@@ -125,6 +125,8 @@
   <ItemGroup>
     <ClCompile Include="Network.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="PeerCommunication.cpp" />
+    <ClCompile Include="PeerMessage.cpp" />
     <ClCompile Include="RiotRestApi.cpp" />
     <ClCompile Include="Communicator.cpp" />
     <ClCompile Include="TcpStream.cpp" />
@@ -132,6 +134,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Network.h" />
+    <ClInclude Include="PacketHelper.h" />
+    <ClInclude Include="PeerCommunication.h" />
+    <ClInclude Include="PeerMessage.h" />
     <ClInclude Include="RiotRestApi.h" />
     <ClInclude Include="Communicator.h" />
     <ClInclude Include="TcpStream.h" />

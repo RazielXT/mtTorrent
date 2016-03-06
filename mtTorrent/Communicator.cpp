@@ -1,137 +1,12 @@
 #include "Communicator.h"
+#include "PacketHelper.h"
 #include "Network.h"
 
-#include <cctype>
-#include <iomanip>
 #include <sstream>
 #include <future>
 #include <iostream>
 
-#define swap16 _byteswap_ushort
-#define swap32 _byteswap_ulong
-#define swap64 _byteswap_uint64
-
 using namespace Torrent;
-
-struct PacketReader
-{
-	uint8_t pop()
-	{
-		uint8_t i = *reinterpret_cast<uint8_t*>(buf.data());
-		buf.erase(buf.begin());
-		return i;
-	}
-
-	uint16_t pop16()
-	{
-		uint16_t i = swap16(*reinterpret_cast<uint16_t*>(buf.data()));
-		buf.erase(buf.begin(), buf.begin() + sizeof i);
-		return i;
-	}
-
-	uint32_t pop32()
-	{
-		uint32_t i = swap32(*reinterpret_cast<uint32_t*>(buf.data()));
-		buf.erase(buf.begin(), buf.begin() + sizeof i);
-		return i;
-	}
-
-	uint64_t pop64()
-	{
-		uint64_t i = swap64(*reinterpret_cast<uint64_t*>(buf.data()));
-		buf.erase(buf.begin(), buf.begin() + sizeof i);
-		return i;
-	}
-
-	PacketReader(std::vector<char> buffer)
-	{
-		buf = buffer;
-	}
-
-	std::vector<char> buf;
-};
-
-struct PacketBuilder
-{
-	void add(char c)
-	{
-		buf.sputn(&c, 1);
-		size ++;
-	}
-
-	void add16(uint16_t i)
-	{
-		i = swap16(i);
-		buf.sputn(reinterpret_cast<char*>(&i), sizeof i);
-		size += sizeof i;
-	}
-
-	void add32(uint32_t i)
-	{
-		i = swap32(i);
-		buf.sputn(reinterpret_cast<char*>(&i), sizeof i);
-		size += sizeof i;
-	}
-
-	void add64(uint64_t i)
-	{
-		i = swap64(i);
-		buf.sputn(reinterpret_cast<char*>(&i), sizeof i);
-		size += sizeof i;
-	}
-
-	void add(const char* b, size_t length)
-	{
-		/*std::vector<char> temp(b, b + length);
-		for (size_t i = 0; i < (size_t)(length*0.5f); i++)
-		{
-			char t = temp[i];
-			temp[i] = temp[length - i - 1];
-			temp[length - i - 1] = t;
-		}
-
-		buf.sputn(temp.data(), length);*/
-		buf.sputn(b, length);
-		size += length;
-	}
-
-	std::vector<char> getBuffer()
-	{
-		std::vector<char> out;
-
-		out.resize(size);
-		buf.sgetn(&out[0], size);
-
-		return out;
-	}
-
-	std::stringbuf buf;
-	uint64_t size = 0;
-};
-
-std::string url_encode(const std::string &value) {
-	std::ostringstream escaped;
-	escaped.fill('0');
-	escaped << std::hex;
-
-	for (std::string::const_iterator i = value.begin(), n = value.end(); i != n; ++i) {
-		std::string::value_type c = (*i);
-
-		// Keep alphanumeric and other accepted characters intact
-		// make sure c is positive for msvc assertion
-		if (c >= 0 && (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~')) {
-			escaped << c;
-			continue;
-		}
-
-		// Any other characters are percent-encoded
-		escaped << std::uppercase;
-		escaped << '%' << std::setw(2) << int((unsigned char)c);
-		escaped << std::nouppercase;
-	}
-
-	return escaped.str();
-}
 
 std::string cutStringPart(std::string& source, std::vector<char> endChars, int cutAdd)
 {
@@ -247,11 +122,11 @@ AnnounceResponse getAnnounceResponse(std::vector<char> buffer)
 	resp.leechersCount = packet.pop32();
 	resp.seedersCount = packet.pop32();
 
-	size_t count = static_cast<size_t>(packet.buf.size() / 6.0f);
+	size_t count = static_cast<size_t>(packet.getRemainingSize() / 6.0f);
 
 	for (size_t i = 0; i < count; i++)
 	{
-		AnnounceResponsePeer p;
+		PeerInfo p;
 		p.ip = packet.pop32();
 		p.port = packet.pop16();
 
@@ -336,7 +211,7 @@ void Communicator::test()
 
 			for (size_t i = 0; i < resp.peers.size(); i++)
 			{
-				futures[i] = std::async(&PeerCommunication::start, &peer[i], &torrent, peerId, resp.peers[i]);
+				futures[i] = std::async(&PeerCommunication::start, &peer[i], &torrent.info, peerId, resp.peers[i]);
 			}			
 
 			for (size_t i = 0; i < resp.peers.size(); i++)
@@ -346,186 +221,4 @@ void Communicator::test()
 		}
 	}
 	
-}
-
-void PeerCommunication::start(TorrentFileParser* torrent, char* pId, AnnounceResponsePeer info)
-{
-	torretFile = torrent;
-	peerId = pId;
-	peerInfo = info;
-
-	try
-	{
-		handshake(peerInfo);
-	}
-	catch (std::exception& e)
-	{
-		std::cout << "Exception: " << e.what() << "\n";
-	}
-}
-
-PeerMessage PeerMessage::loadMessage(std::vector<char>& data)
-{
-	PeerMessage msg;
-
-	if (data.empty())
-		return msg;
-
-	if (data.size() >= 68 && data[0] == 19)
-	{
-		//auto str = std::string(data.begin() + 1, data.begin() + 20);
-		//if (str == "BitTorrent protocol")
-		msg.id = Handshake;
-
-		msg.messageSize = 68;
-		memcpy(msg.peer_id, &data[0] + 20 + 8 + 20, 20);
-
-		return msg;
-	}
-
-	PacketReader reader(data);
-
-	auto size = reader.pop32();
-	msg.messageSize = size + 4;
-
-	//incomplete
-	if (reader.buf.size() < size)
-		return msg;
-
-	if (size == 0)
-	{
-		msg.id = KeepAlive;
-	}	
-	else
-	{
-		msg.id = PeerMessageId(reader.pop());	
-
-		if (msg.id == Have && size == 5)
-		{
-			msg.pieceIndex = reader.pop32();		
-		}
-		else if (msg.id == Bitfield)
-		{
-			msg.bitfield = reader.buf;
-		}
-		else if (msg.id == Request && size == 13)
-		{
-			msg.request.index = reader.pop32();
-			msg.request.begin = reader.pop32();
-			msg.request.length = reader.pop32();
-		}
-		else if (msg.id == Request && size > 9)
-		{
-			msg.piece.index = reader.pop32();
-			msg.piece.begin = reader.pop32();
-			msg.piece.block = reader.buf;
-		}
-		else if (msg.id == Cancel && size == 13)
-		{
-			msg.request.index = reader.pop32();
-			msg.request.begin = reader.pop32();
-			msg.request.length = reader.pop32();
-		}
-		else if (msg.id == Port && size == 3)
-		{
-			msg.port = reader.pop16();
-		}
-	}
-
-	if (msg.id >= Invalid)
-	{
-		msg.id = Invalid;
-		msg.messageSize = 0;
-	}
-		
-	return msg;
-}
-
-std::vector<char> PeerCommunication::getHandshakeMessage()
-{
-	std::string protocol = "BitTorrent protocol";
-
-	PacketBuilder packet;
-	packet.add(static_cast<char>(protocol.length()));
-	packet.add(protocol.data(), protocol.size());
-
-	for (size_t i = 0; i < 8; i++)
-		packet.add(0);
-
-	packet.add(torretFile->info.infoHash.data(), torretFile->info.infoHash.size());
-	packet.add(peerId, 20);
-
-	return packet.getBuffer();
-}
-
-bool PeerCommunication::handshake(AnnounceResponsePeer& peerInfo)
-{
-	auto port = std::to_string(peerInfo.port);
-	stream.connect(peerInfo.ipStr.data(), port.data());
-
-	auto requestData = getHandshakeMessage(); 
-	stream.write(requestData);
-
-	return communicate();
-}
-
-bool PeerCommunication::communicate()
-{
-	while (true)
-	{
-		stream.blockingRead();
-
-		auto message = getNextStreamMessage();
-
-		if (message.messageSize == 0 && !finishedHandshake)
-			break;
-
-		while (message.id != Invalid)
-		{
-			handleMessage(message);
-
-			message = getNextStreamMessage();
-		}
-	}
-
-	return true;
-}
-
-Torrent::PeerMessage Torrent::PeerCommunication::getNextStreamMessage()
-{
-	auto data = stream.getReceivedData();
-
-	auto msg = PeerMessage::loadMessage(data);
-
-	if (msg.id != Invalid)
-		stream.consumeData(msg.messageSize);
-	else if (!msg.messageSize)
-		stream.resetData();
-
-	return msg;
-}
-
-void Torrent::PeerCommunication::setInterested()
-{
-	amInterested = true;
-
-	PacketBuilder packet;
-	packet.add32(1);
-	packet.add(Interested);
-
-	auto interestedMsg = packet.getBuffer();
-
-	stream.write(interestedMsg);
-}
-
-void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
-{
-	std::cout << peerInfo.ipStr << "_ID2:" << std::to_string(message.id) << ", size: " << std::to_string(message.messageSize) << "\n";
-
-	if (message.id == Handshake)
-	{
-		finishedHandshake = true;
-		std::cout << peerInfo.ipStr << "_has peer id:" << std::string(message.peer_id, message.peer_id + 20) << "\n";
-		setInterested();
-	}	
 }

@@ -4,6 +4,14 @@
 #include <vector>
 #include <map>
 
+struct TorrentFileInfo
+{
+	std::string announce;
+	std::vector<std::string> announceList;
+
+	std::vector<char> infoHash;
+};
+
 class TorrentFileParser
 {
 public:
@@ -38,14 +46,7 @@ public:
 
 	Object parsedData;
 	
-	struct
-	{
-		std::string announce;
-		std::vector<std::string> announceList;
-
-		std::vector<char> infoHash;
-
-	} info;
+	TorrentFileInfo info;
 
 private:
 
