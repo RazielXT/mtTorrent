@@ -64,6 +64,6 @@ namespace Torrent
 		uint32_t generateTransaction();
 
 		uint32_t listenPort = 80;
-		uint32_t maxPeers = 50;
+		uint32_t maxPeers = 40;
 	};
 }

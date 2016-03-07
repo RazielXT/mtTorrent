@@ -16,10 +16,9 @@ namespace Torrent
 		uint16_t index;
 	};
 
-	class PeerCommunication
+	struct PeerState
 	{
-	public:
-
+		uint16_t index;
 		bool finishedHandshake = false;
 
 		bool amChoking = true;
@@ -28,6 +27,23 @@ namespace Torrent
 		bool peerChoking = true;
 		bool peerInterested = false;
 
+		void pushMessage(PeerMessage msg);
+		std::vector<PeerMessage> popMessages();
+
+		bool finished = false;
+
+	private:
+
+		std::vector<PeerMessage> messages;
+		std::mutex messages_mutex;
+	};
+
+	class PeerCommunication
+	{
+	public:
+
+		PeerState state;
+
 		PeerInfo peerInfo;
 		TorrentFileInfo* torretFile;
 		char* peerId;
@@ -35,11 +51,13 @@ namespace Torrent
 		void start(TorrentFileInfo* torrent, char* peerId, PeerInfo peerInfo);
 
 		bool handshake(PeerInfo& peerInfo);
+
 		bool communicate();
+		void startListening();
 
 		std::vector<char> getHandshakeMessage();
 
-		PeerMessage getNextStreamMessage();
+		PeerMessage readNextStreamMessage();
 		TcpStream stream;
 
 		void sendInterested();

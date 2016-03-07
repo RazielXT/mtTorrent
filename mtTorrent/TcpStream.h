@@ -3,16 +3,19 @@
 #include "Network.h"
 #include <mutex>
 #include <future>
+#include <memory>
 
 class TcpStream
 {
 public:
 
-	TcpStream() : socket(io_service), resolver(io_service) {}
+	TcpStream();
+
+	void init(const char* server, const char* port);
 
 	virtual void connect(const char* server, const char* port);
 
-	void blockingRead();
+	bool blockingRead();
 	void write(std::vector<char> data);
 
 	std::vector<char> getReceivedData();
@@ -21,15 +24,22 @@ public:
 
 protected:
 
+	bool connected();
+	void closeConnection();
+	void ensureConnection();
+	std::mutex socket_mutex;
+
 	void appendData(std::vector<char>& data);
 
 	std::vector<char> buffer;
 	std::mutex buffer_mutex;
 
 	boost::asio::io_service io_service;
-	tcp::socket socket;
+	std::unique_ptr<tcp::socket> socket;
 	tcp::resolver resolver;
 
+	std::string host;
+	std::string port;
 };
 
 class TcpStreamAsync : public TcpStream
@@ -43,9 +53,7 @@ public:
 protected:
 
 	virtual void onReceiveAsync(std::vector<char> data) = 0;
-	void stopListening();
 	void startListening();
 
 	std::future<void> readHandle;
-	bool stopped = false;
 };

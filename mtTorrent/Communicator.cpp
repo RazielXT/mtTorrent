@@ -186,7 +186,8 @@ AnnounceResponse Communicator::announceUdpTracker(std::string host, std::string 
 
 void Communicator::test()
 {
-	torrent.parse("D:\\dead.torrent");
+	if (!torrent.parse("D:\\dead.torrent"))
+		return;
 
 	auto url = torrent.info.announceList[8];
 

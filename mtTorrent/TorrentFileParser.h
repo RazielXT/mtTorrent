@@ -16,7 +16,7 @@ class TorrentFileParser
 {
 public:
 
-	void parse(char* filename);
+	bool parse(char* filename);
 
 	struct Object;
 

@@ -2,9 +2,15 @@
 #include <iostream>
 #include <openssl/sha.h>
 
-void TorrentFileParser::parse(char* filename)
+bool TorrentFileParser::parse(char* filename)
 {
 	std::ifstream file(filename, std::ios_base::binary);
+
+	if (!file.good())
+	{
+		std::cout << "Failed to parse torrent file " << filename << "\n";
+		return false;
+	}
 
 	std::vector<char> buffer((
 		std::istreambuf_iterator<char>(file)),
@@ -16,6 +22,8 @@ void TorrentFileParser::parse(char* filename)
 	parsedData = parse(&data);
 
 	parseTorrentInfo();
+
+	return true;
 }
 
 void TorrentFileParser::parseTorrentInfo()
@@ -40,8 +48,7 @@ void TorrentFileParser::parseTorrentInfo()
 							info.announceList.push_back(a.txt);
 					}
 			}
-		}
-			
+		}		
 	}
 
 	computeInfoHash();

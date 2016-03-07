@@ -9,6 +9,7 @@ void PeerCommunication::start(TorrentFileInfo* torrent, char* pId, PeerInfo info
 	torretFile = torrent;
 	peerId = pId;
 	peerInfo = info;
+	state.index = info.index;
 
 	try
 	{
@@ -40,7 +41,7 @@ std::vector<char> PeerCommunication::getHandshakeMessage()
 bool PeerCommunication::handshake(PeerInfo& peerInfo)
 {
 	auto port = std::to_string(peerInfo.port);
-	stream.connect(peerInfo.ipStr.data(), port.data());
+	stream.init(peerInfo.ipStr.data(), port.data());
 
 	auto requestData = getHandshakeMessage();
 	stream.write(requestData);
@@ -50,27 +51,55 @@ bool PeerCommunication::handshake(PeerInfo& peerInfo)
 
 bool PeerCommunication::communicate()
 {
-	while (true)
+	std::thread t(&PeerCommunication::startListening, this);
+
+	while (!state.finished)
 	{
-		stream.blockingRead();
+		Sleep(100);
 
-		auto message = getNextStreamMessage();
+		auto messages = state.popMessages();
 
-		if (message.messageSize == 0 && !finishedHandshake)
-			break;
-
-		while (message.id != Invalid)
-		{
-			handleMessage(message);
-
-			message = getNextStreamMessage();
-		}
+		for (auto& msg : messages)
+			handleMessage(msg);
 	}
 
 	return true;
 }
 
-Torrent::PeerMessage Torrent::PeerCommunication::getNextStreamMessage()
+void PeerCommunication::startListening()
+{
+	static int c = 0;
+	std::cout << "LISTEN: " << std::to_string(c++) << "\n";
+
+	try
+	{
+		int retry = 3;
+
+		while (retry > 0)
+		{
+			auto r = stream.blockingRead();
+
+			if (!state.finishedHandshake && !r)
+				retry--;
+
+			auto message = readNextStreamMessage();
+
+			while (message.id != Invalid)
+			{
+				state.pushMessage(message);
+				message = readNextStreamMessage();
+
+				retry = 3;
+			}
+		}
+	}
+	catch (std::exception& e)
+	{
+		std::cout << "MException: " << e.what() << "\n";
+	}
+}
+
+Torrent::PeerMessage Torrent::PeerCommunication::readNextStreamMessage()
 {
 	auto data = stream.getReceivedData();
 	PeerMessage msg(data);
@@ -85,7 +114,7 @@ Torrent::PeerMessage Torrent::PeerCommunication::getNextStreamMessage()
 
 void Torrent::PeerCommunication::sendInterested()
 {
-	amInterested = true;
+	state.amInterested = true;
 
 	PacketBuilder packet;
 	packet.add32(1);
@@ -101,13 +130,29 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 
 	if (message.id == Interested)
 	{
-		peerInterested = true;
+		state.peerInterested = true;
+		//state.finished = true;
 	}
 
 	if (message.id == Handshake)
 	{
-		finishedHandshake = true;
+		state.finishedHandshake = true;
 		std::cout << peerInfo.ipStr << "_has peer id:" << std::string(message.peer_id, message.peer_id + 20) << "\n";
 		sendInterested();
 	}
+}
+
+void Torrent::PeerState::pushMessage(PeerMessage msg)
+{
+	std::lock_guard<std::mutex> guard(messages_mutex);
+	messages.push_back(msg);
+}
+
+std::vector<PeerMessage> Torrent::PeerState::popMessages()
+{
+	std::lock_guard<std::mutex> guard(messages_mutex);
+	auto msgs = messages;// std::move(messages);
+	messages.clear();
+
+	return msgs;
 }
