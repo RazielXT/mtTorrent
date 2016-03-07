@@ -42,7 +42,7 @@ namespace Torrent
 		PeerMessage getNextStreamMessage();
 		TcpStream stream;
 
-		void setInterested();
+		void sendInterested();
 
 		void handleMessage(PeerMessage& msg);
 	};

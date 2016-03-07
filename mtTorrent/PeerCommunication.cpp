@@ -73,8 +73,7 @@ bool PeerCommunication::communicate()
 Torrent::PeerMessage Torrent::PeerCommunication::getNextStreamMessage()
 {
 	auto data = stream.getReceivedData();
-
-	auto msg = PeerMessage::loadMessage(data);
+	PeerMessage msg(data);
 
 	if (msg.id != Invalid)
 		stream.consumeData(msg.messageSize);
@@ -84,7 +83,7 @@ Torrent::PeerMessage Torrent::PeerCommunication::getNextStreamMessage()
 	return msg;
 }
 
-void Torrent::PeerCommunication::setInterested()
+void Torrent::PeerCommunication::sendInterested()
 {
 	amInterested = true;
 
@@ -93,7 +92,6 @@ void Torrent::PeerCommunication::setInterested()
 	packet.add(Interested);
 
 	auto interestedMsg = packet.getBuffer();
-
 	stream.write(interestedMsg);
 }
 
@@ -101,10 +99,15 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 {
 	std::cout << peerInfo.ipStr << "_ID2:" << std::to_string(message.id) << ", size: " << std::to_string(message.messageSize) << "\n";
 
+	if (message.id == Interested)
+	{
+		peerInterested = true;
+	}
+
 	if (message.id == Handshake)
 	{
 		finishedHandshake = true;
 		std::cout << peerInfo.ipStr << "_has peer id:" << std::string(message.peer_id, message.peer_id + 20) << "\n";
-		setInterested();
+		sendInterested();
 	}
 }

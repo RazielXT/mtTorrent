@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
 	try
 	{
 		//riotApiRequest();
-		
+
 		Torrent::Communicator torrent;
 		torrent.test();
 	}

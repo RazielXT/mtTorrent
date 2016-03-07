@@ -46,6 +46,6 @@ namespace Torrent
 		uint16_t port;
 		uint16_t messageSize = 0;
 
-		static PeerMessage loadMessage(std::vector<char>& data);
+		PeerMessage(std::vector<char>& data);
 	};
 }
