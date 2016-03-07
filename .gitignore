@@ -1,0 +1,9 @@
+*.aps
+*.ncb
+*.opensdf
+*.sdf
+*.cfg
+*.cachefile
+x64/
+mtTorrent/x64/
+.vs/
