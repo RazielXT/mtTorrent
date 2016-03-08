@@ -10,6 +10,21 @@ struct TorrentFileInfo
 	std::vector<std::string> announceList;
 
 	std::vector<char> infoHash;
+	
+	struct PieceObj
+	{
+		char hash[20];
+	};
+	std::vector<PieceObj> pieces;
+	size_t pieceSize;
+	
+	struct File
+	{
+		std::string name;
+		int size;
+	};
+	std::vector<File> files;
+	std::string directory;
 };
 
 class TorrentFileParser

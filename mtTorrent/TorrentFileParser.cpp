@@ -48,6 +48,52 @@ void TorrentFileParser::parseTorrentInfo()
 							info.announceList.push_back(a.txt);
 					}
 			}
+		}
+
+		if (dictionary.find("info") != dictionary.end())
+		{
+			auto& infoDictionary = *dictionary["info"].dic;
+
+			info.pieceSize = infoDictionary["piece length"].i;
+
+			auto& pieces = infoDictionary["pieces"].txt;
+			
+			if (pieces.size() % 20 == 0)
+			{
+				TorrentFileInfo::PieceObj temp;
+				auto end = pieces.data() + pieces.size();
+
+				for (auto it = pieces.data(); it != end; it += 20)
+				{
+					memcpy(&temp.hash, it, 20);
+					info.pieces.push_back(temp);
+				}
+			}
+
+			if (infoDictionary.find("files") != infoDictionary.end())
+			{
+				info.directory = infoDictionary["name"].txt;
+
+				auto& files = *infoDictionary["files"].l;
+
+				for (auto& f : files)
+				{
+					std::string path;
+
+					auto& pathList = *(*f.dic)["path"].l;
+					for (auto& p : pathList)
+					{
+						if (!path.empty()) path += "//";
+						path += p.txt;
+					}
+
+					info.files.push_back({ path, (*f.dic)["length"].i });
+				}
+			}
+			else
+			{
+				info.files.push_back({infoDictionary["name"].txt, infoDictionary["length"].i});
+			}
 		}		
 	}
 
