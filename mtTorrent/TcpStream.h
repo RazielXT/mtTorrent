@@ -11,7 +11,7 @@ public:
 
 	TcpStream();
 
-	void init(const char* server, const char* port);
+	void setTarget(const char* server, const char* port);
 
 	void write(std::vector<char> data);
 

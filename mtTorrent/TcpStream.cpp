@@ -6,7 +6,7 @@ TcpStream::TcpStream() : resolver(io_service)
 
 }
 
-void TcpStream::init(const char* server, const char* p)
+void TcpStream::setTarget(const char* server, const char* p)
 { 
 	host = server;
 	port = p;

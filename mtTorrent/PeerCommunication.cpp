@@ -41,7 +41,7 @@ std::vector<char> PeerCommunication::getHandshakeMessage()
 bool PeerCommunication::handshake(PeerInfo& peerInfo)
 {
 	auto port = std::to_string(peerInfo.port);
-	stream.init(peerInfo.ipStr.data(), port.data());
+	stream.setTarget(peerInfo.ipStr.data(), port.data());
 
 	auto requestData = getHandshakeMessage();
 	stream.write(requestData);
