@@ -1,21 +1,50 @@
 #include "TcpStream.h"
+#include <iostream>
 
 TcpStream::TcpStream() : resolver(io_service)
-{ 
-	socket = std::make_unique<tcp::socket>(io_service);
+{
+
 }
 
 void TcpStream::init(const char* server, const char* p)
-{
+{ 
 	host = server;
 	port = p;
+}
 
-	connect(server, p);
+bool TcpStream::active()
+{
+	return connected();
+}
+
+void TcpStream::close()
+{
+	std::lock_guard<std::mutex> guard(socket_mutex);
+
+	socket->close();
+}
+
+void TcpStream::ensureConnection()
+{
+	std::lock_guard<std::mutex> guard(socket_mutex);
+
+	if (!socket || !connected())
+	{
+		socket = std::make_unique<tcp::socket>(io_service);
+		connect(host.c_str(), port.c_str());
+	}
 }
 
 void TcpStream::connect(const char* server, const char* port)
 {
 	openTcpSocket(*socket, resolver, server, port);
+
+	std::thread(&TcpStream::socketListening, this).detach();
+}
+
+bool TcpStream::connected()
+{
+	return socket->is_open();
 }
 
 void TcpStream::write(std::vector<char> data)
@@ -24,12 +53,38 @@ void TcpStream::write(std::vector<char> data)
 	dBuffer.sputn(data.data(), data.size());
 
 	ensureConnection();
-	boost::asio::write(*socket, dBuffer);
+
+	try
+	{
+		boost::asio::write(*socket, dBuffer);
+	}
+	catch (const std::exception&e)
+	{
+		std::cout << "Socket write exception: " << e.what() << "\n";
+		close();
+	}
 }
 
-bool TcpStream::blockingRead()
+void TcpStream::socketListening()
 {
-	ensureConnection();
+	try
+	{
+		while (true)
+		{
+			blockingRead();
+		}
+	}
+	catch (const std::exception&e)
+	{
+		std::cout << "Socket listening exception: " << e.what() << "\n";
+		close();
+	}
+}
+
+void TcpStream::blockingRead()
+{
+	if (!connected())
+		return;
 
 	boost::asio::streambuf response;
 	boost::system::error_code error;
@@ -46,15 +101,15 @@ bool TcpStream::blockingRead()
 
 		appendData(buffer);
 	}
-	else if (error == boost::asio::error::eof)
-	{
-		closeConnection();
-		return false;
-	}	
 	else
-		throw boost::system::system_error(error);
+	{
+		if (error == boost::asio::error::eof)
+		{
+			close();
+		}
 
-	return true;
+		throw boost::system::system_error(error);
+	}		
 }
 
 std::vector<char> TcpStream::getReceivedData()
@@ -83,53 +138,4 @@ void TcpStream::resetData()
 	std::lock_guard<std::mutex> guard(buffer_mutex);
 
 	buffer.clear();
-}
-
-bool TcpStream::connected()
-{
-	return socket->is_open();
-}
-
-void TcpStream::closeConnection()
-{
-	std::lock_guard<std::mutex> guard(socket_mutex);
-
-	socket->close();
-}
-
-void TcpStream::ensureConnection()
-{
-	std::lock_guard<std::mutex> guard(socket_mutex);
-
-	if (!connected())
-	{
-		socket = std::make_unique<tcp::socket>(io_service);
-		connect(host.c_str(), port.c_str());
-	}	
-}
-
-//-----------------------------------
-
-TcpStreamAsync::~TcpStreamAsync()
-{
-	if (socket->is_open())
-		socket->close();
-
-	if (readHandle.valid())
-		readHandle.get();
-}
-
-void TcpStreamAsync::connect(const char* server, const char* port)
-{
-	openTcpSocket(*socket, resolver, server, port);
-
-	readHandle = std::async(&TcpStreamAsync::startListening, this);
-}
-
-void TcpStreamAsync::startListening()
-{
-	while (connected())
-	{
-		blockingRead();
-	}
 }

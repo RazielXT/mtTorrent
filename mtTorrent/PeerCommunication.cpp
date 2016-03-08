@@ -51,52 +51,20 @@ bool PeerCommunication::handshake(PeerInfo& peerInfo)
 
 bool PeerCommunication::communicate()
 {
-	std::thread t(&PeerCommunication::startListening, this);
-
-	while (!state.finished)
+	while (stream.active())
 	{
-		Sleep(100);
+		Sleep(50);
 
-		auto messages = state.popMessages();
+		auto message = readNextStreamMessage();
 
-		for (auto& msg : messages)
-			handleMessage(msg);
+		while (message.id != Invalid)
+		{
+			handleMessage(message);
+			message = readNextStreamMessage();
+		}
 	}
 
 	return true;
-}
-
-void PeerCommunication::startListening()
-{
-	static int c = 0;
-	std::cout << "LISTEN: " << std::to_string(c++) << "\n";
-
-	try
-	{
-		int retry = 3;
-
-		while (retry > 0)
-		{
-			auto r = stream.blockingRead();
-
-			if (!state.finishedHandshake && !r)
-				retry--;
-
-			auto message = readNextStreamMessage();
-
-			while (message.id != Invalid)
-			{
-				state.pushMessage(message);
-				message = readNextStreamMessage();
-
-				retry = 3;
-			}
-		}
-	}
-	catch (std::exception& e)
-	{
-		std::cout << "MException: " << e.what() << "\n";
-	}
 }
 
 Torrent::PeerMessage Torrent::PeerCommunication::readNextStreamMessage()
@@ -107,7 +75,7 @@ Torrent::PeerMessage Torrent::PeerCommunication::readNextStreamMessage()
 	if (msg.id != Invalid)
 		stream.consumeData(msg.messageSize);
 	else if (!msg.messageSize)
-		stream.resetData();
+		stream.consumeData(data.size());
 
 	return msg;
 }
@@ -131,7 +99,7 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 	if (message.id == Interested)
 	{
 		state.peerInterested = true;
-		//state.finished = true;
+		stream.close();
 	}
 
 	if (message.id == Handshake)
@@ -140,19 +108,4 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 		std::cout << peerInfo.ipStr << "_has peer id:" << std::string(message.peer_id, message.peer_id + 20) << "\n";
 		sendInterested();
 	}
-}
-
-void Torrent::PeerState::pushMessage(PeerMessage msg)
-{
-	std::lock_guard<std::mutex> guard(messages_mutex);
-	messages.push_back(msg);
-}
-
-std::vector<PeerMessage> Torrent::PeerState::popMessages()
-{
-	std::lock_guard<std::mutex> guard(messages_mutex);
-	auto msgs = messages;// std::move(messages);
-	messages.clear();
-
-	return msgs;
 }

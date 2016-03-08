@@ -26,16 +26,6 @@ namespace Torrent
 
 		bool peerChoking = true;
 		bool peerInterested = false;
-
-		void pushMessage(PeerMessage msg);
-		std::vector<PeerMessage> popMessages();
-
-		bool finished = false;
-
-	private:
-
-		std::vector<PeerMessage> messages;
-		std::mutex messages_mutex;
 	};
 
 	class PeerCommunication
@@ -53,7 +43,6 @@ namespace Torrent
 		bool handshake(PeerInfo& peerInfo);
 
 		bool communicate();
-		void startListening();
 
 		std::vector<char> getHandshakeMessage();
 
