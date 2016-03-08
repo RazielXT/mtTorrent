@@ -6,9 +6,9 @@ TcpStream::TcpStream() : resolver(io_service)
 
 }
 
-void TcpStream::setTarget(const char* server, const char* p)
+void TcpStream::setTarget(const char* hostname, const char* p)
 { 
-	host = server;
+	host = hostname;
 	port = p;
 }
 
@@ -35,9 +35,9 @@ void TcpStream::ensureConnection()
 	}
 }
 
-void TcpStream::connect(const char* server, const char* port)
+void TcpStream::connect(const char* host, const char* port)
 {
-	openTcpSocket(*socket, resolver, server, port);
+	openTcpSocket(*socket, resolver, host, port);
 
 	std::thread(&TcpStream::socketListening, this).detach();
 }
@@ -138,4 +138,22 @@ void TcpStream::resetData()
 	std::lock_guard<std::mutex> guard(buffer_mutex);
 
 	buffer.clear();
+}
+
+std::vector<char> TcpStream::sendBlockingRequest(std::vector<char>& data)
+{
+	try
+	{
+		if (!active())
+			openTcpSocket(*socket, resolver, host.c_str(), port.c_str());
+
+		return sendTcpRequest(*socket, data);
+	}
+	catch (const std::exception&e)
+	{
+		std::cout << "Socket request exception: " << e.what() << "\n";
+		close();
+	}
+
+	return{};
 }

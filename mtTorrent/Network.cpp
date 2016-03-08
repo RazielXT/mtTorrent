@@ -2,9 +2,9 @@
 #include "boost\asio\buffer.hpp"
 #include "boost\array.hpp"
 
-void openSslSocket(ssl_socket& sock, tcp::resolver& resolver, const char* server)
+void openSslSocket(ssl_socket& sock, tcp::resolver& resolver, const char* hostname)
 {
-	tcp::resolver::query query(server, "https");
+	tcp::resolver::query query(hostname, "https");
 	boost::asio::connect(sock.lowest_layer(), resolver.resolve(query));
 	sock.lowest_layer().set_option(tcp::no_delay(true));
 
@@ -21,9 +21,9 @@ std::vector<std::string> outFHistory;
 std::vector<std::string> outHistory;
 std::vector<std::string> history;
 
-std::string sendHttpsRequest(ssl_socket& socket, tcp::resolver& resolver, boost::asio::streambuf& request, const char* server)
+std::string sendHttpsRequest(ssl_socket& socket, tcp::resolver& resolver, boost::asio::streambuf& request, const char* hostname)
 {
-	openSslSocket(socket, resolver, server);
+	openSslSocket(socket, resolver, hostname);
 
 	// Send the request.
 	boost::asio::write(socket, request);
@@ -71,9 +71,9 @@ std::string sendHttpsRequest(ssl_socket& socket, tcp::resolver& resolver, boost:
 }
 
 
-std::vector<char> sendUdpRequest(udp::socket& socket, udp::resolver& resolver, std::vector<char> request, const char* server, const char* port)
+std::vector<char> sendUdpRequest(udp::socket& socket, udp::resolver& resolver, std::vector<char> request, const char* hostname, const char* port)
 {
-	udp::resolver::query query(udp::v4(), server, port);
+	udp::resolver::query query(udp::v4(), hostname, port);
 	udp::endpoint receiver_endpoint = *resolver.resolve(query);
 
 	socket.send_to(boost::asio::buffer(request), receiver_endpoint);
@@ -86,9 +86,9 @@ std::vector<char> sendUdpRequest(udp::socket& socket, udp::resolver& resolver, s
 	return out;
 }
 
-void openTcpSocket(tcp::socket& socket, tcp::resolver& resolver, const char* server, const char* port)
+void openTcpSocket(tcp::socket& socket, tcp::resolver& resolver, const char* hostname, const char* port)
 {
-	tcp::resolver::query query(server, port);
+	tcp::resolver::query query(hostname, port);
 	
 	tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 	tcp::resolver::iterator end;
@@ -110,17 +110,6 @@ std::vector<char> sendTcpRequest(tcp::socket& socket, std::vector<char>& request
 
 	// Send the request.
 	boost::asio::write(socket, sBuffer);
-
-	/*boost::asio::streambuf response;
-	boost::system::error_code error;
-	boost::asio::read(socket, response, error);
-
-	if (error != boost::asio::error::eof)
-		throw boost::system::system_error(error);
-
-	std::istream response_stream(&response);
-	std::string message;
-	std::string outMessage;*/
 
 	boost::asio::streambuf response;
 	boost::system::error_code error;

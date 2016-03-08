@@ -11,7 +11,7 @@ public:
 
 	TcpStream();
 
-	void setTarget(const char* server, const char* port);
+	void setTarget(const char* hostname, const char* port);
 
 	void write(std::vector<char> data);
 
@@ -22,6 +22,9 @@ public:
 	bool active();
 	void close();
 
+	//do not mix with async usage!!
+	std::vector<char> sendBlockingRequest(std::vector<char>& data);
+
 protected:
 
 	std::vector<char> buffer;
@@ -31,7 +34,7 @@ protected:
 	void blockingRead();
 	void appendData(std::vector<char>& data);
 
-	void connect(const char* server, const char* port);
+	void connect(const char* hostname, const char* port);
 	bool connected();
 	
 	void ensureConnection();
