@@ -52,10 +52,10 @@ void TcpStream::write(std::vector<char> data)
 	boost::asio::streambuf dBuffer;
 	dBuffer.sputn(data.data(), data.size());
 
-	ensureConnection();
-
 	try
 	{
+		ensureConnection();
+
 		boost::asio::write(*socket, dBuffer);
 	}
 	catch (const std::exception&e)
@@ -69,7 +69,7 @@ void TcpStream::socketListening()
 {
 	try
 	{
-		while (true)
+		while (connected())
 		{
 			blockingRead();
 		}
@@ -83,9 +83,6 @@ void TcpStream::socketListening()
 
 void TcpStream::blockingRead()
 {
-	if (!connected())
-		return;
-
 	boost::asio::streambuf response;
 	boost::system::error_code error;
 
