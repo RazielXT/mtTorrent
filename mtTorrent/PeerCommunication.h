@@ -9,7 +9,6 @@ namespace Torrent
 	struct PeerInfo
 	{
 		uint32_t ip;
-		uint8_t ipAddr[4];
 		std::string ipStr;
 
 		uint16_t port;
@@ -28,6 +27,16 @@ namespace Torrent
 		bool peerInterested = false;
 	};
 
+	struct PiecesBitfield
+	{
+		std::vector<char> bitfield;
+		size_t piecesCount = 0;
+
+		void prepare(size_t bitsize, size_t pieces);
+		float getPercentage();
+		void addPiece(size_t index);
+	};
+
 	class PeerCommunication
 	{
 	public:
@@ -36,7 +45,9 @@ namespace Torrent
 
 		PeerInfo peerInfo;
 		TorrentFileInfo* torretFile;
+
 		char* peerId;
+		PiecesBitfield pieces;
 
 		void start(TorrentFileInfo* torrent, char* peerId, PeerInfo peerInfo);
 

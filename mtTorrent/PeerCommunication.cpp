@@ -10,6 +10,7 @@ void PeerCommunication::start(TorrentFileInfo* torrent, char* pId, PeerInfo info
 	peerId = pId;
 	peerInfo = info;
 	state.index = info.index;
+	pieces.prepare(torrent->expectedBitfieldSize, torrent->pieces.size());
 
 	try
 	{
@@ -96,6 +97,18 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 {
 	std::cout << peerInfo.ipStr << "_ID2:" << std::to_string(message.id) << ", size: " << std::to_string(message.messageSize) << "\n";
 
+	if (message.id == Bitfield)
+	{
+		std::cout << peerInfo.ipStr << "BITFIELD size: " << std::to_string(message.bitfield.size()) << ", expected: " << std::to_string(torretFile->expectedBitfieldSize) << "\n";
+
+		pieces.bitfield = message.bitfield;
+	}
+
+	if (message.id == Have)
+	{
+		pieces.addPiece(message.havePieceIndex);
+	}
+
 	if (message.id == Interested)
 	{
 		state.peerInterested = true;
@@ -107,5 +120,43 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 		state.finishedHandshake = true;
 		std::cout << peerInfo.ipStr << "_has peer id:" << std::string(message.peer_id, message.peer_id + 20) << "\n";
 		sendInterested();
+	}
+}
+
+void Torrent::PiecesBitfield::prepare(size_t bitsize, size_t pieces)
+{
+	bitfield.resize(bitsize);
+	piecesCount = pieces;
+}
+
+float Torrent::PiecesBitfield::getPercentage()
+{
+	if (piecesCount)
+	{
+		float r = 0;
+
+		for (size_t i = 0; i < piecesCount; i++)
+		{
+			size_t idx = i / 8.0f;
+			unsigned char bitmask = 255 >> i % 8;
+
+			auto value = bitfield[idx] & bitmask;
+			r += value ? 1 : 0;
+		}
+
+		return r / piecesCount;
+	}
+
+	return 0;
+}
+
+void Torrent::PiecesBitfield::addPiece(size_t index)
+{
+	if (index < piecesCount)
+	{
+		size_t idx = index / 8.0f;
+		unsigned char bitmask = 255 >> index % 8;
+
+		bitfield[idx] |= bitmask;
 	}
 }

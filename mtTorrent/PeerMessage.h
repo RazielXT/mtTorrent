@@ -24,7 +24,7 @@ namespace Torrent
 	{
 		PeerMessageId id = Invalid;
 
-		uint32_t pieceIndex;
+		uint32_t havePieceIndex;
 		std::vector<char> bitfield;
 
 		uint8_t peer_id[20];

@@ -17,7 +17,8 @@ struct TorrentFileInfo
 	};
 	std::vector<PieceObj> pieces;
 	size_t pieceSize;
-	
+	size_t expectedBitfieldSize;
+
 	struct File
 	{
 		std::string name;

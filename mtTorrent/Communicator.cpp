@@ -129,15 +129,16 @@ AnnounceResponse getAnnounceResponse(std::vector<char> buffer)
 		PeerInfo p;
 		p.ip = packet.pop32();
 		p.port = packet.pop16();
-
-		p.ipAddr[3] = *reinterpret_cast<uint8_t*>(&p.ip);
-		p.ipAddr[2] = *(reinterpret_cast<uint8_t*>(&p.ip) + 1);
-		p.ipAddr[1] = *(reinterpret_cast<uint8_t*>(&p.ip) + 2);
-		p.ipAddr[0] = *(reinterpret_cast<uint8_t*>(&p.ip) + 3);
-
-		p.ipStr = std::to_string(p.ipAddr[0]) + "." + std::to_string(p.ipAddr[1]) + "." + std::to_string(p.ipAddr[2]) + "." + std::to_string(p.ipAddr[3]);
 		p.index = static_cast<uint16_t>(i);
 
+		uint8_t ipAddr[4];
+		ipAddr[3] = *reinterpret_cast<uint8_t*>(&p.ip);
+		ipAddr[2] = *(reinterpret_cast<uint8_t*>(&p.ip) + 1);
+		ipAddr[1] = *(reinterpret_cast<uint8_t*>(&p.ip) + 2);
+		ipAddr[0] = *(reinterpret_cast<uint8_t*>(&p.ip) + 3);
+
+		p.ipStr = std::to_string(ipAddr[0]) + "." + std::to_string(ipAddr[1]) + "." + std::to_string(ipAddr[2]) + "." + std::to_string(ipAddr[3]);
+		
 		resp.peers.push_back(p);
 	}
 

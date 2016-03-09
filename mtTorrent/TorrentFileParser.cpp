@@ -94,6 +94,10 @@ void TorrentFileParser::parseTorrentInfo()
 			{
 				info.files.push_back({infoDictionary["name"].txt, infoDictionary["length"].i});
 			}
+
+			auto piecesNum = pieces.size() / 20;
+			auto addExpected = piecesNum % 8 > 0 ? 1 : 0; //8 pieces in byte
+			info.expectedBitfieldSize = piecesNum / 8 + addExpected;
 		}		
 	}
 

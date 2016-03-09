@@ -41,7 +41,7 @@ PeerMessage::PeerMessage(std::vector<char>& data)
 
 		if (id == Have && size == 5)
 		{
-			pieceIndex = reader.pop32();
+			havePieceIndex = reader.pop32();
 		}
 		else if (id == Bitfield)
 		{
