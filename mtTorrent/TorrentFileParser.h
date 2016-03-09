@@ -22,7 +22,11 @@ struct TorrentFileInfo
 	struct File
 	{
 		std::string name;
-		int size;
+		size_t size;
+		size_t startPieceIndex;
+		size_t startPiecePos;
+		size_t endPieceIndex;
+		size_t endPiecePos;
 	};
 	std::vector<File> files;
 	std::string directory;

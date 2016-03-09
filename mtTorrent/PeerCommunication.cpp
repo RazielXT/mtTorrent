@@ -102,11 +102,15 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 		std::cout << peerInfo.ipStr << "BITFIELD size: " << std::to_string(message.bitfield.size()) << ", expected: " << std::to_string(torretFile->expectedBitfieldSize) << "\n";
 
 		pieces.bitfield = message.bitfield;
+
+		std::cout << peerInfo.ipStr << "Percentage: " << std::to_string(pieces.getPercentage()) << "\n";
 	}
 
 	if (message.id == Have)
 	{
 		pieces.addPiece(message.havePieceIndex);
+
+		std::cout << peerInfo.ipStr << "Percentage: " << std::to_string(pieces.getPercentage()) << "\n";
 	}
 
 	if (message.id == Interested)
@@ -137,14 +141,14 @@ float Torrent::PiecesBitfield::getPercentage()
 
 		for (size_t i = 0; i < piecesCount; i++)
 		{
-			size_t idx = i / 8.0f;
+			size_t idx = static_cast<size_t>(i / 8.0f);
 			unsigned char bitmask = 255 >> i % 8;
 
 			auto value = bitfield[idx] & bitmask;
 			r += value ? 1 : 0;
 		}
 
-		return r / piecesCount;
+		return r;// / piecesCount;
 	}
 
 	return 0;
@@ -154,7 +158,7 @@ void Torrent::PiecesBitfield::addPiece(size_t index)
 {
 	if (index < piecesCount)
 	{
-		size_t idx = index / 8.0f;
+		size_t idx = static_cast<size_t>(index / 8.0f);
 		unsigned char bitmask = 255 >> index % 8;
 
 		bitfield[idx] |= bitmask;

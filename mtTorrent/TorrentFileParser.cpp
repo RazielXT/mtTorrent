@@ -26,6 +26,18 @@ bool TorrentFileParser::parse(char* filename)
 	return true;
 }
 
+size_t getPieceIndex(size_t pos, size_t pieceSize)
+{
+	size_t p = 0;
+
+	while (p*pieceSize < pos)
+	{
+		p++;
+	}
+
+	return p;
+}
+
 void TorrentFileParser::parseTorrentInfo()
 {
 	if (parsedData.type == Object::Dictionary)
@@ -74,6 +86,7 @@ void TorrentFileParser::parseTorrentInfo()
 			{
 				info.directory = infoDictionary["name"].txt;
 
+				size_t sizeSum = 0;
 				auto& files = *infoDictionary["files"].l;
 
 				for (auto& f : files)
@@ -87,12 +100,23 @@ void TorrentFileParser::parseTorrentInfo()
 						path += p.txt;
 					}
 
-					info.files.push_back({ path, (*f.dic)["length"].i });
+					size_t size = (*f.dic)["length"].i;
+					auto startId = getPieceIndex(sizeSum, info.pieceSize);
+					auto startPos = sizeSum % info.pieceSize;
+					sizeSum += size;
+					auto endId = getPieceIndex(sizeSum, info.pieceSize);
+					auto endPos = sizeSum % info.pieceSize;
+
+					info.files.push_back({ path,  size, startId, startPos, endId, endPos});
 				}
+
+				if (sizeSum != 0)
+					sizeSum++;
 			}
 			else
 			{
-				info.files.push_back({infoDictionary["name"].txt, infoDictionary["length"].i});
+				size_t size = infoDictionary["length"].i;
+				info.files.push_back({infoDictionary["name"].txt, size, 0, 0, pieces.size() - 1, size});
 			}
 
 			auto piecesNum = pieces.size() / 20;
