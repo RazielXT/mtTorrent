@@ -7,6 +7,21 @@ extern int gcount;
 
 namespace Torrent
 {
+	struct File
+	{
+		std::string name;
+		size_t size;
+		size_t startPieceIndex;
+		size_t startPiecePos;
+		size_t endPieceIndex;
+		size_t endPiecePos;
+	};
+
+	struct PieceObj
+	{
+		char hash[20];
+	};
+
 	struct TorrentInfo
 	{
 		std::string announce;
@@ -14,25 +29,35 @@ namespace Torrent
 
 		std::vector<char> infoHash;
 
-		struct PieceObj
-		{
-			char hash[20];
-		};
 		std::vector<PieceObj> pieces;
 		size_t pieceSize;
 		size_t expectedBitfieldSize;
 
-		struct File
-		{
-			std::string name;
-			size_t size;
-			size_t startPieceIndex;
-			size_t startPiecePos;
-			size_t endPieceIndex;
-			size_t endPiecePos;
-		};
 		std::vector<File> files;
 		std::string directory;
+	};
+
+	struct DownloadedPiece
+	{
+		char* data;
+		size_t index;
+	};
+
+	struct PiecesProgress
+	{
+		size_t piecesCount = 0;
+
+		float getPercentage();
+		void addPiece(size_t index);
+		bool hasPiece(size_t index);
+
+		void fromBitfield(std::vector<char>& bitfield);
+		std::vector<char> toBitfield();
+
+	private:
+
+		std::vector<bool> piecesProgress;
+		size_t downloadedPieces = 0;
 	};
 
 	struct PeerInfo
@@ -56,12 +81,6 @@ namespace Torrent
 
 		uint32_t listenPort = 80;
 		uint32_t maxPeersPerRequest = 40;
-	};
-
-	struct UdpNetwork
-	{
-		udp::socket* socket;
-		udp::resolver* resolver;	
 	};
 
 	extern uint32_t generateTransaction();

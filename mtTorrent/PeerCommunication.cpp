@@ -10,7 +10,7 @@ void PeerCommunication::start(TorrentInfo* tInfo, ClientInfo* cInfo, PeerInfo in
 	client = cInfo;
 	peerInfo = info;
 
-	pieces.prepare(torrent->expectedBitfieldSize, torrent->pieces.size());
+	pieces.piecesCount = torrent->pieces.size();
 
 	try
 	{
@@ -101,7 +101,7 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 	{
 		std::cout << peerInfo.ipStr << "BITFIELD size: " << std::to_string(message.bitfield.size()) << ", expected: " << std::to_string(torrent->expectedBitfieldSize) << "\n";
 
-		pieces.bitfield = message.bitfield;
+		pieces.fromBitfield(message.bitfield);
 		gcount++;
 
 		std::cout << peerInfo.ipStr << "Percentage: " << std::to_string(pieces.getPercentage()) << "\n";
@@ -130,40 +130,45 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 
 int gcount = 0;
 
-void Torrent::PiecesBitfield::prepare(size_t bitsize, size_t pieces)
+float Torrent::PiecesProgress::getPercentage()
 {
-	bitfield.resize(bitsize);
-	piecesCount = pieces;
+	return piecesCount / static_cast<float>(downloadedPieces);
 }
 
-float Torrent::PiecesBitfield::getPercentage()
+void Torrent::PiecesProgress::addPiece(size_t index)
 {
-	if (piecesCount)
+	bool old = piecesProgress[index];
+
+	if (!old)
 	{
-		float r = 0;
-
-		for (size_t i = 0; i < piecesCount; i++)
-		{
-			size_t idx = static_cast<size_t>(i / 8.0f);
-			unsigned char bitmask = 128 >> i % 8;
-
-			auto value = bitfield[idx] & bitmask;
-			r += value ? 1 : 0;
-		}
-
-		return r / piecesCount;
+		piecesProgress[index] = true;
+		downloadedPieces++;
 	}
-
-	return 0;
 }
 
-void Torrent::PiecesBitfield::addPiece(size_t index)
+bool Torrent::PiecesProgress::hasPiece(size_t index)
 {
-	if (index < piecesCount)
-	{
-		size_t idx = static_cast<size_t>(index / 8.0f);
-		unsigned char bitmask = 128 >> index % 8;
+	return piecesProgress[index];
+}
 
-		bitfield[idx] |= bitmask;
+void Torrent::PiecesProgress::fromBitfield(std::vector<char>& bitfield)
+{
+	downloadedPieces = 0;
+
+	for (int i = 0; i < piecesCount; i++)
+	{
+		size_t idx = static_cast<size_t>(i / 8.0f);
+		unsigned char bitmask = 128 >> i % 8;
+
+		bool value = (bitfield[idx] & bitmask) != 0;
+		piecesProgress.push_back(value);
+
+		if (value)
+			downloadedPieces++;
 	}
+}
+
+std::vector<char> Torrent::PiecesProgress::toBitfield()
+{
+	return{};
 }

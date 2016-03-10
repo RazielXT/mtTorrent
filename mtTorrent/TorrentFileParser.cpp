@@ -74,7 +74,7 @@ void TorrentFileParser::parseTorrentInfo()
 			
 			if (pieces.size() % 20 == 0)
 			{
-				TorrentInfo::PieceObj temp;
+				PieceObj temp;
 				auto end = pieces.data() + pieces.size();
 
 				for (auto it = pieces.data(); it != end; it += 20)

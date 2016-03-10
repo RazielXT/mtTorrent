@@ -123,6 +123,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DownloadManager.cpp" />
     <ClCompile Include="Network.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PeerCommunication.cpp" />
@@ -134,6 +135,7 @@
     <ClCompile Include="TrackerCommunication.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DownloadManager.h" />
     <ClInclude Include="Interface.h" />
     <ClInclude Include="Network.h" />
     <ClInclude Include="PacketHelper.h" />

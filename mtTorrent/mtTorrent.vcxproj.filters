@@ -42,6 +42,9 @@
     <ClCompile Include="TrackerCommunication.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DownloadManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RiotRestApi.h">
@@ -72,6 +75,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Interface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DownloadManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

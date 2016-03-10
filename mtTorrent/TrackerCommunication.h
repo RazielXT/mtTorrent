@@ -57,7 +57,6 @@ namespace Torrent
 
 		TrackerCommunication();
 		void setInfo(ClientInfo* client, TorrentInfo* tInfo);
-		void setNetwork(UdpNetwork network);
 
 		AnnounceResponse announceUdpTracker(std::string host, std::string port);
 
@@ -66,7 +65,5 @@ namespace Torrent
 
 		ClientInfo* client;
 		TorrentInfo* torrent;
-
-		UdpNetwork network;
 	};
 }

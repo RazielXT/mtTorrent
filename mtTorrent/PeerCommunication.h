@@ -18,16 +18,6 @@ namespace Torrent
 		bool peerInterested = false;
 	};
 
-	struct PiecesBitfield
-	{
-		std::vector<char> bitfield;
-		size_t piecesCount = 0;
-
-		void prepare(size_t bitsize, size_t pieces);
-		float getPercentage();
-		void addPiece(size_t index);
-	};
-
 	class PeerCommunication
 	{
 	public:
@@ -38,7 +28,7 @@ namespace Torrent
 		TorrentInfo* torrent;
 		ClientInfo* client;
 
-		PiecesBitfield pieces;
+		PiecesProgress pieces;
 
 		void start(TorrentInfo* torrent, ClientInfo* client, PeerInfo peerInfo);
 

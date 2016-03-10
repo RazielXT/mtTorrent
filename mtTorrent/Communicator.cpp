@@ -37,9 +37,9 @@ void Communicator::test()
 
 		if (peers.size())
 		{
-			PeerCommunication peer[100];
+			PeerCommunication peer[400];
 
-			std::future<void> futures[100];
+			std::future<void> futures[400];
 
 			for (size_t i = 0; i < peers.size(); i++)
 			{
