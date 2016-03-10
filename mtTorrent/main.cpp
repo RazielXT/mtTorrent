@@ -20,5 +20,7 @@ int main(int argc, char* argv[])
 		std::cout << "Exception: " << e.what() << "\n";
 	}
 
+	std::cout << "Count: " << std::to_string(gcount) << "\n";
+
 	return 0;
 }

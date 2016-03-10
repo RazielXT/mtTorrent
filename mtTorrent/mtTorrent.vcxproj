@@ -131,8 +131,10 @@
     <ClCompile Include="Communicator.cpp" />
     <ClCompile Include="TcpStream.cpp" />
     <ClCompile Include="TorrentFileParser.cpp" />
+    <ClCompile Include="TrackerCommunication.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Interface.h" />
     <ClInclude Include="Network.h" />
     <ClInclude Include="PacketHelper.h" />
     <ClInclude Include="PeerCommunication.h" />
@@ -141,6 +143,7 @@
     <ClInclude Include="Communicator.h" />
     <ClInclude Include="TcpStream.h" />
     <ClInclude Include="TorrentFileParser.h" />
+    <ClInclude Include="TrackerCommunication.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

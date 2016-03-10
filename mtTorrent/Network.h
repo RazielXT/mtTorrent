@@ -18,4 +18,4 @@ std::string sendHttpsRequest(ssl_socket& socket, tcp::resolver& resolver, boost:
 void openTcpSocket(tcp::socket& sock, tcp::resolver& resolver, const char* hostname, const char* port);
 std::vector<char> sendTcpRequest(tcp::socket& socket, std::vector<char>& request);
 
-std::vector<char> sendUdpRequest(udp::socket& socket, udp::resolver& resolver, std::vector<char> request, const char* hostname, const char* port = "80");
+std::vector<char> sendUdpRequest(udp::socket& socket, udp::resolver& resolver, std::vector<char> request, const char* hostname, const char* port = "80", int32_t timeout = 15000);

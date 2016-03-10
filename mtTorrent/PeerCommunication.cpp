@@ -4,12 +4,12 @@
 
 using namespace Torrent;
 
-void PeerCommunication::start(TorrentFileInfo* torrent, char* pId, PeerInfo info)
+void PeerCommunication::start(TorrentInfo* tInfo, ClientInfo* cInfo, PeerInfo info)
 {
-	torretFile = torrent;
-	peerId = pId;
+	torrent = tInfo;
+	client = cInfo;
 	peerInfo = info;
-	state.index = info.index;
+
 	pieces.prepare(torrent->expectedBitfieldSize, torrent->pieces.size());
 
 	try
@@ -33,8 +33,8 @@ std::vector<char> PeerCommunication::getHandshakeMessage()
 	for (size_t i = 0; i < 8; i++)
 		packet.add(0);
 
-	packet.add(torretFile->infoHash.data(), torretFile->infoHash.size());
-	packet.add(peerId, 20);
+	packet.add(torrent->infoHash.data(), torrent->infoHash.size());
+	packet.add(client->hashId, 20);
 
 	return packet.getBuffer();
 }
@@ -99,9 +99,10 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 
 	if (message.id == Bitfield)
 	{
-		std::cout << peerInfo.ipStr << "BITFIELD size: " << std::to_string(message.bitfield.size()) << ", expected: " << std::to_string(torretFile->expectedBitfieldSize) << "\n";
+		std::cout << peerInfo.ipStr << "BITFIELD size: " << std::to_string(message.bitfield.size()) << ", expected: " << std::to_string(torrent->expectedBitfieldSize) << "\n";
 
 		pieces.bitfield = message.bitfield;
+		gcount++;
 
 		std::cout << peerInfo.ipStr << "Percentage: " << std::to_string(pieces.getPercentage()) << "\n";
 	}
@@ -127,6 +128,8 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 	}
 }
 
+int gcount = 0;
+
 void Torrent::PiecesBitfield::prepare(size_t bitsize, size_t pieces)
 {
 	bitfield.resize(bitsize);
@@ -142,13 +145,13 @@ float Torrent::PiecesBitfield::getPercentage()
 		for (size_t i = 0; i < piecesCount; i++)
 		{
 			size_t idx = static_cast<size_t>(i / 8.0f);
-			unsigned char bitmask = 255 >> i % 8;
+			unsigned char bitmask = 128 >> i % 8;
 
 			auto value = bitfield[idx] & bitmask;
 			r += value ? 1 : 0;
 		}
 
-		return r;// / piecesCount;
+		return r / piecesCount;
 	}
 
 	return 0;
@@ -159,7 +162,7 @@ void Torrent::PiecesBitfield::addPiece(size_t index)
 	if (index < piecesCount)
 	{
 		size_t idx = static_cast<size_t>(index / 8.0f);
-		unsigned char bitmask = 255 >> index % 8;
+		unsigned char bitmask = 128 >> index % 8;
 
 		bitfield[idx] |= bitmask;
 	}

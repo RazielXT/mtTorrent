@@ -12,6 +12,7 @@ public:
 	TcpStream();
 
 	void setTarget(const char* hostname, const char* port);
+	void setTimeout(int32_t msTimeout);
 
 	void write(std::vector<char> data);
 
@@ -38,6 +39,7 @@ protected:
 	bool connected();
 	
 	void ensureConnection();
+	void configureSocket();
 
 	std::mutex socket_mutex;
 	boost::asio::io_service io_service;
@@ -46,4 +48,5 @@ protected:
 
 	std::string host;
 	std::string port;
+	int32_t timeout = 5000;
 };

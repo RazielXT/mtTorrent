@@ -2,6 +2,8 @@
 #include <iostream>
 #include <openssl/sha.h>
 
+using namespace Torrent;
+
 bool TorrentFileParser::parse(char* filename)
 {
 	std::ifstream file(filename, std::ios_base::binary);
@@ -72,7 +74,7 @@ void TorrentFileParser::parseTorrentInfo()
 			
 			if (pieces.size() % 20 == 0)
 			{
-				TorrentFileInfo::PieceObj temp;
+				TorrentInfo::PieceObj temp;
 				auto end = pieces.data() + pieces.size();
 
 				for (auto it = pieces.data(); it != end; it += 20)

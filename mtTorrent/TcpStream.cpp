@@ -12,6 +12,12 @@ void TcpStream::setTarget(const char* hostname, const char* p)
 	port = p;
 }
 
+void TcpStream::setTimeout(int32_t msTimeout)
+{
+	timeout = msTimeout;
+	configureSocket();
+}
+
 bool TcpStream::active()
 {
 	return connected();
@@ -32,6 +38,16 @@ void TcpStream::ensureConnection()
 	{
 		socket = std::make_unique<tcp::socket>(io_service);
 		connect(host.c_str(), port.c_str());
+		configureSocket();
+	}
+}
+
+void TcpStream::configureSocket()
+{
+	if (socket && timeout>0)
+	{
+		auto r = setsockopt(socket->native(), SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
+		r =setsockopt(socket->native(), SOL_SOCKET, SO_SNDTIMEO, (const char*)&timeout, sizeof(timeout));
 	}
 }
 

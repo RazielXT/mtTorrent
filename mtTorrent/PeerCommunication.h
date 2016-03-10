@@ -3,21 +3,12 @@
 #include "TcpStream.h"
 #include "TorrentFileParser.h"
 #include "PeerMessage.h"
+#include "Interface.h"
 
 namespace Torrent
 {
-	struct PeerInfo
-	{
-		uint32_t ip;
-		std::string ipStr;
-
-		uint16_t port;
-		uint16_t index;
-	};
-
 	struct PeerState
 	{
-		uint16_t index;
 		bool finishedHandshake = false;
 
 		bool amChoking = true;
@@ -44,12 +35,12 @@ namespace Torrent
 		PeerState state;
 
 		PeerInfo peerInfo;
-		TorrentFileInfo* torretFile;
+		TorrentInfo* torrent;
+		ClientInfo* client;
 
-		char* peerId;
 		PiecesBitfield pieces;
 
-		void start(TorrentFileInfo* torrent, char* peerId, PeerInfo peerInfo);
+		void start(TorrentInfo* torrent, ClientInfo* client, PeerInfo peerInfo);
 
 		bool handshake(PeerInfo& peerInfo);
 

@@ -71,8 +71,11 @@ std::string sendHttpsRequest(ssl_socket& socket, tcp::resolver& resolver, boost:
 }
 
 
-std::vector<char> sendUdpRequest(udp::socket& socket, udp::resolver& resolver, std::vector<char> request, const char* hostname, const char* port)
+std::vector<char> sendUdpRequest(udp::socket& socket, udp::resolver& resolver, std::vector<char> request, const char* hostname, const char* port, int32_t timeout)
 {
+	setsockopt(socket.native(), SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
+	setsockopt(socket.native(), SOL_SOCKET, SO_SNDTIMEO, (const char*)&timeout, sizeof(timeout));
+
 	udp::resolver::query query(udp::v4(), hostname, port);
 	udp::endpoint receiver_endpoint = *resolver.resolve(query);
 
@@ -80,6 +83,7 @@ std::vector<char> sendUdpRequest(udp::socket& socket, udp::resolver& resolver, s
 
 	boost::array<char, 10*1024> recv_buf;
 	udp::endpoint sender_endpoint;
+
 	size_t len = socket.receive_from( boost::asio::buffer(recv_buf), sender_endpoint);
 
 	std::vector<char> out(recv_buf.data(), recv_buf.data() + len);
