@@ -1,9 +1,10 @@
 #pragma once
 #include <vector>
 #include "TcpStream.h"
-#include "TorrentFileParser.h"
+#include "BencodeParser.h"
 #include "PeerMessage.h"
 #include "Interface.h"
+#include "Extensions.h"
 
 namespace Torrent
 {
@@ -21,6 +22,8 @@ namespace Torrent
 	class PeerCommunication
 	{
 	public:
+
+		PeerExchangeExtension pex;
 
 		PeerState state;
 
@@ -42,6 +45,8 @@ namespace Torrent
 		TcpStream stream;
 
 		void sendInterested();
+
+		void sendBlockRequest(PieceBlockInfo& block);
 
 		void handleMessage(PeerMessage& msg);
 	};

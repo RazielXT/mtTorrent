@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include "Interface.h"
 
 namespace Torrent
 {
@@ -16,8 +17,15 @@ namespace Torrent
 		Cancel,
 		Port,
 		KeepAlive,
+		Extended = 20,
 		Handshake,
 		Invalid
+	};
+
+	enum PeerExtendedMessageId
+	{
+		HandshakeEx = 0,
+		InvalidEx
 	};
 
 	struct PeerMessage
@@ -29,23 +37,20 @@ namespace Torrent
 
 		uint8_t peer_id[20];
 
-		struct
-		{
-			uint32_t index;
-			uint32_t begin;
-			uint32_t length;
-		} request;
-
-		struct
-		{
-			uint32_t index;
-			uint32_t begin;
-			std::vector<char> block;
-		} piece;
+		PieceBlockInfo request;
+		PieceBlock piece;
 
 		uint16_t port;
 		uint16_t messageSize = 0;
 
 		PeerMessage(std::vector<char>& data);
+
+		struct 
+		{
+			PeerExtendedMessageId id;
+
+			std::vector<char> handshakeExt;
+		}
+		extended;
 	};
 }

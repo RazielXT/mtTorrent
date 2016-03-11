@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Interface.h"
-#include "TorrentFileParser.h"
+#include "BencodeParser.h"
 #include "PeerCommunication.h"
 
 namespace Torrent

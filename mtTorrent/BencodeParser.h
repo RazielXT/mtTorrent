@@ -7,16 +7,19 @@
 
 namespace Torrent
 {
-	class TorrentFileParser
+	class BencodeParser
 	{
 	public:
 
-		bool parse(char* filename);
+		~BencodeParser();
+
+		bool parseFile(char* filename);
+		bool parse(std::vector<char>& buffer);
 
 		struct Object;
 
-		using TorrentList = std::vector<Object>;
-		using TorrentDictionary = std::map<std::string, Object>;
+		using BenList = std::vector<Object>;
+		using BenDictionary = std::map<std::string, Object>;
 
 		struct Object
 		{
@@ -24,35 +27,32 @@ namespace Torrent
 			//{
 			int i;
 			std::string txt;
-			TorrentList* l;
-			TorrentDictionary* dic;
+			BenList* l;
+			BenDictionary* dic;
 			//};
 
 			enum Type { None, Number, Text, List, Dictionary } type;
 
 			Object() { type = None; }
 			Object(Object& r) { type = r.type; txt = r.txt; i = r.i; l = r.l; dic = r.dic; r.type = None; }
-			//~Object() { if (type == List) delete l; if (type == Dictionary) delete dic; }
 			Object(int number) { i = number; type = Number; }
 			Object(std::string text) { txt = text; type = Text; }
-			Object(TorrentList* list) { l = list; type = List; }
-			Object(TorrentDictionary* dictionary) { dic = dictionary; type = Dictionary; }
+			Object(BenList* list) { l = list; type = List; }
+			Object(BenDictionary* dictionary) { dic = dictionary; type = Dictionary; }
+
+			void cleanup();
 		};
 
 		Object parsedData;
 
-		TorrentInfo info;
+		TorrentInfo parseTorrentInfo();
 
 	private:
 
-		void parseTorrentInfo();
-
-		void computeInfoHash();
-
 		Object parse(char** body);
 
-		TorrentList* parseList(char** body);
-		TorrentDictionary* parseDictionary(char** body);
+		BenList* parseList(char** body);
+		BenDictionary* parseDictionary(char** body);
 		std::string parseString(char** body);
 		int parseInt(char** body);
 
@@ -60,6 +60,6 @@ namespace Torrent
 		char* infoStart = nullptr;
 		char* infoEnd = nullptr;
 
-		enum ParseState {} state;
 	};
+
 }

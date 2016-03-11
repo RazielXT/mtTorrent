@@ -1,6 +1,6 @@
 #pragma once
 
-#include "TorrentFileParser.h"
+#include "BencodeParser.h"
 #include "TcpStream.h"
 #include "TrackerCommunication.h"
 #include "Interface.h"
@@ -16,7 +16,8 @@ namespace Torrent
 		void test();
 
 		ClientInfo client;
-		TorrentFileParser torrent;
+		BencodeParser torrentParser;
+		TorrentInfo torrentInfo;
 		TrackerCollector trackers;	
 		
 		void initIds();

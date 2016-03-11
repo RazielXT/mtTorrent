@@ -5,12 +5,12 @@
 
 namespace Torrent
 {
-	class DownloadManager
+	class ProgressScheduler
 	{
-		DownloadManager(TorrentInfo* torrent);
+		ProgressScheduler(TorrentInfo* torrent);
 
-		int getNextPieceDownload(PiecesProgress& source);
-		void addPiece(DownloadedPiece piece);
+		PieceDownloadInfo getNextPieceDownload(PiecesProgress& source);
+		void addDownloadedPiece(DownloadedPiece piece);
 		bool finished();
 
 		std::vector<DownloadedPiece> pieces;

@@ -30,8 +30,10 @@ void Communicator::initIds()
 
 void Communicator::test()
 {
-	if (!torrent.parse("D:\\pdf.torrent"))
+	if (!torrentParser.parseFile("D:\\pdf.torrent"))
 		return;
+
+	torrentInfo = torrentParser.parseTorrentInfo();
 
 		auto peers = trackers.announceAll();
 
@@ -43,7 +45,7 @@ void Communicator::test()
 
 			for (size_t i = 0; i < peers.size(); i++)
 			{
-				futures[i] = std::async(&PeerCommunication::start, &peer[i], &torrent.info, &client, peers[i]);
+				futures[i] = std::async(&PeerCommunication::start, &peer[i], &torrentInfo, &client, peers[i]);
 			}			
 
 			for (size_t i = 0; i < peers.size(); i++)
@@ -54,7 +56,7 @@ void Communicator::test()
 	
 }
 
-Torrent::Communicator::Communicator() : trackers(&client, &torrent.info)
+Torrent::Communicator::Communicator() : trackers(&client, &torrentInfo)
 {
 
 }

@@ -30,8 +30,10 @@ std::vector<char> PeerCommunication::getHandshakeMessage()
 	packet.add(static_cast<char>(protocol.length()));
 	packet.add(protocol.data(), protocol.size());
 
-	for (size_t i = 0; i < 8; i++)
-		packet.add(0);
+	char reserved_byte[8] = { 0 };
+	reserved_byte[5] |= 0x10;	//Extension Protocol
+
+	packet.add(reserved_byte, 8);
 
 	packet.add(torrent->infoHash.data(), torrent->infoHash.size());
 	packet.add(client->hashId, 20);
@@ -93,9 +95,20 @@ void Torrent::PeerCommunication::sendInterested()
 	stream.write(interestedMsg);
 }
 
+void Torrent::PeerCommunication::sendBlockRequest(PieceBlockInfo& block)
+{
+	PacketBuilder packet;
+	packet.add(Request);
+	packet.add32(block.index);
+	packet.add32(block.begin);
+	packet.add32(block.length);
+
+	stream.write(packet.getBuffer());
+}
+
 void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 {
-	std::cout << peerInfo.ipStr << "_ID2:" << std::to_string(message.id) << ", size: " << std::to_string(message.messageSize) << "\n";
+	std::cout << peerInfo.ipStr << "_ID:" << std::to_string(message.id) << ", size: " << std::to_string(message.messageSize) << "\n";
 
 	if (message.id == Bitfield)
 	{
@@ -114,10 +127,25 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 		std::cout << peerInfo.ipStr << "Percentage: " << std::to_string(pieces.getPercentage()) << "\n";
 	}
 
-	if (message.id == Interested)
+	if (message.id == Unchoke)
 	{
-		state.peerInterested = true;
-		stream.close();
+		state.amChoking = false;
+	}
+
+	if (message.id == Extended)
+	{
+		std::cout << peerInfo.ipStr << "_ID: Ext" << std::to_string(message.id) << "\n";
+
+		if (message.extended.id == HandshakeEx)
+		{
+			BencodeParser parser;
+			parser.parse(message.extended.handshakeExt);
+			
+			if (pex.load(parser.parsedData))
+			{
+				std::cout << peerInfo.ipStr << "Pex contacts: " << pex.contactsMessage << "\n";
+			}
+		}
 	}
 
 	if (message.id == Handshake)

@@ -1,10 +1,19 @@
-#include "TorrentFileParser.h"
+#include "BencodeParser.h"
 #include <iostream>
 #include <openssl/sha.h>
 
 using namespace Torrent;
 
-bool TorrentFileParser::parse(char* filename)
+bool BencodeParser::parse(std::vector<char>& buffer)
+{
+	char* data = &buffer[0];
+	bodyEnd = data + buffer.size();
+	parsedData = parse(&data);
+
+	return true;
+}
+
+bool BencodeParser::parseFile(char* filename)
 {
 	std::ifstream file(filename, std::ios_base::binary);
 
@@ -18,14 +27,7 @@ bool TorrentFileParser::parse(char* filename)
 		std::istreambuf_iterator<char>(file)),
 		(std::istreambuf_iterator<char>()));
 
-	char* data = &buffer[0];
-	bodyEnd = data + buffer.size();
-
-	parsedData = parse(&data);
-
-	parseTorrentInfo();
-
-	return true;
+	return parse(buffer);
 }
 
 size_t getPieceIndex(size_t pos, size_t pieceSize)
@@ -40,8 +42,10 @@ size_t getPieceIndex(size_t pos, size_t pieceSize)
 	return p;
 }
 
-void TorrentFileParser::parseTorrentInfo()
+TorrentInfo BencodeParser::parseTorrentInfo()
 {
+	TorrentInfo info;
+
 	if (parsedData.type == Object::Dictionary)
 	{
 		auto& dictionary = *parsedData.dic;
@@ -118,7 +122,8 @@ void TorrentFileParser::parseTorrentInfo()
 			else
 			{
 				size_t size = infoDictionary["length"].i;
-				info.files.push_back({infoDictionary["name"].txt, size, 0, 0, pieces.size() - 1, size});
+				auto endPos = size % info.pieceSize;
+				info.files.push_back({infoDictionary["name"].txt, size, 0, 0, pieces.size() - 1, endPos});
 			}
 
 			auto piecesNum = pieces.size() / 20;
@@ -126,23 +131,20 @@ void TorrentFileParser::parseTorrentInfo()
 			info.expectedBitfieldSize = piecesNum / 8 + addExpected;
 		}		
 	}
-
-	computeInfoHash();
-}
-
-void TorrentFileParser::computeInfoHash()
-{
+	
 	if (!infoStart || !infoEnd)
-		return;
+		return info;
 
 	info.infoHash.resize(SHA_DIGEST_LENGTH);
 
-	SHA1((unsigned char*) infoStart, infoEnd - infoStart, (unsigned char*)&info.infoHash[0]);
+	SHA1((unsigned char*)infoStart, infoEnd - infoStart, (unsigned char*)&info.infoHash[0]);
+
+	return info;
 }
 
 #define IS_NUM_CHAR(c) ((c >= '0') && (c <= '9'))
 
-TorrentFileParser::Object TorrentFileParser::parse(char** body)
+BencodeParser::Object BencodeParser::parse(char** body)
 {
 	Object obj;
 	char c = **body;
@@ -171,12 +173,12 @@ TorrentFileParser::Object TorrentFileParser::parse(char** body)
 
 int deep = 0;
 
-TorrentFileParser::TorrentList* TorrentFileParser::parseList(char** body)
+BencodeParser::BenList* BencodeParser::parseList(char** body)
 {
 	//l
 	(*body)++;
 
-	TorrentList* list = new TorrentList();
+	BenList* list = new BenList();
 
 	std::cout << "List start" << std::to_string(deep) << "\n";
 
@@ -196,12 +198,12 @@ TorrentFileParser::TorrentList* TorrentFileParser::parseList(char** body)
 	return list;
 }
 
-TorrentFileParser::TorrentDictionary* TorrentFileParser::parseDictionary(char** body)
+BencodeParser::BenDictionary* BencodeParser::parseDictionary(char** body)
 {
 	//d
 	(*body)++;
 
-	TorrentDictionary* dic = new TorrentDictionary();
+	BenDictionary* dic = new BenDictionary();
 
 	std::cout << "Dictionary start" << std::to_string(deep) << "\n";
 
@@ -234,7 +236,7 @@ TorrentFileParser::TorrentDictionary* TorrentFileParser::parseDictionary(char** 
 	return dic;
 }
 
-std::string TorrentFileParser::parseString(char** body)
+std::string BencodeParser::parseString(char** body)
 {
 	std::string len;
 	while (IS_NUM_CHAR(**body))
@@ -263,7 +265,7 @@ std::string TorrentFileParser::parseString(char** body)
 	return out;
 }
 
-int TorrentFileParser::parseInt(char** body)
+int BencodeParser::parseInt(char** body)
 {
 	//i
 	(*body)++;
@@ -284,4 +286,34 @@ int TorrentFileParser::parseInt(char** body)
 	std::cout << "Integer: " << num << "\n";
 
 	return std::stoi(num);
+}
+
+Torrent::BencodeParser::~BencodeParser()
+{
+	parsedData.cleanup();
+}
+
+void Torrent::BencodeParser::Object::cleanup()
+{
+	if (type == Dictionary)
+	{
+		for (auto& o : *dic)
+		{
+			o.second.cleanup();
+		}
+
+		delete dic;
+	}
+
+	if (type == List)
+	{
+		for (auto& o : *l)
+		{
+			o.cleanup();
+		}
+
+		delete l;
+	}
+
+	type = None;
 }

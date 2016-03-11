@@ -30,9 +30,6 @@
     <ClCompile Include="Network.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TorrentFileParser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="PeerCommunication.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -42,7 +39,13 @@
     <ClCompile Include="TrackerCommunication.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DownloadManager.cpp">
+    <ClCompile Include="ProgressScheduler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BencodeParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Extensions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -57,9 +60,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Network.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TorrentFileParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PacketHelper.h">
@@ -77,7 +77,13 @@
     <ClInclude Include="Interface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DownloadManager.h">
+    <ClInclude Include="ProgressScheduler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BencodeParser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Extensions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

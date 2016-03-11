@@ -55,9 +55,10 @@ PeerMessage::PeerMessage(std::vector<char>& data)
 		}
 		else if (id == Piece && size > 9)
 		{
-			piece.index = reader.pop32();
-			piece.begin = reader.pop32();
-			piece.block = reader.popBuffer(size - 9);
+			piece.info.index = reader.pop32();
+			piece.info.begin = reader.pop32();
+			piece.data = reader.popBuffer(size - 9);
+			piece.info.length = piece.data.size();
 		}
 		else if (id == Cancel && size == 13)
 		{
@@ -68,6 +69,15 @@ PeerMessage::PeerMessage(std::vector<char>& data)
 		else if (id == Port && size == 3)
 		{
 			port = reader.pop16();
+		}
+		else if (id == Extended && size > 2)
+		{
+			extended.id = PeerExtendedMessageId(reader.pop());
+
+			if (extended.id == HandshakeEx)
+				extended.handshakeExt = reader.popBuffer(size - 2);
+			else
+				reader.popBuffer(size - 2);
 		}
 	}
 

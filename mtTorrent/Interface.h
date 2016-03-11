@@ -37,9 +37,27 @@ namespace Torrent
 		std::string directory;
 	};
 
+	struct PieceBlockInfo
+	{
+		uint32_t index;
+		uint32_t begin;
+		uint32_t length;
+	};
+
+	struct PieceBlock
+	{
+		PieceBlockInfo info;
+		std::vector<char> data;
+	};
+
+	struct PieceDownloadInfo
+	{
+		std::vector<PieceBlockInfo> blocks;
+	};
+
 	struct DownloadedPiece
 	{
-		char* data;
+		std::vector<PieceBlock> blocks;
 		size_t index;
 	};
 
@@ -74,6 +92,8 @@ namespace Torrent
 		}
 	};
 
+	class ProgressScheduler;
+
 	struct ClientInfo
 	{
 		char hashId[20];
@@ -81,6 +101,8 @@ namespace Torrent
 
 		uint32_t listenPort = 80;
 		uint32_t maxPeersPerRequest = 40;
+
+		ProgressScheduler* scheduler;
 	};
 
 	extern uint32_t generateTransaction();
