@@ -45,12 +45,12 @@ void Communicator::test()
 	//client.network.resolver = &resolver;
 
 	std::vector<PeerInfo> peers;
-	//peers = trackers.announceAll();
+	peers = trackers.announceAll();
 
 	PeerInfo add;
 	add.port = 6881;
 	add.ipStr = "127.0.0.1";
-	peers.push_back(add);
+	//peers.push_back(add);
 
 	if (peers.size())
 	{
@@ -67,18 +67,25 @@ void Communicator::test()
 
 		std::thread service1([&io_service]() { io_service.run(); });
 
-		while (!peerComm.empty())
+		bool actives = true;
+		while (actives)
 		{
 			Sleep(50);
 
+			actives = false;
 			for (auto it = peerComm.begin(); it != peerComm.end();)
 			{
-				if (!(*it)->active)
+				if (!(*it)->active || progress.finished())
 				{
-					it = peerComm.erase(it);
+					if ((*it)->active)
+						(*it)->stop();
 				}
 				else
-					it++;
+				{
+					actives = true;		
+				}
+
+				it++;
 			}
 		}
 

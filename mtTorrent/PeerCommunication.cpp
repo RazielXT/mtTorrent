@@ -69,6 +69,14 @@ void PeerCommunication::connectionOpened()
 		handshake(peerInfo);
 }
 
+void Torrent::PeerCommunication::stop()
+{
+	if (active)
+		stream.close();
+
+	active = false;
+}
+
 void Torrent::PeerCommunication::connectionClosed()
 {
 	active = false;

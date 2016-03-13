@@ -38,6 +38,7 @@ namespace Torrent
 		DownloadedPiece downloadingPiece;
 
 		void start(TorrentInfo* torrent, PeerInfo peerInfo);
+		void stop();
 
 		void connectionOpened();
 		void handshake(PeerInfo& peerInfo);
