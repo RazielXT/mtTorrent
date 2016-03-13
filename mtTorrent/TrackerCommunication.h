@@ -60,8 +60,8 @@ namespace Torrent
 
 		AnnounceResponse announceUdpTracker(std::string host, std::string port);
 
-		std::vector<char> getAnnouncingRequest(ConnectMessage& response);
-		std::vector<char> getConnectRequest();
+		DataBuffer getAnnouncingRequest(ConnectMessage& response);
+		DataBuffer getConnectRequest();
 
 		ClientInfo* client;
 		TorrentInfo* torrent;

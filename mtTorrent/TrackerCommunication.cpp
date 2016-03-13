@@ -10,7 +10,7 @@ uint32_t Torrent::generateTransaction()
 	return static_cast<uint32_t>(rand());
 }
 
-ConnectMessage getConnectResponse(std::vector<char> buffer)
+ConnectMessage getConnectResponse(DataBuffer buffer)
 {
 	ConnectMessage out;
 
@@ -26,7 +26,7 @@ ConnectMessage getConnectResponse(std::vector<char> buffer)
 	return out;
 }
 
-AnnounceResponse getAnnounceResponse(std::vector<char> buffer)
+AnnounceResponse getAnnounceResponse(DataBuffer buffer)
 {
 	PacketReader packet(buffer);
 
@@ -43,17 +43,8 @@ AnnounceResponse getAnnounceResponse(std::vector<char> buffer)
 	for (size_t i = 0; i < count; i++)
 	{
 		PeerInfo p;
-		p.ip = packet.pop32();
+		p.setIp(packet.pop32());
 		p.port = packet.pop16();
-		p.index = static_cast<uint16_t>(i);
-
-		uint8_t ipAddr[4];
-		ipAddr[3] = *reinterpret_cast<uint8_t*>(&p.ip);
-		ipAddr[2] = *(reinterpret_cast<uint8_t*>(&p.ip) + 1);
-		ipAddr[1] = *(reinterpret_cast<uint8_t*>(&p.ip) + 2);
-		ipAddr[0] = *(reinterpret_cast<uint8_t*>(&p.ip) + 3);
-
-		p.ipStr = std::to_string(ipAddr[0]) + "." + std::to_string(ipAddr[1]) + "." + std::to_string(ipAddr[2]) + "." + std::to_string(ipAddr[3]);
 
 		resp.peers.push_back(p);
 	}
@@ -102,7 +93,7 @@ AnnounceResponse TrackerCommunication::announceUdpTracker(std::string host, std:
 	return announceMsg;
 }
 
-std::vector<char> TrackerCommunication::getAnnouncingRequest(ConnectMessage& response)
+DataBuffer TrackerCommunication::getAnnouncingRequest(ConnectMessage& response)
 {
 	auto transaction = generateTransaction();
 
@@ -131,7 +122,7 @@ std::vector<char> TrackerCommunication::getAnnouncingRequest(ConnectMessage& res
 	return packet.getBuffer();
 }
 
-std::vector<char> TrackerCommunication::getConnectRequest()
+DataBuffer TrackerCommunication::getConnectRequest()
 {
 	auto transaction = generateTransaction();
 	uint64_t connectId = 0x41727101980;
@@ -160,7 +151,7 @@ Torrent::TrackerCollector::TrackerCollector(ClientInfo* c, TorrentInfo* t)
 	torrent = t;
 }
 
-std::string cutStringPart(std::string& source, std::vector<char> endChars, int cutAdd)
+std::string cutStringPart(std::string& source, DataBuffer endChars, int cutAdd)
 {
 	auto id = source.find(endChars[0]);
 
@@ -183,7 +174,7 @@ std::string cutStringPart(std::string& source, std::vector<char> endChars, int c
 
 std::vector<PeerInfo> Torrent::TrackerCollector::announceAll()
 {
-	int max = std::min<int>(10, torrent->announceList.size());
+	size_t max = std::min<size_t>(10, torrent->announceList.size());
 	std::future<Torrent::AnnounceResponse> f[10];
 	TrackerCommunication comm[10];
 	int count = 0;

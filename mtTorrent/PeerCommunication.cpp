@@ -1,28 +1,33 @@
 #include "PeerCommunication.h"
 #include "PacketHelper.h"
 #include <iostream>
+#include "ProgressScheduler.h"
 
 using namespace Torrent;
 
-void PeerCommunication::start(TorrentInfo* tInfo, ClientInfo* cInfo, PeerInfo info)
+PeerCommunication::PeerCommunication(ClientInfo* cInfo) : stream(*cInfo->network.io_service)
 {
-	torrent = tInfo;
 	client = cInfo;
-	peerInfo = info;
+	ext.setInfo(cInfo);
 
-	pieces.piecesCount = torrent->pieces.size();
-
-	try
-	{
-		handshake(peerInfo);
-	}
-	catch (std::exception& e)
-	{
-		std::cout << "Exception: " << e.what() << "\n";
-	}
+	stream.setOnConnectCallback(std::bind(&PeerCommunication::connectionOpened, this));
+	stream.setOnCloseCallback(std::bind(&PeerCommunication::connectionClosed, this));
+	stream.setOnReceiveCallback(std::bind(&PeerCommunication::dataReceived, this));
 }
 
-std::vector<char> PeerCommunication::getHandshakeMessage()
+void PeerCommunication::start(TorrentInfo* tInfo, PeerInfo info)
+{
+	active = true;
+	torrent = tInfo;
+	peerInfo = info;
+
+	pieces.init(torrent->pieces.size());
+	
+	auto port = std::to_string(peerInfo.port);
+	stream.connect(peerInfo.ipStr, port);
+}
+
+DataBuffer PeerCommunication::getHandshakeMessage()
 {
 	std::string protocol = "BitTorrent protocol";
 
@@ -41,33 +46,32 @@ std::vector<char> PeerCommunication::getHandshakeMessage()
 	return packet.getBuffer();
 }
 
-bool PeerCommunication::handshake(PeerInfo& peerInfo)
+void PeerCommunication::handshake(PeerInfo& peerInfo)
 {
-	auto port = std::to_string(peerInfo.port);
-	stream.setTarget(peerInfo.ipStr.data(), port.data());
-
 	auto requestData = getHandshakeMessage();
 	stream.write(requestData);
-
-	return communicate();
 }
 
-bool PeerCommunication::communicate()
+void PeerCommunication::dataReceived()
 {
-	while (stream.active())
+	auto message = readNextStreamMessage();
+
+	while (message.id != Invalid)
 	{
-		Sleep(50);
-
-		auto message = readNextStreamMessage();
-
-		while (message.id != Invalid)
-		{
-			handleMessage(message);
-			message = readNextStreamMessage();
-		}
+		handleMessage(message);
+		message = readNextStreamMessage();
 	}
+}
 
-	return true;
+void PeerCommunication::connectionOpened()
+{
+	if(!state.finishedHandshake)
+		handshake(peerInfo);
+}
+
+void Torrent::PeerCommunication::connectionClosed()
+{
+	active = false;
 }
 
 Torrent::PeerMessage Torrent::PeerCommunication::readNextStreamMessage()
@@ -95,9 +99,16 @@ void Torrent::PeerCommunication::sendInterested()
 	stream.write(interestedMsg);
 }
 
+void Torrent::PeerCommunication::sendHandshakeExt()
+{
+	auto data = ext.getExtendedHandshakeMessage();
+	stream.write(data);
+}
+
 void Torrent::PeerCommunication::sendBlockRequest(PieceBlockInfo& block)
 {
 	PacketBuilder packet;
+	packet.add32(13);
 	packet.add(Request);
 	packet.add32(block.index);
 	packet.add32(block.begin);
@@ -106,9 +117,27 @@ void Torrent::PeerCommunication::sendBlockRequest(PieceBlockInfo& block)
 	stream.write(packet.getBuffer());
 }
 
+void Torrent::PeerCommunication::schedulePieceDownload()
+{
+	if (downloadingPieceInfo.blocks.empty())
+		downloadingPieceInfo = client->scheduler->getNextPieceDownload(pieces);
+
+	if (!downloadingPieceInfo.blocks.empty())
+	{
+		auto b = downloadingPieceInfo.blocks.back();
+		downloadingPieceInfo.blocks.pop_back();
+		downloadingPiece.index = b.index;
+		
+		sendBlockRequest(b);	
+	}
+	else
+		stream.close();
+}
+
 void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 {
 	std::cout << peerInfo.ipStr << "_ID:" << std::to_string(message.id) << ", size: " << std::to_string(message.messageSize) << "\n";
+	std::cout << "Read " << getTimestamp() << "\n";
 
 	if (message.id == Bitfield)
 	{
@@ -127,40 +156,73 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 		std::cout << peerInfo.ipStr << "Percentage: " << std::to_string(pieces.getPercentage()) << "\n";
 	}
 
+	if (message.id == Piece)
+	{
+		downloadingPiece.blocks.push_back({ message.piece });
+		std::cout << peerInfo.ipStr << " block added from " << std::to_string(downloadingPiece.index) << "\n";
+
+		if (downloadingPieceInfo.blocks.empty())
+		{
+			client->scheduler->addDownloadedPiece(downloadingPiece);
+			downloadingPiece.blocks.clear();
+
+			std::cout << peerInfo.ipStr << " Piece Added, Percentage: " << std::to_string(client->scheduler->getPercentage()) << "\n";
+		}
+
+		schedulePieceDownload();
+	}
+
 	if (message.id == Unchoke)
 	{
 		state.amChoking = false;
+
+		schedulePieceDownload();
 	}
 
 	if (message.id == Extended)
 	{
-		std::cout << peerInfo.ipStr << "_ID: Ext" << std::to_string(message.id) << "\n";
+		std::cout << peerInfo.ipStr << " Ext msg: " << std::string(message.extended.data.begin(), message.extended.data.end()) << "\n";
 
-		if (message.extended.id == HandshakeEx)
-		{
-			BencodeParser parser;
-			parser.parse(message.extended.handshakeExt);
-			
-			if (pex.load(parser.parsedData))
-			{
-				std::cout << peerInfo.ipStr << "Pex contacts: " << pex.contactsMessage << "\n";
-			}
-		}
+		auto type = ext.load(message.extended.id, message.extended.data);
+
+		std::cout << peerInfo.ipStr << " Ext Type " << std::to_string(message.extended.id) << " resolve :" << std::to_string(type) << "\n";
 	}
 
 	if (message.id == Handshake)
 	{
 		state.finishedHandshake = true;
 		std::cout << peerInfo.ipStr << "_has peer id:" << std::string(message.peer_id, message.peer_id + 20) << "\n";
+		
+		sendHandshakeExt();
 		sendInterested();
 	}
 }
 
 int gcount = 0;
 
+void Torrent::PeerInfo::setIp(uint32_t addr)
+{
+	ip = addr;
+
+	uint8_t ipAddr[4];
+	ipAddr[3] = *reinterpret_cast<uint8_t*>(&ip);
+	ipAddr[2] = *(reinterpret_cast<uint8_t*>(&ip) + 1);
+	ipAddr[1] = *(reinterpret_cast<uint8_t*>(&ip) + 2);
+	ipAddr[0] = *(reinterpret_cast<uint8_t*>(&ip) + 3);
+
+	ipStr = std::to_string(ipAddr[0]) + "." + std::to_string(ipAddr[1]) + "." + std::to_string(ipAddr[2]) + "." + std::to_string(ipAddr[3]);
+}
+
 float Torrent::PiecesProgress::getPercentage()
 {
-	return piecesCount / static_cast<float>(downloadedPieces);
+	return downloadedPieces / static_cast<float>(piecesCount);
+}
+
+
+void Torrent::PiecesProgress::init(size_t size)
+{
+	piecesCount = size;
+	piecesProgress.resize(size);
 }
 
 void Torrent::PiecesProgress::addPiece(size_t index)
@@ -179,7 +241,7 @@ bool Torrent::PiecesProgress::hasPiece(size_t index)
 	return piecesProgress[index];
 }
 
-void Torrent::PiecesProgress::fromBitfield(std::vector<char>& bitfield)
+void Torrent::PiecesProgress::fromBitfield(DataBuffer& bitfield)
 {
 	downloadedPieces = 0;
 
@@ -189,14 +251,14 @@ void Torrent::PiecesProgress::fromBitfield(std::vector<char>& bitfield)
 		unsigned char bitmask = 128 >> i % 8;
 
 		bool value = (bitfield[idx] & bitmask) != 0;
-		piecesProgress.push_back(value);
+		piecesProgress[i] = value;
 
 		if (value)
 			downloadedPieces++;
 	}
 }
 
-std::vector<char> Torrent::PiecesProgress::toBitfield()
+DataBuffer Torrent::PiecesProgress::toBitfield()
 {
 	return{};
 }

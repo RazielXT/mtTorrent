@@ -4,11 +4,29 @@
 
 using namespace Torrent;
 
-bool BencodeParser::parse(std::vector<char>& buffer)
+bool BencodeParser::parse(std::string& str)
 {
-	char* data = &buffer[0];
-	bodyEnd = data + buffer.size();
-	parsedData = parse(&data);
+	return parse(str.data(), str.size());
+}
+
+bool BencodeParser::parse(DataBuffer& buffer)
+{
+	return parse(buffer.data(), buffer.size());
+}
+
+bool BencodeParser::parse(const char* data, size_t length)
+{
+	infoHash.clear();
+	infoStart = infoEnd = nullptr;
+
+	bodyEnd = data + length;
+	parsedData = internalParse(&data);
+
+	if (infoStart && infoEnd)
+	{
+		infoHash.resize(SHA_DIGEST_LENGTH);
+		SHA1((const unsigned char*)infoStart, infoEnd - infoStart, (unsigned char*)&infoHash[0]);
+	}
 
 	return true;
 }
@@ -19,11 +37,11 @@ bool BencodeParser::parseFile(char* filename)
 
 	if (!file.good())
 	{
-		std::cout << "Failed to parse torrent file " << filename << "\n";
+		//std::cout << "Failed to parse torrent file " << filename << "\n";
 		return false;
 	}
 
-	std::vector<char> buffer((
+	DataBuffer buffer((
 		std::istreambuf_iterator<char>(file)),
 		(std::istreambuf_iterator<char>()));
 
@@ -97,13 +115,12 @@ TorrentInfo BencodeParser::parseTorrentInfo()
 
 				for (auto& f : files)
 				{
-					std::string path;
+					std::vector<std::string> path;
 
 					auto& pathList = *(*f.dic)["path"].l;
 					for (auto& p : pathList)
 					{
-						if (!path.empty()) path += "//";
-						path += p.txt;
+						path.push_back(p.txt);
 					}
 
 					size_t size = (*f.dic)["length"].i;
@@ -123,7 +140,8 @@ TorrentInfo BencodeParser::parseTorrentInfo()
 			{
 				size_t size = infoDictionary["length"].i;
 				auto endPos = size % info.pieceSize;
-				info.files.push_back({infoDictionary["name"].txt, size, 0, 0, pieces.size() - 1, endPos});
+				info.files.push_back({ {infoDictionary["name"].txt }, size, 0, 0, pieces.size() - 1, endPos
+			});
 			}
 
 			auto piecesNum = pieces.size() / 20;
@@ -131,20 +149,15 @@ TorrentInfo BencodeParser::parseTorrentInfo()
 			info.expectedBitfieldSize = piecesNum / 8 + addExpected;
 		}		
 	}
-	
-	if (!infoStart || !infoEnd)
-		return info;
 
-	info.infoHash.resize(SHA_DIGEST_LENGTH);
-
-	SHA1((unsigned char*)infoStart, infoEnd - infoStart, (unsigned char*)&info.infoHash[0]);
+	info.infoHash = infoHash;
 
 	return info;
 }
 
 #define IS_NUM_CHAR(c) ((c >= '0') && (c <= '9'))
 
-BencodeParser::Object BencodeParser::parse(char** body)
+BencodeParser::Object BencodeParser::internalParse(const char** body)
 {
 	Object obj;
 	char c = **body;
@@ -173,45 +186,45 @@ BencodeParser::Object BencodeParser::parse(char** body)
 
 int deep = 0;
 
-BencodeParser::BenList* BencodeParser::parseList(char** body)
+BencodeParser::BenList* BencodeParser::parseList(const char** body)
 {
 	//l
 	(*body)++;
 
 	BenList* list = new BenList();
 
-	std::cout << "List start" << std::to_string(deep) << "\n";
+	//std::cout << "List start" << std::to_string(deep) << "\n";
 
 	deep++;
 
 	while (**body != 'e' && (*body < bodyEnd))
 	{
-		list->push_back(parse(body));
+		list->push_back(internalParse(body));
 	}
 
 	(*body)++;
 
 	deep--;
 
-	std::cout << "List end" << std::to_string(deep) << "\n";
+	//std::cout << "List end" << std::to_string(deep) << "\n";
 
 	return list;
 }
 
-BencodeParser::BenDictionary* BencodeParser::parseDictionary(char** body)
+BencodeParser::BenDictionary* BencodeParser::parseDictionary(const char** body)
 {
 	//d
 	(*body)++;
 
 	BenDictionary* dic = new BenDictionary();
 
-	std::cout << "Dictionary start" << std::to_string(deep) << "\n";
+	//std::cout << "Dictionary start" << std::to_string(deep) << "\n";
 
 	deep++;
 
 	while (**body != 'e' && (*body < bodyEnd))
 	{
-		auto key = parse(body);
+		auto key = internalParse(body);
 
 		if (key.type != Object::Text)
 			throw;
@@ -219,7 +232,7 @@ BencodeParser::BenDictionary* BencodeParser::parseDictionary(char** body)
 		if (key.txt == "info")
 			infoStart = *body;
 
-		auto value = parse(body);
+		auto value = internalParse(body);
 
 		if (key.txt == "info")
 			infoEnd = *body;
@@ -231,12 +244,12 @@ BencodeParser::BenDictionary* BencodeParser::parseDictionary(char** body)
 
 	(*body)++;
 
-	std::cout << "Dictionary end" << std::to_string(deep) << "\n";
+	//std::cout << "Dictionary end" << std::to_string(deep) << "\n";
 
 	return dic;
 }
 
-std::string BencodeParser::parseString(char** body)
+std::string BencodeParser::parseString(const char** body)
 {
 	std::string len;
 	while (IS_NUM_CHAR(**body))
@@ -257,7 +270,7 @@ std::string BencodeParser::parseString(char** body)
 	(*body) += length;
 
 	if(out.length()<100)
-		std::cout << "String: " << out << "\n";
+		//std::cout << "String: " << out << "\n";
 
 	if (out == "pieces")
 		length++;
@@ -265,7 +278,7 @@ std::string BencodeParser::parseString(char** body)
 	return out;
 }
 
-int BencodeParser::parseInt(char** body)
+int BencodeParser::parseInt(const char** body)
 {
 	//i
 	(*body)++;
@@ -283,7 +296,7 @@ int BencodeParser::parseInt(char** body)
 
 	(*body)++;
 
-	std::cout << "Integer: " << num << "\n";
+	//std::cout << "Integer: " << num << "\n";
 
 	return std::stoi(num);
 }

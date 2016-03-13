@@ -1,10 +1,10 @@
 #pragma once
 #include <vector>
-#include "TcpStream.h"
+#include "TcpAsyncStream.h"
 #include "BencodeParser.h"
 #include "PeerMessage.h"
 #include "Interface.h"
-#include "Extensions.h"
+#include "ExtensionProtocol.h"
 
 namespace Torrent
 {
@@ -23,8 +23,9 @@ namespace Torrent
 	{
 	public:
 
-		PeerExchangeExtension pex;
+		PeerCommunication(ClientInfo* client);
 
+		ExtensionProtocol ext;
 		PeerState state;
 
 		PeerInfo peerInfo;
@@ -33,20 +34,28 @@ namespace Torrent
 
 		PiecesProgress pieces;
 
-		void start(TorrentInfo* torrent, ClientInfo* client, PeerInfo peerInfo);
+		PieceDownloadInfo downloadingPieceInfo;
+		DownloadedPiece downloadingPiece;
 
-		bool handshake(PeerInfo& peerInfo);
+		void start(TorrentInfo* torrent, PeerInfo peerInfo);
 
-		bool communicate();
+		void connectionOpened();
+		void handshake(PeerInfo& peerInfo);
 
-		std::vector<char> getHandshakeMessage();
+		void dataReceived();
+		void connectionClosed();
+		bool active = false;
+
+		DataBuffer getHandshakeMessage();
 
 		PeerMessage readNextStreamMessage();
-		TcpStream stream;
+		TcpAsyncStream stream;
 
 		void sendInterested();
+		void sendHandshakeExt();
 
 		void sendBlockRequest(PieceBlockInfo& block);
+		void schedulePieceDownload();
 
 		void handleMessage(PeerMessage& msg);
 	};

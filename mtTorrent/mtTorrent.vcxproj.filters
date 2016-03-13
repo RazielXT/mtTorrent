@@ -45,7 +45,10 @@
     <ClCompile Include="BencodeParser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Extensions.cpp">
+    <ClCompile Include="ExtensionProtocol.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TcpAsyncStream.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -83,7 +86,10 @@
     <ClInclude Include="BencodeParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Extensions.h">
+    <ClInclude Include="ExtensionProtocol.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TcpAsyncStream.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

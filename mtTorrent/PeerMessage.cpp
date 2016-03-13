@@ -3,7 +3,7 @@
 
 using namespace Torrent;
 
-PeerMessage::PeerMessage(std::vector<char>& data)
+PeerMessage::PeerMessage(DataBuffer& data)
 {
 	if (data.empty())
 		return;
@@ -58,7 +58,7 @@ PeerMessage::PeerMessage(std::vector<char>& data)
 			piece.info.index = reader.pop32();
 			piece.info.begin = reader.pop32();
 			piece.data = reader.popBuffer(size - 9);
-			piece.info.length = piece.data.size();
+			piece.info.length = static_cast<uint32_t>(piece.data.size());
 		}
 		else if (id == Cancel && size == 13)
 		{
@@ -72,12 +72,8 @@ PeerMessage::PeerMessage(std::vector<char>& data)
 		}
 		else if (id == Extended && size > 2)
 		{
-			extended.id = PeerExtendedMessageId(reader.pop());
-
-			if (extended.id == HandshakeEx)
-				extended.handshakeExt = reader.popBuffer(size - 2);
-			else
-				reader.popBuffer(size - 2);
+			extended.id = reader.pop();
+			extended.data = reader.popBuffer(size - 2);
 		}
 	}
 

@@ -4,6 +4,7 @@
 #include "TcpStream.h"
 #include "TrackerCommunication.h"
 #include "Interface.h"
+#include "ProgressScheduler.h"
 
 namespace Torrent
 {
@@ -19,7 +20,8 @@ namespace Torrent
 		BencodeParser torrentParser;
 		TorrentInfo torrentInfo;
 		TrackerCollector trackers;	
-		
+		ProgressScheduler scheduler;
+
 		void initIds();
 	};
 }

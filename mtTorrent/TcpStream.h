@@ -4,6 +4,7 @@
 #include <mutex>
 #include <future>
 #include <memory>
+#include <array>
 
 class TcpStream
 {
@@ -14,9 +15,9 @@ public:
 	void setTarget(const char* hostname, const char* port);
 	void setTimeout(int32_t msTimeout);
 
-	void write(std::vector<char> data);
+	void write(DataBuffer data);
 
-	std::vector<char> getReceivedData();
+	DataBuffer getReceivedData();
 	void consumeData(size_t size);
 	void resetData();
 
@@ -24,16 +25,19 @@ public:
 	void close();
 
 	//do not mix with async usage!!
-	std::vector<char> sendBlockingRequest(std::vector<char>& data);
+	DataBuffer sendBlockingRequest(DataBuffer& data);
 
 protected:
 
-	std::vector<char> buffer;
+	DataBuffer buffer;
 	std::mutex buffer_mutex;
+
+	//char recv_buf[128];
+	//void handleReceive(const boost::system::error_code& error, std::size_t bytes_transferred);
 
 	void socketListening();
 	void blockingRead();
-	void appendData(std::vector<char>& data);
+	void appendData(DataBuffer& data);
 
 	void connect(const char* hostname, const char* port);
 	bool connected();
@@ -48,5 +52,5 @@ protected:
 
 	std::string host;
 	std::string port;
-	int32_t timeout = 5000;
+	int32_t timeout = 15;
 };

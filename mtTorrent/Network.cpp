@@ -71,7 +71,7 @@ std::string sendHttpsRequest(ssl_socket& socket, tcp::resolver& resolver, boost:
 }
 
 
-std::vector<char> sendUdpRequest(udp::socket& socket, udp::resolver& resolver, std::vector<char> request, const char* hostname, const char* port, int32_t timeout)
+DataBuffer sendUdpRequest(udp::socket& socket, udp::resolver& resolver, DataBuffer request, const char* hostname, const char* port, int32_t timeout)
 {
 	setsockopt(socket.native(), SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
 	setsockopt(socket.native(), SOL_SOCKET, SO_SNDTIMEO, (const char*)&timeout, sizeof(timeout));
@@ -86,7 +86,7 @@ std::vector<char> sendUdpRequest(udp::socket& socket, udp::resolver& resolver, s
 
 	size_t len = socket.receive_from( boost::asio::buffer(recv_buf), sender_endpoint);
 
-	std::vector<char> out(recv_buf.data(), recv_buf.data() + len);
+	DataBuffer out(recv_buf.data(), recv_buf.data() + len);
 	return out;
 }
 
@@ -107,7 +107,7 @@ void openTcpSocket(tcp::socket& socket, tcp::resolver& resolver, const char* hos
 		throw boost::system::system_error(error);
 }
 
-std::vector<char> sendTcpRequest(tcp::socket& socket, std::vector<char>& request)
+DataBuffer sendTcpRequest(tcp::socket& socket, DataBuffer& request)
 {
 	boost::asio::streambuf sBuffer;
 	sBuffer.sputn(request.data(), request.size());
@@ -123,7 +123,7 @@ std::vector<char> sendTcpRequest(tcp::socket& socket, std::vector<char>& request
 	if (len > 0)
 	{
 		std::istream response_stream(&response);
-		std::vector<char> buffer;
+		DataBuffer buffer;
 
 		buffer.resize(len);
 		response_stream.read(&buffer[0], len);

@@ -14,7 +14,9 @@ namespace Torrent
 		~BencodeParser();
 
 		bool parseFile(char* filename);
-		bool parse(std::vector<char>& buffer);
+		bool parse(DataBuffer& buffer);
+		bool parse(std::string& str);
+		bool parse(const char* data, size_t length);
 
 		struct Object;
 
@@ -44,21 +46,22 @@ namespace Torrent
 		};
 
 		Object parsedData;
+		DataBuffer infoHash;
 
 		TorrentInfo parseTorrentInfo();
 
 	private:
 
-		Object parse(char** body);
+		Object internalParse(const char** body);
 
-		BenList* parseList(char** body);
-		BenDictionary* parseDictionary(char** body);
-		std::string parseString(char** body);
-		int parseInt(char** body);
+		BenList* parseList(const char** body);
+		BenDictionary* parseDictionary(const char** body);
+		std::string parseString(const char** body);
+		int parseInt(const char** body);
 
-		char* bodyEnd = nullptr;
-		char* infoStart = nullptr;
-		char* infoEnd = nullptr;
+		const char* bodyEnd = nullptr;
+		const char* infoStart = nullptr;
+		const char* infoEnd = nullptr;
 
 	};
 

@@ -37,14 +37,14 @@ struct PacketReader
 		return i;
 	}
 
-	std::vector<char> popBuffer(size_t size)
+	DataBuffer popBuffer(size_t size)
 	{
-		auto out = std::vector<char>(buf.begin() + pos, buf.begin() + pos + size);
+		auto out = DataBuffer(buf.begin() + pos, buf.begin() + pos + size);
 		pos += size;
 		return out;
 	}
 
-	PacketReader(std::vector<char>& buffer) : buf(buffer)
+	PacketReader(DataBuffer& buffer) : buf(buffer)
 	{
 	}
 
@@ -55,7 +55,7 @@ struct PacketReader
 
 private:
 
-	std::vector<char>& buf;
+	DataBuffer& buf;
 	size_t pos = 0;
 };
 
@@ -94,9 +94,9 @@ struct PacketBuilder
 		size += length;
 	}
 
-	std::vector<char> getBuffer()
+	DataBuffer getBuffer()
 	{
-		std::vector<char> out;
+		DataBuffer out;
 
 		out.resize(size);
 		buf.sgetn(&out[0], size);

@@ -22,18 +22,12 @@ namespace Torrent
 		Invalid
 	};
 
-	enum PeerExtendedMessageId
-	{
-		HandshakeEx = 0,
-		InvalidEx
-	};
-
 	struct PeerMessage
 	{
 		PeerMessageId id = Invalid;
 
 		uint32_t havePieceIndex;
-		std::vector<char> bitfield;
+		DataBuffer bitfield;
 
 		uint8_t peer_id[20];
 
@@ -43,14 +37,13 @@ namespace Torrent
 		uint16_t port;
 		uint16_t messageSize = 0;
 
-		PeerMessage(std::vector<char>& data);
+		PeerMessage(DataBuffer& data);
 
-		struct 
+		struct
 		{
-			PeerExtendedMessageId id;
-
-			std::vector<char> handshakeExt;
+			char id;
+			DataBuffer data;
 		}
-		extended;
+		extended;	
 	};
 }

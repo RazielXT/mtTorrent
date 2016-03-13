@@ -10,7 +10,7 @@ using namespace Torrent;
 
 void Communicator::initIds()
 {
-	srand(time(NULL));
+	srand((unsigned int)time(NULL));
 
 	{
 		client.hashId[0] = 'M';
@@ -30,33 +30,84 @@ void Communicator::initIds()
 
 void Communicator::test()
 {
-	if (!torrentParser.parseFile("D:\\pdf.torrent"))
+	if (!torrentParser.parseFile("D:\\best.torrent"))
 		return;
 
 	torrentInfo = torrentParser.parseTorrentInfo();
 
-		auto peers = trackers.announceAll();
+	ProgressScheduler progress(&torrentInfo);
+	client.scheduler = &progress;
 
-		if (peers.size())
+	boost::asio::io_service io_service;
+	//tcp::resolver resolver(io_service);
+
+	client.network.io_service = &io_service;
+	//client.network.resolver = &resolver;
+
+	std::vector<PeerInfo> peers;
+	//peers = trackers.announceAll();
+
+	PeerInfo add;
+	add.port = 6881;
+	add.ipStr = "127.0.0.1";
+	peers.push_back(add);
+
+	if (peers.size())
+	{
+		size_t peersCount = std::min<size_t>(40, peers.size());
+
+		std::vector<std::unique_ptr<PeerCommunication>> peerComm;
+		peerComm.resize(peersCount);
+
+		for (size_t i = 0; i < peersCount; i++)
 		{
-			PeerCommunication peer[400];
+			peerComm[i] = std::make_unique<PeerCommunication>(&client);
+			peerComm[i]->start(&torrentInfo, peers[i]);
+		}
 
-			std::future<void> futures[400];
+		std::thread service1([&io_service]() { io_service.run(); });
 
-			for (size_t i = 0; i < peers.size(); i++)
+		while (!peerComm.empty())
+		{
+			Sleep(50);
+
+			for (auto it = peerComm.begin(); it != peerComm.end();)
 			{
-				futures[i] = std::async(&PeerCommunication::start, &peer[i], &torrentInfo, &client, peers[i]);
-			}			
-
-			for (size_t i = 0; i < peers.size(); i++)
-			{
-				futures[i].get();
+				if (!(*it)->active)
+				{
+					it = peerComm.erase(it);
+				}
+				else
+					it++;
 			}
 		}
-	
+
+		service1.join();
+	}
+
+	if (progress.finished())
+	{
+		progress.exportFiles("D:\\");
+	}
 }
 
-Torrent::Communicator::Communicator() : trackers(&client, &torrentInfo)
+Torrent::Communicator::Communicator() : trackers(&client, &torrentInfo), scheduler(&torrentInfo)
 {
+	client.scheduler = &scheduler;
+}
 
+std::string getTimestamp()
+{
+	time_t timer;
+	struct tm y2k = { 0 };
+	double seconds;
+
+	y2k.tm_hour = 0;   y2k.tm_min = 0; y2k.tm_sec = 0;
+	y2k.tm_year = 100; y2k.tm_mon = 0; y2k.tm_mday = 1;
+
+	time(&timer);  /* get current time; same as: timer = time(NULL)  */
+
+	seconds = difftime(timer, mktime(&y2k));
+
+	return std::to_string(static_cast<int64_t>(seconds));
 }

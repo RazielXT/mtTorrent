@@ -1,5 +1,7 @@
 #include "TcpStream.h"
 #include <iostream>
+#include "Interface.h"
+#include <boost/asio/use_future.hpp>
 
 TcpStream::TcpStream() : resolver(io_service)
 {
@@ -46,16 +48,30 @@ void TcpStream::configureSocket()
 {
 	if (socket && timeout>0)
 	{
-		auto r = setsockopt(socket->native(), SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
-		r =setsockopt(socket->native(), SOL_SOCKET, SO_SNDTIMEO, (const char*)&timeout, sizeof(timeout));
+		//auto r = setsockopt(socket->native(), SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
+		//r =setsockopt(socket->native(), SOL_SOCKET, SO_SNDTIMEO, (const char*)&timeout, sizeof(timeout));
 	}
 }
+
+#define ASYNCTEST
+//#define ASYNCTEST_H
 
 void TcpStream::connect(const char* host, const char* port)
 {
 	openTcpSocket(*socket, resolver, host, port);
 
+#ifdef  ASYNCTEST_H
+
+	socket->async_receive(
+		boost::asio::buffer(recv_buf),	std::bind(&TcpStream::handleReceive, this,
+			std::placeholders::_1,
+			std::placeholders::_2));
+
+	std::thread([this]() { io_service.run(); }).detach();
+
+#else
 	std::thread(&TcpStream::socketListening, this).detach();
+#endif
 }
 
 bool TcpStream::connected()
@@ -63,7 +79,7 @@ bool TcpStream::connected()
 	return socket->is_open();
 }
 
-void TcpStream::write(std::vector<char> data)
+void TcpStream::write(DataBuffer data)
 {
 	boost::asio::streambuf dBuffer;
 	dBuffer.sputn(data.data(), data.size());
@@ -76,24 +92,18 @@ void TcpStream::write(std::vector<char> data)
 	}
 	catch (const std::exception&e)
 	{
-		std::cout << "Socket write exception: " << e.what() << "\n";
+		std::cout << host << " Socket write exception: " << e.what() << "\n";
 		close();
 	}
 }
 
+#ifndef  ASYNCTEST
+
 void TcpStream::socketListening()
 {
-	try
+	while (connected())
 	{
-		while (connected())
-		{
-			blockingRead();
-		}
-	}
-	catch (const std::exception&e)
-	{
-		std::cout << "Socket listening exception: " << e.what() << "\n";
-		close();
+		blockingRead();
 	}
 }
 
@@ -107,7 +117,7 @@ void TcpStream::blockingRead()
 	if (len > 0)
 	{
 		std::istream response_stream(&response);
-		std::vector<char> buffer;
+		DataBuffer buffer;
 
 		buffer.resize(len);
 		response_stream.read(&buffer[0], len);
@@ -116,23 +126,66 @@ void TcpStream::blockingRead()
 	}
 	else
 	{
-		if (error == boost::asio::error::eof)
-		{
-			close();
-		}
+		std::cout << "Socket listening exception: " << error.message() << "\n";
+		close();
+	}
+}
+#else
 
-		throw boost::system::system_error(error);
-	}		
+void TcpStream::socketListening()
+{
+	while (connected())
+	{		
+		blockingRead();
+	}
 }
 
-std::vector<char> TcpStream::getReceivedData()
+void TcpStream::blockingRead()
+{
+	std::array<char, 1024> recv_buf;
+	std::future<std::size_t> read_result = socket->async_receive(boost::asio::buffer(recv_buf), boost::asio::use_future);
+
+	std::thread([this]() { io_service.run(); }).detach();
+
+	if (read_result.wait_for(std::chrono::seconds(timeout)) == std::future_status::timeout)
+	{
+		std::cout << host << " Socket timeout\n";
+		close();
+	}
+	else
+	{
+		try
+		{
+			auto bytes_transferred = read_result.get();
+
+			std::cout << host << " Bytes: " << std::to_string(bytes_transferred) << "\n";
+
+			if (bytes_transferred > 0)
+			{
+				DataBuffer buffer(recv_buf.begin(), recv_buf.begin() + bytes_transferred);
+				appendData(buffer);
+
+				std::cout << host << " Read " << getTimestamp() << "\n";
+			}
+		}
+		catch (const std::exception&e)
+		{
+			std::cout << host << " socket listening exception: " << e.what() << "\n";
+			close();
+		}
+	}
+}
+
+#endif // ! ASYNCTEST
+
+DataBuffer TcpStream::getReceivedData()
 {
 	std::lock_guard<std::mutex> guard(buffer_mutex);
 
 	return buffer;
 }
 
-void TcpStream::appendData(std::vector<char>& data)
+void TcpStream::appendData(DataBuffer& data)
 {
 	std::lock_guard<std::mutex> guard(buffer_mutex);
 
@@ -153,7 +206,7 @@ void TcpStream::resetData()
 	buffer.clear();
 }
 
-std::vector<char> TcpStream::sendBlockingRequest(std::vector<char>& data)
+DataBuffer TcpStream::sendBlockingRequest(DataBuffer& data)
 {
 	try
 	{

@@ -123,7 +123,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Extensions.cpp" />
+    <ClCompile Include="ExtensionProtocol.cpp" />
     <ClCompile Include="ProgressScheduler.cpp" />
     <ClCompile Include="Network.cpp" />
     <ClCompile Include="main.cpp" />
@@ -131,12 +131,13 @@
     <ClCompile Include="PeerMessage.cpp" />
     <ClCompile Include="RiotRestApi.cpp" />
     <ClCompile Include="Communicator.cpp" />
+    <ClCompile Include="TcpAsyncStream.cpp" />
     <ClCompile Include="TcpStream.cpp" />
     <ClCompile Include="BencodeParser.cpp" />
     <ClCompile Include="TrackerCommunication.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Extensions.h" />
+    <ClInclude Include="ExtensionProtocol.h" />
     <ClInclude Include="ProgressScheduler.h" />
     <ClInclude Include="Interface.h" />
     <ClInclude Include="Network.h" />
@@ -145,6 +146,7 @@
     <ClInclude Include="PeerMessage.h" />
     <ClInclude Include="RiotRestApi.h" />
     <ClInclude Include="Communicator.h" />
+    <ClInclude Include="TcpAsyncStream.h" />
     <ClInclude Include="TcpStream.h" />
     <ClInclude Include="BencodeParser.h" />
     <ClInclude Include="TrackerCommunication.h" />
