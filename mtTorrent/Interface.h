@@ -11,6 +11,7 @@ namespace Torrent
 {
 	struct File
 	{
+		int id;
 		std::vector<std::string> path;
 		size_t size;
 		size_t startPieceIndex;
@@ -39,6 +40,22 @@ namespace Torrent
 		std::string directory;
 	};
 
+	namespace StorageType 
+	{
+		enum StorageEnum { File, Memory };
+	}	
+
+	struct SelectedFile
+	{
+		File file;
+		StorageType::StorageEnum storageType;
+	};
+
+	struct DownloadSelection
+	{
+		std::vector<SelectedFile> files;
+	};
+
 	struct PieceBlockInfo
 	{
 		uint32_t index;
@@ -59,8 +76,12 @@ namespace Torrent
 
 	struct DownloadedPiece
 	{
-		std::vector<PieceBlock> blocks;
+		DataBuffer data;
 		size_t index;
+		size_t dataSize;
+
+		void reset(size_t maxPieceSize);
+		void addBlock(PieceBlock& block);
 	};
 
 	struct PiecesProgress

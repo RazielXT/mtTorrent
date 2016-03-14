@@ -1,13 +1,22 @@
 #include "ProgressScheduler.h"
-#include <fstream>
 
-Torrent::ProgressScheduler::ProgressScheduler(TorrentInfo* t)
+Torrent::ProgressScheduler::ProgressScheduler(TorrentInfo* t) : storage(selection, t->pieceSize)
 {
 	torrent = t;
 	myProgress.init(torrent->pieces.size());
 	scheduledProgress.init(torrent->pieces.size());
+}
 
-	pieces.resize(myProgress.piecesCount);
+void Torrent::ProgressScheduler::selectFiles(std::vector<Torrent::File> dlSelection)
+{
+	selection.files.clear();
+
+	for (auto& f : dlSelection)
+	{
+		selection.files.push_back({ f, StorageType::Memory });
+	}
+
+	storage.selectionChanged();
 }
 
 Torrent::PieceDownloadInfo Torrent::ProgressScheduler::getNextPieceDownload(PiecesProgress& source)
@@ -36,7 +45,7 @@ Torrent::PieceDownloadInfo Torrent::ProgressScheduler::getNextPieceDownload(Piec
 					PieceBlockInfo block;
 					block.begin = j*blockRequestSize;
 					block.index = i;
-					block.length = std::min<uint32_t>(pieceSize - block.begin, blockRequestSize);
+					block.length = static_cast<uint32_t>(std::min(pieceSize - block.begin, blockRequestSize));
 
 					info.blocks.push_back(block);
 				}
@@ -66,7 +75,7 @@ Torrent::PieceDownloadInfo Torrent::ProgressScheduler::getNextPieceDownload(Piec
 					PieceBlockInfo block;
 					block.begin = j*blockRequestSize;
 					block.index = i;
-					block.length = std::min<uint32_t>(pieceSize - block.begin, blockRequestSize);
+					block.length = static_cast<uint32_t>(std::min(pieceSize - block.begin, blockRequestSize));
 
 					info.blocks.push_back(block);
 				}
@@ -79,11 +88,15 @@ Torrent::PieceDownloadInfo Torrent::ProgressScheduler::getNextPieceDownload(Piec
 	return info;
 }
 
-void Torrent::ProgressScheduler::addDownloadedPiece(DownloadedPiece piece)
+void Torrent::ProgressScheduler::addDownloadedPiece(DownloadedPiece& piece)
 {
 	std::lock_guard<std::mutex> guard(schedule_mutex);
 
-	pieces[piece.index] = piece;
+	if (myProgress.hasPiece(piece.index))
+		return;
+
+	storage.storePiece(piece);
+
 	myProgress.addPiece(piece.index);
 }
 
@@ -99,25 +112,6 @@ float Torrent::ProgressScheduler::getPercentage()
 
 void Torrent::ProgressScheduler::exportFiles(std::string path)
 {
-	DataBuffer file;
-
-	DataBuffer pieceTemp;
-	pieceTemp.resize(torrent->pieceSize);
-
-	for (auto& p : pieces)
-	{
-		size_t writtenSize = 0;
-
-		for (auto& b : p.blocks)
-		{
-			writtenSize += b.info.length;
-			memcpy(&pieceTemp[0] + b.info.begin, b.data.data(), b.info.length);
-		}
-
-		file.insert(file.end(), pieceTemp.begin(), pieceTemp.begin() + writtenSize);
-	}
-
-	std::ofstream fileOut(path + "ttt.pdf", std::ios_base::binary);
-	fileOut.write(file.data(), file.size());
+	storage.exportFiles(path);
 }
 

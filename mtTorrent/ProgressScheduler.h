@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Interface.h"
+#include "Storage.h"
 #include <mutex>
 
 namespace Torrent
@@ -11,15 +11,21 @@ namespace Torrent
 
 		ProgressScheduler(TorrentInfo* torrent);
 
+		void selectFiles(std::vector<File> selection);
+
 		PieceDownloadInfo getNextPieceDownload(PiecesProgress& source);
-		void addDownloadedPiece(DownloadedPiece piece);
+		void addDownloadedPiece(DownloadedPiece& piece);
+
 		bool finished();
 		float getPercentage();
+
 		void exportFiles(std::string path);
 
 	private:
 
-		std::vector<DownloadedPiece> pieces;
+		DownloadSelection selection;
+		Storage storage;
+
 		PiecesProgress scheduledProgress;
 		std::mutex schedule_mutex;
 

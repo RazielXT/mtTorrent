@@ -113,6 +113,7 @@ TorrentInfo BencodeParser::parseTorrentInfo()
 				size_t sizeSum = 0;
 				auto& files = *infoDictionary["files"].l;
 
+				int i = 0;
 				for (auto& f : files)
 				{
 					std::vector<std::string> path;
@@ -130,7 +131,7 @@ TorrentInfo BencodeParser::parseTorrentInfo()
 					auto endId = getPieceIndex(sizeSum, info.pieceSize);
 					auto endPos = sizeSum % info.pieceSize;
 
-					info.files.push_back({ path,  size, startId, startPos, endId, endPos});
+					info.files.push_back({ i++, path,  size, startId, startPos, endId, endPos});
 				}
 
 				if (sizeSum != 0)
@@ -140,7 +141,7 @@ TorrentInfo BencodeParser::parseTorrentInfo()
 			{
 				size_t size = infoDictionary["length"].i;
 				auto endPos = size % info.pieceSize;
-				info.files.push_back({ {infoDictionary["name"].txt }, size, 0, 0, pieces.size() - 1, endPos
+				info.files.push_back({ 0, {infoDictionary["name"].txt }, size, 0, 0, pieces.size() - 1, endPos
 			});
 			}
 

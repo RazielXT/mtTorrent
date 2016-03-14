@@ -36,6 +36,8 @@ void Communicator::test()
 	torrentInfo = torrentParser.parseTorrentInfo();
 
 	ProgressScheduler progress(&torrentInfo);
+	progress.selectFiles({ torrentInfo.files });
+
 	client.scheduler = &progress;
 
 	boost::asio::io_service io_service;

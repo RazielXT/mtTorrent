@@ -1,6 +1,7 @@
 *.aps
 *.ncb
 *.opensdf
+*.opendb
 *.sdf
 *.cfg
 *.cachefile

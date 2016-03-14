@@ -128,7 +128,10 @@ void Torrent::PeerCommunication::sendBlockRequest(PieceBlockInfo& block)
 void Torrent::PeerCommunication::schedulePieceDownload()
 {
 	if (downloadingPieceInfo.blocks.empty())
+	{
 		downloadingPieceInfo = client->scheduler->getNextPieceDownload(pieces);
+		downloadingPiece.reset(torrent->pieceSize);
+	}	
 
 	if (!downloadingPieceInfo.blocks.empty())
 	{
@@ -166,14 +169,12 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 
 	if (message.id == Piece)
 	{
-		downloadingPiece.blocks.push_back({ message.piece });
+		downloadingPiece.addBlock(message.piece);
 		std::cout << peerInfo.ipStr << " block added from " << std::to_string(downloadingPiece.index) << "\n";
 
 		if (downloadingPieceInfo.blocks.empty())
 		{
 			client->scheduler->addDownloadedPiece(downloadingPiece);
-			downloadingPiece.blocks.clear();
-
 			std::cout << peerInfo.ipStr << " Piece Added, Percentage: " << std::to_string(client->scheduler->getPercentage()) << "\n";
 		}
 
@@ -269,4 +270,16 @@ void Torrent::PiecesProgress::fromBitfield(DataBuffer& bitfield)
 DataBuffer Torrent::PiecesProgress::toBitfield()
 {
 	return{};
+}
+
+void DownloadedPiece::reset(size_t maxPieceSize)
+{
+	data.resize(maxPieceSize);
+	dataSize = 0;
+}
+
+void DownloadedPiece::addBlock(PieceBlock& block)
+{
+	dataSize += block.info.length;
+	memcpy(&data[0] + block.info.begin, block.data.data(), block.info.length);
 }

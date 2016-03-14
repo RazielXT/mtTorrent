@@ -131,6 +131,7 @@
     <ClCompile Include="PeerMessage.cpp" />
     <ClCompile Include="RiotRestApi.cpp" />
     <ClCompile Include="Communicator.cpp" />
+    <ClCompile Include="Storage.cpp" />
     <ClCompile Include="TcpAsyncStream.cpp" />
     <ClCompile Include="TcpStream.cpp" />
     <ClCompile Include="BencodeParser.cpp" />
@@ -146,6 +147,7 @@
     <ClInclude Include="PeerMessage.h" />
     <ClInclude Include="RiotRestApi.h" />
     <ClInclude Include="Communicator.h" />
+    <ClInclude Include="Storage.h" />
     <ClInclude Include="TcpAsyncStream.h" />
     <ClInclude Include="TcpStream.h" />
     <ClInclude Include="BencodeParser.h" />
