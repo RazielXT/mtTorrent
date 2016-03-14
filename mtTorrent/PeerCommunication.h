@@ -34,7 +34,8 @@ namespace Torrent
 
 		PiecesProgress pieces;
 
-		PieceDownloadInfo downloadingPieceInfo;
+		std::mutex schedule_mutex;
+		PieceDownloadInfo scheduledPieceInfo;
 		DownloadedPiece downloadingPiece;
 
 		void start(TorrentInfo* torrent, PeerInfo peerInfo);

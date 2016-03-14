@@ -8,7 +8,7 @@ namespace Torrent
 	{
 	public:
 
-		void prepare(File& file);
+		void prepare(File& file, size_t normalPieceSize);
 		void storePiece(File& file, DownloadedPiece& piece, size_t normalPieceSize);
 
 		std::map<int, DataBuffer> filesBuffer;

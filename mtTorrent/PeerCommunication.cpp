@@ -129,9 +129,9 @@ void Torrent::PeerCommunication::sendBlockRequest(PieceBlockInfo& block)
 
 void Torrent::PeerCommunication::schedulePieceDownload()
 {
-	if (downloadingPiece.receivedBlocks == downloadingPieceInfo.blocksCount)
+	if (downloadingPiece.receivedBlocks == scheduledPieceInfo.blocksCount)
 	{
-		downloadingPieceInfo = client->scheduler->getNextPieceDownload(pieces);
+		scheduledPieceInfo = client->scheduler->getNextPieceDownload(pieces);
 		downloadingPiece.reset(torrent->pieceSize);
 	}	
 
@@ -148,10 +148,10 @@ void Torrent::PeerCommunication::schedulePieceDownload()
 	}*/
 
 	for (size_t i = 0; i < 3; i++)
-	if (!downloadingPieceInfo.blocksLeft.empty())
+	if (!scheduledPieceInfo.blocksLeft.empty())
 	{
-		auto& b = downloadingPieceInfo.blocksLeft.back();
-		downloadingPieceInfo.blocksLeft.pop_back();
+		auto& b = scheduledPieceInfo.blocksLeft.back();
+		scheduledPieceInfo.blocksLeft.pop_back();
 		downloadingPiece.index = b.index;
 		sendBlockRequest(b);
 	}
@@ -181,10 +181,12 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 
 	if (message.id == Piece)
 	{
+		std::lock_guard<std::mutex> guard(schedule_mutex);
+
 		downloadingPiece.addBlock(message.piece);
 		std::cout << peerInfo.ipStr << " block added from " << std::to_string(downloadingPiece.index) << "\n";
 
-		if (downloadingPiece.receivedBlocks == downloadingPieceInfo.blocksCount)
+		if (downloadingPiece.receivedBlocks == scheduledPieceInfo.blocksCount)
 		{
 			client->scheduler->addDownloadedPiece(downloadingPiece);
 			std::cout << peerInfo.ipStr << " Piece Added, Percentage: " << std::to_string(client->scheduler->getPercentage()) << "\n";

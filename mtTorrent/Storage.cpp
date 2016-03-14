@@ -48,7 +48,7 @@ void Torrent::Storage::selectionChanged()
 	for (auto& s : selection.files)
 	{
 		if (s.storageType == StorageType::Memory)
-			memoryStorage.prepare(s.file);
+			memoryStorage.prepare(s.file, pieceSize);
 		if (s.storageType == StorageType::File)
 			fileStorage.prepare(s.file);
 	}
@@ -59,18 +59,9 @@ void MemoryStorage::storePiece(File& file, DownloadedPiece& piece, size_t normal
 {
 	auto& outBuffer = filesBuffer[file.id];
 
-	auto pieceStart = piece.data.data();
-	auto dataEnd = pieceStart + piece.dataSize;
+	size_t bufferStartOffset = (piece.index - file.startPieceIndex)*normalPieceSize;
 
-	if (piece.index == file.startPieceIndex)
-		pieceStart = pieceStart + file.startPiecePos;
-
-	if (piece.index == file.endPieceIndex)
-		dataEnd = std::min(dataEnd, pieceStart + file.endPiecePos);
-
-	size_t bufferStartOffset = (piece.index - file.startPieceIndex)*normalPieceSize - file.startPiecePos;
-
-	memcpy(&outBuffer[0] + bufferStartOffset, pieceStart, dataEnd - pieceStart);
+	memcpy(&outBuffer[0] + bufferStartOffset, piece.data.data(), normalPieceSize);
 }
 
 void MemoryStorage::exportFile(File& file, std::string path)
@@ -78,16 +69,17 @@ void MemoryStorage::exportFile(File& file, std::string path)
 	std::ofstream fileOut(path, std::ios_base::binary);
 
 	auto& data = filesBuffer[file.id];
-	fileOut.write(data.data(), data.size());
+	fileOut.write(data.data() + file.startPiecePos, file.size);
 }
 
-void Torrent::MemoryStorage::prepare(File& file)
+void Torrent::MemoryStorage::prepare(File& file, size_t normalPieceSize)
 {
 	auto& data = filesBuffer[file.id];
+	auto pieces = file.endPieceIndex - file.startPieceIndex + 1;
 
-	if (data.size() != file.size)
+	if (data.size() != pieces*normalPieceSize)
 	{
-		data.resize(file.size);
+		data.resize(pieces*normalPieceSize);
 	}
 }
 
