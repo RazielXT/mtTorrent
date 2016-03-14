@@ -52,7 +52,7 @@ size_t getPieceIndex(size_t pos, size_t pieceSize)
 {
 	size_t p = 0;
 
-	while (p*pieceSize < pos)
+	while (pieceSize + p*pieceSize < pos)
 	{
 		p++;
 	}

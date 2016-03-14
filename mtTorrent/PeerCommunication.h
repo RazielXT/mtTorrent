@@ -49,6 +49,7 @@ namespace Torrent
 
 		DataBuffer getHandshakeMessage();
 
+		std::mutex read_mutex;
 		PeerMessage readNextStreamMessage();
 		TcpAsyncStream stream;
 

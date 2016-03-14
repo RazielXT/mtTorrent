@@ -84,6 +84,8 @@ void Torrent::PeerCommunication::connectionClosed()
 
 Torrent::PeerMessage Torrent::PeerCommunication::readNextStreamMessage()
 {
+	std::lock_guard<std::mutex> guard(read_mutex);
+
 	auto data = stream.getReceivedData();
 	PeerMessage msg(data);
 
@@ -127,23 +129,27 @@ void Torrent::PeerCommunication::sendBlockRequest(PieceBlockInfo& block)
 
 void Torrent::PeerCommunication::schedulePieceDownload()
 {
-	if (downloadingPieceInfo.blocksLeft.empty())
+	if (downloadingPiece.receivedBlocks == downloadingPieceInfo.blocksCount)
 	{
 		downloadingPieceInfo = client->scheduler->getNextPieceDownload(pieces);
 		downloadingPiece.reset(torrent->pieceSize);
 	}	
 
-	if (!downloadingPieceInfo.blocksLeft.empty())
+	/*if (!downloadingPieceInfo.blocksLeft.empty())
 	{
-		/*auto blocks = downloadingPieceInfo.blocksLeft;
+		auto blocks = downloadingPieceInfo.blocksLeft;
 		downloadingPieceInfo.blocksLeft.clear();
 
 		for (auto& b : blocks)
 		{
 			downloadingPiece.index = b.index;
 			sendBlockRequest(b);
-		}*/
+		}
+	}*/
 
+	for (size_t i = 0; i < 3; i++)
+	if (!downloadingPieceInfo.blocksLeft.empty())
+	{
 		auto& b = downloadingPieceInfo.blocksLeft.back();
 		downloadingPieceInfo.blocksLeft.pop_back();
 		downloadingPiece.index = b.index;
