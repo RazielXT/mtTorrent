@@ -71,7 +71,8 @@ namespace Torrent
 
 	struct PieceDownloadInfo
 	{
-		std::vector<PieceBlockInfo> blocks;
+		std::vector<PieceBlockInfo> blocksLeft;
+		size_t blocksCount;
 	};
 
 	struct DownloadedPiece
@@ -82,6 +83,7 @@ namespace Torrent
 
 		void reset(size_t maxPieceSize);
 		void addBlock(PieceBlock& block);
+		size_t receivedBlocks = 0;
 	};
 
 	struct PiecesProgress

@@ -14,7 +14,7 @@ void Storage::storePiece(DownloadedPiece& piece)
 	{
 		auto& f = s.file;
 
-		if (f.startPieceIndex >= piece.index && f.endPieceIndex <= piece.index)
+		if (f.startPieceIndex <= piece.index && f.endPieceIndex >= piece.index)
 		{
 			if (s.storageType == StorageType::Memory)
 				memoryStorage.storePiece(f, piece, pieceSize);

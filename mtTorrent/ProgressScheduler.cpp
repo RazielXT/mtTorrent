@@ -24,6 +24,7 @@ Torrent::PieceDownloadInfo Torrent::ProgressScheduler::getNextPieceDownload(Piec
 	std::lock_guard<std::mutex> guard(schedule_mutex);
 
 	Torrent::PieceDownloadInfo info;
+	info.blocksCount = 0;
 
 	for (int i = 0; i < myProgress.piecesCount; i++)
 	{
@@ -47,9 +48,10 @@ Torrent::PieceDownloadInfo Torrent::ProgressScheduler::getNextPieceDownload(Piec
 					block.index = i;
 					block.length = static_cast<uint32_t>(std::min(pieceSize - block.begin, blockRequestSize));
 
-					info.blocks.push_back(block);
+					info.blocksLeft.push_back(block);
 				}
 
+				info.blocksCount = info.blocksLeft.size();
 				return info;
 			}
 		}
@@ -77,9 +79,10 @@ Torrent::PieceDownloadInfo Torrent::ProgressScheduler::getNextPieceDownload(Piec
 					block.index = i;
 					block.length = static_cast<uint32_t>(std::min(pieceSize - block.begin, blockRequestSize));
 
-					info.blocks.push_back(block);
+					info.blocksLeft.push_back(block);
 				}
 
+				info.blocksCount = info.blocksLeft.size();
 				return info;
 			}
 		}

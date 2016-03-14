@@ -30,7 +30,7 @@ void Communicator::initIds()
 
 void Communicator::test()
 {
-	if (!torrentParser.parseFile("D:\\best.torrent"))
+	if (!torrentParser.parseFile("D:\\anime.torrent"))
 		return;
 
 	torrentInfo = torrentParser.parseTorrentInfo();
@@ -47,12 +47,12 @@ void Communicator::test()
 	//client.network.resolver = &resolver;
 
 	std::vector<PeerInfo> peers;
-	peers = trackers.announceAll();
+	//peers = trackers.announceAll();
 
 	PeerInfo add;
 	add.port = 6881;
 	add.ipStr = "127.0.0.1";
-	//peers.push_back(add);
+	peers.push_back(add);
 
 	if (peers.size())
 	{
@@ -68,6 +68,7 @@ void Communicator::test()
 		}
 
 		std::thread service1([&io_service]() { io_service.run(); });
+		std::thread service2([&io_service]() { io_service.run(); });
 
 		bool actives = true;
 		while (actives)
@@ -92,6 +93,7 @@ void Communicator::test()
 		}
 
 		service1.join();
+		service2.join();
 	}
 
 	if (progress.finished())
