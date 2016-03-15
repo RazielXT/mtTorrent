@@ -129,11 +129,17 @@ void Torrent::PeerCommunication::sendBlockRequest(PieceBlockInfo& block)
 
 void Torrent::PeerCommunication::schedulePieceDownload()
 {
+	const int batchSize = 8;
+	static int pieceTodo = 0;
+
 	if (downloadingPiece.receivedBlocks == scheduledPieceInfo.blocksCount)
 	{
 		scheduledPieceInfo = client->scheduler->getNextPieceDownload(pieces);
 		downloadingPiece.reset(torrent->pieceSize);
+		pieceTodo = 0;
 	}	
+	else
+		pieceTodo = std::max(0, pieceTodo - 1);
 
 	/*if (!downloadingPieceInfo.blocksLeft.empty())
 	{
@@ -147,20 +153,22 @@ void Torrent::PeerCommunication::schedulePieceDownload()
 		}
 	}*/
 
-	for (size_t i = 0; i < 3; i++)
+	if(pieceTodo<4)
+	for (size_t i = 0; i < batchSize; i++)
 	if (!scheduledPieceInfo.blocksLeft.empty())
 	{
 		auto& b = scheduledPieceInfo.blocksLeft.back();
 		scheduledPieceInfo.blocksLeft.pop_back();
 		downloadingPiece.index = b.index;
 		sendBlockRequest(b);
+		pieceTodo++;
 	}
 }
 
 void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 {
 	std::cout << peerInfo.ipStr << "_ID:" << std::to_string(message.id) << ", size: " << std::to_string(message.messageSize) << "\n";
-	std::cout << "Read " << getTimestamp() << "\n";
+	//std::cout << "Read " << getTimestamp() << "\n";
 
 	if (message.id == Bitfield)
 	{
@@ -184,7 +192,7 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 		std::lock_guard<std::mutex> guard(schedule_mutex);
 
 		downloadingPiece.addBlock(message.piece);
-		std::cout << peerInfo.ipStr << " block added from " << std::to_string(downloadingPiece.index) << "\n";
+		std::cout << peerInfo.ipStr << " block, index " << downloadingPiece.index << "==" << message.piece.info.index << " ,offset " << std::hex << message.piece.info.begin << "\n";
 
 		if (downloadingPiece.receivedBlocks == scheduledPieceInfo.blocksCount)
 		{
@@ -197,9 +205,14 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 
 	if (message.id == Unchoke)
 	{
-		state.amChoking = false;
+		std::lock_guard<std::mutex> guard(schedule_mutex);
 
-		schedulePieceDownload();
+		if (state.amChoking)
+		{
+			state.amChoking = false;
+
+			schedulePieceDownload();
+		}
 	}
 
 	if (message.id == Extended)

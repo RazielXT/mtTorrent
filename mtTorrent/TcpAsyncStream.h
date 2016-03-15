@@ -40,7 +40,7 @@ protected:
 	std::deque<DataBuffer> write_msgs;
 	void handle_write(const boost::system::error_code& error);
 
-	std::array<char, 128> recv_buffer;
+	std::array<char, 1024> recv_buffer;
 	void handle_receive(const boost::system::error_code& error, std::size_t bytes_transferred);
 	void appendData(char* data, size_t size);
 	std::mutex receiveBuffer_mutex;

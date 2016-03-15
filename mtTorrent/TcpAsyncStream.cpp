@@ -115,7 +115,9 @@ void TcpAsyncStream::handle_connect(const boost::system::error_code& error, tcp:
 
 void TcpAsyncStream::do_close()
 {
-	socket.close();
+	if (socket.is_open())
+		socket.close();
+
 	state = Disconnected;
 }
 

@@ -30,13 +30,13 @@ void Communicator::initIds()
 
 void Communicator::test()
 {
-	if (!torrentParser.parseFile("D:\\anime.torrent"))
+	if (!torrentParser.parseFile("D:\\count.torrent"))
 		return;
 
 	torrentInfo = torrentParser.parseTorrentInfo();
 
 	ProgressScheduler progress(&torrentInfo);
-	progress.selectFiles({ torrentInfo.files });
+	progress.selectFiles({ torrentInfo.files[3], torrentInfo.files[4], torrentInfo.files[5] });
 
 	client.scheduler = &progress;
 
@@ -69,6 +69,8 @@ void Communicator::test()
 
 		std::thread service1([&io_service]() { io_service.run(); });
 		std::thread service2([&io_service]() { io_service.run(); });
+		std::thread service3([&io_service]() { io_service.run(); });
+		std::thread service4([&io_service]() { io_service.run(); });
 
 		bool actives = true;
 		while (actives)
