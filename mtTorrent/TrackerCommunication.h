@@ -18,7 +18,7 @@ namespace Torrent
 		std::vector<PeerInfo> peers;
 	};
 
-	struct ConnectMessage
+	struct ConnectResponse
 	{
 		uint64_t connectionId;
 		uint32_t action;
@@ -60,7 +60,7 @@ namespace Torrent
 
 		AnnounceResponse announceUdpTracker(std::string host, std::string port);
 
-		DataBuffer getAnnouncingRequest(ConnectMessage& response);
+		DataBuffer getAnnouncingRequest(ConnectResponse& response);
 		DataBuffer getConnectRequest();
 
 		ClientInfo* client;

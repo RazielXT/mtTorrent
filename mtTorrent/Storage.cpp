@@ -6,6 +6,7 @@ using namespace Torrent;
 Storage::Storage(DownloadSelection& s, size_t piecesz) : selection(s)
 {
 	pieceSize = piecesz;
+	selectionChanged();
 }
 
 void Storage::storePiece(DownloadedPiece& piece)
@@ -47,6 +48,8 @@ void Torrent::Storage::selectionChanged()
 {
 	for (auto& s : selection.files)
 	{
+		s.storageType = StorageType::Memory;
+
 		if (s.storageType == StorageType::Memory)
 			memoryStorage.prepare(s.file, pieceSize);
 		if (s.storageType == StorageType::File)

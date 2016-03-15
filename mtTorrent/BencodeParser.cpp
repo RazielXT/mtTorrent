@@ -96,7 +96,7 @@ TorrentInfo BencodeParser::parseTorrentInfo()
 			
 			if (pieces.size() % 20 == 0)
 			{
-				PieceObj temp;
+				PieceInfo temp;
 				auto end = pieces.data() + pieces.size();
 
 				for (auto it = pieces.data(); it != end; it += 20)

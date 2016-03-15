@@ -19,6 +19,28 @@ void Torrent::ProgressScheduler::selectFiles(std::vector<Torrent::File> dlSelect
 	storage.selectionChanged();
 }
 
+std::vector<Torrent::PieceBlockInfo> getPieceBlocks(int index, Torrent::TorrentInfo* torrent)
+{
+	std::vector<Torrent::PieceBlockInfo> out;
+	const size_t blockRequestSize = 16 * 1024;
+	size_t pieceSize = torrent->pieceSize;
+
+	if (index == torrent->pieces.size() - 1)
+		pieceSize = torrent->files.back().endPiecePos;
+
+	for (int j = 0; j*blockRequestSize < pieceSize; j++)
+	{
+		Torrent::PieceBlockInfo block;
+		block.begin = j*blockRequestSize;
+		block.index = index;
+		block.length = static_cast<uint32_t>(std::min(pieceSize - block.begin, blockRequestSize));
+
+		out.push_back(block);
+	}
+
+	return out;
+}
+
 Torrent::PieceDownloadInfo Torrent::ProgressScheduler::getNextPieceDownload(PiecesProgress& source)
 {
 	std::lock_guard<std::mutex> guard(schedule_mutex);
@@ -30,58 +52,15 @@ Torrent::PieceDownloadInfo Torrent::ProgressScheduler::getNextPieceDownload(Piec
 	{
 		if (source.hasPiece(i))
 		{
-			if (!scheduledProgress.hasPiece(i))
+			bool needsSchedule = !scheduledProgress.hasPiece(i);
+			bool fullRetry = scheduledProgress.finished() && !myProgress.hasPiece(i);
+
+			if (needsSchedule || fullRetry)
 			{
 				scheduledProgress.addPiece(i);
-				Torrent::PieceDownloadInfo info;
-
-				const size_t blockRequestSize = 16 * 1024;
-				size_t pieceSize = torrent->pieceSize;
-
-				if (i == myProgress.piecesCount - 1)
-					pieceSize = torrent->files.back().endPiecePos;
-
-				for (int j = 0; j*blockRequestSize < pieceSize; j++)
-				{
-					PieceBlockInfo block;
-					block.begin = j*blockRequestSize;
-					block.index = i;
-					block.length = static_cast<uint32_t>(std::min(pieceSize - block.begin, blockRequestSize));
-
-					info.blocksLeft.push_back(block);
-				}
-
-				info.blocksCount = info.blocksLeft.size();
-				return info;
-			}
-		}
-	}
-
-	for (int i = 0; i < myProgress.piecesCount; i++)
-	{
-		if (source.hasPiece(i))
-		{
-			if (!myProgress.hasPiece(i))
-			{
-				scheduledProgress.addPiece(i);
-				Torrent::PieceDownloadInfo info;
-
-				const size_t blockRequestSize = 16 * 1024;
-				size_t pieceSize = torrent->pieceSize;
-
-				if (i == myProgress.piecesCount - 1)
-					pieceSize = torrent->files.back().endPiecePos;
-
-				for (int j = 0; j*blockRequestSize < pieceSize; j++)
-				{
-					PieceBlockInfo block;
-					block.begin = j*blockRequestSize;
-					block.index = i;
-					block.length = static_cast<uint32_t>(std::min(pieceSize - block.begin, blockRequestSize));
-
-					info.blocksLeft.push_back(block);
-				}
-
+				
+				info.blocksLeft = getPieceBlocks(i, torrent);
+				info.hash = torrent->pieces[i].hash;
 				info.blocksCount = info.blocksLeft.size();
 				return info;
 			}

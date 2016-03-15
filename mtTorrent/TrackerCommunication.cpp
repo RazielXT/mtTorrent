@@ -5,16 +5,12 @@
 
 using namespace Torrent;
 
-uint32_t Torrent::generateTransaction()
-{
-	return static_cast<uint32_t>(rand());
-}
 
-ConnectMessage getConnectResponse(DataBuffer buffer)
+ConnectResponse getConnectResponse(DataBuffer buffer)
 {
-	ConnectMessage out;
+	ConnectResponse out;
 
-	if (buffer.size() >= sizeof ConnectMessage)
+	if (buffer.size() >= sizeof ConnectResponse)
 	{
 		PacketReader packet(buffer);
 
@@ -93,7 +89,7 @@ AnnounceResponse TrackerCommunication::announceUdpTracker(std::string host, std:
 	return announceMsg;
 }
 
-DataBuffer TrackerCommunication::getAnnouncingRequest(ConnectMessage& response)
+DataBuffer TrackerCommunication::getAnnouncingRequest(ConnectResponse& response)
 {
 	auto transaction = generateTransaction();
 

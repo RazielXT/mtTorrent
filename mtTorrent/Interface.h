@@ -20,7 +20,7 @@ namespace Torrent
 		size_t endPiecePos;
 	};
 
-	struct PieceObj
+	struct PieceInfo
 	{
 		char hash[20];
 	};
@@ -32,7 +32,7 @@ namespace Torrent
 
 		DataBuffer infoHash;
 
-		std::vector<PieceObj> pieces;
+		std::vector<PieceInfo> pieces;
 		size_t pieceSize;
 		size_t expectedBitfieldSize;
 
@@ -73,6 +73,7 @@ namespace Torrent
 	{
 		std::vector<PieceBlockInfo> blocksLeft;
 		size_t blocksCount;
+		char* hash;
 	};
 
 	struct DownloadedPiece
@@ -91,6 +92,7 @@ namespace Torrent
 		void init(size_t size);
 		size_t piecesCount = 0;
 
+		bool finished();
 		float getPercentage();
 		void addPiece(size_t index);
 		bool hasPiece(size_t index);
@@ -101,7 +103,7 @@ namespace Torrent
 	private:
 
 		std::vector<bool> piecesProgress;
-		size_t downloadedPieces = 0;
+		size_t addedPieces = 0;
 	};
 
 	struct PeerInfo

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "BencodeParser.h"
-#include "TcpStream.h"
 #include "TrackerCommunication.h"
 #include "Interface.h"
 #include "ProgressScheduler.h"

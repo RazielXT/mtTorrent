@@ -124,6 +124,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ExtensionProtocol.cpp" />
+    <ClCompile Include="Interface.cpp" />
     <ClCompile Include="ProgressScheduler.cpp" />
     <ClCompile Include="Network.cpp" />
     <ClCompile Include="main.cpp" />
@@ -133,7 +134,6 @@
     <ClCompile Include="Communicator.cpp" />
     <ClCompile Include="Storage.cpp" />
     <ClCompile Include="TcpAsyncStream.cpp" />
-    <ClCompile Include="TcpStream.cpp" />
     <ClCompile Include="BencodeParser.cpp" />
     <ClCompile Include="TrackerCommunication.cpp" />
   </ItemGroup>
@@ -149,7 +149,6 @@
     <ClInclude Include="Communicator.h" />
     <ClInclude Include="Storage.h" />
     <ClInclude Include="TcpAsyncStream.h" />
-    <ClInclude Include="TcpStream.h" />
     <ClInclude Include="BencodeParser.h" />
     <ClInclude Include="TrackerCommunication.h" />
   </ItemGroup>
