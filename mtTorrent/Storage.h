@@ -30,16 +30,16 @@ namespace Torrent
 	{
 	public:
 
-		Storage(DownloadSelection& selection, size_t pieceSize);
+		Storage(size_t pieceSize);
 
 		void storePiece(DownloadedPiece& piece);
 		void exportFiles(std::string path);
-		void selectionChanged();
+		void selectFiles(std::vector<Torrent::File>& files);
 
 		MemoryStorage memoryStorage;
 		FileStorage fileStorage;
 
-		DownloadSelection& selection;
+		DownloadSelection selection;
 		size_t pieceSize;
 	};
 }

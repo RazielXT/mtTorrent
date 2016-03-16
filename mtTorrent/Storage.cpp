@@ -3,10 +3,9 @@
 
 using namespace Torrent;
 
-Storage::Storage(DownloadSelection& s, size_t piecesz) : selection(s)
+Storage::Storage(size_t piecesz)
 {
 	pieceSize = piecesz;
-	selectionChanged();
 }
 
 void Storage::storePiece(DownloadedPiece& piece)
@@ -44,19 +43,22 @@ void Storage::exportFiles(std::string path)
 	}
 }
 
-void Torrent::Storage::selectionChanged()
+void Torrent::Storage::selectFiles(std::vector<Torrent::File>& files)
 {
-	for (auto& s : selection.files)
-	{
-		s.storageType = StorageType::Memory;
+	selection.files.clear();
 
-		if (s.storageType == StorageType::Memory)
-			memoryStorage.prepare(s.file, pieceSize);
-		if (s.storageType == StorageType::File)
-			fileStorage.prepare(s.file);
+	for (auto& f : files)
+	{
+		auto storageType = StorageType::Memory;
+
+		selection.files.push_back({ f, storageType });
+
+		if (storageType == StorageType::Memory)
+			memoryStorage.prepare(f, pieceSize);
+		if (storageType == StorageType::File)
+			fileStorage.prepare(f);
 	}
 }
-
 
 void MemoryStorage::storePiece(File& file, DownloadedPiece& piece, size_t normalPieceSize)
 {

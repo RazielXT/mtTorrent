@@ -23,7 +23,6 @@ namespace Torrent
 
 	private:
 
-		DownloadSelection selection;
 		Storage storage;
 
 		PiecesProgress scheduledProgress;

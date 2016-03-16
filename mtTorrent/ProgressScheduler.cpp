@@ -14,14 +14,7 @@ void Torrent::ProgressScheduler::selectFiles(std::vector<Torrent::File> dlSelect
 	myProgress.setSelection(dlSelection);
 	scheduledProgress.setSelection(dlSelection);
 
-	selection.files.clear();
-
-	for (auto& f : dlSelection)
-	{
-		selection.files.push_back({ f, StorageType::Memory });
-	}
-
-	storage.selectionChanged();
+	storage.selectFiles(dlSelection);
 }
 
 std::vector<Torrent::PieceBlockInfo> makePieceBlocks(int index, Torrent::TorrentInfo* torrent)
