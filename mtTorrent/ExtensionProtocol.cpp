@@ -16,7 +16,7 @@ void Torrent::PeerExchangeExtension::load(BencodeParser::Object& data)
 			added = add->second.txt;
 			size_t pos = 0;
 
-			while (added.size() + pos <= 6)
+			while (added.size() - pos >= 6)
 			{
 				uint32_t ip = swap32(*reinterpret_cast<uint32_t*>(&added[0] + pos));
 

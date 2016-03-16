@@ -30,13 +30,14 @@ void Communicator::initIds()
 
 void Communicator::test()
 {
-	if (!torrentParser.parseFile("D:\\count.torrent"))
+	if (!torrentParser.parseFile("D:\\punch.torrent"))
 		return;
 
 	torrentInfo = torrentParser.parseTorrentInfo();
 
 	ProgressScheduler progress(&torrentInfo);
-	progress.selectFiles({ torrentInfo.files[3], torrentInfo.files[10], torrentInfo.files[12] });
+	//progress.selectFiles({ torrentInfo.files[3], torrentInfo.files[10], torrentInfo.files[12] });
+	progress.selectFiles(torrentInfo.files);
 
 	client.scheduler = &progress;
 
@@ -47,23 +48,24 @@ void Communicator::test()
 	//client.network.resolver = &resolver;
 
 	std::vector<PeerInfo> peers;
-	//peers = trackers.announceAll();
+	peers = trackers.announceAll();
 
 	PeerInfo add;
 	add.port = 6881;
 	add.ipStr = "127.0.0.1";
-	peers.push_back(add);
+	//peers.push_back(add);
 
 	if (peers.size())
 	{
 		size_t peersCount = std::min<size_t>(40, peers.size());
+		int addedPeersId = 40;
 
-		std::vector<std::unique_ptr<PeerCommunication>> peerComm;
+		std::vector<PeerCommunication*> peerComm;
 		peerComm.resize(peersCount);
 
 		for (size_t i = 0; i < peersCount; i++)
 		{
-			peerComm[i] = std::make_unique<PeerCommunication>(&client);
+			peerComm[i] =new PeerCommunication(&client);
 			peerComm[i]->start(&torrentInfo, peers[i]);
 		}
 
@@ -74,13 +76,28 @@ void Communicator::test()
 		{
 			Sleep(50);
 
+			std::vector<PeerInfo> pexAdd;
+
 			actives = false;
 			for (auto it = peerComm.begin(); it != peerComm.end();)
 			{
+				auto& pexPeers = (*it)->ext.pex.addedPeers;
+
+				if (pexAdd.empty() && !pexPeers.empty())
+				{
+					pexAdd = pexPeers;
+					pexPeers.clear();
+				}		
+
 				if (!(*it)->active || progress.finished())
 				{
 					if ((*it)->active)
 						(*it)->stop();
+					else
+					{
+						it = peerComm.erase(it);
+						continue;
+					}					
 				}
 				else
 				{
@@ -88,6 +105,32 @@ void Communicator::test()
 				}
 
 				it++;
+			}
+
+			if (peerComm.size() < 30 && addedPeersId<peers.size())
+			{
+				auto p = new PeerCommunication(&client);
+				p->start(&torrentInfo, peers[addedPeersId]);
+				peerComm.push_back(p);
+
+				addedPeersId++;
+			}
+
+			for (auto& peer : pexAdd)
+			{
+				bool added = false;
+				for (auto& comm : peerComm)
+				{
+					if (comm->peerInfo == peer)
+						added = true;
+				}
+
+				if (!added)
+				{
+					auto p = new PeerCommunication(&client);
+					p->start(&torrentInfo, peer);
+					peerComm.push_back(p);
+				}
 			}
 		}
 

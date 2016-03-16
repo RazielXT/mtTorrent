@@ -47,12 +47,16 @@ Torrent::PieceDownloadInfo Torrent::ProgressScheduler::getNextPieceDownload(Piec
 
 	for (int i = 0; i < myProgress.piecesCount; i++)
 	{
+		bool fullRetry = scheduledProgress.finished() && myProgress.wantsPiece(i);
+
+		if (fullRetry)
+			scheduledProgress.resetAdded();
+
 		if (source.hasPiece(i))
 		{
 			bool needsSchedule = scheduledProgress.wantsPiece(i);
-			bool fullRetry = scheduledProgress.finished() && myProgress.wantsPiece(i);
 
-			if (needsSchedule || fullRetry)
+			if (needsSchedule)
 			{
 				scheduledProgress.addPiece(i);
 				

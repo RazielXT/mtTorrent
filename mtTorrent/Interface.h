@@ -97,6 +97,7 @@ namespace Torrent
 		float getFullPercentage();
 
 		void setSelection(std::vector<File>& files);
+		void resetAdded();
 
 		void addPiece(size_t index);
 		bool hasPiece(size_t index);
@@ -137,7 +138,7 @@ namespace Torrent
 		uint32_t key;
 
 		uint32_t listenPort = 80;
-		uint32_t maxPeersPerRequest = 40;
+		uint32_t maxPeersPerRequest = 100;
 
 		ProgressScheduler* scheduler;
 

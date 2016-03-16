@@ -58,7 +58,7 @@ namespace Torrent
 		void sendHandshakeExt();
 
 		void sendBlockRequest(PieceBlockInfo& block);
-		void schedulePieceDownload();
+		void schedulePieceDownload(bool forceNext = false);
 
 		void handleMessage(PeerMessage& msg);
 	};

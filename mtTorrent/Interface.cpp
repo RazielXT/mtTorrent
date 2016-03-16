@@ -40,7 +40,7 @@ void Torrent::PeerInfo::setIp(uint32_t addr)
 
 bool Torrent::PiecesProgress::finished()
 {
-	return selectedPiecesCount == selectedPiecesCount;
+	return selectedPiecesCount == addedSelectedPiecesCount;
 }
 
 float Torrent::PiecesProgress::getPercentage()
@@ -82,6 +82,15 @@ void Torrent::PiecesProgress::setSelection(std::vector<File>& files)
 
 		if(piecesProgress[i] != Added)
 			piecesProgress[i] = newProgress[i];
+	}
+}
+
+void Torrent::PiecesProgress::resetAdded()
+{
+	for (auto& p : piecesProgress)
+	{
+		if (p == Added)
+			p = Selected;
 	}
 }
 

@@ -127,12 +127,13 @@ void Torrent::PeerCommunication::sendBlockRequest(PieceBlockInfo& block)
 	stream.write(packet.getBuffer());
 }
 
-void Torrent::PeerCommunication::schedulePieceDownload()
+void Torrent::PeerCommunication::schedulePieceDownload(bool forceNext)
 {
-	const int batchSize = 8;
+	const int batchSize = 4;
+	const int nextBatchMin = 2;
 	static int pieceTodo = 0;
 
-	if (downloadingPiece.receivedBlocks == scheduledPieceInfo.blocksCount)
+	if (forceNext || downloadingPiece.receivedBlocks == scheduledPieceInfo.blocksCount)
 	{
 		scheduledPieceInfo = client->scheduler->getNextPieceDownload(peerPieces);
 		downloadingPiece.reset(torrent->pieceSize);
@@ -153,7 +154,7 @@ void Torrent::PeerCommunication::schedulePieceDownload()
 		}
 	}*/
 
-	if(pieceTodo<4)
+	if(pieceTodo<nextBatchMin)
 	for (size_t i = 0; i < batchSize; i++)
 	if (!scheduledPieceInfo.blocksLeft.empty())
 	{
@@ -169,6 +170,11 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 {
 	std::cout << peerInfo.ipStr << "_ID:" << std::to_string(message.id) << ", size: " << std::to_string(message.messageSize) << "\n";
 	//std::cout << "Read " << getTimestamp() << "\n";
+
+	if (message.id == KeepAlive)
+	{
+		schedulePieceDownload(true);
+	}
 
 	if (message.id == Bitfield)
 	{

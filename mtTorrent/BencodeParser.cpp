@@ -92,14 +92,14 @@ TorrentInfo BencodeParser::parseTorrentInfo()
 
 			info.pieceSize = infoDictionary["piece length"].i;
 
-			auto& pieces = infoDictionary["pieces"].txt;
+			auto& piecesHash = infoDictionary["pieces"].txt;
 			
-			if (pieces.size() % 20 == 0)
+			if (piecesHash.size() % 20 == 0)
 			{
 				PieceInfo temp;
-				auto end = pieces.data() + pieces.size();
+				auto end = piecesHash.data() + piecesHash.size();
 
-				for (auto it = pieces.data(); it != end; it += 20)
+				for (auto it = piecesHash.data(); it != end; it += 20)
 				{
 					memcpy(&temp.hash, it, 20);
 					info.pieces.push_back(temp);
@@ -142,13 +142,13 @@ TorrentInfo BencodeParser::parseTorrentInfo()
 			{
 				size_t size = infoDictionary["length"].i;
 				auto endPos = size % info.pieceSize;
-				info.files.push_back({ 0, {infoDictionary["name"].txt }, size, 0, 0, pieces.size() - 1, endPos
+				info.files.push_back({ 0, {infoDictionary["name"].txt }, size, 0, 0, info.pieces.size() - 1, endPos
 			});
 			}
 
-			auto piecesNum = pieces.size() / 20;
-			auto addExpected = piecesNum % 8 > 0 ? 1 : 0; //8 pieces in byte
-			info.expectedBitfieldSize = piecesNum / 8 + addExpected;
+			auto piecesCount = info.pieces.size();
+			auto addExpected = piecesCount % 8 > 0 ? 1 : 0; //8 pieces in byte
+			info.expectedBitfieldSize = piecesCount / 8 + addExpected;
 		}		
 	}
 
@@ -287,7 +287,7 @@ int BencodeParser::parseInt(const char** body)
 
 	std::string num;
 	
-	while (IS_NUM_CHAR(**body))
+	while (IS_NUM_CHAR(**body) || (**body == '-' && num.empty()))
 	{
 		num += (**body);
 		(*body)++;
