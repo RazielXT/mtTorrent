@@ -9,6 +9,11 @@ Torrent::ProgressScheduler::ProgressScheduler(TorrentInfo* t) : storage(selectio
 
 void Torrent::ProgressScheduler::selectFiles(std::vector<Torrent::File> dlSelection)
 {
+	std::lock_guard<std::mutex> guard(schedule_mutex);
+
+	myProgress.setSelection(dlSelection);
+	scheduledProgress.setSelection(dlSelection);
+
 	selection.files.clear();
 
 	for (auto& f : dlSelection)
@@ -19,7 +24,7 @@ void Torrent::ProgressScheduler::selectFiles(std::vector<Torrent::File> dlSelect
 	storage.selectionChanged();
 }
 
-std::vector<Torrent::PieceBlockInfo> getPieceBlocks(int index, Torrent::TorrentInfo* torrent)
+std::vector<Torrent::PieceBlockInfo> makePieceBlocks(int index, Torrent::TorrentInfo* torrent)
 {
 	std::vector<Torrent::PieceBlockInfo> out;
 	const size_t blockRequestSize = 16 * 1024;
@@ -46,20 +51,19 @@ Torrent::PieceDownloadInfo Torrent::ProgressScheduler::getNextPieceDownload(Piec
 	std::lock_guard<std::mutex> guard(schedule_mutex);
 
 	Torrent::PieceDownloadInfo info;
-	info.blocksCount = 0;
 
 	for (int i = 0; i < myProgress.piecesCount; i++)
 	{
 		if (source.hasPiece(i))
 		{
-			bool needsSchedule = !scheduledProgress.hasPiece(i);
-			bool fullRetry = scheduledProgress.finished() && !myProgress.hasPiece(i);
+			bool needsSchedule = scheduledProgress.wantsPiece(i);
+			bool fullRetry = scheduledProgress.finished() && myProgress.wantsPiece(i);
 
 			if (needsSchedule || fullRetry)
 			{
 				scheduledProgress.addPiece(i);
 				
-				info.blocksLeft = getPieceBlocks(i, torrent);
+				info.blocksLeft = makePieceBlocks(i, torrent);
 				info.hash = torrent->pieces[i].hash;
 				info.blocksCount = info.blocksLeft.size();
 				return info;

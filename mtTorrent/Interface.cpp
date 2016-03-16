@@ -40,14 +40,18 @@ void Torrent::PeerInfo::setIp(uint32_t addr)
 
 bool Torrent::PiecesProgress::finished()
 {
-	return addedPieces == piecesCount;
+	return selectedPiecesCount == selectedPiecesCount;
 }
 
 float Torrent::PiecesProgress::getPercentage()
 {
-	return addedPieces / static_cast<float>(piecesCount);
+	return selectedPiecesCount == 0 ? 1 : std::min(1.0f, addedSelectedPiecesCount / static_cast<float>(selectedPiecesCount));
 }
 
+float Torrent::PiecesProgress::getFullPercentage()
+{
+	return piecesCount == 0 ? 1 : addedPiecesCount / static_cast<float>(piecesCount);
+}
 
 void Torrent::PiecesProgress::init(size_t size)
 {
@@ -55,25 +59,59 @@ void Torrent::PiecesProgress::init(size_t size)
 	piecesProgress.resize(size);
 }
 
+void Torrent::PiecesProgress::setSelection(std::vector<File>& files)
+{
+	std::vector<Progress> newProgress(piecesCount);
+	std::fill(newProgress.begin(), newProgress.end(), NotSelected);
+	
+	for (auto& f : files)
+	{
+		std::fill(newProgress.begin() + f.startPieceIndex, newProgress.begin() + f.endPieceIndex, Selected);
+	}
+
+	addedSelectedPiecesCount = 0;
+	selectedPiecesCount = 0;
+
+	for (size_t i = 0; i < piecesCount; i++)
+	{
+		if (newProgress[i] == Selected)
+			selectedPiecesCount++;
+
+		if (newProgress[i] == Selected && piecesProgress[i] == Added)
+			addedSelectedPiecesCount++;
+
+		if(piecesProgress[i] != Added)
+			piecesProgress[i] = newProgress[i];
+	}
+}
+
 void Torrent::PiecesProgress::addPiece(size_t index)
 {
-	bool old = piecesProgress[index];
+	auto old = piecesProgress[index];
 
-	if (!old)
+	if (old != Added)
 	{
-		piecesProgress[index] = true;
-		addedPieces++;
+		piecesProgress[index] = Added;
+		addedPiecesCount++;
+
+		if(old == Selected)
+			addedSelectedPiecesCount++;
 	}
 }
 
 bool Torrent::PiecesProgress::hasPiece(size_t index)
 {
-	return piecesProgress[index];
+	return piecesProgress[index] == Added;
+}
+
+bool Torrent::PiecesProgress::wantsPiece(size_t index)
+{
+	return piecesProgress[index] == Selected;
 }
 
 void Torrent::PiecesProgress::fromBitfield(DataBuffer& bitfield)
 {
-	addedPieces = 0;
+	addedPiecesCount = 0;
 
 	for (int i = 0; i < piecesCount; i++)
 	{
@@ -81,10 +119,10 @@ void Torrent::PiecesProgress::fromBitfield(DataBuffer& bitfield)
 		unsigned char bitmask = 128 >> i % 8;
 
 		bool value = (bitfield[idx] & bitmask) != 0;
-		piecesProgress[i] = value;
+		piecesProgress[i] = value ? Added : Selected;
 
 		if (value)
-			addedPieces++;
+			addedPiecesCount++;
 	}
 }
 

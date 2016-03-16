@@ -32,7 +32,7 @@ namespace Torrent
 		TorrentInfo* torrent;
 		ClientInfo* client;
 
-		PiecesProgress pieces;
+		PiecesProgress peerPieces;
 
 		std::mutex schedule_mutex;
 		PieceDownloadInfo scheduledPieceInfo;

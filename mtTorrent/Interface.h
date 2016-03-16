@@ -72,7 +72,7 @@ namespace Torrent
 	struct PieceDownloadInfo
 	{
 		std::vector<PieceBlockInfo> blocksLeft;
-		size_t blocksCount;
+		size_t blocksCount = 0;
 		char* hash;
 	};
 
@@ -94,16 +94,25 @@ namespace Torrent
 
 		bool finished();
 		float getPercentage();
+		float getFullPercentage();
+
+		void setSelection(std::vector<File>& files);
+
 		void addPiece(size_t index);
 		bool hasPiece(size_t index);
+		bool wantsPiece(size_t index);
 
 		void fromBitfield(DataBuffer& bitfield);
 		DataBuffer toBitfield();
 
 	private:
 
-		std::vector<bool> piecesProgress;
-		size_t addedPieces = 0;
+		enum Progress : char {NotSelected = -1, Selected = 0, Added = 1};
+
+		std::vector<Progress> piecesProgress;
+		size_t addedPiecesCount = 0;
+		size_t addedSelectedPiecesCount = 0;
+		size_t selectedPiecesCount = 0;
 	};
 
 	struct PeerInfo

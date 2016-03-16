@@ -21,7 +21,7 @@ void PeerCommunication::start(TorrentInfo* tInfo, PeerInfo info)
 	torrent = tInfo;
 	peerInfo = info;
 
-	pieces.init(torrent->pieces.size());
+	peerPieces.init(torrent->pieces.size());
 	
 	auto port = std::to_string(peerInfo.port);
 	stream.connect(peerInfo.ipStr, port);
@@ -134,7 +134,7 @@ void Torrent::PeerCommunication::schedulePieceDownload()
 
 	if (downloadingPiece.receivedBlocks == scheduledPieceInfo.blocksCount)
 	{
-		scheduledPieceInfo = client->scheduler->getNextPieceDownload(pieces);
+		scheduledPieceInfo = client->scheduler->getNextPieceDownload(peerPieces);
 		downloadingPiece.reset(torrent->pieceSize);
 		pieceTodo = 0;
 	}	
@@ -174,17 +174,17 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 	{
 		std::cout << peerInfo.ipStr << "BITFIELD size: " << std::to_string(message.bitfield.size()) << ", expected: " << std::to_string(torrent->expectedBitfieldSize) << "\n";
 
-		pieces.fromBitfield(message.bitfield);
+		peerPieces.fromBitfield(message.bitfield);
 		gcount++;
 
-		std::cout << peerInfo.ipStr << "Percentage: " << std::to_string(pieces.getPercentage()) << "\n";
+		std::cout << peerInfo.ipStr << "Percentage: " << std::to_string(peerPieces.getPercentage()) << "\n";
 	}
 
 	if (message.id == Have)
 	{
-		pieces.addPiece(message.havePieceIndex);
+		peerPieces.addPiece(message.havePieceIndex);
 
-		std::cout << peerInfo.ipStr << "Percentage: " << std::to_string(pieces.getPercentage()) << "\n";
+		std::cout << peerInfo.ipStr << "Percentage: " << std::to_string(peerPieces.getPercentage()) << "\n";
 	}
 
 	if (message.id == Piece)
