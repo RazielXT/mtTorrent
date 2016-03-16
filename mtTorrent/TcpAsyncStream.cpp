@@ -115,10 +115,15 @@ void TcpAsyncStream::handle_connect(const boost::system::error_code& error, tcp:
 
 void TcpAsyncStream::do_close()
 {
+	boost::system::error_code error;
+
 	if (socket.is_open())
-		socket.close();
+		socket.close(error);
 
 	state = Disconnected;
+
+	if(error)
+		postFail("Close", error);
 }
 
 void TcpAsyncStream::do_write(DataBuffer data)
@@ -155,7 +160,6 @@ void TcpAsyncStream::handle_write(const boost::system::error_code& error)
 	}
 	else
 	{
-		do_close();
 		postFail("Write", error);
 	}
 }
@@ -176,7 +180,6 @@ void TcpAsyncStream::handle_receive(const boost::system::error_code& error, std:
 	}
 	else
 	{
-		do_close();
 		postFail("Receive", error);
 	}
 }

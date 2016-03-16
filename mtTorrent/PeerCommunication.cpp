@@ -192,7 +192,7 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 		std::lock_guard<std::mutex> guard(schedule_mutex);
 
 		downloadingPiece.addBlock(message.piece);
-		std::cout << peerInfo.ipStr << " block, index " << downloadingPiece.index << "==" << message.piece.info.index << " ,offset " << std::hex << message.piece.info.begin << "\n";
+		//std::cout << peerInfo.ipStr << " block, index " << downloadingPiece.index << "==" << message.piece.info.index << " ,offset " << std::hex << message.piece.info.begin << "\n";
 
 		if (downloadingPiece.receivedBlocks == scheduledPieceInfo.blocksCount)
 		{

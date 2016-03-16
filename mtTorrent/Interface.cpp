@@ -66,7 +66,7 @@ void Torrent::PiecesProgress::setSelection(std::vector<File>& files)
 	
 	for (auto& f : files)
 	{
-		std::fill(newProgress.begin() + f.startPieceIndex, newProgress.begin() + f.endPieceIndex, Selected);
+		std::fill(newProgress.begin() + f.startPieceIndex, newProgress.begin() + f.endPieceIndex + 1, Selected);
 	}
 
 	addedSelectedPiecesCount = 0;

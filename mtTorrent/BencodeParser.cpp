@@ -117,6 +117,7 @@ TorrentInfo BencodeParser::parseTorrentInfo()
 				for (auto& f : files)
 				{
 					std::vector<std::string> path;
+					path.push_back(info.directory);
 
 					auto& pathList = *(*f.dic)["path"].l;
 					for (auto& p : pathList)

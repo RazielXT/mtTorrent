@@ -36,7 +36,7 @@ void Communicator::test()
 	torrentInfo = torrentParser.parseTorrentInfo();
 
 	ProgressScheduler progress(&torrentInfo);
-	progress.selectFiles({ torrentInfo.files[3], torrentInfo.files[4], torrentInfo.files[5] });
+	progress.selectFiles({ torrentInfo.files[3], torrentInfo.files[10], torrentInfo.files[12] });
 
 	client.scheduler = &progress;
 
@@ -68,9 +68,6 @@ void Communicator::test()
 		}
 
 		std::thread service1([&io_service]() { io_service.run(); });
-		std::thread service2([&io_service]() { io_service.run(); });
-		std::thread service3([&io_service]() { io_service.run(); });
-		std::thread service4([&io_service]() { io_service.run(); });
 
 		bool actives = true;
 		while (actives)
@@ -94,8 +91,14 @@ void Communicator::test()
 			}
 		}
 
+
+		for (auto& peer : peerComm)
+		{
+			peer->stop();
+		}
+
 		service1.join();
-		service2.join();
+
 	}
 
 	if (progress.finished())

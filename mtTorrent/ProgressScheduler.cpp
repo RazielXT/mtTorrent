@@ -1,6 +1,6 @@
 #include "ProgressScheduler.h"
 
-Torrent::ProgressScheduler::ProgressScheduler(TorrentInfo* t) : storage(selection, t->pieceSize)
+Torrent::ProgressScheduler::ProgressScheduler(TorrentInfo* t) : storage(t->pieceSize)
 {
 	torrent = t;
 	myProgress.init(torrent->pieces.size());

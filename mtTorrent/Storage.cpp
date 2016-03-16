@@ -1,5 +1,6 @@
 #include "Storage.h"
 #include <fstream>
+#include <boost/filesystem.hpp>
 
 using namespace Torrent;
 
@@ -10,6 +11,11 @@ Storage::Storage(size_t piecesz)
 
 void Storage::storePiece(DownloadedPiece& piece)
 {
+	bool added = false;
+
+	if (piece.index == 791)
+		added = true;
+
 	for (auto& s : selection.files)
 	{
 		auto& f = s.file;
@@ -31,7 +37,7 @@ void Storage::exportFiles(std::string path)
 		for (auto& p : s.file.path)
 		{
 			if (!filePath.empty())
-				filePath += "//";
+				filePath += "\\";
 
 			filePath += p;
 		}
@@ -71,8 +77,15 @@ void MemoryStorage::storePiece(File& file, DownloadedPiece& piece, size_t normal
 
 void MemoryStorage::exportFile(File& file, std::string path)
 {
-	std::ofstream fileOut(path, std::ios_base::binary);
+	std::string dirPath = path.substr(0, path.find_last_of('\\'));
+	boost::filesystem::path dir(dirPath);
+	if (!boost::filesystem::exists(dir)) 
+	{
+		if (!boost::filesystem::create_directory(dir))
+			return;
+	}
 
+	std::ofstream fileOut(path, std::ios_base::binary);
 	auto& data = filesBuffer[file.id];
 	fileOut.write(data.data() + file.startPiecePos, file.size);
 }
