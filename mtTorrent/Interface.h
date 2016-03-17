@@ -102,26 +102,21 @@ namespace Torrent
 
 		bool finished();
 		float getPercentage();
-		float getFullPercentage();
 
 		void setSelection(std::vector<File>& files);
 		void resetAdded(PiecesProgress& parent);
 
-		void addPiece(size_t index);
-		bool hasPiece(size_t index);
-		bool wantsPiece(size_t index);
+		void closePiece(size_t index);
+		bool closedPiece(size_t index);
+		bool hasPreparedPiece(size_t index);
 
 		void fromBitfield(DataBuffer& bitfield);
 		DataBuffer toBitfield();
 
 	private:
 
-		enum Progress : char {NotSelected = -1, Selected = 0, Added = 1};
-
-		std::vector<Progress> piecesProgress;
-		size_t addedPiecesCount = 0;
-		size_t addedSelectedPiecesCount = 0;
-		size_t selectedPiecesCount = 0;
+		std::map<size_t, bool> piecesSelection;
+		size_t unwantedPiecesCount = 0;
 	};
 
 	struct PeerInfo

@@ -50,9 +50,9 @@ Torrent::PieceDownloadInfo Torrent::ProgressScheduler::getNextPieceDownload(Piec
 
 	for (int i = 0; i < myProgress.piecesCount; i++)
 	{
-		if (source.hasPiece(i) && myProgress.wantsPiece(i))
+		if (source.hasPiece(i) && myProgress.hasPreparedPiece(i))
 		{
-			bool needsSchedule = scheduledProgress.wantsPiece(i);
+			bool needsSchedule = scheduledProgress.hasPreparedPiece(i);
 
 			if (needsSchedule)
 			{

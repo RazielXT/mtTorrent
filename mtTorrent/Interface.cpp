@@ -45,48 +45,51 @@ void Torrent::PeerInfo::setIp(uint32_t addr)
 
 bool Torrent::PiecesProgress::finished()
 {
-	return selectedPiecesCount == addedSelectedPiecesCount;
+	return piecesSelection.size() - unwantedPiecesCount == 0;
 }
 
 float Torrent::PiecesProgress::getPercentage()
 {
-	return selectedPiecesCount == 0 ? 1 : std::min(1.0f, addedSelectedPiecesCount / (float)selectedPiecesCount);
-}
-
-float Torrent::PiecesProgress::getFullPercentage()
-{
-	return piecesCount == 0 ? 1 : addedPiecesCount / (float)piecesCount;
+	return piecesSelection.size() == 0 ? 1 : std::min(1.0f, addedSelectedPiecesCount / (float)selectedPiecesCount);
 }
 
 void Torrent::PiecesProgress::init(size_t size)
 {
 	piecesCount = size;
-	piecesProgress.resize(size);
+	
+	for (size_t i = 0; i < piecesCount; i++)
+	{
+		piecesSelection[i] = true;
+	}
 }
 
 void Torrent::PiecesProgress::setSelection(std::vector<File>& files)
 {
-	std::vector<Progress> newProgress(piecesCount);
-	std::fill(newProgress.begin(), newProgress.end(), NotSelected);
+	std::map<size_t, bool> newProgress;
+	for (size_t i = 0; i < piecesCount; i++)
+	{
+		newProgress[i] = false;
+	}
 	
 	for (auto& f : files)
 	{
-		std::fill(newProgress.begin() + f.startPieceIndex, newProgress.begin() + f.endPieceIndex + 1, Selected);
+		for (size_t i = f.startPieceIndex; i <= f.startPieceIndex; i++)
+		{
+			newProgress[i] = true;
+		}
 	}
 
-	addedSelectedPiecesCount = 0;
-	selectedPiecesCount = 0;
+	unwantedPiecesCount = 0;
 
 	for (size_t i = 0; i < piecesCount; i++)
 	{
-		if (newProgress[i] == Selected)
-			selectedPiecesCount++;
+		if (!newProgress[i])
+			unwantedPiecesCount++;
 
-		if (newProgress[i] == Selected && piecesProgress[i] == Added)
-			addedSelectedPiecesCount++;
-
-		if(piecesProgress[i] != Added)
-			piecesProgress[i] = newProgress[i];
+		if (newProgress[i] && piecesSelection.find(i) == piecesSelection.end())
+			continue;
+		else
+			piecesSelection[i] = newProgress[i];
 	}
 }
 
@@ -97,8 +100,8 @@ void Torrent::PiecesProgress::resetAdded(PiecesProgress& parent)
 
 	for (size_t i = 0; i < piecesCount; i++)
 	{
-		auto& p = piecesProgress[i];
-		auto parentPiece = parent.piecesProgress[i];
+		auto& p = piecesSelection[i];
+		auto parentPiece = parent.piecesSelection[i];
 
 		if (p == Added && parentPiece == Selected)
 		{
@@ -108,33 +111,30 @@ void Torrent::PiecesProgress::resetAdded(PiecesProgress& parent)
 	}
 }
 
-void Torrent::PiecesProgress::addPiece(size_t index)
+void Torrent::PiecesProgress::closePiece(size_t index)
 {
-	auto old = piecesProgress[index];
+	auto it = piecesSelection.find(index);
 
-	if (old != Added)
+	if (it != piecesSelection.end())
 	{
-		piecesProgress[index] = Added;
-		addedPiecesCount++;
-
-		if(old == Selected)
-			addedSelectedPiecesCount++;
+		piecesSelection.erase(it);
 	}
 }
 
-bool Torrent::PiecesProgress::hasPiece(size_t index)
+bool Torrent::PiecesProgress::closedPiece(size_t index)
 {
-	return piecesProgress[index] == Added;
+	return piecesSelection.find(index) == piecesSelection.end();
 }
 
-bool Torrent::PiecesProgress::wantsPiece(size_t index)
+bool Torrent::PiecesProgress::hasPreparedPiece(size_t index)
 {
-	return piecesProgress[index] == Selected;
+	auto it = piecesSelection.find(index);
+	return it != piecesSelection.end() && it->second;
 }
 
 void Torrent::PiecesProgress::fromBitfield(DataBuffer& bitfield)
 {
-	addedPiecesCount = 0;
+	unwantedPiecesCount = 0;
 
 	for (int i = 0; i < piecesCount; i++)
 	{
@@ -142,10 +142,10 @@ void Torrent::PiecesProgress::fromBitfield(DataBuffer& bitfield)
 		unsigned char bitmask = 128 >> i % 8;
 
 		bool value = (bitfield[idx] & bitmask) != 0;
-		piecesProgress[i] = value ? Added : Selected;
+		piecesSelection[i] = value;
 
-		if (value)
-			addedPiecesCount++;
+		if (!value)
+			unwantedPiecesCount++;
 	}
 }
 
