@@ -136,6 +136,7 @@
     <ClCompile Include="TcpAsyncStream.cpp" />
     <ClCompile Include="BencodeParser.cpp" />
     <ClCompile Include="TrackerCommunication.cpp" />
+    <ClCompile Include="UdpTrackerComm.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ExtensionProtocol.h" />
@@ -151,6 +152,7 @@
     <ClInclude Include="TcpAsyncStream.h" />
     <ClInclude Include="BencodeParser.h" />
     <ClInclude Include="TrackerCommunication.h" />
+    <ClInclude Include="UdpTrackerComm.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

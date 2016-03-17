@@ -11,11 +11,6 @@ Storage::Storage(size_t piecesz)
 
 void Storage::storePiece(DownloadedPiece& piece)
 {
-	bool added = false;
-
-	if (piece.index == 791)
-		added = true;
-
 	for (auto& s : selection.files)
 	{
 		auto& f = s.file;

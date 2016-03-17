@@ -5,7 +5,15 @@
 
 extern int gcount;
 
+#define MT_NAME "mtTorrent 0.2"
+#define MT_HASH_NAME "MT-0-2-"
+
 extern std::string getTimestamp();
+
+namespace Checkpoint
+{
+	extern bool hit(int id, int msPeriod);
+};
 
 namespace Torrent
 {
@@ -118,9 +126,9 @@ namespace Torrent
 
 	struct PeerInfo
 	{
-		uint32_t ip;
 		std::string ipStr;
 		uint16_t port;
+		uint32_t ip;	
 
 		void setIp(uint32_t ip);
 

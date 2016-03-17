@@ -13,19 +13,28 @@ void Communicator::initIds()
 	srand((unsigned int)time(NULL));
 
 	{
-		client.hashId[0] = 'M';
-		client.hashId[1] = 'T';
-		client.hashId[2] = '0';
-		client.hashId[3] = '-';
-		client.hashId[4] = '1';
-		client.hashId[5] = '-';
-		for (size_t i = 6; i < 20; i++)
+		size_t hashLen = strlen(MT_HASH_NAME);
+		memcpy(client.hashId, MT_HASH_NAME, hashLen);
+
+		for (size_t i = hashLen; i < 20; i++)
 		{
 			client.hashId[i] = static_cast<uint8_t>(rand() % 255);
 		}
 	}
 
 	client.key = static_cast<uint32_t>(rand());
+}
+
+bool containsPeer(std::vector<std::unique_ptr<PeerCommunication>>& peers, PeerInfo& info)
+{
+	bool added = false;
+	for (auto& comm : peers)
+	{
+		if (comm->peerInfo == info)
+			added = true;
+	}
+
+	return added;
 }
 
 void Communicator::test()
@@ -49,24 +58,24 @@ void Communicator::test()
 
 	std::vector<PeerInfo> peers;
 	peers = trackers.announceAll();
+	size_t trackerReannounceId = 0;
 
-	PeerInfo add;
-	add.port = 6881;
-	add.ipStr = "127.0.0.1";
-	//peers.push_back(add);
+	//peers.push_back({ "127.0.0.1" , 6881});
+	size_t startPeersCount = 40;
+	size_t maxActivePeers = 30;
 
 	if (peers.size())
 	{
-		size_t peersCount = std::min<size_t>(40, peers.size());
-		int addedPeersId = 40;
+		size_t peersCount = std::min<size_t>(startPeersCount, peers.size());
+		size_t addingPeerId = peersCount;
 
-		std::vector<PeerCommunication*> peerComm;
-		peerComm.resize(peersCount);
+		std::vector<std::unique_ptr<PeerCommunication>> peerComms;
+		peerComms.resize(peersCount);
 
 		for (size_t i = 0; i < peersCount; i++)
 		{
-			peerComm[i] =new PeerCommunication(&client);
-			peerComm[i]->start(&torrentInfo, peers[i]);
+			peerComms[i] = std::make_unique<PeerCommunication>(&client);
+			peerComms[i]->start(&torrentInfo, peers[i]);
 		}
 
 		std::thread service1([&io_service]() { io_service.run(); });
@@ -79,7 +88,7 @@ void Communicator::test()
 			std::vector<PeerInfo> pexAdd;
 
 			actives = false;
-			for (auto it = peerComm.begin(); it != peerComm.end();)
+			for (auto it = peerComms.begin(); it != peerComms.end();)
 			{
 				auto& pexPeers = (*it)->ext.pex.addedPeers;
 
@@ -95,7 +104,7 @@ void Communicator::test()
 						(*it)->stop();
 					else
 					{
-						it = peerComm.erase(it);
+						it = peerComms.erase(it);
 						continue;
 					}					
 				}
@@ -107,35 +116,39 @@ void Communicator::test()
 				it++;
 			}
 
-			if (peerComm.size() < 30 && addedPeersId<peers.size())
+			if (peerComms.size() < maxActivePeers && addingPeerId<peers.size())
 			{
-				auto p = new PeerCommunication(&client);
-				p->start(&torrentInfo, peers[addedPeersId]);
-				peerComm.push_back(p);
+				if (!containsPeer(peerComms, peers[addingPeerId]))
+				{
+					auto p = std::make_unique<PeerCommunication>(&client);
+					p->start(&torrentInfo, peers[addingPeerId]);
+					peerComms.push_back(std::move(p));
+				}
 
-				addedPeersId++;
+				addingPeerId++;
+			}
+
+			if (addingPeerId >= peers.size())
+			{
+				peers.clear();
+				addingPeerId = 0;
+
+				peers = trackers.announce(trackerReannounceId);
+				trackerReannounceId = (trackerReannounceId + 1) % trackers.count;
 			}
 
 			for (auto& peer : pexAdd)
 			{
-				bool added = false;
-				for (auto& comm : peerComm)
+				if (!containsPeer(peerComms, peer))
 				{
-					if (comm->peerInfo == peer)
-						added = true;
-				}
-
-				if (!added)
-				{
-					auto p = new PeerCommunication(&client);
+					auto p = std::make_unique<PeerCommunication>(&client);
 					p->start(&torrentInfo, peer);
-					peerComm.push_back(p);
+					peerComms.push_back(std::move(p));
 				}
 			}
 		}
 
-
-		for (auto& peer : peerComm)
+		for (auto& peer : peerComms)
 		{
 			peer->stop();
 		}

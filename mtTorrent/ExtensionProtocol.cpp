@@ -99,7 +99,7 @@ DataBuffer Torrent::ExtensionProtocol::getExtendedHandshakeMessage()
 	PacketBuilder builder;
 
 	//std::string extDict = "d1:md6:ut_pexi" + std::to_string(PexEx) + "ee";
-	std::string extDict = "d1:md11:LT_metadatai2e6:ut_pexi" + std::to_string(PexEx) + "ee1:pi" + std::to_string(clientInfo->listenPort) + "e1:v13:mtTorrent 0.1e";
+	std::string extDict = "d1:md11:LT_metadatai2e6:ut_pexi" + std::to_string(PexEx) + "ee1:pi" + std::to_string(clientInfo->listenPort) + "e1:v" + std::to_string(strlen(MT_NAME)) +":" + MT_NAME + "e";
 	builder.add32(static_cast<uint32_t>(2 + extDict.length()));
 	builder.add(Extended);
 	builder.add(HandshakeEx);

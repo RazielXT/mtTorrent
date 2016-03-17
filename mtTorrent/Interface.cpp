@@ -4,7 +4,7 @@ int gcount = 0;
 
 using namespace Torrent;
 
-std::string getTimestamp()
+int64_t getTimeSeconds()
 {
 	time_t timer;
 	struct tm y2k = { 0 };
@@ -17,7 +17,12 @@ std::string getTimestamp()
 
 	seconds = difftime(timer, mktime(&y2k));
 
-	return std::to_string(static_cast<int64_t>(seconds));
+	return static_cast<int64_t>(seconds);
+}
+
+std::string getTimestamp()
+{
+	return std::to_string(getTimeSeconds());
 }
 
 uint32_t Torrent::generateTransaction()
@@ -152,4 +157,21 @@ void DownloadedPiece::addBlock(PieceBlock& block)
 	receivedBlocks++;
 	dataSize += block.info.length;
 	memcpy(&data[0] + block.info.begin, block.data.data(), block.info.length);
+}
+
+bool Checkpoint::hit(int id, int msPeriod)
+{
+	static std::map<int, clock_t> checkpoints;
+
+	auto& ch = checkpoints[id];
+
+	auto current = clock();
+
+	if (current - ch > msPeriod)
+	{
+		ch = current;
+		return true;
+	}
+	else
+		return false;
 }
