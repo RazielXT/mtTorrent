@@ -80,6 +80,8 @@ void Communicator::test()
 
 		std::thread service1([&io_service]() { io_service.run(); });
 
+		Checkpoint::hit(0, 5 * 60 * 1000);
+
 		bool actives = true;
 		while (actives)
 		{
@@ -130,11 +132,21 @@ void Communicator::test()
 
 			if (addingPeerId >= peers.size())
 			{
-				peers.clear();
-				addingPeerId = 0;
+				bool timeForReannounceRound = true;
 
-				peers = trackers.announce(trackerReannounceId);
-				trackerReannounceId = (trackerReannounceId + 1) % trackers.count;
+				if (trackerReannounceId == 0)
+				{
+					timeForReannounceRound = Checkpoint::hit(0, 5 * 60 * 1000);
+				}
+
+				if (timeForReannounceRound)
+				{
+					peers.clear();
+					addingPeerId = 0;
+
+					peers = trackers.announce(trackerReannounceId);
+					trackerReannounceId = (trackerReannounceId + 1) % trackers.count;
+				}
 			}
 
 			for (auto& peer : pexAdd)

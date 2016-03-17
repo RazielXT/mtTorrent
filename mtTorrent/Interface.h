@@ -105,7 +105,7 @@ namespace Torrent
 		float getFullPercentage();
 
 		void setSelection(std::vector<File>& files);
-		void resetAdded();
+		void resetAdded(PiecesProgress& parent);
 
 		void addPiece(size_t index);
 		bool hasPiece(size_t index);

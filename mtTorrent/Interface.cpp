@@ -50,12 +50,12 @@ bool Torrent::PiecesProgress::finished()
 
 float Torrent::PiecesProgress::getPercentage()
 {
-	return selectedPiecesCount == 0 ? 1 : std::min(1.0f, addedSelectedPiecesCount / static_cast<float>(selectedPiecesCount));
+	return selectedPiecesCount == 0 ? 1 : std::min(1.0f, addedSelectedPiecesCount / (float)selectedPiecesCount);
 }
 
 float Torrent::PiecesProgress::getFullPercentage()
 {
-	return piecesCount == 0 ? 1 : addedPiecesCount / static_cast<float>(piecesCount);
+	return piecesCount == 0 ? 1 : addedPiecesCount / (float)piecesCount;
 }
 
 void Torrent::PiecesProgress::init(size_t size)
@@ -90,12 +90,21 @@ void Torrent::PiecesProgress::setSelection(std::vector<File>& files)
 	}
 }
 
-void Torrent::PiecesProgress::resetAdded()
+void Torrent::PiecesProgress::resetAdded(PiecesProgress& parent)
 {
-	for (auto& p : piecesProgress)
+	selectedPiecesCount = 0;
+	addedSelectedPiecesCount = 0;
+
+	for (size_t i = 0; i < piecesCount; i++)
 	{
-		if (p == Added)
+		auto& p = piecesProgress[i];
+		auto parentPiece = parent.piecesProgress[i];
+
+		if (p == Added && parentPiece == Selected)
+		{
+			selectedPiecesCount++;
 			p = Selected;
+		}		
 	}
 }
 

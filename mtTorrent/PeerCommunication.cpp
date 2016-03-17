@@ -183,14 +183,14 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 		peerPieces.fromBitfield(message.bitfield);
 		gcount++;
 
-		std::cout << peerInfo.ipStr << "Percentage: " << std::to_string(peerPieces.getPercentage()) << "\n";
+		std::cout << peerInfo.ipStr << "Percentage: " << std::to_string(peerPieces.getFullPercentage()) << "\n";
 	}
 
 	if (message.id == Have)
 	{
 		peerPieces.addPiece(message.havePieceIndex);
 
-		std::cout << peerInfo.ipStr << "Percentage: " << std::to_string(peerPieces.getPercentage()) << "\n";
+		std::cout << peerInfo.ipStr << "Percentage: " << std::to_string(peerPieces.getFullPercentage()) << "\n";
 	}
 
 	if (message.id == Piece)

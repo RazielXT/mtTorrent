@@ -35,7 +35,9 @@ std::string cutStringPart(std::string& source, DataBuffer endChars, int cutAdd)
 
 std::vector<PeerInfo> Torrent::TrackerCollector::announceAll()
 {
-	size_t max = std::min<size_t>(20, torrent->announceList.size());
+	count = torrent->announceList.size();
+
+	size_t max = std::min<size_t>(20, count);
 	std::future<std::vector<PeerInfo>> f[20];
 
 	int count = 0;
