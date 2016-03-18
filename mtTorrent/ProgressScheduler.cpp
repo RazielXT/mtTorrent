@@ -3,16 +3,16 @@
 Torrent::ProgressScheduler::ProgressScheduler(TorrentInfo* t) : storage(t->pieceSize)
 {
 	torrent = t;
-	myProgress.init(torrent->pieces.size());
-	scheduledProgress.init(torrent->pieces.size());
+	piecesTodo.init(torrent->pieces.size());
+	scheduleTodo.init(torrent->pieces.size());
 }
 
 void Torrent::ProgressScheduler::selectFiles(std::vector<Torrent::File> dlSelection)
 {
 	std::lock_guard<std::mutex> guard(schedule_mutex);
 
-	myProgress.setSelection(dlSelection);
-	scheduledProgress.setSelection(dlSelection);
+	piecesTodo.fromSelection(dlSelection);
+	scheduleTodo.fromSelection(dlSelection);
 
 	storage.selectFiles(dlSelection);
 }
@@ -45,21 +45,23 @@ Torrent::PieceDownloadInfo Torrent::ProgressScheduler::getNextPieceDownload(Piec
 
 	Torrent::PieceDownloadInfo info;
 
-	if(scheduledProgress.finished() && !myProgress.finished())
-		scheduledProgress.resetAdded(myProgress);
+	if(scheduleTodo.empty() && !piecesTodo.empty())
+		scheduleTodo.resetAdded(piecesTodo);
 
-	for (int i = 0; i < myProgress.piecesCount; i++)
+	for (auto it = piecesTodo.pieces.begin(); it != piecesTodo.pieces.end(); it++)
 	{
-		if (source.hasPiece(i) && myProgress.hasPreparedPiece(i))
+		int id = it->first;
+
+		if (source.hasPiece(id))
 		{
-			bool needsSchedule = scheduledProgress.hasPreparedPiece(i);
+			bool needsSchedule = scheduleTodo.hasPiece(id);
 
 			if (needsSchedule)
 			{
-				scheduledProgress.addPiece(i);
+				scheduleTodo.removePiece(id);
 				
-				info.blocksLeft = makePieceBlocks(i, torrent);
-				info.hash = torrent->pieces[i].hash;
+				info.blocksLeft = makePieceBlocks(id, torrent);
+				info.hash = torrent->pieces[id].hash;
 				info.blocksCount = info.blocksLeft.size();
 				return info;
 			}
@@ -73,22 +75,22 @@ void Torrent::ProgressScheduler::addDownloadedPiece(DownloadedPiece& piece)
 {
 	std::lock_guard<std::mutex> guard(schedule_mutex);
 
-	if (myProgress.hasPiece(piece.index))
+	if (piecesTodo.hasPiece(piece.index))
 		return;
 
 	storage.storePiece(piece);
 
-	myProgress.addPiece(piece.index);
+	piecesTodo.addPiece(piece.index);
 }
 
 bool Torrent::ProgressScheduler::finished()
 {
-	return myProgress.getPercentage() == 1.0f;
+	return piecesTodo.empty();
 }
 
 float Torrent::ProgressScheduler::getPercentage()
 {
-	return myProgress.getPercentage();
+	return 1.0f - piecesTodo.getPercentage();
 }
 
 void Torrent::ProgressScheduler::exportFiles(std::string path)

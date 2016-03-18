@@ -180,17 +180,17 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 	{
 		std::cout << peerInfo.ipStr << "BITFIELD size: " << std::to_string(message.bitfield.size()) << ", expected: " << std::to_string(torrent->expectedBitfieldSize) << "\n";
 
-		peerPieces.fromBitfield(message.bitfield);
+		peerPieces.fromBitfield(message.bitfield, torrent->pieces.size());
 		gcount++;
 
-		std::cout << peerInfo.ipStr << "Percentage: " << std::to_string(peerPieces.getFullPercentage()) << "\n";
+		std::cout << peerInfo.ipStr << "Percentage: " << std::to_string(peerPieces.getPercentage()) << "\n";
 	}
 
 	if (message.id == Have)
 	{
 		peerPieces.addPiece(message.havePieceIndex);
 
-		std::cout << peerInfo.ipStr << "Percentage: " << std::to_string(peerPieces.getFullPercentage()) << "\n";
+		std::cout << peerInfo.ipStr << "Percentage: " << std::to_string(peerPieces.getPercentage()) << "\n";
 	}
 
 	if (message.id == Piece)

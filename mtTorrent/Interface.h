@@ -98,25 +98,26 @@ namespace Torrent
 	struct PiecesProgress
 	{
 		void init(size_t size);
-		size_t piecesCount = 0;
 
-		bool finished();
+		bool empty();
 		float getPercentage();
 
-		void setSelection(std::vector<File>& files);
+		void fromSelection(std::vector<File>& files);
 		void resetAdded(PiecesProgress& parent);
 
-		void closePiece(size_t index);
-		bool closedPiece(size_t index);
-		bool hasPreparedPiece(size_t index);
+		void addPiece(size_t index);
+		bool hasPiece(size_t index);
 
-		void fromBitfield(DataBuffer& bitfield);
+		void removePiece(size_t index);
+		bool removedPiece(size_t index);
+
+		void fromBitfield(DataBuffer& bitfield, size_t piecesCount);
 		DataBuffer toBitfield();
 
-	private:
+	//private:
 
-		std::map<size_t, bool> piecesSelection;
-		size_t unwantedPiecesCount = 0;
+		size_t piecesStartCount = 0;
+		std::map<size_t, bool> pieces;
 	};
 
 	struct PeerInfo

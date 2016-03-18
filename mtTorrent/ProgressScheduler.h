@@ -25,10 +25,10 @@ namespace Torrent
 
 		Storage storage;
 
-		PiecesProgress scheduledProgress;
+		PiecesProgress scheduleTodo;
 		std::mutex schedule_mutex;
 
-		PiecesProgress myProgress;
+		PiecesProgress piecesTodo;
 		TorrentInfo* torrent;
 	};
 }
