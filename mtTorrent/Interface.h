@@ -22,9 +22,9 @@ namespace Torrent
 		int id;
 		std::vector<std::string> path;
 		size_t size;
-		size_t startPieceIndex;
+		uint32_t startPieceIndex;
 		size_t startPiecePos;
-		size_t endPieceIndex;
+		uint32_t endPieceIndex;
 		size_t endPiecePos;
 	};
 
@@ -87,7 +87,7 @@ namespace Torrent
 	struct DownloadedPiece
 	{
 		DataBuffer data;
-		size_t index;
+		uint32_t index;
 		size_t dataSize;
 
 		void reset(size_t maxPieceSize);
@@ -103,20 +103,20 @@ namespace Torrent
 		bool empty();
 		float getPercentage();
 
-		void addPiece(size_t index);
-		bool hasPiece(size_t index);
-		void removePiece(size_t index);
+		void addPiece(uint32_t index);
+		bool hasPiece(uint32_t index);
+		void removePiece(uint32_t index);
 
 		void fromSelection(std::vector<File>& files);
 		void fromBitfield(DataBuffer& bitfield, size_t piecesCount);
 		DataBuffer toBitfield();
 
-		const std::map<size_t, bool>& get();
+		const std::map<uint32_t, bool>& get();
 
 	private:
 
 		size_t piecesStartCount = 0;
-		std::map<size_t, bool> pieces;
+		std::map<uint32_t, bool> pieces;
 	};
 
 	struct PeerInfo

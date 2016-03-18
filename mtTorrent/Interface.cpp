@@ -58,7 +58,7 @@ void Torrent::PiecesProgress::init(size_t size)
 {
 	piecesStartCount = size;
 	
-	for (size_t i = 0; i < piecesStartCount; i++)
+	for (uint32_t i = 0; i < piecesStartCount; i++)
 	{
 		pieces[i] = true;
 	}
@@ -70,7 +70,7 @@ void Torrent::PiecesProgress::fromSelection(std::vector<File>& files)
 
 	for (auto& f : files)
 	{
-		for (size_t i = f.startPieceIndex; i <= f.startPieceIndex; i++)
+		for (uint32_t i = f.startPieceIndex; i <= f.startPieceIndex; i++)
 		{
 			pieces[i] = true;
 		}
@@ -83,12 +83,12 @@ void Torrent::PiecesProgress::reset(PiecesProgress& parent)
 	piecesStartCount = parent.piecesStartCount;
 }
 
-void Torrent::PiecesProgress::addPiece(size_t index)
+void Torrent::PiecesProgress::addPiece(uint32_t index)
 {
 	pieces[index] = true;
 }
 
-void Torrent::PiecesProgress::removePiece(size_t index)
+void Torrent::PiecesProgress::removePiece(uint32_t index)
 {
 	auto it = pieces.find(index);
 
@@ -98,7 +98,7 @@ void Torrent::PiecesProgress::removePiece(size_t index)
 	}
 }
 
-bool Torrent::PiecesProgress::hasPiece(size_t index)
+bool Torrent::PiecesProgress::hasPiece(uint32_t index)
 {
 	auto it = pieces.find(index);
 	return it != pieces.end() && it->second;
@@ -126,7 +126,7 @@ DataBuffer Torrent::PiecesProgress::toBitfield()
 	return{};
 }
 
-const std::map<size_t, bool>& Torrent::PiecesProgress::get()
+const std::map<uint32_t, bool>& Torrent::PiecesProgress::get()
 {
 	return pieces;
 }

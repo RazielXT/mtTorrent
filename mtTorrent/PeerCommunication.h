@@ -38,6 +38,8 @@ namespace Torrent
 		PieceDownloadInfo scheduledPieceInfo;
 		DownloadedPiece downloadingPiece;
 
+		bool validPiece();
+
 		void start(TorrentInfo* torrent, PeerInfo peerInfo);
 		void stop();
 

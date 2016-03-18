@@ -67,6 +67,14 @@ void PeerCommunication::connectionOpened()
 		handshake(peerInfo);
 }
 
+bool Torrent::PeerCommunication::validPiece()
+{
+	unsigned char hash[SHA_DIGEST_LENGTH];
+	SHA1((const unsigned char*)downloadingPiece.data.data(), downloadingPiece.dataSize, hash);
+	
+	return memcmp(hash, scheduledPieceInfo.hash, SHA_DIGEST_LENGTH) == 0;
+}
+
 void Torrent::PeerCommunication::stop()
 {
 	if (active)
@@ -200,8 +208,13 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 
 		if (downloadingPiece.receivedBlocks == scheduledPieceInfo.blocksCount)
 		{
-			client->scheduler->addDownloadedPiece(downloadingPiece);
-			std::cout << peerInfo.ipStr << " Piece Added, Percentage: " << std::to_string(client->scheduler->getPercentage()) << "\n";
+			if (validPiece())
+			{
+				client->scheduler->addDownloadedPiece(downloadingPiece);
+				std::cout << peerInfo.ipStr << " Piece Added, Percentage: " << std::to_string(client->scheduler->getPercentage()) << "\n";
+			}
+			else
+				std::cout << peerInfo.ipStr << " Invalid piece!! \n";
 		}
 
 		schedulePieceDownload();

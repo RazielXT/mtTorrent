@@ -48,7 +48,7 @@ bool BencodeParser::parseFile(char* filename)
 	return parse(buffer);
 }
 
-size_t getPieceIndex(size_t pos, size_t pieceSize)
+uint32_t getPieceIndex(size_t pos, size_t pieceSize)
 {
 	size_t p = 0;
 
@@ -57,7 +57,7 @@ size_t getPieceIndex(size_t pos, size_t pieceSize)
 		p++;
 	}
 
-	return p;
+	return static_cast<uint32_t>(p);
 }
 
 TorrentInfo BencodeParser::parseTorrentInfo()
@@ -142,8 +142,7 @@ TorrentInfo BencodeParser::parseTorrentInfo()
 			{
 				size_t size = infoDictionary["length"].i;
 				auto endPos = size % info.pieceSize;
-				info.files.push_back({ 0, {infoDictionary["name"].txt }, size, 0, 0, info.pieces.size() - 1, endPos
-			});
+				info.files.push_back({ 0, {infoDictionary["name"].txt }, size, 0, 0, static_cast<uint32_t>(info.pieces.size() - 1), endPos});
 			}
 
 			auto piecesCount = info.pieces.size();

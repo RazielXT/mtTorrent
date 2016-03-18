@@ -17,7 +17,7 @@ void Torrent::ProgressScheduler::selectFiles(std::vector<Torrent::File> dlSelect
 	storage.selectFiles(dlSelection);
 }
 
-std::vector<Torrent::PieceBlockInfo> makePieceBlocks(int index, Torrent::TorrentInfo* torrent)
+std::vector<Torrent::PieceBlockInfo> makePieceBlocks(uint32_t index, Torrent::TorrentInfo* torrent)
 {
 	std::vector<Torrent::PieceBlockInfo> out;
 	const size_t blockRequestSize = 16 * 1024;
@@ -50,7 +50,7 @@ Torrent::PieceDownloadInfo Torrent::ProgressScheduler::getNextPieceDownload(Piec
 
 	for (auto& it : piecesTodo.get())
 	{
-		int id = it.first;
+		uint32_t id = it.first;
 
 		if (source.hasPiece(id))
 		{
@@ -75,12 +75,9 @@ void Torrent::ProgressScheduler::addDownloadedPiece(DownloadedPiece& piece)
 {
 	std::lock_guard<std::mutex> guard(schedule_mutex);
 
-	if (piecesTodo.hasPiece(piece.index))
-		return;
+	piecesTodo.removePiece(piece.index);
 
 	storage.storePiece(piece);
-
-	piecesTodo.addPiece(piece.index);
 }
 
 bool Torrent::ProgressScheduler::finished()
