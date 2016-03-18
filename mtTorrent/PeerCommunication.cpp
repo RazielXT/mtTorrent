@@ -202,22 +202,27 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 	if (message.id == Piece)
 	{
 		std::lock_guard<std::mutex> guard(schedule_mutex);
-
-		downloadingPiece.addBlock(message.piece);
-		//std::cout << peerInfo.ipStr << " block, index " << downloadingPiece.index << "==" << message.piece.info.index << " ,offset " << std::hex << message.piece.info.begin << "\n";
-
-		if (downloadingPiece.receivedBlocks == scheduledPieceInfo.blocksCount)
+			
+		if(message.piece.info.index != downloadingPiece.index)
+			std::cout << peerInfo.ipStr << " Invalid block!! \n";
+		else
 		{
-			if (validPiece())
-			{
-				client->scheduler->addDownloadedPiece(downloadingPiece);
-				std::cout << peerInfo.ipStr << " Piece Added, Percentage: " << std::to_string(client->scheduler->getPercentage()) << "\n";
-			}
-			else
-				std::cout << peerInfo.ipStr << " Invalid piece!! \n";
-		}
+			downloadingPiece.addBlock(message.piece);
+			//std::cout << peerInfo.ipStr << " block, index " << downloadingPiece.index << "==" << message.piece.info.index << " ,offset " << std::hex << message.piece.info.begin << "\n";
 
-		schedulePieceDownload();
+			if (downloadingPiece.receivedBlocks == scheduledPieceInfo.blocksCount)
+			{
+				if (validPiece())
+				{
+					client->scheduler->addDownloadedPiece(downloadingPiece);
+					std::cout << peerInfo.ipStr << " Piece Added, Percentage: " << std::to_string(client->scheduler->getPercentage()) << "\n";
+				}
+				else
+					std::cout << peerInfo.ipStr << " Invalid piece!! \n";
+			}
+
+			schedulePieceDownload();
+		}
 	}
 
 	if (message.id == Unchoke)

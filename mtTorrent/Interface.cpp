@@ -70,11 +70,13 @@ void Torrent::PiecesProgress::fromSelection(std::vector<File>& files)
 
 	for (auto& f : files)
 	{
-		for (uint32_t i = f.startPieceIndex; i <= f.startPieceIndex; i++)
+		for (uint32_t i = f.startPieceIndex; i <= f.endPieceIndex; i++)
 		{
 			pieces[i] = true;
 		}
 	}
+
+	piecesStartCount = pieces.size();
 }
 
 void Torrent::PiecesProgress::reset(PiecesProgress& parent)

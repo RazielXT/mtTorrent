@@ -39,7 +39,7 @@ bool containsPeer(std::vector<std::unique_ptr<PeerCommunication>>& peers, PeerIn
 
 void Communicator::test()
 {
-	if (!torrentParser.parseFile("D:\\punch.torrent"))
+	if (!torrentParser.parseFile("D:\\boku.torrent"))
 		return;
 
 	torrentInfo = torrentParser.parseTorrentInfo();
@@ -56,13 +56,18 @@ void Communicator::test()
 	client.network.io_service = &io_service;
 	//client.network.resolver = &resolver;
 
+	bool localTest = false;
+
 	std::vector<PeerInfo> peers;
-	peers = trackers.announceAll();
+	if(!localTest)
+		peers = trackers.announceAll();
+	else
+		peers.push_back({ "127.0.0.1" , 6881 });
+
 	size_t trackerReannounceId = 0;
 
-	//peers.push_back({ "127.0.0.1" , 6881});
-	size_t startPeersCount = 40;
-	size_t maxActivePeers = 30;
+	size_t startPeersCount = 20;
+	size_t maxActivePeers = 10;
 
 	if (peers.size())
 	{
@@ -118,6 +123,7 @@ void Communicator::test()
 				it++;
 			}
 
+			if(!localTest)
 			if (peerComms.size() < maxActivePeers && addingPeerId<peers.size())
 			{
 				if (!containsPeer(peerComms, peers[addingPeerId]))
@@ -130,6 +136,7 @@ void Communicator::test()
 				addingPeerId++;
 			}
 
+			if (!localTest)
 			if (addingPeerId >= peers.size())
 			{
 				bool timeForReannounceRound = true;
@@ -149,6 +156,7 @@ void Communicator::test()
 				}
 			}
 
+			if (!localTest)
 			for (auto& peer : pexAdd)
 			{
 				if (!containsPeer(peerComms, peer))

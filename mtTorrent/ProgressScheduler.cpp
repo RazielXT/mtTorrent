@@ -76,6 +76,7 @@ void Torrent::ProgressScheduler::addDownloadedPiece(DownloadedPiece& piece)
 	std::lock_guard<std::mutex> guard(schedule_mutex);
 
 	piecesTodo.removePiece(piece.index);
+	scheduleTodo.removePiece(piece.index);
 
 	storage.storePiece(piece);
 }
