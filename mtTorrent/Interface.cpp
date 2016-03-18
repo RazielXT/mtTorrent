@@ -77,7 +77,7 @@ void Torrent::PiecesProgress::fromSelection(std::vector<File>& files)
 	}
 }
 
-void Torrent::PiecesProgress::resetAdded(PiecesProgress& parent)
+void Torrent::PiecesProgress::reset(PiecesProgress& parent)
 {
 	pieces = parent.pieces;
 	piecesStartCount = parent.piecesStartCount;
@@ -96,11 +96,6 @@ void Torrent::PiecesProgress::removePiece(size_t index)
 	{
 		pieces.erase(it);
 	}
-}
-
-bool Torrent::PiecesProgress::removedPiece(size_t index)
-{
-	return pieces.find(index) == pieces.end();
 }
 
 bool Torrent::PiecesProgress::hasPiece(size_t index)
@@ -129,6 +124,11 @@ void Torrent::PiecesProgress::fromBitfield(DataBuffer& bitfield, size_t piecesCo
 DataBuffer Torrent::PiecesProgress::toBitfield()
 {
 	return{};
+}
+
+const std::map<size_t, bool>& Torrent::PiecesProgress::get()
+{
+	return pieces;
 }
 
 void DownloadedPiece::reset(size_t maxPieceSize)

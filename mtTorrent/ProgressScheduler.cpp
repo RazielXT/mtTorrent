@@ -46,11 +46,11 @@ Torrent::PieceDownloadInfo Torrent::ProgressScheduler::getNextPieceDownload(Piec
 	Torrent::PieceDownloadInfo info;
 
 	if(scheduleTodo.empty() && !piecesTodo.empty())
-		scheduleTodo.resetAdded(piecesTodo);
+		scheduleTodo.reset(piecesTodo);
 
-	for (auto it = piecesTodo.pieces.begin(); it != piecesTodo.pieces.end(); it++)
+	for (auto& it : piecesTodo.get())
 	{
-		int id = it->first;
+		int id = it.first;
 
 		if (source.hasPiece(id))
 		{

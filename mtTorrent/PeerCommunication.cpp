@@ -21,8 +21,6 @@ void PeerCommunication::start(TorrentInfo* tInfo, PeerInfo info)
 	torrent = tInfo;
 	peerInfo = info;
 
-	peerPieces.init(torrent->pieces.size());
-	
 	auto port = std::to_string(peerInfo.port);
 	stream.connect(peerInfo.ipStr, port);
 }
