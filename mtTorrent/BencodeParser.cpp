@@ -135,14 +135,15 @@ TorrentInfo BencodeParser::parseTorrentInfo()
 					info.files.push_back({ i++, path,  size, startId, startPos, endId, endPos});
 				}
 
-				if (sizeSum != 0)
-					sizeSum++;
+				info.fullSize = sizeSum;
 			}
 			else
 			{
 				size_t size = infoDictionary["length"].i;
 				auto endPos = size % info.pieceSize;
 				info.files.push_back({ 0, {infoDictionary["name"].txt }, size, 0, 0, static_cast<uint32_t>(info.pieces.size() - 1), endPos});
+
+				info.fullSize = size;
 			}
 
 			auto piecesCount = info.pieces.size();
@@ -305,6 +306,54 @@ int BencodeParser::parseInt(const char** body)
 Torrent::BencodeParser::~BencodeParser()
 {
 	parsedData.cleanup();
+}
+
+BencodeParser::BenList* BencodeParser::Object::getListItem(const char* name)
+{
+	if (type == BencodeParser::Object::Dictionary)
+	{
+		if (dic->find(name) != dic->end())
+		{
+			auto& item = (*dic)[name];
+
+			if(item.type == BencodeParser::Object::List)
+				return item.l;
+		}
+	}
+
+	return nullptr;
+}
+
+std::string* Torrent::BencodeParser::Object::getTxtItem(const char* name)
+{
+	if (type == BencodeParser::Object::Dictionary)
+	{
+		if (dic->find(name) != dic->end())
+		{
+			auto& item = (*dic)[name];
+
+			if (item.type == BencodeParser::Object::Text)
+				return &item.txt;
+		}
+	}
+
+	return nullptr;
+}
+
+int* Torrent::BencodeParser::Object::getIntItem(const char* name)
+{
+	if (type == BencodeParser::Object::Dictionary)
+	{
+		if (dic->find(name) != dic->end())
+		{
+			auto& item = (*dic)[name];
+
+			if (item.type == BencodeParser::Object::Number)
+				return &item.i;
+		}
+	}
+
+	return nullptr;
 }
 
 void Torrent::BencodeParser::Object::cleanup()

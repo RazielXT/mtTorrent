@@ -43,6 +43,10 @@ namespace Torrent
 			Object(BenDictionary* dictionary) { dic = dictionary; type = Dictionary; }
 
 			void cleanup();
+
+			BenList* getListItem(const char* name);
+			std::string* getTxtItem(const char* name);
+			int* getIntItem(const char* name);
 		};
 
 		Object parsedData;

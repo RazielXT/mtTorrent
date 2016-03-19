@@ -1,6 +1,7 @@
 #include "TrackerCommunication.h"
 #include "PacketHelper.h"
 #include <iostream>
+#include "HttpTrackerComm.h"
 
 using namespace Torrent;
 
@@ -71,9 +72,6 @@ std::vector<PeerInfo> Torrent::TrackerCollector::announce(size_t id)
 
 	if (torrent->announceList.size() > id)
 	{
-		UdpTrackerComm comm;
-		comm.setInfo(client, torrent);
-
 		auto url = torrent->announceList[id];
 
 		std::string protocol = cutStringPart(url, { ':' }, 2);
@@ -82,7 +80,17 @@ std::vector<PeerInfo> Torrent::TrackerCollector::announce(size_t id)
 
 		if (protocol == "udp")
 		{
-			auto resp = comm.announceUdpTracker(hostname, port);
+			UdpTrackerComm comm;
+			comm.setInfo(client, torrent);
+
+			auto resp = comm.announceTracker(hostname, port);
+			out = resp.peers;
+		}
+		if (protocol == "http")
+		{
+			HttpTrackerComm comm;
+			comm.setInfo(client, torrent);
+			auto resp = comm.announceTracker(hostname, port);
 			out = resp.peers;
 		}
 	}

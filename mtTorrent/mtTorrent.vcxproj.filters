@@ -57,6 +57,9 @@
     <ClCompile Include="UdpTrackerComm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="HttpTrackerComm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RiotRestApi.h">
@@ -99,6 +102,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="UdpTrackerComm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpTrackerComm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

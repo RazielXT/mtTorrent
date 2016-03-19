@@ -186,4 +186,5 @@ void Communicator::test()
 Torrent::Communicator::Communicator() : trackers(&client, &torrentInfo), scheduler(&torrentInfo)
 {
 	client.scheduler = &scheduler;
+	initIds();
 }

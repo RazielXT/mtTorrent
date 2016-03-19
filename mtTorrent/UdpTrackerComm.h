@@ -10,16 +10,6 @@ namespace Torrent
 		uint32_t transaction;
 	};
 
-	struct AnnounceResponse : public TrackerMessage
-	{
-		uint32_t interval;
-
-		uint32_t leechCount;
-		uint32_t seedCount;
-
-		std::vector<PeerInfo> peers;
-	};
-
 	struct ConnectResponse : public TrackerMessage
 	{
 		uint64_t connectionId;
@@ -48,7 +38,7 @@ namespace Torrent
 		UdpTrackerComm();
 		void setInfo(ClientInfo* client, TorrentInfo* tInfo);
 
-		AnnounceResponse announceUdpTracker(std::string host, std::string port);
+		AnnounceResponse announceTracker(std::string host, std::string port);
 
 	private:
 

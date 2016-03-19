@@ -124,6 +124,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ExtensionProtocol.cpp" />
+    <ClCompile Include="HttpTrackerComm.cpp" />
     <ClCompile Include="Interface.cpp" />
     <ClCompile Include="ProgressScheduler.cpp" />
     <ClCompile Include="Network.cpp" />
@@ -140,6 +141,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ExtensionProtocol.h" />
+    <ClInclude Include="HttpTrackerComm.h" />
     <ClInclude Include="ProgressScheduler.h" />
     <ClInclude Include="Interface.h" />
     <ClInclude Include="Network.h" />

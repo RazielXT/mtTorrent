@@ -26,10 +26,14 @@ AnnounceResponse UdpTrackerComm::getAnnounceResponse(DataBuffer buffer)
 	PacketReader packet(buffer);
 
 	AnnounceResponse resp;
-	resp.action = packet.pop32();
-	resp.transaction = packet.pop32();
-	resp.interval = packet.pop32();
 
+	auto action = packet.pop32();
+	auto transaction = packet.pop32();
+
+	if (!validResponse(TrackerMessage{ action, transaction }))
+		return resp;
+
+	resp.interval = packet.pop32();
 	resp.leechCount = packet.pop32();
 	resp.seedCount = packet.pop32();
 
@@ -47,9 +51,9 @@ AnnounceResponse UdpTrackerComm::getAnnounceResponse(DataBuffer buffer)
 	return resp;
 }
 
-AnnounceResponse UdpTrackerComm::announceUdpTracker(std::string host, std::string port)
+AnnounceResponse UdpTrackerComm::announceTracker(std::string host, std::string port)
 {
-	std::cout << "Announcing to tracker " << host << "\n";
+	std::cout << "Announcing to UDP tracker " << host << "\n";
 
 	AnnounceResponse announceMsg;
 
@@ -78,7 +82,7 @@ AnnounceResponse UdpTrackerComm::announceUdpTracker(std::string host, std::strin
 			announceMsg = getAnnounceResponse(announceMsgBuffer);
 		}
 
-		std::cout << "Tracker " << host << " returned peers:" << std::to_string(announceMsg.peers.size()) << ", p: " << std::to_string(announceMsg.seedCount) << ", l: " << std::to_string(announceMsg.leechCount) << "\n";
+		std::cout << "Udp Tracker " << host << " returned peers:" << std::to_string(announceMsg.peers.size()) << ", p: " << std::to_string(announceMsg.seedCount) << ", l: " << std::to_string(announceMsg.leechCount) << "\n";
 	}
 	catch (const std::exception&e)
 	{

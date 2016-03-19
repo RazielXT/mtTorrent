@@ -46,6 +46,7 @@ namespace Torrent
 
 		std::vector<File> files;
 		std::string directory;
+		size_t fullSize;
 	};
 
 	namespace StorageType 
@@ -131,6 +132,16 @@ namespace Torrent
 		{
 			return ip == r.ip && port == r.port;
 		}
+	};
+
+	struct AnnounceResponse
+	{
+		uint32_t interval;
+
+		uint32_t leechCount;
+		uint32_t seedCount;
+
+		std::vector<PeerInfo> peers;
 	};
 
 	class ProgressScheduler;

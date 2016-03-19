@@ -11,51 +11,56 @@ struct PacketReader
 {
 	uint8_t pop()
 	{
-		uint8_t i = *reinterpret_cast<uint8_t*>(buf.data() + pos);
+		uint8_t i = *reinterpret_cast<const uint8_t*>(buffer + pos);
 		pos++;
 		return i;
 	}
 
 	uint16_t pop16()
 	{
-		uint16_t i = swap16(*reinterpret_cast<uint16_t*>(buf.data() + pos));
+		uint16_t i = swap16(*reinterpret_cast<const uint16_t*>(buffer + pos));
 		pos += sizeof i;
 		return i;
 	}
 
 	uint32_t pop32()
 	{
-		uint32_t i = swap32(*reinterpret_cast<uint32_t*>(buf.data() + pos));
+		uint32_t i = swap32(*reinterpret_cast<const uint32_t*>(buffer + pos));
 		pos += sizeof i;
 		return i;
 	}
 
 	uint64_t pop64()
 	{
-		uint64_t i = swap64(*reinterpret_cast<uint64_t*>(buf.data() + pos));
+		uint64_t i = swap64(*reinterpret_cast<const uint64_t*>(buffer + pos));
 		pos += sizeof i;
 		return i;
 	}
 
 	DataBuffer popBuffer(size_t size)
 	{
-		auto out = DataBuffer(buf.begin() + pos, buf.begin() + pos + size);
+		auto out = DataBuffer(buffer + pos, buffer + pos + size);
 		pos += size;
 		return out;
 	}
 
-	PacketReader(DataBuffer& buffer) : buf(buffer)
+	PacketReader(DataBuffer& buffer) : buffer(buffer.data()), size(buffer.size())
+	{
+	}
+
+	PacketReader(const char* buf, size_t sz) : buffer(buf), size(sz)
 	{
 	}
 
 	size_t getRemainingSize()
 	{
-		return buf.size() - pos;
+		return size - pos;
 	}
 
 private:
 
-	DataBuffer& buf;
+	const char* buffer = nullptr;
+	size_t size = 0;
 	size_t pos = 0;
 };
 
