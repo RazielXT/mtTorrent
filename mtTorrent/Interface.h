@@ -136,10 +136,10 @@ namespace Torrent
 
 	struct AnnounceResponse
 	{
-		uint32_t interval;
+		uint32_t interval = 5*60;
 
-		uint32_t leechCount;
-		uint32_t seedCount;
+		uint32_t leechCount = 0;
+		uint32_t seedCount = 0;
 
 		std::vector<PeerInfo> peers;
 	};

@@ -39,7 +39,7 @@ bool containsPeer(std::vector<std::unique_ptr<PeerCommunication>>& peers, PeerIn
 
 void Communicator::test()
 {
-	if (!torrentParser.parseFile("D:\\boku.torrent"))
+	if (!torrentParser.parseFile("D:\\movieRare.torrent"))
 		return;
 
 	torrentInfo = torrentParser.parseTorrentInfo();

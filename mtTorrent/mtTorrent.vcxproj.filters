@@ -107,5 +107,8 @@
     <ClInclude Include="HttpTrackerComm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="LibInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

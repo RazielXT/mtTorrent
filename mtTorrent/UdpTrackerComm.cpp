@@ -30,7 +30,7 @@ AnnounceResponse UdpTrackerComm::getAnnounceResponse(DataBuffer buffer)
 	auto action = packet.pop32();
 	auto transaction = packet.pop32();
 
-	if (!validResponse(TrackerMessage{ action, transaction }))
+	if (!validResponse(TrackerMessage{ action, transaction }) || buffer.size() < 26)
 		return resp;
 
 	resp.interval = packet.pop32();
