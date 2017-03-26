@@ -3,7 +3,7 @@
 #include "Network.h"
 #include <iostream>
 
-using namespace Torrent;
+using namespace mtt;
 
 ConnectResponse UdpTrackerComm::getConnectResponse(DataBuffer buffer)
 {
@@ -95,6 +95,7 @@ AnnounceResponse UdpTrackerComm::announceTracker(std::string host, std::string p
 DataBuffer UdpTrackerComm::createAnnounceRequest(ConnectResponse& response)
 {
 	auto transaction = generateTransaction();
+	auto client = mtt::getClientInfo();
 
 	lastMessage = { Announce, transaction };
 
@@ -138,17 +139,11 @@ DataBuffer UdpTrackerComm::createConnectRequest()
 	return packet.getBuffer();
 }
 
-void Torrent::UdpTrackerComm::setInfo(ClientInfo* c, TorrentInfo* t)
-{
-	client = c;
-	torrent = t;
-}
-
-bool Torrent::UdpTrackerComm::validResponse(TrackerMessage& resp)
+bool mtt::UdpTrackerComm::validResponse(TrackerMessage& resp)
 {
 	return resp.action == lastMessage.action && resp.transaction == lastMessage.transaction;
 }
 
-Torrent::UdpTrackerComm::UdpTrackerComm()
+mtt::UdpTrackerComm::UdpTrackerComm(TorrentFileInfo* t) : torrent(t)
 {
 }

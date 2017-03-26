@@ -4,11 +4,11 @@
 #include "PeerCommunication.h"
 #include "UdpTrackerComm.h"
 
-namespace Torrent
+namespace mtt
 {
 	struct TrackerCollector
 	{
-		TrackerCollector(ClientInfo* client, TorrentInfo* tInfo);
+		TrackerCollector(TorrentFileInfo* tInfo);
 
 		std::vector<PeerInfo> announceAll();
 		std::vector<PeerInfo> announce(size_t id);
@@ -18,6 +18,6 @@ namespace Torrent
 	private:
 
 		ClientInfo* client;
-		TorrentInfo* torrent;
+		TorrentFileInfo* torrent;
 	};
 }

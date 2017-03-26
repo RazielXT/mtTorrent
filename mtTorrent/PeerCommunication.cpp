@@ -3,19 +3,16 @@
 #include <iostream>
 #include "ProgressScheduler.h"
 
-using namespace Torrent;
+using namespace mtt;
 
-PeerCommunication::PeerCommunication(ClientInfo* cInfo) : stream(*cInfo->network.io_service)
+PeerCommunication::PeerCommunication(boost::asio::io_service* io_service, ProgressScheduler* sched) : scheduler(sched), stream(*io_service)
 {
-	client = cInfo;
-	ext.setInfo(cInfo);
-
 	stream.setOnConnectCallback(std::bind(&PeerCommunication::connectionOpened, this));
 	stream.setOnCloseCallback(std::bind(&PeerCommunication::connectionClosed, this));
 	stream.setOnReceiveCallback(std::bind(&PeerCommunication::dataReceived, this));
 }
 
-void PeerCommunication::start(TorrentInfo* tInfo, PeerInfo info)
+void PeerCommunication::start(TorrentFileInfo* tInfo, PeerInfo info)
 {
 	active = true;
 	torrent = tInfo;
@@ -39,7 +36,7 @@ DataBuffer PeerCommunication::getHandshakeMessage()
 	packet.add(reserved_byte, 8);
 
 	packet.add(torrent->infoHash.data(), torrent->infoHash.size());
-	packet.add(client->hashId, 20);
+	packet.add(mtt::getClientInfo()->hashId, 20);
 
 	return packet.getBuffer();
 }
@@ -67,7 +64,7 @@ void PeerCommunication::connectionOpened()
 		handshake(peerInfo);
 }
 
-bool Torrent::PeerCommunication::validPiece()
+bool mtt::PeerCommunication::validPiece()
 {
 	unsigned char hash[SHA_DIGEST_LENGTH];
 	SHA1((const unsigned char*)downloadingPiece.data.data(), downloadingPiece.dataSize, hash);
@@ -75,7 +72,7 @@ bool Torrent::PeerCommunication::validPiece()
 	return memcmp(hash, scheduledPieceInfo.hash, SHA_DIGEST_LENGTH) == 0;
 }
 
-void Torrent::PeerCommunication::stop()
+void mtt::PeerCommunication::stop()
 {
 	if (active)
 		stream.close();
@@ -83,12 +80,12 @@ void Torrent::PeerCommunication::stop()
 	active = false;
 }
 
-void Torrent::PeerCommunication::connectionClosed()
+void mtt::PeerCommunication::connectionClosed()
 {
 	active = false;
 }
 
-Torrent::PeerMessage Torrent::PeerCommunication::readNextStreamMessage()
+mtt::PeerMessage mtt::PeerCommunication::readNextStreamMessage()
 {
 	std::lock_guard<std::mutex> guard(read_mutex);
 
@@ -103,7 +100,7 @@ Torrent::PeerMessage Torrent::PeerCommunication::readNextStreamMessage()
 	return msg;
 }
 
-void Torrent::PeerCommunication::sendInterested()
+void mtt::PeerCommunication::sendInterested()
 {
 	state.amInterested = true;
 
@@ -115,13 +112,13 @@ void Torrent::PeerCommunication::sendInterested()
 	stream.write(interestedMsg);
 }
 
-void Torrent::PeerCommunication::sendHandshakeExt()
+void mtt::PeerCommunication::sendHandshakeExt()
 {
 	auto data = ext.getExtendedHandshakeMessage();
 	stream.write(data);
 }
 
-void Torrent::PeerCommunication::sendBlockRequest(PieceBlockInfo& block)
+void mtt::PeerCommunication::sendBlockRequest(PieceBlockInfo& block)
 {
 	PacketBuilder packet;
 	packet.add32(13);
@@ -133,15 +130,15 @@ void Torrent::PeerCommunication::sendBlockRequest(PieceBlockInfo& block)
 	stream.write(packet.getBuffer());
 }
 
-void Torrent::PeerCommunication::schedulePieceDownload(bool forceNext)
+void mtt::PeerCommunication::schedulePieceDownload(bool forceNext)
 {
-	const int batchSize = 4;
-	const int nextBatchMin = 2;
+	const int batchSize = 10;
+	const int nextBatchMin = 4;
 	static int pieceTodo = 0;
 
 	if (forceNext || downloadingPiece.receivedBlocks == scheduledPieceInfo.blocksCount)
 	{
-		scheduledPieceInfo = client->scheduler->getNextPieceDownload(peerPieces);
+		scheduledPieceInfo = scheduler->getNextPieceDownload(peerPieces);
 		downloadingPiece.reset(torrent->pieceSize);
 		pieceTodo = 0;
 	}	
@@ -172,10 +169,10 @@ void Torrent::PeerCommunication::schedulePieceDownload(bool forceNext)
 	}
 }
 
-void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
+void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 {
-	std::cout << peerInfo.ipStr << "_ID:" << std::to_string(message.id) << ", size: " << std::to_string(message.messageSize) << "\n";
-	//std::cout << "Read " << getTimestamp() << "\n";
+	if (message.id != Piece)
+		std::cout << peerInfo.ipStr << "_ID:" << std::to_string(message.id) << ", size: " << std::to_string(message.messageSize) << "\n";
 
 	if (message.id == KeepAlive)
 	{
@@ -203,6 +200,8 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 	{
 		std::lock_guard<std::mutex> guard(schedule_mutex);
 			
+		std::cout << "Piece id: " << std::to_string(message.piece.info.index) << ", size: " << std::to_string(message.piece.info.length) << "\n";
+
 		if(message.piece.info.index != downloadingPiece.index)
 			std::cout << peerInfo.ipStr << " Invalid block!! \n";
 		else
@@ -214,8 +213,8 @@ void Torrent::PeerCommunication::handleMessage(PeerMessage& message)
 			{
 				if (validPiece())
 				{
-					client->scheduler->addDownloadedPiece(downloadingPiece);
-					std::cout << peerInfo.ipStr << " Piece Added, Percentage: " << std::to_string(client->scheduler->getPercentage()) << "\n";
+					scheduler->addDownloadedPiece(downloadingPiece);
+					std::cout << peerInfo.ipStr << " Piece Added, Percentage: " << std::to_string(scheduler->getPercentage()) << "\n";
 				}
 				else
 					std::cout << peerInfo.ipStr << " Invalid piece!! \n";

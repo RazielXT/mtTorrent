@@ -1,6 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="DebugStandalone|Win32">
+      <Configuration>DebugStandalone</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugStandalone|x64">
+      <Configuration>DebugStandalone</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
@@ -31,6 +39,12 @@
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugStandalone|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
@@ -40,6 +54,12 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugStandalone|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
@@ -59,10 +79,16 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugStandalone|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugStandalone|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -78,6 +104,14 @@
       <AdditionalIncludeDirectories>D:\AA\boost_1_60_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugStandalone|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>D:\AA\boost_1_60_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -85,6 +119,20 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost64-1.60.0-vs2015\include\boost-1_60;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\include64;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\..\boost64-1.60.0-vs2015\lib;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ssleay32MTd.lib;libeay32MTd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugStandalone|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost64-1.60.0-vs2015\include\boost-1_60;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\include64;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PreprocessorDefinitions>STANDALONE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(ProjectDir)..\..\boost64-1.60.0-vs2015\lib;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -125,32 +173,36 @@
   <ItemGroup>
     <ClCompile Include="ExtensionProtocol.cpp" />
     <ClCompile Include="HttpTrackerComm.cpp" />
-    <ClCompile Include="Interface.cpp" />
+    <ClCompile Include="Torrent.cpp" />
+    <ClCompile Include="TorrentDefines.cpp" />
     <ClCompile Include="ProgressScheduler.cpp" />
     <ClCompile Include="Network.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PeerCommunication.cpp" />
     <ClCompile Include="PeerMessage.cpp" />
     <ClCompile Include="RiotRestApi.cpp" />
-    <ClCompile Include="Communicator.cpp" />
+    <ClCompile Include="PeerMgr.cpp" />
     <ClCompile Include="Storage.cpp" />
     <ClCompile Include="TcpAsyncStream.cpp" />
     <ClCompile Include="BencodeParser.cpp" />
+    <ClCompile Include="Core.cpp" />
     <ClCompile Include="TrackerCommunication.cpp" />
     <ClCompile Include="UdpTrackerComm.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ExtensionProtocol.h" />
+    <ClInclude Include="Torrent.h" />
     <ClInclude Include="HttpTrackerComm.h" />
-    <ClInclude Include="LibInterface.h" />
-    <ClInclude Include="ProgressScheduler.h" />
     <ClInclude Include="Interface.h" />
+    <ClInclude Include="Core.h" />
+    <ClInclude Include="ProgressScheduler.h" />
+    <ClInclude Include="TorrentDefines.h" />
     <ClInclude Include="Network.h" />
     <ClInclude Include="PacketHelper.h" />
     <ClInclude Include="PeerCommunication.h" />
     <ClInclude Include="PeerMessage.h" />
     <ClInclude Include="RiotRestApi.h" />
-    <ClInclude Include="Communicator.h" />
+    <ClInclude Include="PeerMgr.h" />
     <ClInclude Include="Storage.h" />
     <ClInclude Include="TcpAsyncStream.h" />
     <ClInclude Include="BencodeParser.h" />

@@ -3,13 +3,11 @@
 #include <iostream>
 #include "HttpTrackerComm.h"
 
-using namespace Torrent;
+using namespace mtt;
 
-Torrent::TrackerCollector::TrackerCollector(ClientInfo* c, TorrentInfo* t)
+mtt::TrackerCollector::TrackerCollector(TorrentFileInfo* t)
 {
-	client = c;
 	torrent = t;
-
 	count = torrent->announceList.size();
 }
 
@@ -34,7 +32,7 @@ std::string cutStringPart(std::string& source, DataBuffer endChars, int cutAdd)
 	return ret;
 }
 
-std::vector<PeerInfo> Torrent::TrackerCollector::announceAll()
+std::vector<PeerInfo> mtt::TrackerCollector::announceAll()
 {
 	count = torrent->announceList.size();
 
@@ -66,7 +64,7 @@ std::vector<PeerInfo> Torrent::TrackerCollector::announceAll()
 	return resp;
 }
 
-std::vector<PeerInfo> Torrent::TrackerCollector::announce(size_t id)
+std::vector<PeerInfo> mtt::TrackerCollector::announce(size_t id)
 {
 	std::vector<PeerInfo> out;
 
@@ -80,16 +78,13 @@ std::vector<PeerInfo> Torrent::TrackerCollector::announce(size_t id)
 
 		if (protocol == "udp")
 		{
-			UdpTrackerComm comm;
-			comm.setInfo(client, torrent);
-
+			UdpTrackerComm comm(torrent);
 			auto resp = comm.announceTracker(hostname, port);
 			out = resp.peers;
 		}
 		if (protocol == "http")
 		{
-			HttpTrackerComm comm;
-			comm.setInfo(client, torrent);
+			HttpTrackerComm comm(torrent);
 			auto resp = comm.announceTracker(hostname, port);
 			out = resp.peers;
 		}

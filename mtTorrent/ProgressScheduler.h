@@ -3,13 +3,13 @@
 #include "Storage.h"
 #include <mutex>
 
-namespace Torrent
+namespace mtt
 {
 	class ProgressScheduler
 	{
 	public:
 
-		ProgressScheduler(TorrentInfo* torrent);
+		ProgressScheduler(TorrentFileInfo* torrent);
 
 		void selectFiles(std::vector<File> selection);
 
@@ -19,7 +19,9 @@ namespace Torrent
 		bool finished();
 		float getPercentage();
 
-		void exportFiles(std::string path);
+		void saveProgress();
+		void loadProgress();
+		void exportFiles();
 
 	private:
 
@@ -29,6 +31,6 @@ namespace Torrent
 		std::mutex schedule_mutex;
 
 		PiecesProgress piecesTodo;
-		TorrentInfo* torrent;
+		TorrentFileInfo* torrent;
 	};
 }

@@ -2,7 +2,7 @@
 #include <iostream>
 #include <openssl/sha.h>
 
-using namespace Torrent;
+using namespace mtt;
 
 bool BencodeParser::parse(std::string& str)
 {
@@ -31,7 +31,7 @@ bool BencodeParser::parse(const char* data, size_t length)
 	return true;
 }
 
-bool BencodeParser::parseFile(char* filename)
+bool BencodeParser::parseFile(const char* filename)
 {
 	std::ifstream file(filename, std::ios_base::binary);
 
@@ -60,9 +60,9 @@ uint32_t getPieceIndex(size_t pos, size_t pieceSize)
 	return static_cast<uint32_t>(p);
 }
 
-TorrentInfo BencodeParser::parseTorrentInfo()
+TorrentFileInfo BencodeParser::parseTorrentInfo()
 {
-	TorrentInfo info;
+	TorrentFileInfo info;
 
 	if (parsedData.type == Object::Dictionary)
 	{
@@ -303,7 +303,7 @@ int BencodeParser::parseInt(const char** body)
 	return std::stoi(num);
 }
 
-Torrent::BencodeParser::~BencodeParser()
+mtt::BencodeParser::~BencodeParser()
 {
 	parsedData.cleanup();
 }
@@ -324,7 +324,7 @@ BencodeParser::BenList* BencodeParser::Object::getListItem(const char* name)
 	return nullptr;
 }
 
-std::string* Torrent::BencodeParser::Object::getTxtItem(const char* name)
+std::string* mtt::BencodeParser::Object::getTxtItem(const char* name)
 {
 	if (type == BencodeParser::Object::Dictionary)
 	{
@@ -340,7 +340,7 @@ std::string* Torrent::BencodeParser::Object::getTxtItem(const char* name)
 	return nullptr;
 }
 
-int* Torrent::BencodeParser::Object::getIntItem(const char* name)
+int* mtt::BencodeParser::Object::getIntItem(const char* name)
 {
 	if (type == BencodeParser::Object::Dictionary)
 	{
@@ -356,7 +356,7 @@ int* Torrent::BencodeParser::Object::getIntItem(const char* name)
 	return nullptr;
 }
 
-void Torrent::BencodeParser::Object::cleanup()
+void mtt::BencodeParser::Object::cleanup()
 {
 	if (type == Dictionary)
 	{

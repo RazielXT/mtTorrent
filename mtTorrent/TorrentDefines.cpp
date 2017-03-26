@@ -1,8 +1,8 @@
-#include "Interface.h"
+#include "TorrentDefines.h"
 
 int gcount = 0;
 
-using namespace Torrent;
+using namespace mtt;
 
 int64_t getTimeSeconds()
 {
@@ -25,13 +25,13 @@ std::string getTimestamp()
 	return std::to_string(getTimeSeconds());
 }
 
-uint32_t Torrent::generateTransaction()
+uint32_t mtt::generateTransaction()
 {
 	int id = rand();
 	return *reinterpret_cast<uint32_t*>(&id);
 }
 
-void Torrent::PeerInfo::setIp(uint32_t addr)
+void mtt::PeerInfo::setIp(uint32_t addr)
 {
 	ip = addr;
 
@@ -44,17 +44,17 @@ void Torrent::PeerInfo::setIp(uint32_t addr)
 	ipStr = std::to_string(ipAddr[0]) + "." + std::to_string(ipAddr[1]) + "." + std::to_string(ipAddr[2]) + "." + std::to_string(ipAddr[3]);
 }
 
-bool Torrent::PiecesProgress::empty()
+bool mtt::PiecesProgress::empty()
 {
 	return pieces.empty();
 }
 
-float Torrent::PiecesProgress::getPercentage()
+float mtt::PiecesProgress::getPercentage()
 {
 	return piecesStartCount == 0 ? 1 : (pieces.size() / (float)piecesStartCount);
 }
 
-void Torrent::PiecesProgress::init(size_t size)
+void mtt::PiecesProgress::init(size_t size)
 {
 	piecesStartCount = size;
 	
@@ -64,7 +64,7 @@ void Torrent::PiecesProgress::init(size_t size)
 	}
 }
 
-void Torrent::PiecesProgress::fromSelection(std::vector<File>& files)
+void mtt::PiecesProgress::fromSelection(std::vector<File>& files)
 {
 	pieces.clear();
 
@@ -79,18 +79,18 @@ void Torrent::PiecesProgress::fromSelection(std::vector<File>& files)
 	piecesStartCount = pieces.size();
 }
 
-void Torrent::PiecesProgress::reset(PiecesProgress& parent)
+void mtt::PiecesProgress::reset(PiecesProgress& parent)
 {
 	pieces = parent.pieces;
 	piecesStartCount = parent.piecesStartCount;
 }
 
-void Torrent::PiecesProgress::addPiece(uint32_t index)
+void mtt::PiecesProgress::addPiece(uint32_t index)
 {
 	pieces[index] = true;
 }
 
-void Torrent::PiecesProgress::removePiece(uint32_t index)
+void mtt::PiecesProgress::removePiece(uint32_t index)
 {
 	auto it = pieces.find(index);
 
@@ -100,13 +100,13 @@ void Torrent::PiecesProgress::removePiece(uint32_t index)
 	}
 }
 
-bool Torrent::PiecesProgress::hasPiece(uint32_t index)
+bool mtt::PiecesProgress::hasPiece(uint32_t index)
 {
 	auto it = pieces.find(index);
 	return it != pieces.end() && it->second;
 }
 
-void Torrent::PiecesProgress::fromBitfield(DataBuffer& bitfield, size_t piecesCount)
+void mtt::PiecesProgress::fromBitfield(DataBuffer& bitfield, size_t piecesCount)
 {
 	pieces.clear();
 	piecesStartCount = piecesCount;
@@ -123,12 +123,12 @@ void Torrent::PiecesProgress::fromBitfield(DataBuffer& bitfield, size_t piecesCo
 	}
 }
 
-DataBuffer Torrent::PiecesProgress::toBitfield()
+DataBuffer mtt::PiecesProgress::toBitfield()
 {
 	return{};
 }
 
-const std::map<uint32_t, bool>& Torrent::PiecesProgress::get()
+const std::map<uint32_t, bool>& mtt::PiecesProgress::get()
 {
 	return pieces;
 }

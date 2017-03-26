@@ -1,8 +1,8 @@
 #pragma once
 #include <vector>
-#include "Interface.h"
+#include "TorrentDefines.h"
 
-namespace Torrent
+namespace mtt
 {
 	enum PeerMessageId
 	{

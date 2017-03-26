@@ -2,7 +2,7 @@
 #include "PacketHelper.h"
 #include "PeerMessage.h"
 
-void Torrent::PeerExchangeExtension::load(BencodeParser::Object& data)
+void mtt::PeerExchangeExtension::load(BencodeParser::Object& data)
 {
 	added.clear();
 	addedFlags.clear();
@@ -38,12 +38,7 @@ void Torrent::PeerExchangeExtension::load(BencodeParser::Object& data)
 	}
 }
 
-void Torrent::ExtensionProtocol::setInfo(ClientInfo* client)
-{
-	clientInfo = client;
-}
-
-Torrent::ExtendedMessageType Torrent::ExtensionProtocol::load(char id, DataBuffer& data)
+mtt::ExtendedMessageType mtt::ExtensionProtocol::load(char id, DataBuffer& data)
 {
 	if (id >= InvalidEx)
 		return InvalidEx;
@@ -94,12 +89,12 @@ Torrent::ExtendedMessageType Torrent::ExtensionProtocol::load(char id, DataBuffe
 	return InvalidEx;
 }
 
-DataBuffer Torrent::ExtensionProtocol::getExtendedHandshakeMessage()
+DataBuffer mtt::ExtensionProtocol::getExtendedHandshakeMessage()
 {
 	PacketBuilder builder;
 
 	//std::string extDict = "d1:md6:ut_pexi" + std::to_string(PexEx) + "ee";
-	std::string extDict = "d1:md11:LT_metadatai2e6:ut_pexi" + std::to_string(PexEx) + "ee1:pi" + std::to_string(clientInfo->listenPort) + "e1:v" + std::to_string(strlen(MT_NAME)) +":" + MT_NAME + "e";
+	std::string extDict = "d1:md11:LT_metadatai2e6:ut_pexi" + std::to_string(PexEx) + "ee1:pi" + std::to_string(mtt::getClientInfo()->listenPort) + "e1:v" + std::to_string(strlen(MT_NAME)) +":" + MT_NAME + "e";
 	builder.add32(static_cast<uint32_t>(2 + extDict.length()));
 	builder.add(Extended);
 	builder.add(HandshakeEx);

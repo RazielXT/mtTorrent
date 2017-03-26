@@ -2,8 +2,10 @@
 #include <istream>
 #include <ostream>
 #include <string>
-#include <RiotRestApi.h>
-#include "Communicator.h"
+//#include <RiotRestApi.h>
+#include "Core.h"
+
+mtt::Core core;
 
 #ifndef STANDALONE
 
@@ -48,18 +50,30 @@ int __stdcall Main(HINSTANCE h, ULONG ulReason, PVOID pvReserved) {
 }
 
 #else
+
+BOOL WINAPI ConsoleHandler(DWORD CEvent)
+{
+	//if(CEvent == CTRL_CLOSE_EVENT)
+	//	MessageBox(NULL, "Program being closed!", "CEvent", MB_OK);
+	
+	return TRUE;
+}
+
 int main(int argc, char* argv[])
 {
+	SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleHandler, TRUE);
+
 	try
 	{
-		//riotApiRequest();
-
-		Torrent::Communicator torrent;
-		torrent.test();
+		if (auto t = core.getTorrent(core.addTorrent("D:\\konosuba.torrent")))
+		{
+			t->scheduler->selectFiles({ t->info.files.front() });
+			t->start();
+		}
 	}
 	catch (std::exception& e)
 	{
-		std::cout << "Exception: " << e.what() << "\n";
+		std::cout << "End exception: " << e.what() << "\n";
 	}
 
 	std::cout << "Count: " << std::to_string(gcount) << "\n";

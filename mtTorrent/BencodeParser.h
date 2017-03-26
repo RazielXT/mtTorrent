@@ -3,9 +3,9 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "Interface.h"
+#include "TorrentDefines.h"
 
-namespace Torrent
+namespace mtt
 {
 	class BencodeParser
 	{
@@ -13,7 +13,7 @@ namespace Torrent
 
 		~BencodeParser();
 
-		bool parseFile(char* filename);
+		bool parseFile(const char* filename);
 		bool parse(DataBuffer& buffer);
 		bool parse(std::string& str);
 		bool parse(const char* data, size_t length);
@@ -52,7 +52,7 @@ namespace Torrent
 		Object parsedData;
 		DataBuffer infoHash;
 
-		TorrentInfo parseTorrentInfo();
+		TorrentFileInfo parseTorrentInfo();
 
 	private:
 

@@ -1,13 +1,13 @@
 #include "ProgressScheduler.h"
 
-Torrent::ProgressScheduler::ProgressScheduler(TorrentInfo* t) : storage(t->pieceSize)
+mtt::ProgressScheduler::ProgressScheduler(TorrentFileInfo* t) : storage(t->pieceSize)
 {
 	torrent = t;
 	piecesTodo.init(torrent->pieces.size());
 	scheduleTodo.init(torrent->pieces.size());
 }
 
-void Torrent::ProgressScheduler::selectFiles(std::vector<Torrent::File> dlSelection)
+void mtt::ProgressScheduler::selectFiles(std::vector<mtt::File> dlSelection)
 {
 	std::lock_guard<std::mutex> guard(schedule_mutex);
 
@@ -17,9 +17,9 @@ void Torrent::ProgressScheduler::selectFiles(std::vector<Torrent::File> dlSelect
 	storage.selectFiles(dlSelection);
 }
 
-std::vector<Torrent::PieceBlockInfo> makePieceBlocks(uint32_t index, Torrent::TorrentInfo* torrent)
+std::vector<mtt::PieceBlockInfo> makePieceBlocks(uint32_t index, mtt::TorrentFileInfo* torrent)
 {
-	std::vector<Torrent::PieceBlockInfo> out;
+	std::vector<mtt::PieceBlockInfo> out;
 	const size_t blockRequestSize = 16 * 1024;
 	size_t pieceSize = torrent->pieceSize;
 
@@ -28,7 +28,7 @@ std::vector<Torrent::PieceBlockInfo> makePieceBlocks(uint32_t index, Torrent::To
 
 	for (int j = 0; j*blockRequestSize < pieceSize; j++)
 	{
-		Torrent::PieceBlockInfo block;
+		mtt::PieceBlockInfo block;
 		block.begin = j*blockRequestSize;
 		block.index = index;
 		block.length = static_cast<uint32_t>(std::min(pieceSize - block.begin, blockRequestSize));
@@ -39,11 +39,11 @@ std::vector<Torrent::PieceBlockInfo> makePieceBlocks(uint32_t index, Torrent::To
 	return out;
 }
 
-Torrent::PieceDownloadInfo Torrent::ProgressScheduler::getNextPieceDownload(PiecesProgress& source)
+mtt::PieceDownloadInfo mtt::ProgressScheduler::getNextPieceDownload(PiecesProgress& source)
 {
 	std::lock_guard<std::mutex> guard(schedule_mutex);
 
-	Torrent::PieceDownloadInfo info;
+	mtt::PieceDownloadInfo info;
 
 	if(scheduleTodo.empty() && !piecesTodo.empty())
 		scheduleTodo.reset(piecesTodo);
@@ -71,7 +71,7 @@ Torrent::PieceDownloadInfo Torrent::ProgressScheduler::getNextPieceDownload(Piec
 	return info;
 }
 
-void Torrent::ProgressScheduler::addDownloadedPiece(DownloadedPiece& piece)
+void mtt::ProgressScheduler::addDownloadedPiece(DownloadedPiece& piece)
 {
 	std::lock_guard<std::mutex> guard(schedule_mutex);
 
@@ -81,18 +81,28 @@ void Torrent::ProgressScheduler::addDownloadedPiece(DownloadedPiece& piece)
 	storage.storePiece(piece);
 }
 
-bool Torrent::ProgressScheduler::finished()
+bool mtt::ProgressScheduler::finished()
 {
 	return piecesTodo.empty();
 }
 
-float Torrent::ProgressScheduler::getPercentage()
+float mtt::ProgressScheduler::getPercentage()
 {
 	return 1.0f - piecesTodo.getPercentage();
 }
 
-void Torrent::ProgressScheduler::exportFiles(std::string path)
+void mtt::ProgressScheduler::saveProgress()
 {
-	storage.exportFiles(path);
+	storage.saveProgress();
+}
+
+void mtt::ProgressScheduler::loadProgress()
+{
+	storage.loadProgress();
+}
+
+void mtt::ProgressScheduler::exportFiles()
+{
+	storage.exportFiles();
 }
 

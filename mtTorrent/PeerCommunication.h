@@ -3,10 +3,10 @@
 #include "TcpAsyncStream.h"
 #include "BencodeParser.h"
 #include "PeerMessage.h"
-#include "Interface.h"
+#include "TorrentDefines.h"
 #include "ExtensionProtocol.h"
 
-namespace Torrent
+namespace mtt
 {
 	struct PeerState
 	{
@@ -23,14 +23,14 @@ namespace Torrent
 	{
 	public:
 
-		PeerCommunication(ClientInfo* client);
+		PeerCommunication(boost::asio::io_service* io_service, ProgressScheduler* scheduler);
 
 		ExtensionProtocol ext;
 		PeerState state;
 
 		PeerInfo peerInfo;
-		TorrentInfo* torrent;
-		ClientInfo* client;
+		TorrentFileInfo* torrent;
+		ProgressScheduler* scheduler;
 
 		PiecesProgress peerPieces;
 
@@ -40,7 +40,7 @@ namespace Torrent
 
 		bool validPiece();
 
-		void start(TorrentInfo* torrent, PeerInfo peerInfo);
+		void start(TorrentFileInfo* torrent, PeerInfo peerInfo);
 		void stop();
 
 		void connectionOpened();

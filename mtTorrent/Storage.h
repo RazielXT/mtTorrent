@@ -1,45 +1,37 @@
 #pragma once
 
-#include "Interface.h"
+#include "TorrentDefines.h"
 
-namespace Torrent
+namespace mtt
 {
-	class MemoryStorage
-	{
-	public:
-
-		void prepare(File& file, size_t normalPieceSize);
-		void storePiece(File& file, DownloadedPiece& piece, size_t normalPieceSize);
-
-		std::map<int, DataBuffer> filesBuffer;
-		void exportFile(File& file, std::string path);
-	};
-
-	class FileStorage
-	{
-	public:
-
-		void flush() {};
-		void prepare(File& file) {};
-		void storePiece(File& file, DownloadedPiece& piece, size_t normalPieceSize) {};
-
-		std::vector<DownloadedPiece> cachedPieces;
-	};
-
 	class Storage
 	{
 	public:
 
 		Storage(size_t pieceSize);
 
-		void storePiece(DownloadedPiece& piece);
-		void exportFiles(std::string path);
-		void selectFiles(std::vector<Torrent::File>& files);
+		void setPath(std::string path);
 
-		MemoryStorage memoryStorage;
-		FileStorage fileStorage;
+		void storePiece(DownloadedPiece& piece);
+		void exportFiles();
+		void selectFiles(std::vector<mtt::File>& files);
+
+		void saveProgress();
+		void loadProgress();
 
 		DownloadSelection selection;
 		size_t pieceSize;
+
+	private:
+
+		std::string getFullpath(File& file);
+		void storePiece(File& file, DownloadedPiece& piece, size_t normalPieceSize);
+
+		const int piecesCacheSize = 5;
+		void flush(File& file);
+
+		std::string path;
+		std::map<int, std::vector<DownloadedPiece>> unsavedPieces;
+
 	};
 }

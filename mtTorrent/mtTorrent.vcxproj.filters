@@ -5,110 +5,129 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    <Filter Include="Source Files\Core">
+      <UniqueIdentifier>{956eb943-9978-42b3-b382-2ac0742ade1f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="Source Files\Core\Torrent">
+      <UniqueIdentifier>{913e770b-8b3a-45b7-aa70-a9db2c8abc47}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Core\Torrent\Download">
+      <UniqueIdentifier>{1bd05d52-d5e4-41d5-adc5-9252f5314b8c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Core\Torrent\Protocol">
+      <UniqueIdentifier>{fc624ad9-2e00-45a6-b029-64de25ae3d7b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Utils">
+      <UniqueIdentifier>{8c576c55-78ce-47ad-97d2-3968987cb6c6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="RiotRestApi.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Communicator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Network.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PeerCommunication.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="ExtensionProtocol.cpp">
+      <Filter>Source Files\Core\Torrent\Protocol</Filter>
     </ClCompile>
     <ClCompile Include="PeerMessage.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TrackerCommunication.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ProgressScheduler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BencodeParser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ExtensionProtocol.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TcpAsyncStream.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Core\Torrent\Protocol</Filter>
     </ClCompile>
     <ClCompile Include="Storage.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Core\Torrent\Download</Filter>
     </ClCompile>
-    <ClCompile Include="Interface.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="BencodeParser.cpp">
+      <Filter>Source Files\Utils</Filter>
     </ClCompile>
     <ClCompile Include="UdpTrackerComm.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Core\Torrent\Protocol</Filter>
+    </ClCompile>
+    <ClCompile Include="TrackerCommunication.cpp">
+      <Filter>Source Files\Core\Torrent\Protocol</Filter>
+    </ClCompile>
+    <ClCompile Include="TcpAsyncStream.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="ProgressScheduler.cpp">
+      <Filter>Source Files\Core\Torrent\Download</Filter>
+    </ClCompile>
+    <ClCompile Include="PeerCommunication.cpp">
+      <Filter>Source Files\Core\Torrent\Download</Filter>
+    </ClCompile>
+    <ClCompile Include="Network.cpp">
+      <Filter>Source Files\Utils</Filter>
     </ClCompile>
     <ClCompile Include="HttpTrackerComm.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Core\Torrent\Protocol</Filter>
+    </ClCompile>
+    <ClCompile Include="RiotRestApi.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="TorrentDefines.cpp">
+      <Filter>Source Files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Core.cpp">
+      <Filter>Source Files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Torrent.cpp">
+      <Filter>Source Files\Core\Torrent</Filter>
+    </ClCompile>
+    <ClCompile Include="PeerMgr.cpp">
+      <Filter>Source Files\Core\Torrent\Download</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="RiotRestApi.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Communicator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Network.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="PacketHelper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PeerCommunication.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PeerMessage.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TrackerCommunication.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Interface.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ProgressScheduler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BencodeParser.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ExtensionProtocol.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TcpAsyncStream.h">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="Storage.h">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files\Core\Torrent\Download</Filter>
     </ClInclude>
     <ClInclude Include="UdpTrackerComm.h">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files\Core\Torrent\Protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="TrackerCommunication.h">
+      <Filter>Source Files\Core\Torrent\Protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="TcpAsyncStream.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="ProgressScheduler.h">
+      <Filter>Source Files\Core\Torrent\Download</Filter>
+    </ClInclude>
+    <ClInclude Include="PeerMessage.h">
+      <Filter>Source Files\Core\Torrent\Protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="PeerCommunication.h">
+      <Filter>Source Files\Core\Torrent\Download</Filter>
+    </ClInclude>
+    <ClInclude Include="Network.h">
+      <Filter>Source Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="HttpTrackerComm.h">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files\Core\Torrent\Protocol</Filter>
     </ClInclude>
-    <ClInclude Include="LibInterface.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="BencodeParser.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="ExtensionProtocol.h">
+      <Filter>Source Files\Core\Torrent\Protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="RiotRestApi.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="TorrentDefines.h">
+      <Filter>Source Files\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Interface.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Core.h">
+      <Filter>Source Files\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Torrent.h">
+      <Filter>Source Files\Core\Torrent</Filter>
+    </ClInclude>
+    <ClInclude Include="PeerMgr.h">
+      <Filter>Source Files\Core\Torrent\Download</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

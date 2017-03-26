@@ -1,7 +1,7 @@
 #include "PeerMessage.h"
 #include "PacketHelper.h"
 
-using namespace Torrent;
+using namespace mtt;
 
 PeerMessage::PeerMessage(DataBuffer& data)
 {

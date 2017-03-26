@@ -1,7 +1,7 @@
 #pragma once
 #include "BencodeParser.h"
 
-namespace Torrent
+namespace mtt
 {
 	enum ExtendedMessageType
 	{
@@ -22,7 +22,6 @@ namespace Torrent
 
 	struct ExtensionProtocol
 	{	
-		void setInfo(ClientInfo* client);
 		ExtendedMessageType load(char id, DataBuffer& data);
 		DataBuffer getExtendedHandshakeMessage();
 
@@ -37,7 +36,6 @@ namespace Torrent
 
 	private:
 
-		ClientInfo* clientInfo;
 		BencodeParser parser;
 		std::map<int, ExtendedMessageType> messageIds;
 	};

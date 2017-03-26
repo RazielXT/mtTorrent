@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Interface.h"
+#include "TorrentDefines.h"
 
-namespace Torrent
+namespace mtt
 {
 	struct TrackerMessage
 	{
@@ -35,8 +35,7 @@ namespace Torrent
 	{
 	public:
 
-		UdpTrackerComm();
-		void setInfo(ClientInfo* client, TorrentInfo* tInfo);
+		UdpTrackerComm(TorrentFileInfo* tInfo);
 
 		AnnounceResponse announceTracker(std::string host, std::string port);
 
@@ -52,8 +51,6 @@ namespace Torrent
 		TrackerMessage lastMessage;
 
 		uint32_t connectionId;
-
-		ClientInfo* client;
-		TorrentInfo* torrent;
+		TorrentFileInfo* torrent;
 	};
 }

@@ -1,15 +1,14 @@
 #pragma once
 
-#include "Interface.h"
+#include "TorrentDefines.h"
 
-namespace Torrent
+namespace mtt
 {
 	class HttpTrackerComm
 	{
 	public:
 
-		HttpTrackerComm();
-		void setInfo(ClientInfo* client, TorrentInfo* tInfo);
+		HttpTrackerComm(TorrentFileInfo* tInfo);
 
 		AnnounceResponse announceTracker(std::string host, std::string port);
 
@@ -19,6 +18,6 @@ namespace Torrent
 		AnnounceResponse getAnnounceResponse(DataBuffer buffer);
 
 		ClientInfo* client;
-		TorrentInfo* torrent;
+		TorrentFileInfo* torrent;
 	};
 }

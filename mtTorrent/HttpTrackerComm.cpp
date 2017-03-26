@@ -4,7 +4,7 @@
 #include "BencodeParser.h"
 #include "PacketHelper.h"
 
-using namespace Torrent;
+using namespace mtt;
 
 std::string url_encode(const std::string &s)
 {
@@ -31,18 +31,11 @@ std::string url_encode(const std::string &s)
 	return e.str();
 }
 
-Torrent::HttpTrackerComm::HttpTrackerComm()
+mtt::HttpTrackerComm::HttpTrackerComm(TorrentFileInfo* t) : torrent(t)
 {
-
 }
 
-void Torrent::HttpTrackerComm::setInfo(ClientInfo* c, TorrentInfo* t)
-{
-	client = c;
-	torrent = t;
-}
-
-Torrent::AnnounceResponse Torrent::HttpTrackerComm::announceTracker(std::string host, std::string port)
+mtt::AnnounceResponse mtt::HttpTrackerComm::announceTracker(std::string host, std::string port)
 {
 	std::cout << "Announcing to HTTP tracker " << host << "\n";
 
@@ -73,8 +66,10 @@ Torrent::AnnounceResponse Torrent::HttpTrackerComm::announceTracker(std::string 
 	return announceMsg;
 }
 
-DataBuffer Torrent::HttpTrackerComm::createAnnounceRequest(std::string host, std::string port)
+DataBuffer mtt::HttpTrackerComm::createAnnounceRequest(std::string host, std::string port)
 {
+	auto client = mtt::getClientInfo();
+
 	std::string request = "GET /announce?info_hash=" + url_encode(std::string(torrent->infoHash.data(), 20)) + "&peer_id=" + url_encode(std::string(client->hashId, 20)) +
 		"&port=" + std::to_string(client->listenPort) + "&uploaded=0&downloaded=0&left=" + std::to_string(torrent->fullSize) + 
 		"&numwant=" + std::to_string(client->maxPeersPerRequest) + "&compact=1&no_peer_id=0&key=" + std::to_string(client->key) + "&event=started HTTP/1.0" + "\r\n" +
@@ -87,7 +82,7 @@ DataBuffer Torrent::HttpTrackerComm::createAnnounceRequest(std::string host, std
 	return DataBuffer(request.begin(), request.end());
 }
 
-Torrent::AnnounceResponse Torrent::HttpTrackerComm::getAnnounceResponse(DataBuffer buffer)
+mtt::AnnounceResponse mtt::HttpTrackerComm::getAnnounceResponse(DataBuffer buffer)
 {
 	AnnounceResponse response;
 

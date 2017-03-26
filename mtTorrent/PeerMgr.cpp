@@ -1,4 +1,4 @@
-#include "Communicator.h"
+#include "PeerMgr.h"
 #include "PacketHelper.h"
 #include "Network.h"
 
@@ -6,24 +6,7 @@
 #include <future>
 #include <iostream>
 
-using namespace Torrent;
-
-void Communicator::initIds()
-{
-	srand((unsigned int)time(NULL));
-
-	{
-		size_t hashLen = strlen(MT_HASH_NAME);
-		memcpy(client.hashId, MT_HASH_NAME, hashLen);
-
-		for (size_t i = hashLen; i < 20; i++)
-		{
-			client.hashId[i] = static_cast<uint8_t>(rand() % 255);
-		}
-	}
-
-	client.key = static_cast<uint32_t>(rand());
-}
+using namespace mtt;
 
 bool containsPeer(std::vector<std::unique_ptr<PeerCommunication>>& peers, PeerInfo& info)
 {
@@ -37,37 +20,29 @@ bool containsPeer(std::vector<std::unique_ptr<PeerCommunication>>& peers, PeerIn
 	return added;
 }
 
-void Communicator::test()
+PeerMgr::PeerMgr(TorrentFileInfo* info, ProgressScheduler& sched) : torrentInfo(info), scheduler(sched), trackers(torrentInfo)
 {
-	if (!torrentParser.parseFile("D:\\movieRare.torrent"))
-		return;
 
-	torrentInfo = torrentParser.parseTorrentInfo();
+}
 
-	ProgressScheduler progress(&torrentInfo);
-	//progress.selectFiles({ torrentInfo.files[3], torrentInfo.files[10], torrentInfo.files[12] });
-	progress.selectFiles(torrentInfo.files);
+void PeerMgr::start()
+{
+	Checkpoint check;
 
-	client.scheduler = &progress;
-
-	boost::asio::io_service io_service;
-	//tcp::resolver resolver(io_service);
-
-	client.network.io_service = &io_service;
-	//client.network.resolver = &resolver;
-
-	bool localTest = false;
+	bool localTest = true;
 
 	std::vector<PeerInfo> peers;
 	if(!localTest)
 		peers = trackers.announceAll();
 	else
-		peers.push_back({ "127.0.0.1" , 6881 });
+		peers.push_back({ "127.0.0.1" , 55391 });
 
 	size_t trackerReannounceId = 0;
 
 	size_t startPeersCount = 20;
 	size_t maxActivePeers = 10;
+
+	ClientInfo* client = mtt::getClientInfo();
 
 	if (peers.size())
 	{
@@ -79,13 +54,13 @@ void Communicator::test()
 
 		for (size_t i = 0; i < peersCount; i++)
 		{
-			peerComms[i] = std::make_unique<PeerCommunication>(&client);
-			peerComms[i]->start(&torrentInfo, peers[i]);
+			peerComms[i] = std::make_unique<PeerCommunication>(client->network.io_service, &scheduler);
+			peerComms[i]->start(torrentInfo, peers[i]);
 		}
 
-		std::thread service1([&io_service]() { io_service.run(); });
+		std::thread service1([client]() { client->network.io_service->run(); });
 
-		Checkpoint::hit(0, 5 * 60 * 1000);
+		check.hit(0, 5 * 60 * 1000);
 
 		bool actives = true;
 		while (actives)
@@ -105,7 +80,7 @@ void Communicator::test()
 					pexPeers.clear();
 				}		
 
-				if (!(*it)->active || progress.finished())
+				if (!(*it)->active || scheduler.finished())
 				{
 					if ((*it)->active)
 						(*it)->stop();
@@ -128,8 +103,8 @@ void Communicator::test()
 			{
 				if (!containsPeer(peerComms, peers[addingPeerId]))
 				{
-					auto p = std::make_unique<PeerCommunication>(&client);
-					p->start(&torrentInfo, peers[addingPeerId]);
+					auto p = std::make_unique<PeerCommunication>(client->network.io_service, &scheduler);
+					p->start(torrentInfo, peers[addingPeerId]);
 					peerComms.push_back(std::move(p));
 				}
 
@@ -143,7 +118,7 @@ void Communicator::test()
 
 				if (trackerReannounceId == 0)
 				{
-					timeForReannounceRound = Checkpoint::hit(0, 5 * 60 * 1000);
+					timeForReannounceRound = check.hit(0, 5 * 60 * 1000);
 				}
 
 				if (timeForReannounceRound)
@@ -161,8 +136,8 @@ void Communicator::test()
 			{
 				if (!containsPeer(peerComms, peer))
 				{
-					auto p = std::make_unique<PeerCommunication>(&client);
-					p->start(&torrentInfo, peer);
+					auto p = std::make_unique<PeerCommunication>(client->network.io_service, &scheduler);
+					p->start(torrentInfo, peer);
 					peerComms.push_back(std::move(p));
 				}
 			}
@@ -174,17 +149,10 @@ void Communicator::test()
 		}
 
 		service1.join();
-
 	}
 
-	if (progress.finished())
+	if (scheduler.finished())
 	{
-		progress.exportFiles("D:\\");
+		scheduler.exportFiles(getClientInfo()->settings.outDirectory);
 	}
-}
-
-Torrent::Communicator::Communicator() : trackers(&client, &torrentInfo), scheduler(&torrentInfo)
-{
-	client.scheduler = &scheduler;
-	initIds();
 }
