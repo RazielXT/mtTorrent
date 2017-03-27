@@ -20,12 +20,12 @@ void mtt::Storage::storePiece(DownloadedPiece& piece)
 
 		if (f.startPieceIndex <= piece.index && f.endPieceIndex >= piece.index)
 		{
-			storePiece(f, piece, pieceSize);
+			storePiece(f, piece);
 		}
 	}
 }
 
-void mtt::Storage::exportFiles()
+void mtt::Storage::flush()
 {
 	for (auto& s : selection.files)
 	{
@@ -40,6 +40,7 @@ void mtt::Storage::selectFiles(std::vector<mtt::File>& files)
 	for (auto& f : files)
 	{
 		selection.files.push_back({ f });
+		preallocate(f);
 	}
 }
 
@@ -53,7 +54,7 @@ void mtt::Storage::loadProgress()
 
 }
 
-void mtt::Storage::storePiece(File& file, DownloadedPiece& piece, size_t normalPieceSize)
+void mtt::Storage::storePiece(File& file, DownloadedPiece& piece)
 {
 	/*auto& outBuffer = filesBuffer[file.id];
 
@@ -80,15 +81,28 @@ void mtt::Storage::flush(File& file)
 
 	auto& pieces = unsavedPieces[file.id];
 
+	std::ofstream fileOut(path);
+
 	for (auto& p : pieces)
-	{
-		std::ofstream fileOut(path, std::ios_base::binary);
-		auto piecePos = 
+	{	
+		auto piecePos = file.startPiecePos + (p.index - file.startPieceIndex)*pieceSize;
 		fileOut.seekp(piecePos);
 		fileOut.write(p.data.data(), p.dataSize);
 	}
 
 	unsavedPieces[file.id].clear();
+}
+
+void mtt::Storage::preallocate(File& file)
+{
+	auto fullpath = getFullpath(file);
+	boost::filesystem::path dir(fullpath);
+	if (!boost::filesystem::exists(dir))
+	{
+		std::ofstream fileOut(fullpath, std::ios_base::binary);
+		fileOut.seekp(file.size - 1);
+		fileOut.put(0);
+	}
 }
 
 std::string mtt::Storage::getFullpath(File& file)

@@ -13,8 +13,8 @@ namespace mtt
 		void setPath(std::string path);
 
 		void storePiece(DownloadedPiece& piece);
-		void exportFiles();
 		void selectFiles(std::vector<mtt::File>& files);
+		void flush();
 
 		void saveProgress();
 		void loadProgress();
@@ -25,10 +25,11 @@ namespace mtt
 	private:
 
 		std::string getFullpath(File& file);
-		void storePiece(File& file, DownloadedPiece& piece, size_t normalPieceSize);
+		void storePiece(File& file, DownloadedPiece& piece);
 
 		const int piecesCacheSize = 5;
 		void flush(File& file);
+		void preallocate(File& file);
 
 		std::string path;
 		std::map<int, std::vector<DownloadedPiece>> unsavedPieces;

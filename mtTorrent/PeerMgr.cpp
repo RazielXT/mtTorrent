@@ -29,7 +29,7 @@ void PeerMgr::start()
 {
 	Checkpoint check;
 
-	bool localTest = true;
+	bool localTest = false;
 
 	std::vector<PeerInfo> peers;
 	if(!localTest)
@@ -149,10 +149,5 @@ void PeerMgr::start()
 		}
 
 		service1.join();
-	}
-
-	if (scheduler.finished())
-	{
-		scheduler.exportFiles(getClientInfo()->settings.outDirectory);
 	}
 }

@@ -5,6 +5,8 @@ mtt::ProgressScheduler::ProgressScheduler(TorrentFileInfo* t) : storage(t->piece
 	torrent = t;
 	piecesTodo.init(torrent->pieces.size());
 	scheduleTodo.init(torrent->pieces.size());
+
+	storage.setPath(getClientInfo()->settings.outDirectory);
 }
 
 void mtt::ProgressScheduler::selectFiles(std::vector<mtt::File> dlSelection)
@@ -103,6 +105,6 @@ void mtt::ProgressScheduler::loadProgress()
 
 void mtt::ProgressScheduler::exportFiles()
 {
-	storage.exportFiles();
+	storage.flush();
 }
 
