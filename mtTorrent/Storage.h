@@ -14,10 +14,11 @@ namespace mtt
 
 		void storePiece(DownloadedPiece& piece);
 		void selectFiles(std::vector<mtt::File>& files);
+		std::vector<PieceInfo> checkFileHash(mtt::File& file);
 		void flush();
 
 		void saveProgress();
-		void loadProgress();
+		void loadProgress();	
 
 		DownloadSelection selection;
 		size_t pieceSize;

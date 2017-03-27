@@ -81,7 +81,7 @@ void mtt::Storage::flush(File& file)
 
 	auto& pieces = unsavedPieces[file.id];
 
-	std::ofstream fileOut(path);
+	std::ofstream fileOut(path, std::ios_base::binary | std::ios_base::in);
 
 	for (auto& p : pieces)
 	{	
@@ -93,11 +93,44 @@ void mtt::Storage::flush(File& file)
 	unsavedPieces[file.id].clear();
 }
 
+std::vector<mtt::PieceInfo> mtt::Storage::checkFileHash(File& file)
+{
+	std::vector<mtt::PieceInfo> out;
+
+	auto fullpath = getFullpath(file);
+	boost::filesystem::path dir(fullpath);
+	if (boost::filesystem::exists(dir))
+	{
+		std::ifstream fileIn(fullpath, std::ios_base::binary);
+		std::vector<char> buffer(pieceSize);
+		size_t idx = 0;
+		
+		if (file.startPiecePos)
+		{
+			auto startOffset = pieceSize - (file.startPiecePos % pieceSize);
+			out.push_back(PieceInfo{});
+			fileIn.read(buffer.data(), startOffset);
+		}	
+
+		PieceInfo info;
+		out.reserve(file.size % pieceSize);
+
+		while (fileIn)
+		{
+			fileIn.read(buffer.data(), pieceSize);
+			SHA1((unsigned char*)buffer.data(), fileIn.gcount(), (unsigned char*)&info.hash);
+			out.push_back(info);
+		}
+	}
+
+	return out;
+}
+
 void mtt::Storage::preallocate(File& file)
 {
 	auto fullpath = getFullpath(file);
 	boost::filesystem::path dir(fullpath);
-	if (!boost::filesystem::exists(dir))
+	if (!boost::filesystem::exists(dir) || boost::filesystem::file_size(dir) != file.size)
 	{
 		std::ofstream fileOut(fullpath, std::ios_base::binary);
 		fileOut.seekp(file.size - 1);

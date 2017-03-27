@@ -17,6 +17,21 @@ void mtt::ProgressScheduler::selectFiles(std::vector<mtt::File> dlSelection)
 	scheduleTodo.fromSelection(dlSelection);
 
 	storage.selectFiles(dlSelection);
+
+	for (auto& f : dlSelection)
+	{
+		auto hashes = storage.checkFileHash(f);
+		for(size_t i = 0; i < hashes.size(); i++)
+		{
+			auto pieceIdx = f.startPieceIndex + i;
+
+			if(memcmp(hashes[i].hash, torrent->pieces[pieceIdx].hash, 20))
+				continue;
+
+			piecesTodo.removePiece(pieceIdx);
+			scheduleTodo.removePiece(pieceIdx);
+		}
+	}
 }
 
 std::vector<mtt::PieceBlockInfo> makePieceBlocks(uint32_t index, mtt::TorrentFileInfo* torrent)
