@@ -7,40 +7,22 @@
 
 mtt::Core core;
 
-#ifndef STANDALONE
+#ifdef STANDALONE
 
-/*typedef void(*MSGFUNC)(UiMessage*);
 extern "C"
 {
-__declspec(dllexport) void __cdecl StartUi(HWND*, HWND*);
-
-__declspec(dllexport) void __cdecl SendMsg(UiMessage*);
-
-__declspec(dllexport) void __cdecl SetMsgFunc(MSGFUNC);
-}
-
-MSGFUNC sendMsg;
-
-__declspec(dllexport) void __cdecl SetMsgFunc(MSGFUNC func)
+__declspec(dllexport) void __cdecl IoctlMsg(mttLib::MessageId id, void* data)
 {
-sendMsg = func;
+	//core.ioctlMsg(id, data);
 }
-
-__declspec(dllexport) void __cdecl SendMsg(UiMessage* msg)
-{
-FormsUpdate(msg);
 }
-
-__declspec(dllexport) void __cdecl StartUi(HWND* hwnd, HWND* parent)
-{
-FormsMain(hwnd, parent);
-}*/
 
 int __stdcall Main(HINSTANCE h, ULONG ulReason, PVOID pvReserved) {
 
 	switch (ulReason)
 	{
 	case DLL_PROCESS_ATTACH:
+		//init
 	case DLL_THREAD_ATTACH:
 	case DLL_THREAD_DETACH:
 	case DLL_PROCESS_DETACH:

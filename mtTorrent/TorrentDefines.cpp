@@ -27,8 +27,7 @@ std::string getTimestamp()
 
 uint32_t mtt::generateTransaction()
 {
-	int id = rand();
-	return *reinterpret_cast<uint32_t*>(&id);
+	return (uint32_t)rand();
 }
 
 void mtt::PeerInfo::setIp(uint32_t addr)
