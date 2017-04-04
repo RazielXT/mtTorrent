@@ -4,7 +4,7 @@
 
 namespace mtt
 {
-	enum class TorrentState
+	enum class TorrentStateType
 	{
 		Stopped, Active
 	};
@@ -20,7 +20,7 @@ namespace mtt
 
 		uint32_t id = 0;
 		TorrentFileInfo info;
-		TorrentState state;
+		TorrentStateType state;
 		std::shared_ptr<ProgressScheduler> scheduler;
 		PeerMgr* comm = nullptr;
 	};

@@ -54,7 +54,7 @@
         </rect>
        </property>
        <property name="text">
-        <string>PushButton</string>
+        <string>Add</string>
        </property>
       </widget>
      </widget>
@@ -121,7 +121,7 @@
                </sizepolicy>
               </property>
              </widget>
-             <widget class="QTableWidget" name="tableWidget">
+             <widget class="QTreeWidget" name="treeWidget">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                 <horstretch>0</horstretch>
@@ -131,12 +131,11 @@
               <property name="sizeAdjustPolicy">
                <enum>QAbstractScrollArea::AdjustToContents</enum>
               </property>
-              <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
-               <bool>false</bool>
-              </attribute>
-              <attribute name="horizontalHeaderStretchLastSection">
-               <bool>true</bool>
-              </attribute>
+              <column>
+               <property name="text">
+                <string notr="true">1</string>
+               </property>
+              </column>
              </widget>
             </widget>
            </item>
@@ -190,5 +189,25 @@
  <resources>
   <include location="mtTorrentGui.qrc"/>
  </resources>
- <connections/>
+ <connections>
+  <connection>
+   <sender>pushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>mtTorrentGuiClass</receiver>
+   <slot>addButtonPressed()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>123</x>
+     <y>36</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>553</x>
+     <y>-15</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>addButtonPressed()</slot>
+ </slots>
 </ui>

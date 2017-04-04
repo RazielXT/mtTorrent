@@ -7,11 +7,11 @@
 
 mtt::Core core;
 
-#ifdef STANDALONE
+#ifndef STANDALONE
 
 extern "C"
 {
-__declspec(dllexport) void __cdecl IoctlMsg(mttLib::MessageId id, void* data)
+__declspec(dllexport) void __cdecl Ioctl(mttLib::MessageId id, void* data)
 {
 	//core.ioctlMsg(id, data);
 }

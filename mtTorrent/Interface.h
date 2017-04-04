@@ -3,8 +3,17 @@
 
 namespace mttLib
 {
+	enum ResultId
+	{
+		Ok,
+		CommandFailed,
+		BadFile
+	};
+
 	enum MessageId
 	{
+		TorrentChangeNotify,
+
 		AddTorrentFile,
 		GetTorrents,
 		GetTorrentsInfo
@@ -13,6 +22,8 @@ namespace mttLib
 	struct AddTorrentFileParams
 	{
 		std::string path;
+
+		uint32_t id;
 	};
 
 	struct Torrent
@@ -37,12 +48,18 @@ namespace mttLib
 		uint32_t peersConnected;
 	};
 
-	struct GetTorrentsParams
+	struct TorrentChangeNotifyParams
 	{
-		std::vector<TorrentInfo> torrents;
+		uint32_t id;
+
+		enum ChangeType
+		{
+			State,
+			Progress
+		};
 	};
 }
 
-#ifdef STANDALONE
-typedef void(*IoctlMsg)(mttLib::MessageId, void*);
+#ifndef STANDALONE
+typedef mttLib::ResultId(*mtIoctl)(mttLib::MessageId, void*);
 #endif

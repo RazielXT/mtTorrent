@@ -22,7 +22,7 @@
 #include <QtWidgets/QSplitter>
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QTabWidget>
-#include <QtWidgets/QTableWidget>
+#include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QWidget>
 
 QT_BEGIN_NAMESPACE
@@ -41,7 +41,7 @@ public:
     QGridLayout *gridLayout_3;
     QSplitter *splitter;
     QListWidget *listWidget;
-    QTableWidget *tableWidget;
+    QTreeWidget *treeWidget;
     QTabWidget *tabWidget;
     QWidget *tab;
     QWidget *tab_2;
@@ -121,14 +121,15 @@ public:
         sizePolicy2.setHeightForWidth(listWidget->sizePolicy().hasHeightForWidth());
         listWidget->setSizePolicy(sizePolicy2);
         splitter->addWidget(listWidget);
-        tableWidget = new QTableWidget(splitter);
-        tableWidget->setObjectName(QStringLiteral("tableWidget"));
-        sizePolicy2.setHeightForWidth(tableWidget->sizePolicy().hasHeightForWidth());
-        tableWidget->setSizePolicy(sizePolicy2);
-        tableWidget->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
-        splitter->addWidget(tableWidget);
-        tableWidget->horizontalHeader()->setProperty("showSortIndicator", QVariant(false));
-        tableWidget->horizontalHeader()->setStretchLastSection(true);
+        treeWidget = new QTreeWidget(splitter);
+        QTreeWidgetItem *__qtreewidgetitem = new QTreeWidgetItem();
+        __qtreewidgetitem->setText(0, QStringLiteral("1"));
+        treeWidget->setHeaderItem(__qtreewidgetitem);
+        treeWidget->setObjectName(QStringLiteral("treeWidget"));
+        sizePolicy2.setHeightForWidth(treeWidget->sizePolicy().hasHeightForWidth());
+        treeWidget->setSizePolicy(sizePolicy2);
+        treeWidget->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+        splitter->addWidget(treeWidget);
 
         gridLayout_3->addWidget(splitter, 0, 0, 1, 1);
 
@@ -168,6 +169,7 @@ public:
         mtTorrentGuiClass->setStatusBar(statusBar);
 
         retranslateUi(mtTorrentGuiClass);
+        QObject::connect(pushButton, SIGNAL(clicked()), mtTorrentGuiClass, SLOT(addButtonPressed()));
 
         tabWidget->setCurrentIndex(1);
 
@@ -178,7 +180,7 @@ public:
     void retranslateUi(QMainWindow *mtTorrentGuiClass)
     {
         mtTorrentGuiClass->setWindowTitle(QApplication::translate("mtTorrentGuiClass", "mtTorrentGui", Q_NULLPTR));
-        pushButton->setText(QApplication::translate("mtTorrentGuiClass", "PushButton", Q_NULLPTR));
+        pushButton->setText(QApplication::translate("mtTorrentGuiClass", "Add", Q_NULLPTR));
         tabWidget->setTabText(tabWidget->indexOf(tab), QApplication::translate("mtTorrentGuiClass", "Tab 1", Q_NULLPTR));
         tabWidget->setTabText(tabWidget->indexOf(tab_2), QApplication::translate("mtTorrentGuiClass", "Tab 2", Q_NULLPTR));
     } // retranslateUi

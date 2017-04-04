@@ -73,6 +73,9 @@
     <ClCompile Include="PeerMgr.cpp">
       <Filter>Source Files\Core\Torrent\Download</Filter>
     </ClCompile>
+    <ClCompile Include="State.cpp">
+      <Filter>Source Files\Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PacketHelper.h">
@@ -128,6 +131,9 @@
     </ClInclude>
     <ClInclude Include="PeerMgr.h">
       <Filter>Source Files\Core\Torrent\Download</Filter>
+    </ClInclude>
+    <ClInclude Include="State.h">
+      <Filter>Source Files\Core</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
