@@ -18,22 +18,25 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\cef\3.3029.1611\tests\cefsimple\simple_app.cc">
+    <ClCompile Include="simple_app.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\cef\3.3029.1611\tests\cefsimple\simple_handler.cc">
+    <ClCompile Include="simple_handler.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\cef\3.3029.1611\tests\cefsimple\simple_handler_win.cc">
+    <ClCompile Include="simple_handler_win.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\cef\3.3029.1611\tests\cefsimple\simple_app.h">
+    <ClInclude Include="MyV8Handler.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\cef\3.3029.1611\tests\cefsimple\simple_handler.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="simple_app.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="simple_handler.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
