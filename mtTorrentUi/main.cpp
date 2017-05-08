@@ -4,7 +4,7 @@
 
 #include <windows.h>
 
-#include "tests/cefsimple/simple_app.h"
+#include "simple_app.h"
 #include "include/cef_sandbox_win.h"
 
 
@@ -66,7 +66,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 	// It will create the first browser instance in OnContextInitialized() after
 	// CEF has initialized.
 	
-	//settings.single_process = TRUE;
+	settings.single_process = TRUE;
 
 	// Initialize CEF.
 	CefInitialize(main_args, settings, app.get(), sandbox_info);

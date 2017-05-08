@@ -32,6 +32,8 @@ class SimpleHandler : public CefClient,
     return this;
   }
 
+  virtual bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process, CefRefPtr<CefProcessMessage> message);
+
   // CefDisplayHandler methods:
   virtual void OnTitleChange(CefRefPtr<CefBrowser> browser,
                              const CefString& title) OVERRIDE;

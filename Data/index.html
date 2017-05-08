@@ -7,18 +7,32 @@
     <title>Site Title</title>
     <script type="text/javascript" src="jquery.js"></script>
     <script type="text/javascript" src="fading-tabs.js"></script>
+	<script type="text/javascript" src="test.js"></script>
     <script type="text/javascript">
 $(function() {$('#tabwrap').tabs({ fxFade: true, fxSpeed: 'normal' }); });
                         
 </script>
 
 <script>
-function test() {
-  var doc = document.getElementById("tab2");
-   doc.innerHTML += "begin ";
-   doc.innerHTML += myfunc();
-   doc.innerHTML += " end";
-}
+function doAppend(value){
+      var doc = document.getElementById("tab2");
+	   doc.innerHTML = value;
+	   };
+</script>
+	   
+<script>
+$(document).ready(function(){
+
+	window.register(doAppend);
+	
+    $("#About-link").click(function(){
+	
+		var doc = document.getElementById("tab2");
+		doc.innerHTML = "loading";
+        requestAppend();
+    });
+
+});
 </script>
 
     <meta charset="UTF-8" />
@@ -43,7 +57,7 @@ function test() {
                 <a href="index.html#tab1">Home</a>
               </li>
               <li id="menu-item-9" class="">
-                <a href="index.html#tab2" onclick="test()">About</a>
+                <a id="About-link" href="index.html#tab2">About</a>
               </li>
               <li id="menu-item-10" class="">
                 <a href="index.html#tab3">Contact</a>

@@ -2,7 +2,7 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "tests/cefsimple/simple_handler.h"
+#include "simple_handler.h"
 
 #include <sstream>
 #include <string>
@@ -13,6 +13,7 @@
 #include "include/views/cef_window.h"
 #include "include/wrapper/cef_closure_task.h"
 #include "include/wrapper/cef_helpers.h"
+#include <future>
 
 namespace {
 
@@ -150,4 +151,34 @@ void SimpleHandler::CloseAllBrowsers(bool force_close) {
   BrowserList::const_iterator it = browser_list_.begin();
   for (; it != browser_list_.end(); ++it)
     (*it)->GetHost()->CloseBrowser(force_close);
+}
+
+//from renderer to browser
+bool SimpleHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process, CefRefPtr<CefProcessMessage> message)
+{
+	const std::string& message_name = message->GetName();
+	if (message_name == "ipcTest") 
+	{
+		std::thread([this, browser]() {
+		
+			Sleep(2000);
+
+			// Create the message object.
+			CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("ipcResponse");
+
+			// Retrieve the argument list object.
+			CefRefPtr<CefListValue> args = msg->GetArgumentList();
+			// Populate the argument values.
+			args->SetString(0, "heeeey");
+
+			// Send the process message to the render process.
+			// Use PID_BROWSER instead when sending a message to the browser process.
+			browser->SendProcessMessage(PID_RENDERER, msg);
+		
+		}).detach();
+		
+
+		return true;
+	}
+	return false;
 }

@@ -2,17 +2,17 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "tests/cefsimple/simple_app.h"
+#include "simple_app.h"
 
 #include <string>
 
-#include "tests/cefsimple/simple_handler.h"
+#include "simple_handler.h"
 #include "include/cef_browser.h"
 #include "include/cef_command_line.h"
 #include "include/views/cef_browser_view.h"
 #include "include/views/cef_window.h"
 #include "include/wrapper/cef_helpers.h"
-#include "../../mtTorrent/mtTorrentUi/MyV8Handler.h"
+#include "MyV8Handler.h"
 
 namespace {
 
@@ -102,10 +102,19 @@ void SimpleApp::OnContextInitialized() {
   }
 }
 
-bool SimpleApp::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
-	CefProcessId source_process,
-	CefRefPtr<CefProcessMessage> message) 
+//from browser to renderer
+bool SimpleApp::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,	CefProcessId source_process,	CefRefPtr<CefProcessMessage> message) 
 {
+	const std::string& message_name = message->GetName();
+	auto args = message->GetArgumentList();
+
+	if (message_name == "ipcResponse")
+	{
+		v8Handler->executeFunc(args->GetString(0));
+
+		return true;
+	}
+
 	return false;
 }
 
@@ -117,11 +126,13 @@ void SimpleApp::OnContextCreated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFra
 	CefRefPtr<CefV8Value> object = context->GetGlobal();
 
 	// Create an instance of my CefV8Handler object.
-	CefRefPtr<CefV8Handler> handler = new MyV8Handler();
+	v8Handler = new MyV8Handler(browser);
 
 	// Create the "myfunc" function.
-	CefRefPtr<CefV8Value> func = CefV8Value::CreateFunction("myfunc", handler);
-
+	CefRefPtr<CefV8Value> func = CefV8Value::CreateFunction("requestAppend", v8Handler);
 	// Add the "myfunc" function to the "window" object.
-	object->SetValue("myfunc", func, V8_PROPERTY_ATTRIBUTE_NONE);
+	object->SetValue("requestAppend", func, V8_PROPERTY_ATTRIBUTE_NONE);
+
+
+	object->SetValue("register", CefV8Value::CreateFunction("register", v8Handler), V8_PROPERTY_ATTRIBUTE_NONE);
 }
