@@ -157,19 +157,23 @@ void SimpleHandler::CloseAllBrowsers(bool force_close) {
 bool SimpleHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process, CefRefPtr<CefProcessMessage> message)
 {
 	const std::string& message_name = message->GetName();
-	if (message_name == "ipcTest") 
+	auto args = message->GetArgumentList();
+
+	if (message_name == "appendRequest") 
 	{
-		std::thread([this, browser]() {
+		auto reqData = args->GetString(0).ToString();
+
+		std::thread([this, browser, reqData]() {
 		
 			Sleep(2000);
 
 			// Create the message object.
-			CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("ipcResponse");
+			CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("appendResponse");
 
 			// Retrieve the argument list object.
 			CefRefPtr<CefListValue> args = msg->GetArgumentList();
 			// Populate the argument values.
-			args->SetString(0, "heeeey");
+			args->SetString(0, reqData + "->" + "result");
 
 			// Send the process message to the render process.
 			// Use PID_BROWSER instead when sending a message to the browser process.
@@ -177,8 +181,8 @@ bool SimpleHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefP
 		
 		}).detach();
 		
-
 		return true;
 	}
+
 	return false;
 }

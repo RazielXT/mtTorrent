@@ -108,14 +108,26 @@ bool SimpleApp::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,	CefProce
 	const std::string& message_name = message->GetName();
 	auto args = message->GetArgumentList();
 
-	if (message_name == "ipcResponse")
+	if (message_name == "appendResponse")
 	{
-		v8Handler->executeFunc(args->GetString(0));
+		v8Handler->executeFunc("doAppend", args->GetString(0));
 
 		return true;
 	}
 
 	return false;
+}
+
+void SimpleApp::OnContextReleased(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefV8Context> context)
+{
+	if (v8Handler)
+	{
+		for (auto it = v8Handler->functions.begin(); it != v8Handler->functions.end();)
+			if (it->second.ctx->IsSame(context))
+				v8Handler->functions.erase(it++);
+			else
+				++it;
+	}
 }
 
 void SimpleApp::OnContextCreated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefV8Context> context)

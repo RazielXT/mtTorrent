@@ -32,7 +32,7 @@ public:
 		{
 			if (arguments.size() == 1 && arguments[0]->IsFunction()) 
 			{
-				functions["append"] = { arguments[0] , CefV8Context::GetCurrentContext() };
+				functions[arguments[0]->GetFunctionName().ToString()] = { arguments[0] , CefV8Context::GetCurrentContext() };
 				return true;
 			}
 		}
@@ -44,29 +44,30 @@ public:
 	void sendIpc()
 	{
 		// Create the message object.
-		CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("ipcTest");
+		CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("appendRequest");
 
 		// Retrieve the argument list object.
 		CefRefPtr<CefListValue> args = msg->GetArgumentList();
 
 		// Populate the argument values.
-		args->SetString(0, "ipcTest");
+		args->SetString(0, "request");
 
 		// Send the process message to the render process.
 		// Use PID_BROWSER instead when sending a message to the browser process.
 		browser->SendProcessMessage(PID_BROWSER, msg);
 	}
 
-	bool executeFunc(CefString str)
+	bool executeFunc(const char* funcName, CefString str)
 	{
-		auto it = functions.find("append");
+		auto it = functions.find(funcName);
 		if (it == functions.end())
 			return false;
 
 		auto& f = it->second;
 
 		CefV8ValueList args;
-		args.push_back(CefV8Value::CreateString(str));
+		if(!str.empty())
+			args.push_back(CefV8Value::CreateString(str));
 
 		CefRefPtr<CefV8Value> retval;
 		CefRefPtr<CefV8Exception> exception;

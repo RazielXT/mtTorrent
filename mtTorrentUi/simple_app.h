@@ -34,7 +34,10 @@ class SimpleApp : public CefApp,
 
   CefRefPtr<MyV8Handler> v8Handler;
 
- private:
+
+  virtual void OnContextReleased(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefV8Context> context) override;
+
+private:
   // Include the default reference counting implementation.
   IMPLEMENT_REFCOUNTING(SimpleApp);
 };
