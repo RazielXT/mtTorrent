@@ -3,13 +3,12 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <title>Site Title</title>
-	
-	        <!-- GLOBAL MANDATORY STYLES -->
-        <link href="http://fonts.googleapis.com/css?family=Hind:300,400,500,600,700" rel="stylesheet" type="text/css">
 
-        <!-- THEME STYLES -->
-        <link href="css/layout.min.css" rel="stylesheet" type="text/css"/>
-		
+		<!-- GLOBAL MANDATORY STYLES -->
+	<link href="http://fonts.googleapis.com/css?family=Hind:300,400,500,600,700" rel="stylesheet" type="text/css">
+
+	<!-- THEME STYLES -->
+	<link href="css/layout.min.css" rel="stylesheet" type="text/css"/>
 		
     <script type="text/javascript" src="jquery.js"></script>
     <script type="text/javascript" src="fading-tabs.js"></script>
@@ -71,10 +70,10 @@ $(document).ready(function(){
     -webkit-transition: width 0.4s ease-in-out;
     border-radius: 4px;
 	position: relative;
+	padding: 7px 15px !important;
 	}
 
 	#filterInput:focus {
-    width: 100%;
 	}
 
 </style>
@@ -90,16 +89,19 @@ ul {
 	text-align: center;
 }
 
+.main-navigation a { font-size: 2rem; padding: 7px 15px !important;}
+
 li {
     display: list-item;
     text-align: -webkit-match-parent;
+	text-align: center;
 }
 
-ul li {
+li {
     display: inline;
 }
 
-li.filter {
+li.filter, button.filter {
     list-style: none;
     max-width: 156px;
     background-color: #e5e5e5;
@@ -111,11 +113,12 @@ li.filter {
     margin-right: 5px !important;
     padding: 7px 15px !important;
     border-radius: 5px;
+	border: none;
 }
 
 .filter:hover, .filter.selected {
     color: #fff !important;
-    background-color: #f68a5e !important;
+    background-color: #f68a5e !important;	
 }
 </style>
 
@@ -281,12 +284,11 @@ li.filter {
 			
 			<!--Category Filter-->
                     <div class="category-filter" style="display: inline-block;">
+
                     	<ul style="display: inline-block;">
-                            <li class="filter selected">All</li>
-                            <li class="filter">Photography</li>
-                            <li class="filter">Creative</li>
-                            <li class="filter">Web Design</li>
-                            <li class="filter">Application</li>
+                            <li class="filter selected">130 torrents</li>
+                            <li class="filter">0 downloading</li>
+                            <li class="filter">2 seeding</li>
                         </ul>
                     </div>
                     <!--End-->
