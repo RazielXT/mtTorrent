@@ -1,23 +1,20 @@
 <!DOCTYPE html>
 <html>
   <head>
+  
+	<script type="text/javascript" src="http://livejs.com/live.js"></script>
+	
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <title>Site Title</title>
 
 		<!-- GLOBAL MANDATORY STYLES -->
 	<link href="http://fonts.googleapis.com/css?family=Hind:300,400,500,600,700" rel="stylesheet" type="text/css">
+	
+	<script type="text/javascript" src="./jquery.min.js.download"></script>
 
-	<!-- THEME STYLES -->
-	<link href="css/layout.min.css" rel="stylesheet" type="text/css"/>
-		
-    <script type="text/javascript" src="jquery.js"></script>
-    <script type="text/javascript" src="fading-tabs.js"></script>
-	<script type="text/javascript" src="test.js"></script>
-    <script type="text/javascript">
-$(function() {$('#tabwrap').tabs({ fxFade: true, fxSpeed: 'normal' }); });
-                        
-</script>
-
+	<script type="text/javascript" src="./sortTable.js"></script>
+	<script type="text/javascript" src="./test.js"></script>
+	
 <script>
 function doAppend(value){
       var doc = document.getElementById("tab2");
@@ -32,23 +29,60 @@ function doTestAppend(){
 </script>
 
 <script>
-$(document).ready(function(){
+var activeTab;
 
-	window.register(doAppend);
+$(document).ready(function(){
+		
+	activeTab = "#tab1";
+		
+	$("#Tab1-link").click(function(){
 	
-    $("#About-link").click(function(){
+		if(activeTab != "#tab1")
+		{
+			$(activeTab).fadeOut('fast', function() {
+			$('#tab1').fadeIn('fast')
+		  })
+  
+		activeTab = "#tab1";
+		}
+    });
 	
+	$("#Tab2-link").click(function(){
+	
+		if(activeTab != "#tab2")
+		{
+			$(activeTab).fadeOut('fast', function() {
+			$('#tab2').fadeIn('fast')
+		  })
+  
+		activeTab = "#tab2";
+		}
+		
 		var doc = document.getElementById("tab2");
 		doc.innerHTML = "loading";
         requestAppend();
     });
+	
+    $("#Tab3-link").click(function(){
+	
+		if(activeTab != "#tab3")
+		{
+			$(activeTab).fadeOut('fast', function() {
+			$('#tab3').fadeIn('fast')
+		  })
+  
+		activeTab = "#tab3";
+		}
+    });
 
+	window.register(doAppend);
 });
 </script>
 
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel='stylesheet' id='all-css-0-1' href='default.css' type='text/css' media='all'/>
+	<link href="css/layout.min.css" rel="stylesheet" type="text/css"/>
     <style type="text/css" id="syntaxhighlighteranchor"></style>
     <style type="text/css">
         .tabs-hide { display:none; }                                      
@@ -76,6 +110,16 @@ $(document).ready(function(){
 	#filterInput:focus {
 	}
 
+	#table {
+	-webkit-transition: all 0.4s ease-in-out;
+	}
+
+	table{
+    table-layout:auto;
+	width: 100%;
+	height: auto;
+	resize:both;
+}
 </style>
 
 	<style> 
@@ -130,18 +174,17 @@ li.filter, button.filter {
         <nav id="site-navigation" class="main-navigation" role="navigation">
           <div class="">
             <ul id="menu-item" class="tabs-nav">
-              <li id="menu-item-8" class="">
+			
+              <li id="Tab1-link" class="">
                 <a href="index.html#tab1">Home</a>
-              </li>
-              <li id="menu-item-9" class="">
-                <a id="About-link" href="index.html#tab2">About</a>
-              </li>
-              <li id="menu-item-10" class="">
-                <a href="index.html#tab3">Contact</a>
-              </li>
-			  <li id="menu-item-11" class="" style="float: right;">
-				<button class="link" onclick="window.close()" style="background:none;border:none;">Off</button>
-              </li>
+               </li>
+             <li id="Tab2-link" class="">
+			 <a id="About-link" href="index.html#tab2">About</a>
+               </li>
+             <li id="Tab3-link" class="">
+               <a href="index.html#tab3">Contact</a>
+               </li>
+ 			  
             </ul>
 
           </div>
@@ -152,6 +195,7 @@ li.filter, button.filter {
       <div id="content" class="site-content">
         <section id="primary" class="content-area">
           <div id="tab1" class="tabs-container">
+				
             <article id="post-4">
               <a class="entry-thumbnail apostrophe-thumb" href="https://mttorrent.wordpress.com/2017/05/06/first-blog-post/">
                 <img src="https://twentysixteendemo.files.wordpress.com/2015/11/post.png?w=450&amp;h=450&amp;crop=1"
@@ -292,7 +336,78 @@ li.filter, button.filter {
                         </ul>
                     </div>
                     <!--End-->
-					
+		
+		
+						<div id="table1">
+		          <table class="tableSorter" id="torrentsTable">
+                  <thead>
+                  <tr>
+                    <th style="text-align: left; cursor: pointer;" onclick="sortTable(table1,0)">Order ID</th>
+                    <th style="text-align: left; cursor: pointer;" onclick="sortTable(table1,1)">Item</th>
+                    <th style="text-align: left; cursor: pointer;" onclick="sortTable(table1,2)">Status</th>
+                    <th style="text-align: left; cursor: pointer;" onclick="sortTable(table1,3)">Popularity</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr>
+                    <td><a href="pages/examples/invoice.html">OR9842</a></td>
+                    <td>Call of Duty IV</td>
+                    <td><div>Shipped</div></td>
+                    <td>
+                      <div>90,80,90,-70,61,-83,63</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><a href="pages/examples/invoice.html">OR1848</a></td>
+                    <td>Samsung Smart TV</td>
+                    <td><div>Pending</div></td>
+                    <td>
+                      <div>90,80,-90,70,61,-83,68</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><a href="pages/examples/invoice.html">OR7429</a></td>
+                    <td>iPhone 6 Plus</td>
+                    <td><div>Delivered</div></td>
+                    <td>
+                      <div>90,-80,90,70,-61,83,63</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><a href="pages/examples/invoice.html">OR7429</a></td>
+                    <td>Samsung Smart TV</td>
+                    <td><div>Processing</div></td>
+                    <td>
+                      <div>90,80,-90,70,-61,83,63</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><a href="pages/examples/invoice.html">OR1848</a></td>
+                    <td>Samsung Smart TV</td>
+                    <td><div>Pending</div></td>
+                    <td>
+                      <div>90,80,-90,70,61,-83,68</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><a href="pages/examples/invoice.html">OR7429</a></td>
+                    <td>iPhone 6 Plus</td>
+                    <td><div>Delivered</div></td>
+                    <td>
+                      <div>90,-80,90,70,-61,83,63</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><a href="pages/examples/invoice.html">OR9842</a></td>
+                    <td>Call of Duty IV</td>
+                    <td><div>Shipped</div></td>
+                    <td>
+                      <div>90,80,90,-70,61,-83,63</div>
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
+				</div>
           </div>
         </section>
       </div>

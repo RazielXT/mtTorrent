@@ -59,28 +59,22 @@ void SimpleHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
 void SimpleHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
   CEF_REQUIRE_UI_THREAD();
 
+  static bool done = false;
+  if (done)
+	  return;
+  
+  done = true;
+
   EnableDrag(browser);
 
   // Add to the list of existing browsers.
   browser_list_.push_back(browser);
 
+  CefWindowInfo windowInfo;
+  windowInfo.SetAsPopup(NULL, "cefsimpleDebug");
 
-  // Retrieve the context's window object.
-  /*auto ctx = browser->GetMainFrame()->GetV8Context();
-  CefRefPtr<CefV8Value> object = ctx->GetGlobal();
-
-  // Create an instance of my CefV8Handler object.
-  CefRefPtr<CefV8Handler> handler = new MyV8Handler();
-
-  ctx->Enter();
-
-  // Create the "myfunc" function.
-  CefRefPtr<CefV8Value> func = CefV8Value::CreateFunction("myfunc", handler);
-
-  // Add the "myfunc" function to the "window" object.
-  object->SetValue("myfunc", func, V8_PROPERTY_ATTRIBUTE_NONE);
-
-  ctx->Exit();*/
+  CefBrowserSettings settings;
+  browser->GetHost()->ShowDevTools(windowInfo, this, settings, CefPoint());
 }
 
 bool SimpleHandler::DoClose(CefRefPtr<CefBrowser> browser) {
