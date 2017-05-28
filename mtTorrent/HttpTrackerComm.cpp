@@ -37,7 +37,7 @@ mtt::HttpTrackerComm::HttpTrackerComm(TorrentFileInfo* t) : torrent(t)
 
 mtt::AnnounceResponse mtt::HttpTrackerComm::announceTracker(std::string host, std::string port)
 {
-	std::cout << "Announcing to HTTP tracker " << host << "\n";
+	TRACKER_LOG("Announcing to HTTP tracker " << host << "\n");
 
 	AnnounceResponse announceMsg;
 
@@ -56,11 +56,11 @@ mtt::AnnounceResponse mtt::HttpTrackerComm::announceTracker(std::string host, st
 
 		announceMsg = getAnnounceResponse(resp);
 
-		std::cout << "Http Tracker " << host << " returned peers:" << std::to_string(announceMsg.peers.size()) << ", p: " << std::to_string(announceMsg.seedCount) << ", l: " << std::to_string(announceMsg.leechCount) << "\n";
+		TRACKER_LOG("Http Tracker " << host << " returned peers:" << std::to_string(announceMsg.peers.size()) << ", p: " << std::to_string(announceMsg.seedCount) << ", l: " << std::to_string(announceMsg.leechCount) << "\n");
 	}
 	catch (const std::exception&e)
 	{
-		std::cout << "Https " << host << " exception: " << e.what() << "\n";
+		TRACKER_LOG("Https " << host << " exception: " << e.what() << "\n");
 	}
 
 	return announceMsg;

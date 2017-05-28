@@ -18,6 +18,8 @@ namespace mtt
 
 		bool finished();
 		float getPercentage();
+		uint32_t getDownloadedSize();
+		float getSpeed();
 
 		void saveProgress();
 		void loadProgress();

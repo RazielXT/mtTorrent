@@ -53,7 +53,7 @@ AnnounceResponse UdpTrackerComm::getAnnounceResponse(DataBuffer buffer)
 
 AnnounceResponse UdpTrackerComm::announceTracker(std::string host, std::string port)
 {
-	std::cout << "Announcing to UDP tracker " << host << "\n";
+	TRACKER_LOG("Announcing to UDP tracker " << host << "\n");
 
 	AnnounceResponse announceMsg;
 
@@ -82,11 +82,11 @@ AnnounceResponse UdpTrackerComm::announceTracker(std::string host, std::string p
 			announceMsg = getAnnounceResponse(announceMsgBuffer);
 		}
 
-		std::cout << "Udp Tracker " << host << " returned peers:" << std::to_string(announceMsg.peers.size()) << ", p: " << std::to_string(announceMsg.seedCount) << ", l: " << std::to_string(announceMsg.leechCount) << "\n";
+		TRACKER_LOG("Udp Tracker " << host << " returned peers:" << std::to_string(announceMsg.peers.size()) << ", p: " << std::to_string(announceMsg.seedCount) << ", l: " << std::to_string(announceMsg.leechCount) << "\n");
 	}
 	catch (const std::exception&e)
 	{
-		std::cout << "Udp " << host << " exception: " << e.what() << "\n";
+		TRACKER_LOG("Udp " << host << " exception: " << e.what() << "\n");
 	}
 
 	return announceMsg;

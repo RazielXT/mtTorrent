@@ -59,7 +59,7 @@ std::vector<PeerInfo> mtt::TrackerCollector::announceAll()
 		}
 	}
 	
-	std::cout << "Unique peers: " << std::to_string(resp.size()) << "\n";
+	TRACKER_LOG("Unique peers: " << std::to_string(resp.size()) << "\n");
 
 	return resp;
 }

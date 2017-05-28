@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
 
 	try
 	{
-		if (auto t = core.getTorrent(core.addTorrent("D:\\konosuba.torrent")))
+		if (auto t = core.getTorrent(core.addTorrent("D:\\hero.torrent")))
 		{
 			t->scheduler->selectFiles({ t->info.files.front() });
 			t->start();

@@ -172,7 +172,7 @@ void mtt::PeerCommunication::schedulePieceDownload(bool forceNext)
 void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 {
 	if (message.id != Piece)
-		std::cout << peerInfo.ipStr << "_ID:" << std::to_string(message.id) << ", size: " << std::to_string(message.messageSize) << "\n";
+		PEER_LOG(peerInfo.ipStr << "_ID:" << std::to_string(message.id) << ", size: " << std::to_string(message.messageSize) << "\n");
 
 	if (message.id == KeepAlive)
 	{
@@ -181,29 +181,29 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 
 	if (message.id == Bitfield)
 	{
-		std::cout << peerInfo.ipStr << "BITFIELD size: " << std::to_string(message.bitfield.size()) << ", expected: " << std::to_string(torrent->expectedBitfieldSize) << "\n";
+		PEER_LOG(peerInfo.ipStr << "BITFIELD size: " << std::to_string(message.bitfield.size()) << ", expected: " << std::to_string(torrent->expectedBitfieldSize) << "\n");
 
 		peerPieces.fromBitfield(message.bitfield, torrent->pieces.size());
 		gcount++;
 
-		std::cout << peerInfo.ipStr << "Percentage: " << std::to_string(peerPieces.getPercentage()) << "\n";
+		PEER_LOG(peerInfo.ipStr << "Percentage: " << std::to_string(peerPieces.getPercentage()) << "\n");
 	}
 
 	if (message.id == Have)
 	{
 		peerPieces.addPiece(message.havePieceIndex);
 
-		std::cout << peerInfo.ipStr << "Percentage: " << std::to_string(peerPieces.getPercentage()) << "\n";
+		PEER_LOG(peerInfo.ipStr << "Percentage: " << std::to_string(peerPieces.getPercentage()) << "\n");
 	}
 
 	if (message.id == Piece)
 	{
 		std::lock_guard<std::mutex> guard(schedule_mutex);
 			
-		std::cout << "Piece id: " << std::to_string(message.piece.info.index) << ", size: " << std::to_string(message.piece.info.length) << "\n";
+		PEER_LOG("Piece id: " << std::to_string(message.piece.info.index) << ", size: " << std::to_string(message.piece.info.length) << "\n");
 
 		if(message.piece.info.index != downloadingPiece.index)
-			std::cout << peerInfo.ipStr << " Invalid block!! \n";
+			PEER_LOG(peerInfo.ipStr << " Invalid block!! \n")
 		else
 		{
 			downloadingPiece.addBlock(message.piece);
@@ -214,10 +214,10 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 				if (validPiece())
 				{
 					scheduler->addDownloadedPiece(downloadingPiece);
-					std::cout << peerInfo.ipStr << " Piece Added, Percentage: " << std::to_string(scheduler->getPercentage()) << "\n";
+					PEER_LOG(peerInfo.ipStr << " Piece Added, Percentage: " << std::to_string(scheduler->getPercentage()) << "\n");
 				}
 				else
-					std::cout << peerInfo.ipStr << " Invalid piece!! \n";
+					PEER_LOG(peerInfo.ipStr << " Invalid piece!! \n");
 			}
 
 			schedulePieceDownload();
@@ -238,17 +238,17 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 
 	if (message.id == Extended)
 	{
-		std::cout << peerInfo.ipStr << " Ext msg: " << std::string(message.extended.data.begin(), message.extended.data.end()) << "\n";
+		PEER_LOG(peerInfo.ipStr << " Ext msg: " << std::string(message.extended.data.begin(), message.extended.data.end()) << "\n");
 
 		auto type = ext.load(message.extended.id, message.extended.data);
 
-		std::cout << peerInfo.ipStr << " Ext Type " << std::to_string(message.extended.id) << " resolve :" << std::to_string(type) << "\n";
+		PEER_LOG(peerInfo.ipStr << " Ext Type " << std::to_string(message.extended.id) << " resolve :" << std::to_string(type) << "\n");
 	}
 
 	if (message.id == Handshake)
 	{
 		state.finishedHandshake = true;
-		std::cout << peerInfo.ipStr << "_has peer id:" << std::string(message.peer_id, message.peer_id + 20) << "\n";
+		PEER_LOG(peerInfo.ipStr << "_has peer id:" << std::string(message.peer_id, message.peer_id + 20) << "\n");
 		
 		sendHandshakeExt();
 		sendInterested();

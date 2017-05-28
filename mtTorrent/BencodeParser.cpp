@@ -37,7 +37,7 @@ bool BencodeParser::parseFile(const char* filename)
 
 	if (!file.good())
 	{
-		//std::cout << "Failed to parse torrent file " << filename << "\n";
+		PARSER_LOG("Failed to parse torrent file " << filename << "\n");
 		return false;
 	}
 
@@ -190,12 +190,11 @@ int deep = 0;
 
 BencodeParser::BenList* BencodeParser::parseList(const char** body)
 {
-	//l
 	(*body)++;
 
 	BenList* list = new BenList();
 
-	//std::cout << "List start" << std::to_string(deep) << "\n";
+	PARSER_LOG("List start" << std::to_string(deep) << "\n");
 
 	deep++;
 
@@ -208,19 +207,18 @@ BencodeParser::BenList* BencodeParser::parseList(const char** body)
 
 	deep--;
 
-	//std::cout << "List end" << std::to_string(deep) << "\n";
+	PARSER_LOG("List end" << std::to_string(deep) << "\n");
 
 	return list;
 }
 
 BencodeParser::BenDictionary* BencodeParser::parseDictionary(const char** body)
 {
-	//d
 	(*body)++;
 
 	BenDictionary* dic = new BenDictionary();
 
-	//std::cout << "Dictionary start" << std::to_string(deep) << "\n";
+	PARSER_LOG("Dictionary start" << std::to_string(deep) << "\n");
 
 	deep++;
 
@@ -246,7 +244,7 @@ BencodeParser::BenDictionary* BencodeParser::parseDictionary(const char** body)
 
 	(*body)++;
 
-	//std::cout << "Dictionary end" << std::to_string(deep) << "\n";
+	PARSER_LOG("Dictionary end" << std::to_string(deep) << "\n");
 
 	return dic;
 }
@@ -272,7 +270,7 @@ std::string BencodeParser::parseString(const char** body)
 	(*body) += length;
 
 	if(out.length()<100)
-		//std::cout << "String: " << out << "\n";
+		PARSER_LOG("String: " << out << "\n");
 
 	if (out == "pieces")
 		length++;
@@ -298,7 +296,7 @@ int BencodeParser::parseInt(const char** body)
 
 	(*body)++;
 
-	//std::cout << "Integer: " << num << "\n";
+	PARSER_LOG("Integer: " << num << "\n");
 
 	return std::stoi(num);
 }

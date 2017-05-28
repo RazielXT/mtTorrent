@@ -20,6 +20,26 @@ bool containsPeer(std::vector<std::unique_ptr<PeerCommunication>>& peers, PeerIn
 	return added;
 }
 
+void addUniquePeers(std::vector<PeerInfo>& from, std::vector<PeerInfo>& to, size_t pos)
+{
+	for (auto& p : from)
+	{
+		bool found = false;
+
+		for (auto& p2 : to)
+		{
+			if (p == p2)
+			{
+				found = true;
+				break;
+			}
+		}
+
+		if (!found)
+			to.insert(to.begin() + pos, p);
+	}
+}
+
 PeerMgr::PeerMgr(TorrentFileInfo* info, ProgressScheduler& sched) : torrentInfo(info), scheduler(sched), trackers(torrentInfo)
 {
 
@@ -31,16 +51,20 @@ void PeerMgr::start()
 
 	bool localTest = false;
 
+	GENERAL_INFO_LOG("Announcing\n");
+
 	std::vector<PeerInfo> peers;
 	if(!localTest)
 		peers = trackers.announceAll();
 	else
 		peers.push_back({ "127.0.0.1" , 55391 });
 
+	GENERAL_INFO_LOG("Received " << peers.size() << " peers\n");
+
 	size_t trackerReannounceId = 0;
 
-	size_t startPeersCount = 20;
-	size_t maxActivePeers = 10;
+	size_t startPeersCount = 15;
+	size_t maxActivePeers = 30;
 
 	ClientInfo* client = mtt::getClientInfo();
 
@@ -61,8 +85,10 @@ void PeerMgr::start()
 		std::thread service1([client]() { client->network.io_service->run(); });
 
 		check.hit(0, 5 * 60 * 1000);
+		check.hit(1, 1000);
 
 		bool actives = true;
+
 		while (actives)
 		{
 			Sleep(50);
@@ -77,7 +103,7 @@ void PeerMgr::start()
 				if (pexAdd.empty() && !pexPeers.empty())
 				{
 					pexAdd = pexPeers;
-					pexPeers.clear();
+					(*it)->ext.pex.addedPeers.clear();
 				}		
 
 				if (!(*it)->active || scheduler.finished())
@@ -132,15 +158,17 @@ void PeerMgr::start()
 			}
 
 			if (!localTest)
-			for (auto& peer : pexAdd)
+				addUniquePeers(pexAdd, peers, addingPeerId);
+
+			uint32_t currentActives = 0;
+			for (auto& p : peerComms)
 			{
-				if (!containsPeer(peerComms, peer))
-				{
-					auto p = std::make_unique<PeerCommunication>(client->network.io_service, &scheduler);
-					p->start(torrentInfo, peer);
-					peerComms.push_back(std::move(p));
-				}
+				if (p->active && p->state.finishedHandshake)
+					currentActives++;
 			}
+
+			if(check.hit(1,1000))
+				GENERAL_INFO_LOG("Peers: " << currentActives << "/" << peerComms.size() << "/" << peers.size() << "    speed: " << scheduler.getSpeed() << "    progress: " << scheduler.getPercentage() << "% / " << scheduler.getDownloadedSize()/(1024.f*1024.f) << "mb\n");
 		}
 
 		for (auto& peer : peerComms)
