@@ -1,5 +1,7 @@
 #pragma once
 #include "BencodeParser.h"
+#include <mutex>
+#include "TorrentDefines.h"
 
 namespace mtt
 {
@@ -17,7 +19,9 @@ namespace mtt
 
 		std::vector<PeerInfo> addedPeers;
 
+		std::vector<PeerInfo> readPexPeers();
 		void load(BencodeParser::Object& data);
+		std::mutex dataMutex;
 	};
 
 	struct ExtensionProtocol

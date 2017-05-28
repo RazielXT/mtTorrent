@@ -2,6 +2,16 @@
 #include "PacketHelper.h"
 #include "PeerMessage.h"
 
+std::vector<mtt::PeerInfo> mtt::PeerExchangeExtension::readPexPeers()
+{
+	std::lock_guard<std::mutex> guard(dataMutex);
+
+	auto peers = addedPeers;
+	addedPeers.clear();
+
+	return peers;
+}
+
 void mtt::PeerExchangeExtension::load(BencodeParser::Object& data)
 {
 	added.clear();
@@ -15,6 +25,8 @@ void mtt::PeerExchangeExtension::load(BencodeParser::Object& data)
 		{
 			added = add->second.txt;
 			size_t pos = 0;
+
+			std::lock_guard<std::mutex> guard(dataMutex);
 
 			while (added.size() - pos >= 6)
 			{

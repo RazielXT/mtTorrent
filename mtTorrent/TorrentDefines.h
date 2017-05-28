@@ -10,7 +10,7 @@ extern int gcount;
 
 //#define NETWORK_LOG(x) {std::cout << x;}
 //#define PEER_LOG(x) {std::cout << x;}
-//#define TRACKER_LOG(x) {std::cout << x;}
+#define TRACKER_LOG(x) {std::cout << x;}
 //#define PARSER_LOG(x) {std::cout << x;}
 #define GENERAL_INFO_LOG(x) {std::cout << x;}
 

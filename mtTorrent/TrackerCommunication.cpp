@@ -2,13 +2,14 @@
 #include "PacketHelper.h"
 #include <iostream>
 #include "HttpTrackerComm.h"
+#include <thread>
 
 using namespace mtt;
 
 mtt::TrackerCollector::TrackerCollector(TorrentFileInfo* t)
 {
 	torrent = t;
-	count = torrent->announceList.size();
+	trackersCount = torrent->announceList.size();
 }
 
 std::string cutStringPart(std::string& source, DataBuffer endChars, int cutAdd)
@@ -32,36 +33,50 @@ std::string cutStringPart(std::string& source, DataBuffer endChars, int cutAdd)
 	return ret;
 }
 
-std::vector<PeerInfo> mtt::TrackerCollector::announceAll()
+void mtt::TrackerCollector::announceAsync()
 {
-	count = torrent->announceList.size();
+	size_t max = std::min<size_t>(20, trackersCount);
+	TRACKER_LOG("Announcing " << max << " trackers...\n");
+	collectingTodo = max;
 
-	size_t max = std::min<size_t>(20, count);
-	std::future<std::vector<PeerInfo>> f[20];
-
-	int count = 0;
 	for (int i = 0; i < max; i++)
 	{
-		f[count] = std::async(&TrackerCollector::announce, this, i);
-		count++;
-	}
-
-	std::vector<PeerInfo> resp;
-
-	for (int i = 0; i < count; i++)
-	{
-		auto peers = f[i].get();
-
-		for (auto& p : peers)
+		std::thread([this,i]()
 		{
-			if (std::find(resp.begin(), resp.end(), p) == resp.end())
-				resp.push_back(p);
-		}
-	}
-	
-	TRACKER_LOG("Unique peers: " << std::to_string(resp.size()) << "\n");
+			auto r = announce(i);
 
-	return resp;
+			std::lock_guard<std::mutex> guard(resultsMutex);
+
+			collectingTodo--;
+
+			for (auto& p : r)
+			{
+				if (std::find(asyncResults.begin(), asyncResults.end(), p) == asyncResults.end())
+					asyncResults.push_back(p);
+			}
+		}
+		).detach();
+	}
+}
+
+void mtt::TrackerCollector::waitForAnyResults()
+{
+	while (collectingTodo>0 && asyncResults.empty())
+	{
+		Sleep(100);
+	}
+}
+
+std::vector<PeerInfo> mtt::TrackerCollector::getResults()
+{
+	waitForAnyResults();
+
+	std::lock_guard<std::mutex> guard(resultsMutex);
+
+	auto r = asyncResults;
+	asyncResults.clear();
+
+	return r;
 }
 
 std::vector<PeerInfo> mtt::TrackerCollector::announce(size_t id)

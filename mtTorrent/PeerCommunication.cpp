@@ -77,7 +77,7 @@ void mtt::PeerCommunication::stop()
 	if (active)
 		stream.close();
 
-	active = false;
+	//active = false;
 }
 
 void mtt::PeerCommunication::connectionClosed()

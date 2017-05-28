@@ -146,7 +146,7 @@ uint32_t mtt::ProgressScheduler::getDownloadedSize()
 
 float mtt::ProgressScheduler::getSpeed()
 {
-	return getDownloadSpeed()/(1024.f*1024.f);
+	return ((float)getDownloadSpeed())/1024.f;
 }
 
 void mtt::ProgressScheduler::saveProgress()

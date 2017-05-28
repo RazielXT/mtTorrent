@@ -20,8 +20,11 @@ bool containsPeer(std::vector<std::unique_ptr<PeerCommunication>>& peers, PeerIn
 	return added;
 }
 
-void addUniquePeers(std::vector<PeerInfo>& from, std::vector<PeerInfo>& to, size_t pos)
+void addUniquePeers(std::vector<PeerInfo>& from, std::vector<PeerInfo>& to, size_t pos = -1)
 {
+	if (pos == -1)
+		pos = to.size();
+
 	for (auto& p : from)
 	{
 		bool found = false;
@@ -54,8 +57,11 @@ void PeerMgr::start()
 	GENERAL_INFO_LOG("Announcing\n");
 
 	std::vector<PeerInfo> peers;
-	if(!localTest)
-		peers = trackers.announceAll();
+	if (!localTest)
+	{
+		trackers.announceAsync();
+		peers = trackers.getResults();
+	}
 	else
 		peers.push_back({ "127.0.0.1" , 55391 });
 
@@ -63,8 +69,9 @@ void PeerMgr::start()
 
 	size_t trackerReannounceId = 0;
 
-	size_t startPeersCount = 15;
-	size_t maxActivePeers = 30;
+	size_t startPeersCount = 25;
+	size_t maxActivePeers = 15;
+	size_t maxConnectedPeers = 40;
 
 	ClientInfo* client = mtt::getClientInfo();
 
@@ -93,18 +100,23 @@ void PeerMgr::start()
 		{
 			Sleep(50);
 
-			std::vector<PeerInfo> pexAdd;
+			auto newTrackerPeers = trackers.getResults();
+			if(!newTrackerPeers.empty())
+				addUniquePeers(newTrackerPeers, peers, addingPeerId);
 
 			actives = false;
 			for (auto it = peerComms.begin(); it != peerComms.end();)
 			{
-				auto& pexPeers = (*it)->ext.pex.addedPeers;
 
-				if (pexAdd.empty() && !pexPeers.empty())
+				if (!localTest)
 				{
-					pexAdd = pexPeers;
-					(*it)->ext.pex.addedPeers.clear();
-				}		
+					auto pexPeers = (*it)->ext.pex.readPexPeers();
+
+					if (!pexPeers.empty())
+					{
+						addUniquePeers(pexPeers, peers, addingPeerId);
+					}
+				}
 
 				if (!(*it)->active || scheduler.finished())
 				{
@@ -125,7 +137,7 @@ void PeerMgr::start()
 			}
 
 			if(!localTest)
-			if (peerComms.size() < maxActivePeers && addingPeerId<peers.size())
+			if (peerComms.size() < maxConnectedPeers && addingPeerId<peers.size())
 			{
 				if (!containsPeer(peerComms, peers[addingPeerId]))
 				{
@@ -153,12 +165,9 @@ void PeerMgr::start()
 					addingPeerId = 0;
 
 					peers = trackers.announce(trackerReannounceId);
-					trackerReannounceId = (trackerReannounceId + 1) % trackers.count;
+					trackerReannounceId = (trackerReannounceId + 1) % trackers.trackersCount;
 				}
 			}
-
-			if (!localTest)
-				addUniquePeers(pexAdd, peers, addingPeerId);
 
 			uint32_t currentActives = 0;
 			for (auto& p : peerComms)
