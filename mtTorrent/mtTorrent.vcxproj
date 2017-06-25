@@ -231,6 +231,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DhtCommunication.cpp" />
     <ClCompile Include="ExtensionProtocol.cpp" />
     <ClCompile Include="HttpTrackerComm.cpp" />
     <ClCompile Include="State.cpp" />
@@ -249,8 +250,10 @@
     <ClCompile Include="Core.cpp" />
     <ClCompile Include="TrackerCommunication.cpp" />
     <ClCompile Include="UdpTrackerComm.cpp" />
+    <ClCompile Include="utils\Base32.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DhtCommunication.h" />
     <ClInclude Include="ExtensionProtocol.h" />
     <ClInclude Include="State.h" />
     <ClInclude Include="Torrent.h" />
@@ -270,6 +273,7 @@
     <ClInclude Include="BencodeParser.h" />
     <ClInclude Include="TrackerCommunication.h" />
     <ClInclude Include="UdpTrackerComm.h" />
+    <ClInclude Include="utils\Base32.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

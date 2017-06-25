@@ -93,8 +93,11 @@ struct PacketBuilder
 		size += sizeof i;
 	}
 
-	void add(const char* b, size_t length)
+	void add(const char* b, size_t length = 0)
 	{
+		if (!length)
+			length = strlen(b);
+
 		buf.sputn(b, length);
 		size += length;
 	}

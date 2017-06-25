@@ -354,6 +354,11 @@ int* mtt::BencodeParser::Object::getIntItem(const char* name)
 	return nullptr;
 }
 
+bool mtt::BencodeParser::Object::isMap()
+{
+	return type == Dictionary;
+}
+
 void mtt::BencodeParser::Object::cleanup()
 {
 	if (type == Dictionary)

@@ -5,6 +5,7 @@
 #include <sstream>
 #include <future>
 #include <iostream>
+#include "DhtCommunication.h"
 
 using namespace mtt;
 
@@ -50,6 +51,11 @@ PeerMgr::PeerMgr(TorrentFileInfo* info, ProgressScheduler& sched) : torrentInfo(
 
 void PeerMgr::start()
 {
+	mtt::DhtCommunication dht;
+	dht.test();
+
+	return;
+
 	Checkpoint check;
 
 	bool localTest = false;

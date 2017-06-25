@@ -47,6 +47,7 @@ namespace mtt
 			BenList* getListItem(const char* name);
 			std::string* getTxtItem(const char* name);
 			int* getIntItem(const char* name);
+			bool isMap();
 		};
 
 		Object parsedData;
