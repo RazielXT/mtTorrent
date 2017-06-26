@@ -75,18 +75,16 @@ void mtt::DhtCommunication::test()
 		myId[i] = 5 + i * 5;
 	}
 
-	std::string targetId = "û?0Ìt`|XÞ¶©-ômoÃhr3j";
-	auto data = const_cast<char*>(targetId.data());
+	std::string targetIdBase32 = "ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J";
+	auto targetIdRaw = base32decode(targetIdBase32);
 
-	char dd = 'z';
-	unsigned char ddd = 'z';
-
-	unsigned char out[100] = { 0 };
-	Base32::Decode32((unsigned char*)data, targetId.length(), out);
-
-	std::string findNodeCommand = "d1:ad2:id20:" + myId + "9:info_hash20:" + targetId + "e1:q9:get_peers1:t2:aa1:y1:qe";
-	DataBuffer buffer(findNodeCommand.begin(), findNodeCommand.end());
-
+	PacketBuilder packet;
+	packet.add("d1:ad2:id20:");
+	packet.add(myId.data(), 20);
+	packet.add("9:info_hash20:");
+	packet.add(targetIdRaw.data(), 20);
+	packet.add("e1:q9:get_peers1:t2:aa1:y1:qe");
+	DataBuffer buffer = packet.getBuffer();
 
 	std::vector<NodeInfo> receivedNodes;
 

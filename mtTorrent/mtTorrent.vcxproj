@@ -250,7 +250,6 @@
     <ClCompile Include="Core.cpp" />
     <ClCompile Include="TrackerCommunication.cpp" />
     <ClCompile Include="UdpTrackerComm.cpp" />
-    <ClCompile Include="utils\Base32.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DhtCommunication.h" />

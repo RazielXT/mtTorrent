@@ -1,33 +1,59 @@
-//////////////////////////////////////////////////////////////////////
-// Base32.h
-//////////////////////////////////////////////////////////////////////
+#pragma once
+#include <array>
+#include <string>
 
-#if !defined(_BASE32_H_)
-#define _BASE32_H_
-
-#include <string.h>
-
-/*
-	Base32 encoding / decoding.
-	Encode32 outputs at out bytes with values from 0 to 32 that can be mapped to 32 signs.
-	Decode32 input is the output of Encode32. The out parameters should be unsigned char[] of
-	length GetDecode32Length(inLen) and GetEncode32Length(inLen) respectively.
-    To map the output of Encode32 to an alphabet of 32 characters use Map32.
-	To unmap back the output of Map32 to an array understood by Decode32 use Unmap32.
-	Both Map32 and Unmap32 do inplace modification of the inout32 array.
-	The alpha32 array must be exactly 32 chars long.
-*/
-
-struct Base32
+std::string base32decode(std::string& s)
 {
-	static bool Decode32(unsigned char* in, int inLen, unsigned char* out);
-	static bool Encode32(unsigned char* in, int inLen, unsigned char* out);
+	std::array<std::uint8_t, 8> inbuf;
+	std::array<std::uint8_t, 5> outbuf;
 
-	static int  GetDecode32Length(int bytes);
-	static int  GetEncode32Length(int bytes);
+	std::string ret;
+	for (auto i = s.begin(); i != s.end();)
+	{
+		int available_input = std::min(int(inbuf.size()), int(s.end() - i));
 
-	static bool Map32(unsigned char* inout32, int inout32Len, unsigned char* alpha32);
-	static bool Unmap32(unsigned char* inout32, int inout32Len, unsigned char* alpha32);
-};
+		int pad_start = 0;
+		if (available_input < 8) pad_start = available_input;
 
-#endif
+		// clear input buffer
+		inbuf.fill(0);
+		for (int j = 0; j < available_input; ++j)
+		{
+			char const in = char(std::toupper(*i++));
+			if (in >= 'A' && in <= 'Z')
+				inbuf[j] = (in - 'A') & 0xff;
+			else if (in >= '2' && in <= '7')
+				inbuf[j] = (in - '2' + ('Z' - 'A') + 1) & 0xff;
+			else if (in == '=')
+			{
+				inbuf[j] = 0;
+				if (pad_start == 0) pad_start = j;
+			}
+			else if (in == '1')
+				inbuf[j] = 'I' - 'A';
+			else
+				return std::string();
+		}
+
+		// decode inbuf to outbuf
+		outbuf[0] = (inbuf[0] << 3) & 0xff;
+		outbuf[0] |= inbuf[1] >> 2;
+		outbuf[1] = ((inbuf[1] & 0x3) << 6) & 0xff;
+		outbuf[1] |= inbuf[2] << 1;
+		outbuf[1] |= (inbuf[3] & 0x10) >> 4;
+		outbuf[2] = ((inbuf[3] & 0x0f) << 4) & 0xff;
+		outbuf[2] |= (inbuf[4] & 0x1e) >> 1;
+		outbuf[3] = ((inbuf[4] & 0x01) << 7) & 0xff;
+		outbuf[3] |= (inbuf[5] & 0x1f) << 2;
+		outbuf[3] |= (inbuf[6] & 0x18) >> 3;
+		outbuf[4] = ((inbuf[6] & 0x07) << 5) & 0xff;
+		outbuf[4] |= inbuf[7];
+
+		int input_output_mapping[] = { 5, 1, 1, 2, 2, 3, 4, 4, 5 };
+		int num_out = input_output_mapping[pad_start];
+
+		// write output
+		std::copy(outbuf.begin(), outbuf.begin() + num_out, std::back_inserter(ret));
+	}
+	return ret;
+}
