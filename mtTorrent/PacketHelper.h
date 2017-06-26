@@ -66,31 +66,39 @@ private:
 
 struct PacketBuilder
 {
+	PacketBuilder()
+	{
+	}
+
+	PacketBuilder(size_t size)
+	{
+		out.reserve(size);
+	}
+
 	void add(char c)
 	{
-		buf.sputn(&c, 1);
-		size++;
+		out.push_back(c);
 	}
 
 	void add16(uint16_t i)
 	{
 		i = swap16(i);
-		buf.sputn(reinterpret_cast<char*>(&i), sizeof i);
-		size += sizeof i;
+		auto ci = reinterpret_cast<char*>(&i);
+		out.insert(out.end(), ci, ci + sizeof i);
 	}
 
 	void add32(uint32_t i)
 	{
 		i = swap32(i);
-		buf.sputn(reinterpret_cast<char*>(&i), sizeof i);
-		size += sizeof i;
+		auto ci = reinterpret_cast<char*>(&i);
+		out.insert(out.end(), ci, ci + sizeof i);
 	}
 
 	void add64(uint64_t i)
 	{
 		i = swap64(i);
-		buf.sputn(reinterpret_cast<char*>(&i), sizeof i);
-		size += sizeof i;
+		auto ci = reinterpret_cast<char*>(&i);
+		out.insert(out.end(), ci, ci + sizeof i);
 	}
 
 	void add(const char* b, size_t length = 0)
@@ -98,20 +106,13 @@ struct PacketBuilder
 		if (!length)
 			length = strlen(b);
 
-		buf.sputn(b, length);
-		size += length;
+		out.insert(out.end(), b, b + length);
 	}
 
-	DataBuffer getBuffer()
+	DataBuffer& getBuffer()
 	{
-		DataBuffer out;
-
-		out.resize(size);
-		buf.sgetn(&out[0], size);
-
 		return out;
 	}
 
-	std::stringbuf buf;
-	uint64_t size = 0;
+	DataBuffer out;
 };

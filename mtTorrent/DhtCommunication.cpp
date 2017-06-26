@@ -78,13 +78,16 @@ void mtt::DhtCommunication::test()
 	std::string targetIdBase32 = "ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J";
 	auto targetIdRaw = base32decode(targetIdBase32);
 
-	PacketBuilder packet;
+	PacketBuilder packet(104);
 	packet.add("d1:ad2:id20:");
 	packet.add(myId.data(), 20);
 	packet.add("9:info_hash20:");
 	packet.add(targetIdRaw.data(), 20);
-	packet.add("e1:q9:get_peers1:t2:aa1:y1:qe");
-	DataBuffer buffer = packet.getBuffer();
+	packet.add("e1:q9:get_peers");
+	packet.add("1:v4:mt02");
+	packet.add("1:t2:ab");
+	packet.add("1:y1:qe");
+	auto& buffer = packet.getBuffer();
 
 	std::vector<NodeInfo> receivedNodes;
 

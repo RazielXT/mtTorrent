@@ -47,13 +47,15 @@ int main(int argc, char* argv[])
 
 	try
 	{
-		mtt::Torrent t("D:\\fff");
-		t.start();
-
 		if (auto t = core.getTorrent(core.addTorrent("D:\\hero.torrent")))
 		{
 			t->scheduler->selectFiles({ t->info.files.front() });
 			t->start();
+		}
+		else
+		{
+			mtt::Torrent tt("D:\\fff");
+			tt.start();
 		}
 	}
 	catch (std::exception& e)
