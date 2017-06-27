@@ -76,24 +76,27 @@ void mtt::DhtCommunication::test()
 	}
 
 	std::string targetIdBase32 = "ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J";
-	auto targetIdRaw = base32decode(targetIdBase32);
+	auto targetId = base32decode(targetIdBase32);
+
+	const char* clientId = "mt02";
+	uint16_t transactionId = 54535;
 
 	PacketBuilder packet(104);
-	packet.add("d1:ad2:id20:");
+	packet.add("d1:ad2:id20:",12);
 	packet.add(myId.data(), 20);
-	packet.add("9:info_hash20:");
-	packet.add(targetIdRaw.data(), 20);
-	packet.add("e1:q9:get_peers");
-	packet.add("1:v4:mt02");
-	packet.add("1:t2:ab");
-	packet.add("1:y1:qe");
-	auto& buffer = packet.getBuffer();
+	packet.add("9:info_hash20:",14);
+	packet.add(targetId.data(), 20);
+	packet.add("e1:q9:get_peers1:v4:",20);
+	packet.add(clientId,4);
+	packet.add("1:t2:",5);
+	packet.add(reinterpret_cast<char*>(&transactionId),2);
+	packet.add("1:y1:qe",7);
 
 	std::vector<NodeInfo> receivedNodes;
 
 	try
 	{	
-		auto message = sendUdpRequest(sock, resolver, buffer, dhtRoot, dhtRootPort, 5000, ipv6);
+		auto message = sendUdpRequest(sock, resolver, packet.getBuffer(), dhtRoot, dhtRootPort, 5000, ipv6);
 
 		if (!message.empty())
 		{

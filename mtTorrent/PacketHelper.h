@@ -101,11 +101,14 @@ struct PacketBuilder
 		out.insert(out.end(), ci, ci + sizeof i);
 	}
 
-	void add(const char* b, size_t length = 0)
+	void addString(const char* b)
 	{
-		if (!length)
-			length = strlen(b);
+		size_t length = strlen(b);
+		out.insert(out.end(), b, b + length);
+	}
 
+	void add(const char* b, size_t length)
+	{
 		out.insert(out.end(), b, b + length);
 	}
 
