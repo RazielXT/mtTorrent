@@ -41,6 +41,7 @@ struct NodeInfo
 	NodeId id;
 
 	std::string addr;
+	std::vector<uint8_t> addrBytes;
 	uint16_t port;
 
 	void parse(char* buffer, bool v6)
@@ -49,10 +50,37 @@ struct NodeInfo
 		buffer += 20;
 
 		size_t addrSize = v6 ? 16 : 4;
-		addr.assign(buffer, buffer + addrSize);
+		addrBytes.assign(buffer, buffer + addrSize);
+
+		if (!v6)
+		{
+			uint32_t ip = swap32(*reinterpret_cast<uint32_t*>(&addrBytes));
+
+			uint8_t ipAddr[4];
+			ipAddr[3] = *reinterpret_cast<uint8_t*>(&ip);
+			ipAddr[2] = *(reinterpret_cast<uint8_t*>(&ip) + 1);
+			ipAddr[1] = *(reinterpret_cast<uint8_t*>(&ip) + 2);
+			ipAddr[0] = *(reinterpret_cast<uint8_t*>(&ip) + 3);
+
+			addr = std::to_string(ipAddr[0]) + "." + std::to_string(ipAddr[1]) + "." + std::to_string(ipAddr[2]) + "." + std::to_string(ipAddr[3]);
+		}
+		else
+		{
+			addr.resize(41);
+			auto ptr = &addr[0];
+
+			for (size_t i = 0; i < 16; i+=2)
+			{
+				sprintf_s(ptr, 6, "%02X%02X:", addrBytes[i], addrBytes[i + 1]);
+				ptr += 5;
+			}
+
+			addr.resize(39);
+		}
+
 		buffer += addrSize;
 
-		uint16_t i = _byteswap_ushort(*reinterpret_cast<const uint16_t*>(buffer));
+		port = _byteswap_ushort(*reinterpret_cast<const uint16_t*>(buffer));
 	}
 };
 

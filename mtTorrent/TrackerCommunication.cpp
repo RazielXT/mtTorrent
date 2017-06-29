@@ -37,7 +37,7 @@ void mtt::TrackerCollector::announceAsync()
 {
 	size_t max = std::min<size_t>(20, trackersCount);
 	TRACKER_LOG("Announcing " << max << " trackers...\n");
-	collectingTodo = max;
+	collectingTodo = (uint32_t)max;
 
 	for (int i = 0; i < max; i++)
 	{
