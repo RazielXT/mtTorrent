@@ -8,8 +8,12 @@
 #include <functional>
 #include <deque>
 
+class TcpAsyncServer;
+
 class TcpAsyncStream
 {
+	friend class TcpAsyncServer;
+
 public:
 
 	TcpAsyncStream(boost::asio::io_service& io_service);
@@ -50,7 +54,7 @@ protected:
 	std::function<void()> onReceiveCallback;
 	std::function<void()> onCloseCallback;
 
-	std::mutex socket_mutex;	
+	std::mutex socket_mutex;
 	tcp::socket socket;
 
 	boost::asio::io_service& io_service;
