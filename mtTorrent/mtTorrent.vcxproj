@@ -235,6 +235,7 @@
     <ClCompile Include="ExtensionProtocol.cpp" />
     <ClCompile Include="HttpTrackerComm.cpp" />
     <ClCompile Include="State.cpp" />
+    <ClCompile Include="TcpAsyncServer.cpp" />
     <ClCompile Include="Torrent.cpp" />
     <ClCompile Include="TorrentDefines.cpp" />
     <ClCompile Include="ProgressScheduler.cpp" />
@@ -255,6 +256,7 @@
     <ClInclude Include="DhtCommunication.h" />
     <ClInclude Include="ExtensionProtocol.h" />
     <ClInclude Include="State.h" />
+    <ClInclude Include="TcpAsyncServer.h" />
     <ClInclude Include="Torrent.h" />
     <ClInclude Include="HttpTrackerComm.h" />
     <ClInclude Include="Interface.h" />

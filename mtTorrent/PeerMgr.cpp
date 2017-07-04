@@ -51,7 +51,7 @@ PeerMgr::PeerMgr(TorrentFileInfo* info, ProgressScheduler& sched) : torrentInfo(
 
 void PeerMgr::start()
 {
-	mtt::DhtCommunication dht;
+	mtt::dht::Communication dht;
 	dht.test();
 
 	return;

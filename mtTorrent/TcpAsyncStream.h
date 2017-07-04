@@ -18,7 +18,10 @@ public:
 
 	TcpAsyncStream(boost::asio::io_service& io_service);
 
+	void connect(const uint8_t* data, uint16_t port, bool ipv6);
+	void connect(const std::string& ip, uint16_t port);
 	void connect(const std::string& hostname, const std::string& port);
+
 	void close();
 
 	void write(const DataBuffer& data);
@@ -32,11 +35,14 @@ public:
 
 protected:
 
+	void setAsConnected();
+
 	void postFail(std::string place, const boost::system::error_code& error);
 
 	enum { Disconnected, Connecting, Connected } state;
-	void handle_resolve(const boost::system::error_code& error, tcp::resolver::iterator iterator);
-	void handle_connect(const boost::system::error_code& err, tcp::resolver::iterator endpoint_iterator);
+	void handle_resolve(const boost::system::error_code& error, tcp::resolver::iterator iterator, std::shared_ptr<tcp::resolver> resolver);
+	void handle_resolver_connect(const boost::system::error_code& err, tcp::resolver::iterator endpoint_iterator, std::shared_ptr<tcp::resolver> resolver);
+	void handle_connect(const boost::system::error_code& err);
 	void do_close();
 
 	void do_write(DataBuffer data);
@@ -58,7 +64,6 @@ protected:
 	tcp::socket socket;
 
 	boost::asio::io_service& io_service;
-	tcp::resolver resolver;
 
 	std::string host;
 	int32_t timeout = 15;

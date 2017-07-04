@@ -33,6 +33,8 @@ private:
 	{
 		if (!error)
 		{
+			connection->setAsConnected();
+
 			if(acceptCallback)
 				acceptCallback(connection);
 

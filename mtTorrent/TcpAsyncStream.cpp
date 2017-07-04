@@ -1,7 +1,7 @@
 #include "TcpAsyncStream.h"
 #include <iostream>
 
-TcpAsyncStream::TcpAsyncStream(boost::asio::io_service& io) : io_service(io), resolver(io), socket(io)
+TcpAsyncStream::TcpAsyncStream(boost::asio::io_service& io) : io_service(io), socket(io)
 {
 	
 }
@@ -15,10 +15,42 @@ void TcpAsyncStream::connect(const std::string& hostname, const std::string& por
 	state = Connecting;
 	
 	tcp::resolver::query query(hostname, port);
-	resolver.async_resolve(query,
+
+	auto resolver = std::make_shared<tcp::resolver>(io_service);
+	resolver->async_resolve(query,
 		std::bind(&TcpAsyncStream::handle_resolve, this,
 			std::placeholders::_1,
-			std::placeholders::_2));
+			std::placeholders::_2, resolver));
+}
+
+void TcpAsyncStream::connect(const uint8_t* ip, uint16_t port, bool ipv6)
+{
+	if (state != Disconnected)
+		return;
+
+	host.assign((const char*)ip, ipv6 ? 16 : 4);
+	state = Connecting;
+
+	socket.async_connect(ipv6 ?
+		tcp::endpoint(boost::asio::ip::address_v6(*reinterpret_cast<const boost::asio::ip::address_v6::bytes_type*>(ip)), port) :
+		tcp::endpoint(boost::asio::ip::address_v4(*reinterpret_cast<const boost::asio::ip::address_v4::bytes_type*>(ip)), port)
+		,
+		std::bind(&TcpAsyncStream::handle_connect, this,
+			std::placeholders::_1));
+}
+
+void TcpAsyncStream::connect(const std::string& ip, uint16_t port)
+{
+	if (state != Disconnected)
+		return;
+
+	host = ip;
+	state = Connecting;
+
+	tcp::endpoint endpoint(boost::asio::ip::address::from_string(ip), port);
+	socket.async_connect(endpoint,
+		std::bind(&TcpAsyncStream::handle_connect, this,
+			std::placeholders::_1));
 }
 
 void TcpAsyncStream::close()
@@ -60,6 +92,19 @@ void TcpAsyncStream::setOnCloseCallback(std::function<void()> func)
 	onCloseCallback = func;
 }
 
+void TcpAsyncStream::setAsConnected()
+{
+	state = Connected;
+
+	socket.async_receive(boost::asio::buffer(recv_buffer),
+		std::bind(&TcpAsyncStream::handle_receive, this,
+			std::placeholders::_1,
+			std::placeholders::_2));
+
+	if (onConnectCallback)
+		onConnectCallback();
+}
+
 void TcpAsyncStream::postFail(std::string place, const boost::system::error_code& error)
 {
 	//std::cout << place << "-" << host << "-" << error.message() << "\n";
@@ -68,14 +113,14 @@ void TcpAsyncStream::postFail(std::string place, const boost::system::error_code
 		onCloseCallback();
 }
 
-void TcpAsyncStream::handle_resolve(const boost::system::error_code& error, tcp::resolver::iterator iterator)
+void TcpAsyncStream::handle_resolve(const boost::system::error_code& error, tcp::resolver::iterator iterator, std::shared_ptr<tcp::resolver> resolver)
 {
 	if (!error)
 	{
 		tcp::endpoint endpoint = *iterator;
 		socket.async_connect(endpoint,
-			std::bind(&TcpAsyncStream::handle_connect, this,
-				std::placeholders::_1, ++iterator));
+			std::bind(&TcpAsyncStream::handle_resolver_connect, this,
+				std::placeholders::_1, ++iterator, resolver));
 	}
 	else
 	{
@@ -84,27 +129,25 @@ void TcpAsyncStream::handle_resolve(const boost::system::error_code& error, tcp:
 	}
 }
 
-void TcpAsyncStream::handle_connect(const boost::system::error_code& error, tcp::resolver::iterator iterator)
+void TcpAsyncStream::handle_resolver_connect(const boost::system::error_code& error, tcp::resolver::iterator iterator, std::shared_ptr<tcp::resolver> resolver)
 {
-	if (!error)
-	{
-		state = Connected;
-
-		socket.async_receive(boost::asio::buffer(recv_buffer),
-			std::bind(&TcpAsyncStream::handle_receive, this,
-				std::placeholders::_1,
-				std::placeholders::_2));
-
-		if (onConnectCallback)
-			onConnectCallback();
-	}
-	else if (iterator != tcp::resolver::iterator())
+	if (error && iterator != tcp::resolver::iterator())
 	{
 		socket.close();
 		tcp::endpoint endpoint = *iterator;
 		socket.async_connect(endpoint,
-			std::bind(&TcpAsyncStream::handle_connect, this,
-				std::placeholders::_1, ++iterator));
+			std::bind(&TcpAsyncStream::handle_resolver_connect, this,
+				std::placeholders::_1, ++iterator, resolver));
+	}
+	else
+		handle_connect(error);
+}
+
+void TcpAsyncStream::handle_connect(const boost::system::error_code& error)
+{
+	if (!error)
+	{
+		setAsConnected();
 	}
 	else
 	{
