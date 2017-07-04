@@ -4,88 +4,284 @@
 #include "BencodeParser.h"
 #include "PacketHelper.h"
 #include "utils/Base32.h"
+#include <future>
 
-struct NodeId
+using namespace mtt::dht;
+
+NodeId::NodeId()
 {
-	uint8_t data[20];
+}
 
-	NodeId()
+NodeId::NodeId(const char* buffer)
+{
+	copy(buffer);
+}
+
+void NodeId::copy(const char* buffer)
+{
+	for (int i = 0; i < 20; i++)
+		data[i] = (uint8_t)buffer[i];
+}
+
+bool mtt::dht::NodeId::closerThanThis(NodeId& maxDistance, NodeId& target)
+{
+	auto dist = distance(target);
+
+	for (int i = 0; i < 20; i++)
 	{
+		if (dist.data[i] <= maxDistance.data[i])
+			return true;
+		if (dist.data[i] > maxDistance.data[i])
+			return false;
 	}
 
-	NodeId(char* buffer)
+	return false;
+}
+
+bool mtt::dht::NodeId::closerThan(NodeId& r, NodeId& target)
+{
+	auto otherDist = r.distance(target);
+
+	return closerThanThis(otherDist, target);
+}
+
+NodeId mtt::dht::NodeId::distance(NodeId& r)
+{
+	NodeId out;
+
+	for (int i = 0; i < 20; i++)
 	{
-		copy(buffer);
+		out.data[i] = data[i] ^ r.data[i];
 	}
 
-	void copy(char* buffer)
-	{
-		for (int i = 0; i < 20; i++)
-			data[i] = (uint8_t)buffer[i];
-	}
+	return out;
+}
 
-	bool shorterThan(NodeId& r)
+uint8_t mtt::dht::NodeId::length()
+{
+	for (int i = 0; i < 20; i++)
 	{
-		for (int i = 0; i < 20; i++)
+		if (data[i])
 		{
-			if (data[i] < r.data[i])
-				return true;
+			uint8_t d = data[i];
+			uint8_t l = (19 - i) * 8;
+
+			while (d >>= 1)
+				l++;
+
+			return l;
 		}
-
-		return false;
 	}
-};
 
-struct NodeInfo
+	return 0;
+}
+
+size_t NodeInfo::parse(char* buffer, bool v6)
 {
-	NodeId id;
+	id.copy(buffer);
+	buffer += 20;
 
-	std::string addr;
-	std::vector<uint8_t> addrBytes;
-	uint16_t port;
+	return 20 + addr.parse(buffer, v6);
+}
 
-	void parse(char* buffer, bool v6)
+size_t NodeAddr::parse(char* buffer, bool v6)
+{
+	size_t addrSize = v6 ? 16 : 4;
+
+	if (!v6)
 	{
-		id.copy(buffer);
-		buffer += 20;
+		uint32_t ip = swap32(*reinterpret_cast<uint32_t*>(&buffer));
+		addrBytes.assign(reinterpret_cast<char*>(&ip), reinterpret_cast<char*>(&ip) + addrSize);
 
-		size_t addrSize = v6 ? 16 : 4;
+		uint8_t ipAddr[4];
+		ipAddr[3] = *reinterpret_cast<uint8_t*>(&ip);
+		ipAddr[2] = *(reinterpret_cast<uint8_t*>(&ip) + 1);
+		ipAddr[1] = *(reinterpret_cast<uint8_t*>(&ip) + 2);
+		ipAddr[0] = *(reinterpret_cast<uint8_t*>(&ip) + 3);
+
+		str.resize(16);
+		str.resize(sprintf_s(&str[0], 16, "%d.%d.%d.%d", ipAddr[0], ipAddr[1], ipAddr[2], ipAddr[3]));
+	}
+	else
+	{
 		addrBytes.assign(buffer, buffer + addrSize);
 
-		if (!v6)
+		str.resize(40);
+		sprintf_s(&str[0], 40, "%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X",
+			addrBytes[0], addrBytes[1], addrBytes[2], addrBytes[3], addrBytes[4], addrBytes[5], addrBytes[6], addrBytes[7],
+			addrBytes[8], addrBytes[9], addrBytes[10], addrBytes[11], addrBytes[12], addrBytes[13], addrBytes[14], addrBytes[15]);
+		str.resize(39);
+	}
+
+	buffer += addrSize;
+
+	port = _byteswap_ushort(*reinterpret_cast<const uint16_t*>(buffer));
+
+	return 2 + addrSize;
+}
+
+bool mtt::dht::NodeInfo::operator==(const NodeInfo& r)
+{
+	return memcmp(id.data, r.id.data, 20) == 0;
+}
+
+mtt::dht::NodeAddr::NodeAddr()
+{
+
+}
+
+mtt::dht::NodeAddr::NodeAddr(char* buffer, bool v6)
+{
+	parse(buffer, v6);
+}
+
+bool mtt::dht::NodeAddr::isIpv6()
+{
+	return addrBytes.size() > 4;
+}
+
+void mergeClosestNodes(std::vector<NodeInfo>& to, std::vector<NodeInfo>& from, std::vector<NodeInfo>& blacklist, uint8_t maxSize, NodeId& minDistance, NodeId& target)
+{
+	for (auto& n : from)
+	{
+		if (std::find(to.begin(), to.end(), n) != to.end())
+			continue;
+
+		if (std::find(blacklist.begin(), blacklist.end(), n) != blacklist.end())
+			continue;
+
+		if (n.id.closerThanThis(minDistance, target))
 		{
-			uint32_t ip = swap32(*reinterpret_cast<uint32_t*>(&addrBytes));
-
-			uint8_t ipAddr[4];
-			ipAddr[3] = *reinterpret_cast<uint8_t*>(&ip);
-			ipAddr[2] = *(reinterpret_cast<uint8_t*>(&ip) + 1);
-			ipAddr[1] = *(reinterpret_cast<uint8_t*>(&ip) + 2);
-			ipAddr[0] = *(reinterpret_cast<uint8_t*>(&ip) + 3);
-
-			addr = std::to_string(ipAddr[0]) + "." + std::to_string(ipAddr[1]) + "." + std::to_string(ipAddr[2]) + "." + std::to_string(ipAddr[3]);
-		}
-		else
-		{
-			addr.resize(41);
-			auto ptr = &addr[0];
-
-			for (size_t i = 0; i < 16; i+=2)
+			if (to.size() < maxSize)
 			{
-				sprintf_s(ptr, 6, "%02X%02X:", addrBytes[i], addrBytes[i + 1]);
-				ptr += 5;
+				to.push_back(n);
+			}
+			else
+			{
+				size_t replaceIdx = -1;
+				uint8_t worstDistance = 0;
+				auto nd = n.id.distance(target);
+
+				for (size_t i = 0; i < to.size(); i++)
+				{
+					if (!to[i].id.closerThanThis(nd, target))
+					{
+						auto dist = to[i].id.distance(target).length();
+
+						if (dist > worstDistance)
+						{
+							worstDistance = dist;
+							replaceIdx = i;
+						}
+					}
+				}
+				
+				if (replaceIdx != -1)
+				{
+					to[replaceIdx] = n;
+				}
+			}
+		}
+	}
+}
+
+NodeId getShortestDistance(std::vector<NodeInfo>& from, NodeId& target)
+{
+	NodeId id = from[0].id;
+
+	for (size_t i = 1; i < from.size(); i++)
+	{
+		if (from[i].id.closerThan(id, target))
+			id = from[i].id;
+	}
+
+	id = id.distance(target);
+
+	return id;
+}
+
+GetPeersResponse Communication::parseGetPeersResponse(DataBuffer& message)
+{
+	GetPeersResponse response;
+
+	if (!message.empty())
+	{
+		BencodeParser parser;
+		parser.parse(message);
+
+		if (parser.parsedData.isMap())
+		{
+			auto resp = parser.parsedData.getDictItem("r");
+
+			if (resp)
+			{
+				auto nodesV4 = resp->find("nodes");
+				auto nodesV6 = resp->find("nodes6");
+
+				bool v6nodes = (nodesV6 != resp->end());
+				auto nodes = v6nodes ? nodesV6 : nodesV4;
+
+				if (nodes != resp->end() && nodes->second.type == mtt::BencodeParser::Object::Text)
+				{
+					auto& receivedNodes = response.nodes;
+					auto& data = nodes->second.txt;
+
+					for (size_t pos = 0; pos < data.size();)
+					{
+						NodeInfo info;
+						pos += info.parse(&data[pos], v6nodes);
+
+						if(std::find(receivedNodes.begin(), receivedNodes.end(), info) == receivedNodes.end())
+							receivedNodes.push_back(info);
+					}
+				}
+				else
+				{
+					auto values = resp->find("values");
+
+					if (values != resp->end() && values->second.isList())
+					{
+						for (auto& v : *values->second.l)
+						{
+							response.values.emplace_back(NodeAddr(&v.txt[0], v.txt.length() >= 18));
+						}
+					}
+				}
+
+				auto token = resp->find("token");
+				if (token != resp->end())
+				{
+					response.token = token->second.txt;
+				}
+
+				auto id = resp->find("id");
+				if (id != resp->end() && id->second.txt.length() == 20)
+				{
+					memcpy(response.id, id->second.txt.data(), 20);
+				}
 			}
 
-			addr.resize(39);
+			auto eresp = parser.parsedData.getListItem("e");
+
+			if (eresp && !eresp->empty())
+			{
+				response.result = eresp->at(0).i;
+			}
 		}
-
-		buffer += addrSize;
-
-		port = _byteswap_ushort(*reinterpret_cast<const uint16_t*>(buffer));
 	}
-};
 
-void mtt::DhtCommunication::test()
+	return response;
+}
+
+#define ASYNC_DHT
+
+void Communication::test()
 {
+	/*NodeId testdata;
+	memset(testdata.data, 0, 20);
+	testdata.data[2] = 8;
+	auto l = testdata.length();*/
+
 	const char* dhtRoot = "dht.transmissionbt.com";
 	const char* dhtRootPort = "6881";
 
@@ -94,8 +290,11 @@ void mtt::DhtCommunication::test()
 	boost::asio::io_service io_service;
 	udp::resolver resolver(io_service);
 
-	udp::socket sock(io_service);
-	sock.open(ipv6 ? udp::v6() : udp::v4());
+	udp::socket sock_v6(io_service);
+	sock_v6.open(udp::v6());
+
+	udp::socket sock_v4(io_service);
+	sock_v4.open(udp::v4());
 
 	std::string myId(20,0);
 	for (int i = 0; i < 20; i++)
@@ -103,7 +302,7 @@ void mtt::DhtCommunication::test()
 		myId[i] = 5 + i * 5;
 	}
 
-	std::string targetIdBase32 = "ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J";
+	std::string targetIdBase32 = "VNGQVFD33ZEU3FCVIQMEIYMLS7B5P7DH"; // "ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J";
 	auto targetId = base32decode(targetIdBase32);
 
 	const char* clientId = "mt02";
@@ -120,45 +319,101 @@ void mtt::DhtCommunication::test()
 	packet.add(reinterpret_cast<char*>(&transactionId),2);
 	packet.add("1:y1:qe",7);
 
+	PacketBuilder ipv4packet = packet;
+	ipv4packet.addAfter(targetId.data(), "4:wantl2:n4e", 12);
+
 	std::vector<NodeInfo> receivedNodes;
 
 	try
 	{	
-		auto message = sendUdpRequest(sock, resolver, packet.getBuffer(), dhtRoot, dhtRootPort, 5000, ipv6);
+		auto message = sendUdpRequest(ipv6 ? sock_v6 : sock_v4, resolver, packet.getBuffer(), dhtRoot, dhtRootPort, 5000, ipv6);
+		auto resp = parseGetPeersResponse(message);
 
-		if (!message.empty())
+		std::vector<NodeInfo> usedNodes;
+		std::vector<NodeInfo> nextNodes = resp.nodes;
+		std::vector<std::string> values;
+		NodeId minDistance = nextNodes.front().id;
+		NodeId targetIdNode(targetId.data());
+
+		while (!nextNodes.empty() && values.empty())
 		{
-			BencodeParser parser;
-			parser.parse(message);
+			auto currentNodes = nextNodes;
+			usedNodes.insert(usedNodes.end(), currentNodes.begin(), currentNodes.end());
 
-			if (parser.parsedData.isMap())
+			nextNodes.clear();
+
+#ifdef ASYNC_DHT
+			std::vector<std::future<GetPeersResponse>> f;
+#endif
+
+			for(size_t i = 0; i < currentNodes.size(); i++)
 			{
-				auto obj = parser.parsedData.dic->find("r");
+				auto& node = currentNodes[i];
 
-				if (obj != parser.parsedData.dic->end() && obj->second.isMap())
+#ifdef ASYNC_DHT
+				if (f.size() >= 5)
 				{
-					auto nodesV4 = obj->second.dic->find("nodes");
-					auto nodesV6 = obj->second.dic->find("nodes6");
-
-					bool v6nodes = (nodesV6 != obj->second.dic->end());
-					auto nodes = v6nodes ? nodesV6 : nodesV4;
-
-					if (nodes != obj->second.dic->end() && nodes->second.type == mtt::BencodeParser::Object::Text)
+					for (auto& r : f)
 					{
-						auto& data = nodes->second.txt;
-
-						for (size_t pos = 0; pos < data.size(); pos += 38)
-						{
-							NodeInfo info;
-							info.parse(&data[pos], v6nodes);
-
-							receivedNodes.push_back(info);
-						}	
+						auto resp = r.get();
+						mergeClosestNodes(nextNodes, resp.nodes, usedNodes, 64, minDistance, targetIdNode);
 					}
+
+					f.clear();
 				}
+
+				f.push_back(std::async([&]() 
+				{
+					GetPeersResponse resp;
+
+					try
+					{
+						auto message = sendUdpRequest(node.addr.isIpv6() ? sock_v6 : sock_v4, ipv4packet.getBuffer(), node.addr.str.data(), node.addr.port, 3000);
+						resp = parseGetPeersResponse(message);
+					}
+					catch (const std::exception&e)
+					{
+						DHT_LOG("DHT exception: " << e.what() << "\n");
+					}
+
+					return resp;
+				}));
+#else
+				try
+				{
+					auto message = sendUdpRequest(node.addr.isIpv6() ? sock_v6 : sock_v4, ipv4packet.getBuffer(), node.addr.str.data(), node.addr.port, 3000);
+					resp = parseGetPeersResponse(message);
+					mergeClosestNodes(nextNodes, resp.nodes, usedNodes, 64, minDistance, targetIdNode);
+				}
+				catch (const std::exception&e)
+				{
+					DHT_LOG("DHT exception: " << e.what() << "\n");
+				}
+#endif
 			}
 
+#ifdef ASYNC_DHT
+			if (!f.empty())
+			{
+				for (auto& r : f)
+				{
+					auto resp = r.get();
+					mergeClosestNodes(nextNodes, resp.nodes, usedNodes, 32, minDistance, targetIdNode);
+				}
+
+				f.clear();
+			}
+#endif
+
+			if (!nextNodes.empty())
+			{
+				minDistance = getShortestDistance(nextNodes, targetIdNode);
+				DHT_LOG("DHT distance: " << (int)minDistance.length() << " next nodes count: " << nextNodes.size() << "\n");
+			}
 		}
+
+		if(!values.empty())
+			DHT_LOG("DHT returned values count: " << values.size() << "\n");
 	}
 	catch (const std::exception&e)
 	{
