@@ -44,10 +44,13 @@ namespace mtt
 
 			void cleanup();
 
+			BenDictionary* getDictItem(const char* name);
 			BenList* getListItem(const char* name);
 			std::string* getTxtItem(const char* name);
 			int* getIntItem(const char* name);
 			bool isMap();
+			bool isList();
+			bool isInt();
 		};
 
 		Object parsedData;

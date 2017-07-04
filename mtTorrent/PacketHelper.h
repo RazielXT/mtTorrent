@@ -112,6 +112,22 @@ struct PacketBuilder
 		out.insert(out.end(), b, b + length);
 	}
 
+	void addAfter(const char* find, const char* b, size_t length)
+	{
+		auto findLen = strlen(find);
+		auto f = std::find_if(out.begin(), out.end() - length, [=](char& idx) { return strncmp(&idx, find, findLen) == 0; });
+
+		if (f != out.end())
+			f += findLen;
+
+		out.insert(f, b, b + length);
+	}
+
+	void insert(size_t pos, const char* b, size_t length)
+	{
+		out.insert(out.begin() + pos, b, b + length);
+	}
+
 	DataBuffer& getBuffer()
 	{
 		return out;

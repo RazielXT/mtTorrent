@@ -322,6 +322,22 @@ BencodeParser::BenList* BencodeParser::Object::getListItem(const char* name)
 	return nullptr;
 }
 
+BencodeParser::BenDictionary* mtt::BencodeParser::Object::getDictItem(const char* name)
+{
+	if (type == BencodeParser::Object::Dictionary)
+	{
+		if (dic->find(name) != dic->end())
+		{
+			auto& item = (*dic)[name];
+
+			if (item.type == BencodeParser::Object::Dictionary)
+				return item.dic;
+		}
+	}
+
+	return nullptr;
+}
+
 std::string* mtt::BencodeParser::Object::getTxtItem(const char* name)
 {
 	if (type == BencodeParser::Object::Dictionary)
@@ -357,6 +373,16 @@ int* mtt::BencodeParser::Object::getIntItem(const char* name)
 bool mtt::BencodeParser::Object::isMap()
 {
 	return type == Dictionary;
+}
+
+bool mtt::BencodeParser::Object::isList()
+{
+	return type == List;
+}
+
+bool mtt::BencodeParser::Object::isInt()
+{
+	return type == Number;
 }
 
 void mtt::BencodeParser::Object::cleanup()
