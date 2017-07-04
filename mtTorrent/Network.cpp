@@ -70,24 +70,46 @@ std::string sendHttpsRequest(ssl_socket& socket, tcp::resolver& resolver, boost:
 	return outMessage;
 }
 
-
-DataBuffer sendUdpRequest(udp::socket& socket, udp::resolver& resolver, DataBuffer& request, const char* hostname, const char* port, int32_t timeout, bool ipv6)
+DataBuffer _sendUdpRequest(udp::socket& socket, DataBuffer& request, udp::endpoint& receiver_endpoint, int32_t timeout)
 {
 	setsockopt(socket.native(), SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
 	setsockopt(socket.native(), SOL_SOCKET, SO_SNDTIMEO, (const char*)&timeout, sizeof(timeout));
 
-	udp::resolver::query query(ipv6 ? udp::v6() : udp::v4(), hostname, port);
-	udp::endpoint receiver_endpoint = *resolver.resolve(query);
-
 	socket.send_to(boost::asio::buffer(request), receiver_endpoint);
 
-	boost::array<char, 10*1024> recv_buf;
+	boost::array<char, 10 * 1024> recv_buf;
 	udp::endpoint sender_endpoint;
 
-	size_t len = socket.receive_from( boost::asio::buffer(recv_buf), sender_endpoint);
+	size_t len = socket.receive_from(boost::asio::buffer(recv_buf), sender_endpoint);
 
 	DataBuffer out(recv_buf.data(), recv_buf.data() + len);
 	return out;
+}
+
+DataBuffer sendUdpRequest(udp::socket& socket, DataBuffer& request, const char* ip, uint16_t port, int32_t timeout)
+{
+	udp::endpoint receiver_endpoint(boost::asio::ip::address::from_string(ip), port);
+
+	return _sendUdpRequest(socket, request, receiver_endpoint, timeout);
+}
+
+DataBuffer sendUdpRequest(udp::socket& socket, udp::resolver& resolver, DataBuffer& request, const char* hostname, const char* port, int32_t timeout, bool ipv6)
+{
+	udp::resolver::query query(ipv6 ? udp::v6() : udp::v4(), hostname, port);
+	udp::endpoint receiver_endpoint = *resolver.resolve(query);
+	
+	return _sendUdpRequest(socket, request, receiver_endpoint, timeout);
+}
+
+DataBuffer sendUdpRequest(udp::socket& socket, DataBuffer& request, uint8_t* ip, uint16_t port, int32_t timeout, bool ipv6)
+{
+	//udp::endpoint receiver_endpoint(boost::asio::ip::address_v4(*reinterpret_cast<boost::asio::ip::address_v4::bytes_type*>(ip)), port);
+
+	return _sendUdpRequest(socket, request, 
+		ipv6 ? 
+		udp::endpoint(boost::asio::ip::address_v6(*reinterpret_cast<boost::asio::ip::address_v6::bytes_type*>(ip)), port) :
+		udp::endpoint(boost::asio::ip::address_v4(*reinterpret_cast<boost::asio::ip::address_v4::bytes_type*>(ip)), port)
+		, timeout);
 }
 
 void openTcpSocket(tcp::socket& socket, tcp::resolver& resolver, const char* hostname, const char* port)

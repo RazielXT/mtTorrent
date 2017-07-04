@@ -20,4 +20,6 @@ std::string sendHttpsRequest(ssl_socket& socket, tcp::resolver& resolver, boost:
 void openTcpSocket(tcp::socket& sock, tcp::resolver& resolver, const char* hostname, const char* port);
 DataBuffer sendTcpRequest(tcp::socket& socket, DataBuffer& request);
 
-DataBuffer sendUdpRequest(udp::socket& socket, udp::resolver& resolver, DataBuffer& request, const char* hostname, const char* port = "80", int32_t timeout = 15000, bool ipv6 = false);
+DataBuffer sendUdpRequest(udp::socket& socket, udp::resolver& resolver, DataBuffer& request, const char* hostname, const char* port = "80", int32_t timeout = 5000, bool ipv6 = false);
+DataBuffer sendUdpRequest(udp::socket& socket, DataBuffer& request, const char* ip, uint16_t port, int32_t timeout = 5000);
+DataBuffer sendUdpRequest(udp::socket& socket, DataBuffer& request, uint8_t* ip, uint16_t port, int32_t timeout = 5000, bool ipv6 = false);
