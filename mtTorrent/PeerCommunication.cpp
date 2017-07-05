@@ -18,8 +18,10 @@ void PeerCommunication::start(TorrentFileInfo* tInfo, PeerInfo info)
 	torrent = tInfo;
 	peerInfo = info;
 
-	auto port = std::to_string(peerInfo.port);
-	stream.connect(peerInfo.ipStr, port);
+	/*auto port = std::to_string(peerInfo.port);
+	stream.connect(peerInfo.ipStr, port);*/
+
+	stream.connect((uint8_t*)&peerInfo.ip, peerInfo.port, false);
 }
 
 DataBuffer PeerCommunication::getHandshakeMessage()

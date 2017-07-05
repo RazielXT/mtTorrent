@@ -90,14 +90,14 @@ size_t NodeAddr::parse(char* buffer, bool v6)
 
 	if (!v6)
 	{
-		uint32_t ip = swap32(*reinterpret_cast<uint32_t*>(&buffer));
-		addrBytes.assign(reinterpret_cast<char*>(&ip), reinterpret_cast<char*>(&ip) + addrSize);
-
 		uint8_t ipAddr[4];
-		ipAddr[3] = *reinterpret_cast<uint8_t*>(&ip);
-		ipAddr[2] = *(reinterpret_cast<uint8_t*>(&ip) + 1);
-		ipAddr[1] = *(reinterpret_cast<uint8_t*>(&ip) + 2);
-		ipAddr[0] = *(reinterpret_cast<uint8_t*>(&ip) + 3);
+		ipAddr[0] = *reinterpret_cast<uint8_t*>(buffer);
+		ipAddr[1] = *(reinterpret_cast<uint8_t*>(buffer + 1));
+		ipAddr[2] = *(reinterpret_cast<uint8_t*>(buffer + 2));
+		ipAddr[3] = *(reinterpret_cast<uint8_t*>(buffer + 3));
+
+		uint32_t ip = swap32(*reinterpret_cast<uint32_t*>(&buffer));
+		addrBytes.assign(ipAddr, ipAddr + 4);
 
 		str.resize(16);
 		str.resize(sprintf_s(&str[0], 16, "%d.%d.%d.%d", ipAddr[0], ipAddr[1], ipAddr[2], ipAddr[3]));
@@ -215,12 +215,7 @@ GetPeersResponse Communication::parseGetPeersResponse(DataBuffer& message)
 
 			if (resp)
 			{
-				auto nodesV4 = resp->find("nodes");
-				auto nodesV6 = resp->find("nodes6");
-
-				bool v6nodes = (nodesV6 != resp->end());
-				auto nodes = v6nodes ? nodesV6 : nodesV4;
-
+				auto nodes = resp->find("nodes");
 				if (nodes != resp->end() && nodes->second.type == mtt::BencodeParser::Object::Text)
 				{
 					auto& receivedNodes = response.nodes;
@@ -229,22 +224,36 @@ GetPeersResponse Communication::parseGetPeersResponse(DataBuffer& message)
 					for (size_t pos = 0; pos < data.size();)
 					{
 						NodeInfo info;
-						pos += info.parse(&data[pos], v6nodes);
+						pos += info.parse(&data[pos], false);
+
+						if (std::find(receivedNodes.begin(), receivedNodes.end(), info) == receivedNodes.end())
+							receivedNodes.push_back(info);
+					}
+				}
+
+				nodes = resp->find("nodes6");
+				if (nodes != resp->end() && nodes->second.type == mtt::BencodeParser::Object::Text)
+				{
+					auto& receivedNodes = response.nodes;
+					auto& data = nodes->second.txt;
+
+					for (size_t pos = 0; pos < data.size();)
+					{
+						NodeInfo info;
+						pos += info.parse(&data[pos], true);
 
 						if(std::find(receivedNodes.begin(), receivedNodes.end(), info) == receivedNodes.end())
 							receivedNodes.push_back(info);
 					}
 				}
-				else
-				{
-					auto values = resp->find("values");
 
-					if (values != resp->end() && values->second.isList())
+				auto values = resp->find("values");
+
+				if (values != resp->end() && values->second.isList())
+				{
+					for (auto& v : *values->second.l)
 					{
-						for (auto& v : *values->second.l)
-						{
-							response.values.emplace_back(NodeAddr(&v.txt[0], v.txt.length() >= 18));
-						}
+						response.values.emplace_back(NodeAddr(&v.txt[0], v.txt.length() >= 18));
 					}
 				}
 
@@ -273,7 +282,17 @@ GetPeersResponse Communication::parseGetPeersResponse(DataBuffer& message)
 	return response;
 }
 
-#define ASYNC_DHT
+//#define ASYNC_DHT
+
+char fromHexa(char h)
+{
+	if (h <= '9')
+		h = h - '0';
+	else
+		h = h - 'a' + 10;
+
+	return h;
+}
 
 void Communication::test()
 {
@@ -302,8 +321,17 @@ void Communication::test()
 		myId[i] = 5 + i * 5;
 	}
 
-	std::string targetIdBase32 = "VNGQVFD33ZEU3FCVIQMEIYMLS7B5P7DH"; // "ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J";
+	std::string targetIdBase32 = "T323KFN5XLZAZZO2NDNCYX7OBMQTUV6U"; // "ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J";
 	auto targetId = base32decode(targetIdBase32);
+
+	/*auto hexaStr = "c90bb8324012a7d515901f4b3edaf02f02a5fae9";
+	for (size_t i = 0; i < 20; i++)
+	{
+		char f = fromHexa(hexaStr[i * 2]);
+		char s = fromHexa(hexaStr[i * 2 + 1]);
+
+		targetId[i] = (f << 4) + s;
+	}*/
 
 	const char* clientId = "mt02";
 	uint16_t transactionId = 54535;
@@ -320,7 +348,7 @@ void Communication::test()
 	packet.add("1:y1:qe",7);
 
 	PacketBuilder ipv4packet = packet;
-	ipv4packet.addAfter(targetId.data(), "4:wantl2:n4e", 12);
+	ipv4packet.addAfter(targetId.data(), "4:wantl2:n42:n6e", 16);
 
 	std::vector<NodeInfo> receivedNodes;
 
@@ -328,12 +356,20 @@ void Communication::test()
 	{	
 		auto message = sendUdpRequest(ipv6 ? sock_v6 : sock_v4, resolver, packet.getBuffer(), dhtRoot, dhtRootPort, 5000, ipv6);
 		auto resp = parseGetPeersResponse(message);
+		std::vector<NodeInfo> nextNodes = resp.nodes;
+		
+	/*	std::vector<NodeInfo> nextNodes;
+		NodeInfo info;
+		info.addr.str = "127.0.0.1";
+		info.addr.port = 56572;
+		nextNodes.push_back(info);*/
 
 		std::vector<NodeInfo> usedNodes;
-		std::vector<NodeInfo> nextNodes = resp.nodes;
-		std::vector<std::string> values;
+		std::vector<NodeAddr> values;
 		NodeId minDistance = nextNodes.front().id;
 		NodeId targetIdNode(targetId.data());
+
+		bool firstWave = false;
 
 		while (!nextNodes.empty() && values.empty())
 		{
@@ -368,7 +404,7 @@ void Communication::test()
 
 					try
 					{
-						auto message = sendUdpRequest(node.addr.isIpv6() ? sock_v6 : sock_v4, ipv4packet.getBuffer(), node.addr.str.data(), node.addr.port, 3000);
+						auto message = sendUdpRequest(node.addr.isIpv6() ? sock_v6 : sock_v4, firstWave ? packet.getBuffer() : ipv4packet.getBuffer(), node.addr.str.data(), node.addr.port, 3000);
 						resp = parseGetPeersResponse(message);
 					}
 					catch (const std::exception&e)
@@ -381,9 +417,11 @@ void Communication::test()
 #else
 				try
 				{
-					auto message = sendUdpRequest(node.addr.isIpv6() ? sock_v6 : sock_v4, ipv4packet.getBuffer(), node.addr.str.data(), node.addr.port, 3000);
-					resp = parseGetPeersResponse(message);
-					mergeClosestNodes(nextNodes, resp.nodes, usedNodes, 64, minDistance, targetIdNode);
+					auto message = sendUdpRequest(node.addr.isIpv6() ? sock_v6 : sock_v4, firstWave ? packet.getBuffer() : ipv4packet.getBuffer(), node.addr.str.data(), node.addr.port, 3000);
+					auto resp = parseGetPeersResponse(message);
+					mergeClosestNodes(nextNodes, resp.nodes, usedNodes, 16, minDistance, targetIdNode);
+
+					values.assign(resp.values.begin(), resp.values.end());
 				}
 				catch (const std::exception&e)
 				{
@@ -410,10 +448,28 @@ void Communication::test()
 				minDistance = getShortestDistance(nextNodes, targetIdNode);
 				DHT_LOG("DHT distance: " << (int)minDistance.length() << " next nodes count: " << nextNodes.size() << "\n");
 			}
+
+			firstWave = false;
 		}
 
-		if(!values.empty())
+		if (!values.empty())
+		{
 			DHT_LOG("DHT returned values count: " << values.size() << "\n");
+
+			for (auto& addr : values)
+			{
+				try
+				{
+					auto message = sendUdpRequest(addr.isIpv6() ? sock_v6 : sock_v4, firstWave ? packet.getBuffer() : ipv4packet.getBuffer(), addr.str.data(), addr.port, 3000);
+					auto resp = parseGetPeersResponse(message);
+				}
+				catch (const std::exception&e)
+				{
+					DHT_LOG("DHT exception: " << e.what() << "\n");
+				}
+			}
+		}
+
 	}
 	catch (const std::exception&e)
 	{
