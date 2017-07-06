@@ -28,7 +28,7 @@ namespace mtt
 	struct UtMetadataExtension
 	{
 		int size = 0;
-		uint8_t remainingPiecesFlag = 0;
+		uint32_t remainingPiecesFlag = 0;
 		DataBuffer metadata;
 
 		bool isFull();

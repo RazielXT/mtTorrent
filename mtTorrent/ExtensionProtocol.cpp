@@ -60,7 +60,7 @@ void mtt::UtMetadataExtension::setSize(int s)
 	size = s;
 	remainingPiecesFlag = 0;
 
-	uint8_t flagPos = 1;
+	uint32_t flagPos = 1;
 	while (s > 0)
 	{
 		remainingPiecesFlag |= flagPos;
@@ -81,14 +81,14 @@ void mtt::UtMetadataExtension::load(BencodeParser::Object& data, const char* rem
 			{
 
 			}
-			else if (*msgType == 0)	//data
+			else if (*msgType == 1)	//data
 			{
 				auto piece = data.getIntItem("piece");
 				auto size = data.getIntItem("total_size");
 
 				if (piece && size && *size >= remainingSize)
 				{
-					uint8_t flagPos = (uint8_t)(1 << *piece);
+					uint32_t flagPos = (uint32_t)(1 << *piece);
 					if (remainingPiecesFlag & flagPos)
 					{
 						remainingPiecesFlag ^= flagPos;
@@ -97,7 +97,7 @@ void mtt::UtMetadataExtension::load(BencodeParser::Object& data, const char* rem
 					}
 				}
 			}
-			else if (*msgType == 0)	//reject
+			else if (*msgType == 2)	//reject
 			{
 				size = 0;
 			}
