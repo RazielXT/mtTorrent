@@ -26,11 +26,9 @@ void PeerCommunication::start(TorrentFileInfo* tInfo, PeerInfo info)
 
 DataBuffer PeerCommunication::getHandshakeMessage()
 {
-	std::string protocol = "BitTorrent protocol";
-
-	PacketBuilder packet;
-	packet.add(static_cast<char>(protocol.length()));
-	packet.add(protocol.data(), protocol.size());
+	PacketBuilder packet(70);
+	packet.add(19);
+	packet.add("BitTorrent protocol", 19);
 
 	char reserved_byte[8] = { 0 };
 	reserved_byte[5] |= 0x10;	//Extension Protocol
