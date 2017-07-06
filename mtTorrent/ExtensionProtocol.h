@@ -9,6 +9,7 @@ namespace mtt
 	{
 		HandshakeEx = 0,
 		PexEx,
+		UtMetadataEx,
 		InvalidEx
 	};
 
@@ -24,12 +25,24 @@ namespace mtt
 		std::mutex dataMutex;
 	};
 
+	struct UtMetadataExtension
+	{
+		int size = 0;
+		uint8_t remainingPiecesFlag = 0;
+		DataBuffer metadata;
+
+		bool isFull();
+		void setSize(int size);
+		void load(BencodeParser::Object& data, const char* remainingData, size_t remainingSize);
+	};
+
 	struct ExtensionProtocol
 	{	
 		ExtendedMessageType load(char id, DataBuffer& data);
-		DataBuffer getExtendedHandshakeMessage();
+		DataBuffer getExtendedHandshakeMessage(bool enablePex = true, uint16_t metadataSize = 0);
 
 		PeerExchangeExtension pex;
+		UtMetadataExtension utm;
 
 		struct
 		{

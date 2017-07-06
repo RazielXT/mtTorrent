@@ -22,6 +22,9 @@ bool BencodeParser::parse(const char* data, size_t length)
 	bodyEnd = data + length;
 	parsedData = internalParse(&data);
 
+	remainingData = bodyEnd - data;
+	bodyEnd = data;
+
 	if (infoStart && infoEnd)
 	{
 		infoHash.resize(SHA_DIGEST_LENGTH);

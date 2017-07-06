@@ -58,6 +58,9 @@ namespace mtt
 
 		TorrentFileInfo parseTorrentInfo();
 
+		const char* bodyEnd = nullptr;
+		size_t remainingData = 0;
+
 	private:
 
 		Object internalParse(const char** body);
@@ -67,7 +70,6 @@ namespace mtt
 		std::string parseString(const char** body);
 		int parseInt(const char** body);
 
-		const char* bodyEnd = nullptr;
 		const char* infoStart = nullptr;
 		const char* infoEnd = nullptr;
 

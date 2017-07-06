@@ -50,6 +50,61 @@ void mtt::PeerExchangeExtension::load(BencodeParser::Object& data)
 	}
 }
 
+bool mtt::UtMetadataExtension::isFull()
+{
+	return size && !remainingPiecesFlag;
+}
+
+void mtt::UtMetadataExtension::setSize(int s)
+{
+	size = s;
+	remainingPiecesFlag = 0;
+
+	uint8_t flagPos = 1;
+	while (s > 0)
+	{
+		remainingPiecesFlag |= flagPos;
+		flagPos <<= 1;
+		s -= 16 * 1024;
+	}
+
+	metadata.resize(s);
+}
+
+void mtt::UtMetadataExtension::load(BencodeParser::Object& data, const char* remainingData, size_t remainingSize)
+{
+	if (data.isMap())
+	{
+		if (auto msgType = data.getIntItem("msg_type"))
+		{
+			if (*msgType == 0)	//request
+			{
+
+			}
+			else if (*msgType == 0)	//data
+			{
+				auto piece = data.getIntItem("piece");
+				auto size = data.getIntItem("total_size");
+
+				if (piece && size && *size >= remainingSize)
+				{
+					uint8_t flagPos = (uint8_t)(1 << *piece);
+					if (remainingPiecesFlag & flagPos)
+					{
+						remainingPiecesFlag ^= flagPos;
+						size_t offset = *piece * 16 * 1024;
+						memcpy(&metadata[0] + offset, remainingData, *size);
+					}
+				}
+			}
+			else if (*msgType == 0)	//reject
+			{
+				size = 0;
+			}
+		}
+	}
+}
+
 mtt::ExtendedMessageType mtt::ExtensionProtocol::load(char id, DataBuffer& data)
 {
 	if (id >= InvalidEx)
@@ -76,6 +131,24 @@ mtt::ExtendedMessageType mtt::ExtensionProtocol::load(char id, DataBuffer& data)
 						messageIds[pexInfo.i] = PexEx;
 					}
 				}
+
+				if (extensions.find("ut_metadata") != extensions.end())
+				{
+					auto& utmInfo = extensions["ut_metadata"];
+
+					if (utmInfo.type == BencodeParser::Object::Number)
+					{
+						messageIds[utmInfo.i] = UtMetadataEx;
+					}
+
+					auto& utmSize = parser.parsedData.dic->find("metadata_size");
+					if (utmSize != parser.parsedData.dic->end() && utmSize->second.type == BencodeParser::Object::Number)
+					{
+						utm.size = utmSize->second.i;
+					}
+					else
+						utm.size = 0;
+				}
 			}
 		}
 
@@ -94,6 +167,11 @@ mtt::ExtendedMessageType mtt::ExtensionProtocol::load(char id, DataBuffer& data)
 				pex.load(parser.parsedData);
 			}
 
+			if (msgType == UtMetadataEx)
+			{
+				utm.load(parser.parsedData, parser.bodyEnd, parser.remainingData);
+			}
+
 			return msgType;
 		}
 	}
@@ -101,17 +179,60 @@ mtt::ExtendedMessageType mtt::ExtensionProtocol::load(char id, DataBuffer& data)
 	return InvalidEx;
 }
 
-DataBuffer mtt::ExtensionProtocol::getExtendedHandshakeMessage()
+DataBuffer mtt::ExtensionProtocol::getExtendedHandshakeMessage(bool enablePex, uint16_t metadataSize)
 {
-	PacketBuilder builder;
+	PacketBuilder extDict(100);
+	extDict.add32(0);
+	extDict.add(Extended);
+	extDict.add(HandshakeEx);
 
-	//std::string extDict = "d1:md6:ut_pexi" + std::to_string(PexEx) + "ee";
-	std::string extDict = "d1:md11:LT_metadatai2e6:ut_pexi" + std::to_string(PexEx) + "ee1:pi" + std::to_string(mtt::getClientInfo()->listenPort) + "e1:v" + std::to_string(strlen(MT_NAME)) +":" + MT_NAME + "e";
-	builder.add32(static_cast<uint32_t>(2 + extDict.length()));
-	builder.add(Extended);
-	builder.add(HandshakeEx);
+	//std::string extDict = "d1:md11:LT_metadatai2e6:ut_pexi" + std::to_string(PexEx) + "ee1:pi" + std::to_string(mtt::getClientInfo()->listenPort) + "e1:v" + std::to_string(strlen(MT_NAME)) +":" + MT_NAME + "e";
 	
-	builder.add(extDict.data(), extDict.length());
+	extDict.add('d');
 
-	return builder.getBuffer();
+	if (enablePex || metadataSize)
+	{
+		extDict.add("1:md", 4);
+
+		if (metadataSize)
+		{
+			extDict.add("ut_metadatai", 12);
+			extDict.add((char)UtMetadataEx);
+			extDict.add('e');
+		}
+
+		if (enablePex)
+		{
+			extDict.add("6:ut_pexi", 9);
+			extDict.add((char)PexEx);
+			extDict.add('e');
+		}
+
+		extDict.add('e');
+	}
+
+	if (metadataSize)
+	{
+		extDict.add("13:metadata_sizei", 17);
+		auto sizeStr = std::to_string(metadataSize);
+		extDict.add(sizeStr.data(), sizeStr.length());
+		extDict.add('e');
+	}
+
+	extDict.add("1:pi", 4);
+	auto portStr = std::to_string(mtt::getClientInfo()->listenPort);
+	extDict.add(portStr.data(), portStr.length());
+	extDict.add('e');
+
+	extDict.add("1:v", 3);
+	auto nameLen = std::to_string(_countof(MT_NAME));
+	extDict.add(nameLen.data(), nameLen.length());
+	extDict.add(':');
+	extDict.add(MT_NAME, _countof(MT_NAME));
+
+	extDict.add('e');
+
+	*reinterpret_cast<uint32_t*>(&extDict.out[0]) = swap32((uint32_t)(extDict.out.size() - sizeof(uint32_t)));
+
+	return extDict.getBuffer();
 }
