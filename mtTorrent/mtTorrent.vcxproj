@@ -255,6 +255,7 @@
   <ItemGroup>
     <ClInclude Include="DhtCommunication.h" />
     <ClInclude Include="ExtensionProtocol.h" />
+    <ClInclude Include="PeerCommunication2.h" />
     <ClInclude Include="State.h" />
     <ClInclude Include="TcpAsyncServer.h" />
     <ClInclude Include="Torrent.h" />

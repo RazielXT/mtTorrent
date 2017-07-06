@@ -153,5 +153,8 @@
     <ClInclude Include="TcpAsyncServer.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="PeerCommunication2.h">
+      <Filter>Source Files\Core\Torrent\Download</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
