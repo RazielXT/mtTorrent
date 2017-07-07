@@ -23,6 +23,9 @@
     <Filter Include="Source Files\Core\Torrent\Dht">
       <UniqueIdentifier>{2be78120-b9ea-4798-81cf-9059ab6bc814}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Core\Proposal">
+      <UniqueIdentifier>{f699ff89-bf4b-4991-84c0-809ff9af92c1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -154,7 +157,31 @@
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="PeerCommunication2.h">
-      <Filter>Source Files\Core\Torrent\Download</Filter>
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClInclude>
+    <ClInclude Include="PeerMgr2.h">
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClInclude>
+    <ClInclude Include="ProgressState.h">
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClInclude>
+    <ClInclude Include="Scheduler.h">
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClInclude>
+    <ClInclude Include="DhtControl.h">
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClInclude>
+    <ClInclude Include="Torrent2.h">
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClInclude>
+    <ClInclude Include="Interface2.h">
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClInclude>
+    <ClInclude Include="Configuration.h">
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClInclude>
+    <ClInclude Include="TrackerManager.h">
+      <Filter>Source Files\Core\Proposal</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

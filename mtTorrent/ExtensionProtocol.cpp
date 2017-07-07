@@ -2,20 +2,11 @@
 #include "PacketHelper.h"
 #include "PeerMessage.h"
 
-std::vector<mtt::PeerInfo> mtt::PeerExchangeExtension::readPexPeers()
+using namespace mtt::ext;
+
+PeerExchange::Message PeerExchange::load(BencodeParser::Object& data)
 {
-	std::lock_guard<std::mutex> guard(dataMutex);
-
-	auto peers = addedPeers;
-	addedPeers.clear();
-
-	return peers;
-}
-
-void mtt::PeerExchangeExtension::load(BencodeParser::Object& data)
-{
-	added.clear();
-	addedFlags.clear();
+	Message msg;
 
 	if (data.type == BencodeParser::Object::Dictionary)
 	{
@@ -23,20 +14,18 @@ void mtt::PeerExchangeExtension::load(BencodeParser::Object& data)
 
 		if (add != data.dic->end() && add->second.type == BencodeParser::Object::Text)
 		{
-			added = add->second.txt;
+			msg.added = add->second.txt;
 			size_t pos = 0;
 
-			std::lock_guard<std::mutex> guard(dataMutex);
-
-			while (added.size() - pos >= 6)
+			while (msg.added.size() - pos >= 6)
 			{
-				uint32_t ip = swap32(*reinterpret_cast<uint32_t*>(&added[0] + pos));
+				uint32_t ip = swap32(*reinterpret_cast<uint32_t*>(&msg.added[0] + pos));
 
 				PeerInfo peer;
 				peer.setIp(ip);
-				peer.port = swap16(*reinterpret_cast<uint16_t*>(&added[0] + pos + 4));
+				peer.port = swap16(*reinterpret_cast<uint16_t*>(&msg.added[0] + pos + 4));
 
-				addedPeers.push_back(peer);
+				msg.addedPeers.push_back(peer);
 				pos += 6;
 			}
 		}
@@ -45,11 +34,12 @@ void mtt::PeerExchangeExtension::load(BencodeParser::Object& data)
 
 		if (addF != data.dic->end() && addF->second.type == BencodeParser::Object::Text)
 		{
-			addedFlags = addF->second.txt;
+			msg.addedFlags = addF->second.txt;
 		}
 	}
 }
 
+/*
 bool mtt::UtMetadataExtension::isFull()
 {
 	return size && !remainingPiecesFlag;
@@ -70,42 +60,48 @@ void mtt::UtMetadataExtension::setSize(int s)
 
 	metadata.resize(s);
 }
+*/
 
-void mtt::UtMetadataExtension::load(BencodeParser::Object& data, const char* remainingData, size_t remainingSize)
+UtMetadata::Message UtMetadata::load(BencodeParser::Object& data, const char* remainingData, size_t remainingSize)
 {
+	Message msg;
+	msg.size = size;
+
 	if (data.isMap())
 	{
 		if (auto msgType = data.getIntItem("msg_type"))
 		{
-			if (*msgType == 0)	//request
-			{
+			msg.id = (MessageId)*msgType;
 
+			if (msg.id == Request)
+			{
 			}
-			else if (*msgType == 1)	//data
+			else if (msg.id == Data)
 			{
 				auto piece = data.getIntItem("piece");
-				auto size = data.getIntItem("total_size");
+				auto piecesize = data.getIntItem("total_size");
 
-				if (piece && size && *size >= remainingSize)
+				if (piece && piecesize && *piecesize <= remainingSize)
 				{
-					uint32_t flagPos = (uint32_t)(1 << *piece);
+					/*uint32_t flagPos = (uint32_t)(1 << *piece);
 					if (remainingPiecesFlag & flagPos)
 					{
 						remainingPiecesFlag ^= flagPos;
 						size_t offset = *piece * 16 * 1024;
-						memcpy(&metadata[0] + offset, remainingData, *size);
-					}
+						memcpy(&metadata[0] + offset, remainingData, *piecesize);
+					}*/
+
+					msg.metadata.insert(msg.metadata.begin(), remainingData, remainingData + *piecesize);
 				}
 			}
-			else if (*msgType == 2)	//reject
+			else if (msg.id == Reject)
 			{
-				size = 0;
 			}
 		}
 	}
 }
 
-mtt::ExtendedMessageType mtt::ExtensionProtocol::load(char id, DataBuffer& data)
+MessageType ExtensionProtocol::load(char id, DataBuffer& data)
 {
 	if (id >= InvalidEx)
 		return InvalidEx;
@@ -164,12 +160,18 @@ mtt::ExtendedMessageType mtt::ExtensionProtocol::load(char id, DataBuffer& data)
 
 			if (msgType == PexEx)
 			{
-				pex.load(parser.parsedData);
+				auto msg = pex.load(parser.parsedData);
+
+				if (onPexMessage)
+					onPexMessage(msg);
 			}
 
 			if (msgType == UtMetadataEx)
 			{
-				utm.load(parser.parsedData, parser.bodyEnd, parser.remainingData);
+				auto msg = utm.load(parser.parsedData, parser.bodyEnd, parser.remainingData);
+
+				if (onUtMetadataMessage)
+					onUtMetadataMessage(msg);
 			}
 
 			return msgType;
@@ -179,11 +181,11 @@ mtt::ExtendedMessageType mtt::ExtensionProtocol::load(char id, DataBuffer& data)
 	return InvalidEx;
 }
 
-DataBuffer mtt::ExtensionProtocol::getExtendedHandshakeMessage(bool enablePex, uint16_t metadataSize)
+DataBuffer ExtensionProtocol::getExtendedHandshakeMessage(bool enablePex, uint16_t metadataSize)
 {
 	PacketBuilder extDict(100);
 	extDict.add32(0);
-	extDict.add(Extended);
+	extDict.add(mtt::Extended);
 	extDict.add(HandshakeEx);
 
 	//std::string extDict = "d1:md11:LT_metadatai2e6:ut_pexi" + std::to_string(PexEx) + "ee1:pi" + std::to_string(mtt::getClientInfo()->listenPort) + "e1:v" + std::to_string(strlen(MT_NAME)) +":" + MT_NAME + "e";

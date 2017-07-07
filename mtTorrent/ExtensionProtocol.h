@@ -5,55 +5,64 @@
 
 namespace mtt
 {
-	enum ExtendedMessageType
+	namespace ext
 	{
-		HandshakeEx = 0,
-		PexEx,
-		UtMetadataEx,
-		InvalidEx
-	};
-
-	struct PeerExchangeExtension
-	{
-		std::string added;
-		std::string addedFlags;
-
-		std::vector<PeerInfo> addedPeers;
-
-		std::vector<PeerInfo> readPexPeers();
-		void load(BencodeParser::Object& data);
-		std::mutex dataMutex;
-	};
-
-	struct UtMetadataExtension
-	{
-		int size = 0;
-		uint32_t remainingPiecesFlag = 0;
-		DataBuffer metadata;
-
-		bool isFull();
-		void setSize(int size);
-		void load(BencodeParser::Object& data, const char* remainingData, size_t remainingSize);
-	};
-
-	struct ExtensionProtocol
-	{	
-		ExtendedMessageType load(char id, DataBuffer& data);
-		DataBuffer getExtendedHandshakeMessage(bool enablePex = true, uint16_t metadataSize = 0);
-
-		PeerExchangeExtension pex;
-		UtMetadataExtension utm;
-
-		struct
+		enum MessageType
 		{
-			std::string peerClient;
-			std::string myIp;
-		} 
-		extInfo;
+			HandshakeEx = 0,
+			PexEx,
+			UtMetadataEx,
+			InvalidEx
+		};
 
-	private:
+		struct PeerExchange
+		{
+			struct Message
+			{
+				std::string added;
+				std::string addedFlags;
+				std::vector<PeerInfo> addedPeers;
+			};
 
-		BencodeParser parser;
-		std::map<int, ExtendedMessageType> messageIds;
-	};
+			Message load(BencodeParser::Object& data);
+		};
+
+		struct UtMetadata
+		{
+			enum MessageId
+			{
+				Request = 0,
+				Data,
+				Reject
+			};
+
+			struct Message
+			{
+				MessageId id;
+				uint32_t piece;
+				DataBuffer metadata;
+				uint32_t size;
+			};
+
+			uint32_t size;
+			Message load(BencodeParser::Object& data, const char* remainingData, size_t remainingSize);
+		};
+
+		struct ExtensionProtocol
+		{
+			MessageType load(char id, DataBuffer& data);
+			DataBuffer getExtendedHandshakeMessage(bool enablePex = true, uint16_t metadataSize = 0);
+
+			std::function<void(PeerExchange::Message&)> onPexMessage;
+			std::function<void(UtMetadata::Message&)> onUtMetadataMessage;
+
+		private:
+
+			PeerExchange pex;
+			UtMetadata utm;
+
+			BencodeParser parser;
+			std::map<int, MessageType> messageIds;
+		};
+	}
 }

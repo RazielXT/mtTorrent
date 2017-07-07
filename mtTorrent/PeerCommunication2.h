@@ -8,53 +8,54 @@
 
 namespace mtt
 {
+	struct PeerState
+	{
+		bool finishedHandshake = false;
+
+		bool amChoking = true;
+		bool amInterested = false;
+
+		bool peerChoking = true;
+		bool peerInterested = false;
+
+		enum
+		{
+			Idle,
+			Handshake,
+			Downloading,
+			Uploading,
+			Metadata
+		}
+		action;
+	};
+
 	class PeerCommunication2
 	{
 	public:
 
 		PeerCommunication2(PeerInfo& info);
 
-		struct
-		{
-			bool finishedHandshake = false;
-
-			bool amChoking = true;
-			bool amInterested = false;
-
-			bool peerChoking = true;
-			bool peerInterested = false;
-
-			enum
-			{
-				Idle,
-				Handshake,
-				Downloading,
-				Uploading,
-				Metadata
-			}
-			action;
-		}
-		state;
-
-		PiecesProgress peerPieces;
+		PiecesProgress pieces;
 		PeerInfo info;
+		PeerState state;
 
 		bool requestPiece();
-		void setOnPieceCallback(std::function<void()> func);
+		std::function<void()> onReceivedPiece;
 
 		bool requestMetadataPiece();
-		void setOnMetadataPieceCallback(std::function<void()> func);
+		std::function<void()> onReceivedMetadataPiece;
 
 		void startHandshake();
-		void setOnHandshakeFinishedCallback(std::function<void(bool)> func);
+		std::function<void(bool)> onHandshakeFinished;
+		std::function<void()> onPexReceived;
 
-		void setOnPexReceivedCallback(std::function<void()> func);
+	private:
 
 		std::mutex schedule_mutex;
 		PieceDownloadInfo scheduledPieceInfo;
 		DownloadedPiece downloadingPiece;
 
-		ExtensionProtocol ext;
+		ext::ExtensionProtocol ext;
 		TcpAsyncStream stream;
 	};
 
