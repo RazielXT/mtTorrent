@@ -101,13 +101,14 @@ namespace mtt
 	{
 		std::vector<PieceBlockInfo> blocksLeft;
 		size_t blocksCount = 0;
+		uint32_t index;
 	};
 
 	struct DownloadedPiece
 	{
 		DataBuffer data;
-		uint32_t index;
-		size_t dataSize;
+		uint32_t index = -1;
+		size_t dataSize = 0;
 
 		bool isValid(char* expectedHash);
 		void reset(size_t maxPieceSize);

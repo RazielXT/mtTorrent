@@ -53,7 +53,7 @@ namespace mtt
 		void startHandshake(Addr& address);
 		void sendInterested();
 		bool requestMetadataPiece();
-		bool requestPiece();
+		bool requestPiece(PieceDownloadInfo& pieceInfo);
 
 		void stop();
 

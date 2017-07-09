@@ -56,10 +56,10 @@ namespace mtt
 			std::function<void(PeerExchange::Message&)> onPexMessage;
 			std::function<void(UtMetadata::Message&)> onUtMetadataMessage;
 
-		private:
-
 			PeerExchange pex;
 			UtMetadata utm;
+
+		private:
 
 			BencodeParser parser;
 			std::map<int, MessageType> messageIds;

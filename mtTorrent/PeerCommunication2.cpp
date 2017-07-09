@@ -17,6 +17,9 @@ PeerCommunication2::PeerCommunication2(TorrentInfo& t, IPeerListener& l, boost::
 	stream.onConnectCallback = std::bind(&PeerCommunication2::connectionOpened, this);
 	stream.onCloseCallback = std::bind(&PeerCommunication2::connectionClosed, this);
 	stream.onReceiveCallback = std::bind(&PeerCommunication2::dataReceived, this);
+
+	ext.onPexMessage = std::bind(&mtt::IPeerListener::pexReceived, &listener);
+	ext.onUtMetadataMessage = std::bind(&mtt::IPeerListener::metadataPieceReceived, &listener);
 }
 
 void PeerCommunication2::startHandshake(Addr& address)
@@ -30,6 +33,8 @@ void PeerCommunication2::startHandshake(Addr& address)
 
 void PeerCommunication2::dataReceived()
 {
+	std::lock_guard<std::mutex> guard(read_mutex);
+
 	auto message = readNextStreamMessage();
 
 	while (message.id != Invalid)
@@ -65,8 +70,6 @@ void mtt::PeerCommunication2::connectionClosed()
 
 mtt::PeerMessage mtt::PeerCommunication2::readNextStreamMessage()
 {
-	std::lock_guard<std::mutex> guard(read_mutex);
-
 	auto data = stream.getReceivedData();
 	PeerMessage msg(data);
 
@@ -83,6 +86,28 @@ void mtt::PeerCommunication2::sendInterested()
 	state.amInterested = true;
 
 	stream.write(mtt::bt::createInterested());
+}
+
+bool mtt::PeerCommunication2::requestMetadataPiece()
+{
+
+}
+
+bool mtt::PeerCommunication2::requestPiece(PieceDownloadInfo& pieceInfo)
+{
+	if (state.action != PeerCommunicationState::Idle)
+		return false;
+
+	if (!info.pieces.hasPiece(pieceInfo.index))
+		return false;
+
+	std::lock_guard<std::mutex> guard(schedule_mutex);
+
+	scheduledPieceInfo = pieceInfo;
+	downloadingPiece.reset(torrent.pieceSize);
+	downloadingPiece.index = scheduledPieceInfo.index;
+
+	requestPieceBlock();
 }
 
 void mtt::PeerCommunication2::sendHandshakeExt()
@@ -129,41 +154,53 @@ void mtt::PeerCommunication2::handleMessage(PeerMessage& message)
 
 	if (message.id == Piece)
 	{
-		std::lock_guard<std::mutex> guard(schedule_mutex);
-
 		PEER_LOG("Piece id: " << std::to_string(message.piece.info.index) << ", size: " << std::to_string(message.piece.info.length) << "\n");
 
-		if (message.piece.info.index != downloadingPiece.index)
-		{
-			listener.pieceReceived(nullptr);
-			PEER_LOG(peerInfo.ipStr << " Invalid block!! \n")
-		}
-		else
-		{
-			downloadingPiece.addBlock(message.piece);
+		bool finished = false;
+		bool success = false;
 
-			if (downloadingPiece.receivedBlocks == scheduledPieceInfo.blocksCount)
+		{
+			std::lock_guard<std::mutex> guard(schedule_mutex);
+
+			if (message.piece.info.index != downloadingPiece.index)
 			{
-				listener.pieceReceived(&downloadingPiece);
+				PEER_LOG(peerInfo.ipStr << " Invalid block!! \n")
+				finished = true;
 			}
 			else
 			{
-				requestPieceBlock();
+				downloadingPiece.addBlock(message.piece);
+
+				if (downloadingPiece.receivedBlocks == scheduledPieceInfo.blocksCount)
+				{
+					finished = success = true;
+				}
+				else
+				{
+					requestPieceBlock();
+				}
 			}
 		}
+
+		if(finished)
+			listener.pieceReceived(success ? &downloadingPiece : nullptr);
 	}
 
 	if (message.id == Unchoke)
 	{
+		state.peerChoking = false;
 	}
 
 	if (message.id == Extended)
 	{
-		PEER_LOG(peerInfo.ipStr << " Ext msg: " << std::string(message.extended.data.begin(), message.extended.data.end()) << "\n");
-
 		auto type = ext.load(message.extended.id, message.extended.data);
 
-		PEER_LOG(peerInfo.ipStr << " Ext Type " << std::to_string(message.extended.id) << " resolve :" << std::to_string(type) << "\n");
+		PEER_LOG(peerInfo.ipStr << " Ext message type " std::to_string(type) << "\n");
+
+		if (type == mtt::ext::HandshakeEx)
+		{
+			listener.handshakeFinished();
+		}
 	}
 
 	if (message.id == Handshake)
@@ -173,9 +210,15 @@ void mtt::PeerCommunication2::handleMessage(PeerMessage& message)
 			state.finishedHandshake = true;
 			PEER_LOG(peerInfo.ipStr << " finished handshake\n");
 
-			sendHandshakeExt();
+			memcpy(info.id, message.handshake.peerId, 20);
+			memcpy(info.protocol, message.handshake.reservedBytes, 8);
 
-			listener.handshakeFinished();
+			if(info.protocol[5] & 0x10)
+				sendHandshakeExt();
+			else
+				listener.handshakeFinished();
 		}
 	}
+
+	listener.messageReceived(message);
 }
