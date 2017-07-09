@@ -29,7 +29,12 @@ namespace mtt
 		uint32_t havePieceIndex;
 		DataBuffer bitfield;
 
-		uint8_t peer_id[20];
+		struct  
+		{
+			uint8_t reservedBytes[8];
+			uint8_t peerId[20];
+		}
+		handshake;
 
 		PieceBlockInfo request;
 		PieceBlock piece;
@@ -41,7 +46,7 @@ namespace mtt
 
 		struct
 		{
-			char id;
+			uint8_t id;
 			DataBuffer data;
 		}
 		extended;	

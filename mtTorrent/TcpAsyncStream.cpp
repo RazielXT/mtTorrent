@@ -77,21 +77,6 @@ void TcpAsyncStream::consumeData(size_t size)
 	receiveBuffer.erase(receiveBuffer.begin(), receiveBuffer.begin() + size);
 }
 
-void TcpAsyncStream::setOnConnectCallback(std::function<void()> func)
-{
-	onConnectCallback = func;
-}
-
-void TcpAsyncStream::setOnReceiveCallback(std::function<void()> func)
-{
-	onReceiveCallback = func;
-}
-
-void TcpAsyncStream::setOnCloseCallback(std::function<void()> func)
-{
-	onCloseCallback = func;
-}
-
 void TcpAsyncStream::setAsConnected()
 {
 	state = Connected;

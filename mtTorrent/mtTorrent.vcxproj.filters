@@ -88,6 +88,9 @@
     <ClCompile Include="TcpAsyncServer.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="PeerCommunication2.cpp">
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PacketHelper.h">
@@ -181,6 +184,15 @@
       <Filter>Source Files\Core\Proposal</Filter>
     </ClInclude>
     <ClInclude Include="TrackerManager.h">
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClInclude>
+    <ClInclude Include="IPeerListener.h">
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClInclude>
+    <ClInclude Include="ServiceThreadpool.h">
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClInclude>
+    <ClInclude Include="BTProtocol.h">
       <Filter>Source Files\Core\Proposal</Filter>
     </ClInclude>
   </ItemGroup>

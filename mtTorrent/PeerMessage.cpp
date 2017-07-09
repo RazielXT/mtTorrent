@@ -10,13 +10,13 @@ PeerMessage::PeerMessage(DataBuffer& data)
 
 	if (data.size() >= 68 && data[0] == 19)
 	{
-		auto str = std::string(data.begin() + 1, data.begin() + 20);
-		if (str == "BitTorrent protocol")
+		if (strncmp(data.data() + 1, "BitTorrent protocol", 19) == 0)
 		{
 			id = Handshake;
 
 			messageSize = 68;
-			memcpy(peer_id, &data[0] + 20 + 8 + 20, 20);
+			memcpy(handshake.peerId, &data[0] + 20 + 8 + 20, 20);
+			memcpy(handshake.reservedBytes, &data[0] + 20, 8);
 
 			return;
 		}

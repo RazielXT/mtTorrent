@@ -50,15 +50,12 @@ namespace mtt
 
 	struct PieceInfo
 	{
-		char hash[20];
+		uint8_t hash[20];
 	};
 
-	struct TorrentFileInfo
+	struct TorrentInfo
 	{
-		std::string announce;
-		std::vector<std::string> announceList;
-
-		DataBuffer infoHash;
+		uint8_t hash[20];
 
 		std::vector<PieceInfo> pieces;
 		size_t pieceSize;
@@ -67,6 +64,14 @@ namespace mtt
 		std::vector<File> files;
 		std::string directory;
 		size_t fullSize;
+	};
+
+	struct TorrentFileInfo
+	{
+		std::string announce;
+		std::vector<std::string> announceList;
+
+		TorrentInfo info;
 	};
 
 	struct SelectedFile
@@ -104,6 +109,7 @@ namespace mtt
 		uint32_t index;
 		size_t dataSize;
 
+		bool isValid(char* expectedHash);
 		void reset(size_t maxPieceSize);
 		void addBlock(PieceBlock& block);
 		size_t receivedBlocks = 0;

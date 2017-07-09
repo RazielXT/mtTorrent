@@ -234,6 +234,7 @@
     <ClCompile Include="DhtCommunication.cpp" />
     <ClCompile Include="ExtensionProtocol.cpp" />
     <ClCompile Include="HttpTrackerComm.cpp" />
+    <ClCompile Include="PeerCommunication2.cpp" />
     <ClCompile Include="State.cpp" />
     <ClCompile Include="TcpAsyncServer.cpp" />
     <ClCompile Include="Torrent.cpp" />
@@ -253,15 +254,18 @@
     <ClCompile Include="UdpTrackerComm.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BTProtocol.h" />
     <ClInclude Include="Configuration.h" />
     <ClInclude Include="DhtCommunication.h" />
     <ClInclude Include="DhtControl.h" />
     <ClInclude Include="ExtensionProtocol.h" />
     <ClInclude Include="Interface2.h" />
+    <ClInclude Include="IPeerListener.h" />
     <ClInclude Include="PeerCommunication2.h" />
     <ClInclude Include="PeerMgr2.h" />
     <ClInclude Include="ProgressState.h" />
     <ClInclude Include="Scheduler.h" />
+    <ClInclude Include="ServiceThreadpool.h" />
     <ClInclude Include="State.h" />
     <ClInclude Include="TcpAsyncServer.h" />
     <ClInclude Include="Torrent.h" />

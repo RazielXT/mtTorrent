@@ -112,6 +112,12 @@ struct PacketBuilder
 		out.insert(out.end(), b, b + length);
 	}
 
+	template<typename T>
+	void add(const T* b, size_t length)
+	{
+		out.insert(out.end(), b, b + length);
+	}
+
 	void addAfter(const char* find, const char* b, size_t length)
 	{
 		auto findLen = strlen(find);

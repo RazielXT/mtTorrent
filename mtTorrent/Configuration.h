@@ -15,16 +15,11 @@ namespace mtt
 
 		struct Internal
 		{
-			char hashId[20];
+			uint8_t hashId[20];
 			uint32_t key;
 		};
 
-		struct Cfg
-		{
-			External external;
-			Internal internal;
-		}
-
-		extern Cfg* get();
+		extern External external;
+		extern Internal internal;
 	}
 }

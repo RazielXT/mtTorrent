@@ -29,9 +29,9 @@ public:
 	DataBuffer getReceivedData();
 	void consumeData(size_t size);
 
-	void setOnConnectCallback(std::function<void()> func);
-	void setOnReceiveCallback(std::function<void()> func);
-	void setOnCloseCallback(std::function<void()> func);
+	std::function<void()> onConnectCallback;
+	std::function<void()> onReceiveCallback;
+	std::function<void()> onCloseCallback;
 
 protected:
 
@@ -55,10 +55,6 @@ protected:
 	void appendData(char* data, size_t size);
 	std::mutex receiveBuffer_mutex;
 	DataBuffer receiveBuffer;
-
-	std::function<void()> onConnectCallback;
-	std::function<void()> onReceiveCallback;
-	std::function<void()> onCloseCallback;
 
 	std::mutex socket_mutex;
 	tcp::socket socket;

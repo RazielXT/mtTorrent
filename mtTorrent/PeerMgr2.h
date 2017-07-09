@@ -2,12 +2,20 @@
 
 #include "BencodeParser.h"
 #include "TrackerCommunication.h"
-#include "TorrentDefines.h"
+#include "Interface2.h"
 #include "ProgressScheduler.h"
+#include "IPeerListener.h"
 
 namespace mtt
 {
-	class PeerMgr
+	enum PeerSource
+	{
+		Tracker,
+		Pex,
+		Dht
+	};
+
+	class PeerMgr : public IPeerListener
 	{
 	public:
 
@@ -15,7 +23,17 @@ namespace mtt
 
 		void start();
 
-		TorrentFileInfo* torrentInfo;
+	private:
+
+		struct KnownPeer
+		{
+			Addr address;
+			PeerSource source;
+		};
+		std::vector<KnownPeer> knownPeers;
+		std::vector<PeerCommunication2> activePeers;
+
+		TorrentInfo* torrentInfo;
 		TrackerCollector trackers;
 		ProgressScheduler& scheduler;
 	};

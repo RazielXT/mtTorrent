@@ -3,12 +3,13 @@
 #include "TcpAsyncStream.h"
 #include "BencodeParser.h"
 #include "PeerMessage.h"
-#include "TorrentDefines.h"
+#include "Interface2.h"
 #include "ExtensionProtocol.h"
+#include "IPeerListener.h"
 
 namespace mtt
 {
-	struct PeerState
+	struct PeerCommunicationState
 	{
 		bool finishedHandshake = false;
 
@@ -20,36 +21,46 @@ namespace mtt
 
 		enum
 		{
-			Idle,
+			Disconnected,
+			Connecting,
 			Handshake,
 			Downloading,
 			Uploading,
-			Metadata
+			Metadata,
+			Idle
 		}
-		action;
+		action = Disconnected;
+	};
+
+	struct PeerStateInfo
+	{
+		PeerStateInfo();
+
+		PiecesProgress pieces;
+		uint8_t id[20];
+		uint8_t protocol[8];
 	};
 
 	class PeerCommunication2
 	{
 	public:
 
-		PeerCommunication2(PeerInfo& info);
+		PeerCommunication2(TorrentInfo& torrent, IPeerListener& listener, boost::asio::io_service& io_service);
 
-		PiecesProgress pieces;
-		PeerInfo info;
-		PeerState state;
+		PeerStateInfo info;
+		PeerCommunicationState state;
 
-		bool requestPiece();
-		std::function<void()> onReceivedPiece;
-
+		void startHandshake(Addr& address);
+		void sendInterested();
 		bool requestMetadataPiece();
-		std::function<void()> onReceivedMetadataPiece;
+		bool requestPiece();
 
-		void startHandshake();
-		std::function<void(bool)> onHandshakeFinished;
-		std::function<void()> onPexReceived;
+		void stop();
 
 	private:
+
+		TorrentInfo& torrent;
+		IPeerListener& listener;
 
 		std::mutex schedule_mutex;
 		PieceDownloadInfo scheduledPieceInfo;
@@ -57,6 +68,17 @@ namespace mtt
 
 		ext::ExtensionProtocol ext;
 		TcpAsyncStream stream;
+
+		std::mutex read_mutex;
+		mtt::PeerMessage readNextStreamMessage();
+		void handleMessage(PeerMessage& msg);
+
+		void connectionOpened();
+		void dataReceived();
+		void connectionClosed();
+
+		void sendHandshakeExt();
+		void requestPieceBlock();
 	};
 
 }
