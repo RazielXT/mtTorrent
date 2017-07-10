@@ -94,6 +94,9 @@
     <ClCompile Include="Interface2.cpp">
       <Filter>Source Files\Core\Proposal</Filter>
     </ClCompile>
+    <ClCompile Include="PiecesProgress.cpp">
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PacketHelper.h">
@@ -190,9 +193,6 @@
       <Filter>Source Files\Core\Proposal</Filter>
     </ClInclude>
     <ClInclude Include="ServiceThreadpool.h">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClInclude>
-    <ClInclude Include="BTProtocol.h">
       <Filter>Source Files\Core\Proposal</Filter>
     </ClInclude>
     <ClInclude Include="PiecesProgress.h">

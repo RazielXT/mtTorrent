@@ -3,9 +3,7 @@
 #include <ostream>
 #include <string>
 //#include <RiotRestApi.h>
-#include "Core.h"
-
-mtt::Core core;
+#include "PeerCommunication2.h"
 
 #ifndef STANDALONE
 
@@ -41,29 +39,54 @@ BOOL WINAPI ConsoleHandler(DWORD CEvent)
 	return TRUE;
 }
 
+class BasicPeerListener : public mtt::IPeerListener
+{
+public:
+	virtual void handshakeFinished() override
+	{
+	}
+
+	virtual void connectionClosed() override
+	{
+	}
+
+	virtual void messageReceived(mtt::PeerMessage&) override
+	{
+	}
+
+	virtual void progressUpdated() override
+	{
+	}
+
+	virtual void pieceReceived(mtt::DownloadedPiece* piece) override
+	{
+	}
+
+	virtual void metadataPieceReceived(mtt::ext::UtMetadata::Message&) override
+	{
+	}
+
+	virtual void pexReceived(mtt::ext::PeerExchange::Message&) override
+	{
+	}
+};
+
 int main(int argc, char* argv[])
 {
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleHandler, TRUE);
 
 	try
 	{
-		if (auto t = core.getTorrent(core.addTorrent("D:\\hero.torrent")))
-		{
-			t->scheduler->selectFiles({ t->info.files.front() });
-			t->start();
-		}
-		else
-		{
-			mtt::Torrent tt("D:\\fff");
-			tt.start();
-		}
+		mtt::TorrentInfo torrent;
+		boost::asio::io_service io;
+		BasicPeerListener listener;
+
+		mtt::PeerCommunication2 peer(torrent, listener, io);
 	}
 	catch (std::exception& e)
 	{
 		std::cout << "End exception: " << e.what() << "\n";
 	}
-
-	std::cout << "Count: " << std::to_string(gcount) << "\n";
 
 	return 0;
 }

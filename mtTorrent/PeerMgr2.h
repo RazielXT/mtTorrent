@@ -1,10 +1,8 @@
 #pragma once
 
-#include "BencodeParser.h"
+#include "PeerCommunication2.h"
 #include "TrackerCommunication.h"
-#include "Interface2.h"
 #include "ProgressScheduler.h"
-#include "IPeerListener.h"
 
 namespace mtt
 {

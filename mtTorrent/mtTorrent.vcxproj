@@ -236,6 +236,7 @@
     <ClCompile Include="HttpTrackerComm.cpp" />
     <ClCompile Include="Interface2.cpp" />
     <ClCompile Include="PeerCommunication2.cpp" />
+    <ClCompile Include="PiecesProgress.cpp" />
     <ClCompile Include="State.cpp" />
     <ClCompile Include="TcpAsyncServer.cpp" />
     <ClCompile Include="Torrent.cpp" />
@@ -255,7 +256,6 @@
     <ClCompile Include="UdpTrackerComm.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BTProtocol.h" />
     <ClInclude Include="Configuration.h" />
     <ClInclude Include="DhtCommunication.h" />
     <ClInclude Include="DhtControl.h" />
