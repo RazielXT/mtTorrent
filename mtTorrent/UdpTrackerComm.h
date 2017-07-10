@@ -1,6 +1,6 @@
 #pragma once
 
-#include "TorrentDefines.h"
+#include "HttpTrackerComm.h"
 
 namespace mtt
 {

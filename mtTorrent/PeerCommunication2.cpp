@@ -64,7 +64,7 @@ PeerCommunication2::PeerCommunication2(TorrentInfo& t, IPeerListener& l, boost::
 	ext.utm.onUtMetadataMessage = std::bind(&mtt::IPeerListener::metadataPieceReceived, &listener, std::placeholders::_1);
 }
 
-void PeerCommunication2::startHandshake(Addr& address)
+void PeerCommunication2::start(Addr& address)
 {
 	if (state.action == PeerCommunicationState::Disconnected)
 	{

@@ -2,6 +2,7 @@
 #include "PacketHelper.h"
 #include "Network.h"
 #include <iostream>
+#include "Configuration.h"
 
 using namespace mtt;
 
@@ -41,11 +42,8 @@ AnnounceResponse UdpTrackerComm::getAnnounceResponse(DataBuffer buffer)
 
 	for (size_t i = 0; i < count; i++)
 	{
-		PeerInfo p;
-		p.setIp(packet.pop32());
-		p.port = packet.pop16();
-
-		resp.peers.push_back(p);
+		uint32_t ip = packet.pop32();
+		resp.peers.push_back(Addr((char*)&ip, packet.pop16(), false));
 	}
 
 	return resp;
@@ -94,8 +92,7 @@ AnnounceResponse UdpTrackerComm::announceTracker(std::string host, std::string p
 
 DataBuffer UdpTrackerComm::createAnnounceRequest(ConnectResponse& response)
 {
-	auto transaction = generateTransaction();
-	auto client = mtt::getClientInfo();
+	auto transaction = (uint32_t)rand();
 
 	lastMessage = { Announce, transaction };
 
@@ -104,10 +101,8 @@ DataBuffer UdpTrackerComm::createAnnounceRequest(ConnectResponse& response)
 	packet.add32(Announce);
 	packet.add32(transaction);
 
-	auto& iHash = torrent->infoHash;
-	packet.add(iHash.data(), iHash.size());
-
-	packet.add(client->hashId, 20);
+	packet.add(torrent->info.hash, 20);
+	packet.add(mtt::config::internal.hashId, 20);
 
 	packet.add64(0);
 	packet.add64(0);
@@ -116,9 +111,9 @@ DataBuffer UdpTrackerComm::createAnnounceRequest(ConnectResponse& response)
 	packet.add32(Started);
 	packet.add32(0);
 
-	packet.add32(client->key);
-	packet.add32(client->maxPeersPerRequest);
-	packet.add32(client->listenPort);
+	packet.add32(mtt::config::internal.key);
+	packet.add32(mtt::config::external.maxPeersPerRequest);
+	packet.add32(mtt::config::external.listenPort);
 	packet.add16(0);
 
 	return packet.getBuffer();
@@ -126,7 +121,7 @@ DataBuffer UdpTrackerComm::createAnnounceRequest(ConnectResponse& response)
 
 DataBuffer UdpTrackerComm::createConnectRequest()
 {
-	auto transaction = generateTransaction();
+	auto transaction = (uint32_t)rand();
 	uint64_t connectId = 0x41727101980;
 
 	lastMessage = { Connnect, transaction };

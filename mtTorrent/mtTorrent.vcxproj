@@ -231,28 +231,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Configuration.cpp" />
     <ClCompile Include="DhtCommunication.cpp" />
     <ClCompile Include="ExtensionProtocol.cpp" />
     <ClCompile Include="HttpTrackerComm.cpp" />
     <ClCompile Include="Interface2.cpp" />
     <ClCompile Include="PeerCommunication2.cpp" />
     <ClCompile Include="PiecesProgress.cpp" />
-    <ClCompile Include="State.cpp" />
+    <ClCompile Include="ServiceThreadpool.cpp" />
     <ClCompile Include="TcpAsyncServer.cpp" />
-    <ClCompile Include="Torrent.cpp" />
-    <ClCompile Include="TorrentDefines.cpp" />
-    <ClCompile Include="ProgressScheduler.cpp" />
     <ClCompile Include="Network.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="PeerCommunication.cpp" />
     <ClCompile Include="PeerMessage.cpp" />
     <ClCompile Include="RiotRestApi.cpp" />
-    <ClCompile Include="PeerMgr.cpp" />
     <ClCompile Include="Storage.cpp" />
     <ClCompile Include="TcpAsyncStream.cpp" />
     <ClCompile Include="BencodeParser.cpp" />
-    <ClCompile Include="Core.cpp" />
-    <ClCompile Include="TrackerCommunication.cpp" />
+    <ClCompile Include="Test.cpp" />
     <ClCompile Include="UdpTrackerComm.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -267,25 +262,17 @@
     <ClInclude Include="PiecesProgress.h" />
     <ClInclude Include="Scheduler.h" />
     <ClInclude Include="ServiceThreadpool.h" />
-    <ClInclude Include="State.h" />
     <ClInclude Include="TcpAsyncServer.h" />
-    <ClInclude Include="Torrent.h" />
     <ClInclude Include="HttpTrackerComm.h" />
     <ClInclude Include="Interface.h" />
-    <ClInclude Include="Core.h" />
-    <ClInclude Include="ProgressScheduler.h" />
-    <ClInclude Include="Torrent2.h" />
-    <ClInclude Include="TorrentDefines.h" />
     <ClInclude Include="Network.h" />
     <ClInclude Include="PacketHelper.h" />
-    <ClInclude Include="PeerCommunication.h" />
     <ClInclude Include="PeerMessage.h" />
     <ClInclude Include="RiotRestApi.h" />
-    <ClInclude Include="PeerMgr.h" />
     <ClInclude Include="Storage.h" />
     <ClInclude Include="TcpAsyncStream.h" />
     <ClInclude Include="BencodeParser.h" />
-    <ClInclude Include="TrackerCommunication.h" />
+    <ClInclude Include="Test.h" />
     <ClInclude Include="TrackerManager.h" />
     <ClInclude Include="UdpTrackerComm.h" />
     <ClInclude Include="utils\Base32.h" />

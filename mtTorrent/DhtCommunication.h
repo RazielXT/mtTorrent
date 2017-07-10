@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "Network.h"
+#include "Interface2.h"
 
 namespace mtt
 {
@@ -19,23 +19,10 @@ namespace mtt
 			uint8_t length();
 		};
 
-		struct NodeAddr
-		{
-			NodeAddr();
-			NodeAddr(char* buffer, bool v6);
-
-			std::string str;
-			std::vector<uint8_t> addrBytes;
-			uint16_t port;
-
-			bool isIpv6();
-			size_t parse(char* buffer, bool v6);
-		};
-
 		struct NodeInfo
 		{
 			NodeId id;
-			NodeAddr addr;
+			mtt::Addr addr;
 
 			size_t parse(char* buffer, bool v6);
 			bool operator==(const NodeInfo& r);
@@ -51,14 +38,14 @@ namespace mtt
 			uint8_t id[20];
 			std::string token;
 			std::vector<NodeInfo> nodes;
-			std::vector<NodeAddr> values;
+			std::vector<Addr> values;
 		};
 
 		class Communication
 		{
 		public:
 
-			void test();
+			std::vector<mtt::Addr> get();
 
 		private:
 

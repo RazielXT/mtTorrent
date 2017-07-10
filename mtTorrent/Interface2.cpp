@@ -30,6 +30,11 @@ mtt::Addr::Addr()
 
 }
 
+mtt::Addr::Addr(char* ip, uint16_t port, bool isIpv6)
+{
+	set(ip, port, isIpv6);
+}
+
 mtt::Addr::Addr(char* buffer, bool v6)
 {
 	parse(buffer, v6);

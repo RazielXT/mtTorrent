@@ -6,7 +6,9 @@ class ServiceThreadpool
 {
 public:
 
-	boost::asio::io_service io_service;
+	ServiceThreadpool();
+
+	boost::asio::io_service io;
 
 	void start(uint32_t startWorkers);
 	void stop();
@@ -17,6 +19,5 @@ private:
 
 	boost::asio::io_service::work work;
 
-	void workerThread();
 	uint32_t workers = 0;
 };

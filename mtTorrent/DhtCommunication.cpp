@@ -1,6 +1,6 @@
 #include "DhtCommunication.h"
 #include "Network.h"
-#include "TorrentDefines.h"
+#include "Interface2.h"
 #include "BencodeParser.h"
 #include "PacketHelper.h"
 #include "utils/Base32.h"
@@ -84,60 +84,9 @@ size_t NodeInfo::parse(char* buffer, bool v6)
 	return 20 + addr.parse(buffer, v6);
 }
 
-size_t NodeAddr::parse(char* buffer, bool v6)
-{
-	size_t addrSize = v6 ? 16 : 4;
-
-	if (!v6)
-	{
-		uint8_t ipAddr[4];
-		ipAddr[0] = *reinterpret_cast<uint8_t*>(buffer);
-		ipAddr[1] = *(reinterpret_cast<uint8_t*>(buffer + 1));
-		ipAddr[2] = *(reinterpret_cast<uint8_t*>(buffer + 2));
-		ipAddr[3] = *(reinterpret_cast<uint8_t*>(buffer + 3));
-
-		uint32_t ip = swap32(*reinterpret_cast<uint32_t*>(&buffer));
-		addrBytes.assign(ipAddr, ipAddr + 4);
-
-		str.resize(16);
-		str.resize(sprintf_s(&str[0], 16, "%d.%d.%d.%d", ipAddr[0], ipAddr[1], ipAddr[2], ipAddr[3]));
-	}
-	else
-	{
-		addrBytes.assign(buffer, buffer + addrSize);
-
-		str.resize(40);
-		sprintf_s(&str[0], 40, "%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X",
-			addrBytes[0], addrBytes[1], addrBytes[2], addrBytes[3], addrBytes[4], addrBytes[5], addrBytes[6], addrBytes[7],
-			addrBytes[8], addrBytes[9], addrBytes[10], addrBytes[11], addrBytes[12], addrBytes[13], addrBytes[14], addrBytes[15]);
-		str.resize(39);
-	}
-
-	buffer += addrSize;
-
-	port = _byteswap_ushort(*reinterpret_cast<const uint16_t*>(buffer));
-
-	return 2 + addrSize;
-}
-
 bool mtt::dht::NodeInfo::operator==(const NodeInfo& r)
 {
 	return memcmp(id.data, r.id.data, 20) == 0;
-}
-
-mtt::dht::NodeAddr::NodeAddr()
-{
-
-}
-
-mtt::dht::NodeAddr::NodeAddr(char* buffer, bool v6)
-{
-	parse(buffer, v6);
-}
-
-bool mtt::dht::NodeAddr::isIpv6()
-{
-	return addrBytes.size() > 4;
 }
 
 void mergeClosestNodes(std::vector<NodeInfo>& to, std::vector<NodeInfo>& from, std::vector<NodeInfo>& blacklist, uint8_t maxSize, NodeId& minDistance, NodeId& target)
@@ -253,7 +202,7 @@ GetPeersResponse Communication::parseGetPeersResponse(DataBuffer& message)
 				{
 					for (auto& v : *values->second.l)
 					{
-						response.values.emplace_back(NodeAddr(&v.txt[0], v.txt.length() >= 18));
+						response.values.emplace_back(Addr(&v.txt[0], v.txt.length() >= 18));
 					}
 				}
 
@@ -294,7 +243,7 @@ char fromHexa(char h)
 	return h;
 }
 
-void Communication::test()
+std::vector<mtt::Addr> Communication::get()
 {
 	/*NodeId testdata;
 	memset(testdata.data, 0, 20);
@@ -365,7 +314,7 @@ void Communication::test()
 		nextNodes.push_back(info);*/
 
 		std::vector<NodeInfo> usedNodes;
-		std::vector<NodeAddr> values;
+		std::vector<Addr> values;
 		NodeId minDistance = nextNodes.front().id;
 		NodeId targetIdNode(targetId.data());
 
@@ -417,7 +366,7 @@ void Communication::test()
 #else
 				try
 				{
-					auto message = sendUdpRequest(node.addr.isIpv6() ? sock_v6 : sock_v4, firstWave ? packet.getBuffer() : ipv4packet.getBuffer(), node.addr.str.data(), node.addr.port, 3000);
+					auto message = sendUdpRequest(node.addr.isIpv6() ? sock_v6 : sock_v4, firstWave ? packet.getBuffer() : ipv4packet.getBuffer(), node.addr.addrBytes.data(), node.addr.port, 3000);
 					auto resp = parseGetPeersResponse(message);
 					mergeClosestNodes(nextNodes, resp.nodes, usedNodes, 16, minDistance, targetIdNode);
 
@@ -456,24 +405,27 @@ void Communication::test()
 		{
 			DHT_LOG("DHT returned values count: " << values.size() << "\n");
 
-			for (auto& addr : values)
+			/*for (auto& addr : values)
 			{
 				try
 				{
-					auto message = sendUdpRequest(addr.isIpv6() ? sock_v6 : sock_v4, firstWave ? packet.getBuffer() : ipv4packet.getBuffer(), addr.str.data(), addr.port, 3000);
+					auto message = sendUdpRequest(addr.isIpv6() ? sock_v6 : sock_v4, firstWave ? packet.getBuffer() : ipv4packet.getBuffer(), addr.addrBytes.data(), addr.port, 3000);
 					auto resp = parseGetPeersResponse(message);
 				}
 				catch (const std::exception&e)
 				{
 					DHT_LOG("DHT exception: " << e.what() << "\n");
 				}
-			}
+			}*/
 		}
 
+		return values;
 	}
 	catch (const std::exception&e)
 	{
 		DHT_LOG("DHT exception: " << e.what() << "\n");
 	}
+
+	return{};
 }
 

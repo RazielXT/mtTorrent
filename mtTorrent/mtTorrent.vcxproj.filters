@@ -46,17 +46,8 @@
     <ClCompile Include="UdpTrackerComm.cpp">
       <Filter>Source Files\Core\Torrent\Protocol</Filter>
     </ClCompile>
-    <ClCompile Include="TrackerCommunication.cpp">
-      <Filter>Source Files\Core\Torrent\Protocol</Filter>
-    </ClCompile>
     <ClCompile Include="TcpAsyncStream.cpp">
       <Filter>Source Files\Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="ProgressScheduler.cpp">
-      <Filter>Source Files\Core\Torrent\Download</Filter>
-    </ClCompile>
-    <ClCompile Include="PeerCommunication.cpp">
-      <Filter>Source Files\Core\Torrent\Download</Filter>
     </ClCompile>
     <ClCompile Include="Network.cpp">
       <Filter>Source Files\Utils</Filter>
@@ -66,21 +57,6 @@
     </ClCompile>
     <ClCompile Include="RiotRestApi.cpp">
       <Filter>Source Files\Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="TorrentDefines.cpp">
-      <Filter>Source Files\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core.cpp">
-      <Filter>Source Files\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Torrent.cpp">
-      <Filter>Source Files\Core\Torrent</Filter>
-    </ClCompile>
-    <ClCompile Include="PeerMgr.cpp">
-      <Filter>Source Files\Core\Torrent\Download</Filter>
-    </ClCompile>
-    <ClCompile Include="State.cpp">
-      <Filter>Source Files\Core</Filter>
     </ClCompile>
     <ClCompile Include="DhtCommunication.cpp">
       <Filter>Source Files\Core\Torrent\Dht</Filter>
@@ -97,6 +73,15 @@
     <ClCompile Include="PiecesProgress.cpp">
       <Filter>Source Files\Core\Proposal</Filter>
     </ClCompile>
+    <ClCompile Include="Configuration.cpp">
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClCompile>
+    <ClCompile Include="Test.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="ServiceThreadpool.cpp">
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PacketHelper.h">
@@ -108,20 +93,11 @@
     <ClInclude Include="UdpTrackerComm.h">
       <Filter>Source Files\Core\Torrent\Protocol</Filter>
     </ClInclude>
-    <ClInclude Include="TrackerCommunication.h">
-      <Filter>Source Files\Core\Torrent\Protocol</Filter>
-    </ClInclude>
     <ClInclude Include="TcpAsyncStream.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="ProgressScheduler.h">
-      <Filter>Source Files\Core\Torrent\Download</Filter>
-    </ClInclude>
     <ClInclude Include="PeerMessage.h">
       <Filter>Source Files\Core\Torrent\Protocol</Filter>
-    </ClInclude>
-    <ClInclude Include="PeerCommunication.h">
-      <Filter>Source Files\Core\Torrent\Download</Filter>
     </ClInclude>
     <ClInclude Include="Network.h">
       <Filter>Source Files\Utils</Filter>
@@ -138,23 +114,8 @@
     <ClInclude Include="RiotRestApi.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="TorrentDefines.h">
-      <Filter>Source Files\Core</Filter>
-    </ClInclude>
     <ClInclude Include="Interface.h">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Core.h">
-      <Filter>Source Files\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Torrent.h">
-      <Filter>Source Files\Core\Torrent</Filter>
-    </ClInclude>
-    <ClInclude Include="PeerMgr.h">
-      <Filter>Source Files\Core\Torrent\Download</Filter>
-    </ClInclude>
-    <ClInclude Include="State.h">
-      <Filter>Source Files\Core</Filter>
     </ClInclude>
     <ClInclude Include="DhtCommunication.h">
       <Filter>Source Files\Core\Torrent\Dht</Filter>
@@ -177,9 +138,6 @@
     <ClInclude Include="DhtControl.h">
       <Filter>Source Files\Core\Proposal</Filter>
     </ClInclude>
-    <ClInclude Include="Torrent2.h">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClInclude>
     <ClInclude Include="Interface2.h">
       <Filter>Source Files\Core\Proposal</Filter>
     </ClInclude>
@@ -197,6 +155,9 @@
     </ClInclude>
     <ClInclude Include="PiecesProgress.h">
       <Filter>Source Files\Core\Proposal</Filter>
+    </ClInclude>
+    <ClInclude Include="Test.h">
+      <Filter>Source Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

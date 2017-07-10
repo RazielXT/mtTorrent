@@ -23,7 +23,7 @@ namespace mtt
 				std::vector<Addr> addedPeers;
 			};
 
-			Message load(BencodeParser::Object& data);
+			void load(BencodeParser::Object& data);
 			std::function<void(PeerExchange::Message&)> onPexMessage;
 		};
 
@@ -46,7 +46,7 @@ namespace mtt
 
 			uint32_t size = 0;
 
-			Message load(BencodeParser::Object& data, const char* remainingData, size_t remainingSize);
+			void load(BencodeParser::Object& data, const char* remainingData, size_t remainingSize);
 			DataBuffer createMetadataRequest(uint32_t index);
 
 			std::function<void(UtMetadata::Message&)> onUtMetadataMessage;

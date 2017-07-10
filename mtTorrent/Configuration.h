@@ -16,7 +16,7 @@ namespace mtt
 		struct Internal
 		{
 			uint8_t hashId[20];
-			uint32_t key;
+			uint32_t key = 1111;
 		};
 
 		extern External external;

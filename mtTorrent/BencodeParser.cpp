@@ -65,14 +65,15 @@ uint32_t getPieceIndex(size_t pos, size_t pieceSize)
 
 TorrentFileInfo BencodeParser::parseTorrentInfo()
 {
-	TorrentFileInfo info;
+	TorrentFileInfo file;
+	TorrentInfo& info = file.info;
 
 	if (parsedData.type == Object::Dictionary)
 	{
 		auto& dictionary = *parsedData.dic;
 
 		if (dictionary.find("announce") != dictionary.end())
-			info.announce = dictionary["announce"].txt;
+			file.announce = dictionary["announce"].txt;
 
 		if (dictionary.find("announce-list") != dictionary.end())
 		{
@@ -84,7 +85,7 @@ TorrentFileInfo BencodeParser::parseTorrentInfo()
 					for (auto& a : *obj.l)
 					{
 						if (a.type == Object::Text)
-							info.announceList.push_back(a.txt);
+							file.announceList.push_back(a.txt);
 					}
 			}
 		}
@@ -155,9 +156,10 @@ TorrentFileInfo BencodeParser::parseTorrentInfo()
 		}		
 	}
 
-	info.infoHash = infoHash;
+	if(infoHash.size() == 20)
+		memcpy(info.hash, infoHash.data(), 20);
 
-	return info;
+	return file;
 }
 
 #define IS_NUM_CHAR(c) ((c >= '0') && (c <= '9'))

@@ -48,7 +48,7 @@ namespace mtt
 		PeerStateInfo info;
 		PeerCommunicationState state;
 
-		void startHandshake(Addr& address);
+		void start(Addr& address);
 		bool sendInterested();
 		bool requestPiece(PieceDownloadInfo& pieceInfo);
 

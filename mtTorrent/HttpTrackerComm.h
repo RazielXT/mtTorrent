@@ -1,9 +1,19 @@
 #pragma once
 
-#include "TorrentDefines.h"
+#include "Interface2.h"
 
 namespace mtt
 {
+	struct AnnounceResponse
+	{
+		uint32_t interval = 5 * 60;
+
+		uint32_t leechCount = 0;
+		uint32_t seedCount = 0;
+
+		std::vector<Addr> peers;
+	};
+
 	class HttpTrackerComm
 	{
 	public:
@@ -17,7 +27,6 @@ namespace mtt
 		DataBuffer createAnnounceRequest(std::string host, std::string port);
 		AnnounceResponse getAnnounceResponse(DataBuffer buffer);
 
-		ClientInfo* client;
 		TorrentFileInfo* torrent;
 	};
 }

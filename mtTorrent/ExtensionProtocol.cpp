@@ -1,10 +1,12 @@
 #include "ExtensionProtocol.h"
 #include "PacketHelper.h"
 #include "PeerMessage.h"
+#include "Configuration.h"
 
+using namespace mtt;
 using namespace mtt::ext;
 
-PeerExchange::Message PeerExchange::load(BencodeParser::Object& data)
+void PeerExchange::load(BencodeParser::Object& data)
 {
 	Message msg;
 
@@ -65,7 +67,7 @@ void mtt::UtMetadataExtension::setSize(int s)
 }
 */
 
-UtMetadata::Message UtMetadata::load(BencodeParser::Object& data, const char* remainingData, size_t remainingSize)
+void UtMetadata::load(BencodeParser::Object& data, const char* remainingData, size_t remainingSize)
 {
 	if (data.isMap())
 	{
@@ -232,7 +234,7 @@ DataBuffer ExtensionProtocol::getExtendedHandshakeMessage(bool enablePex, uint16
 	}
 
 	extDict.add("1:pi", 4);
-	auto portStr = std::to_string(mtt::getClientInfo()->listenPort);
+	auto portStr = std::to_string(mtt::config::external.listenPort);
 	extDict.add(portStr.data(), portStr.length());
 	extDict.add('e');
 

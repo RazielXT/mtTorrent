@@ -118,6 +118,7 @@ namespace mtt
 	{
 		Addr();
 		Addr(char* buffer, bool v6);
+		Addr(char* ip, uint16_t port, bool isIpv6);
 
 		//std::string str;
 		std::vector<uint8_t> addrBytes;

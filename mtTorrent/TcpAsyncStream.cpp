@@ -92,7 +92,7 @@ void TcpAsyncStream::setAsConnected()
 
 void TcpAsyncStream::postFail(std::string place, const boost::system::error_code& error)
 {
-	//std::cout << place << "-" << host << "-" << error.message() << "\n";
+	std::cout << place << "-" << host << "-" << error.message() << "\n";
 
 	if (onCloseCallback)
 		onCloseCallback();

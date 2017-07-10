@@ -3,7 +3,7 @@
 #include <ostream>
 #include <string>
 //#include <RiotRestApi.h>
-#include "PeerCommunication2.h"
+#include <Test.h>
 
 #ifndef STANDALONE
 
@@ -39,49 +39,14 @@ BOOL WINAPI ConsoleHandler(DWORD CEvent)
 	return TRUE;
 }
 
-class BasicPeerListener : public mtt::IPeerListener
-{
-public:
-	virtual void handshakeFinished() override
-	{
-	}
-
-	virtual void connectionClosed() override
-	{
-	}
-
-	virtual void messageReceived(mtt::PeerMessage&) override
-	{
-	}
-
-	virtual void progressUpdated() override
-	{
-	}
-
-	virtual void pieceReceived(mtt::DownloadedPiece* piece) override
-	{
-	}
-
-	virtual void metadataPieceReceived(mtt::ext::UtMetadata::Message&) override
-	{
-	}
-
-	virtual void pexReceived(mtt::ext::PeerExchange::Message&) override
-	{
-	}
-};
-
 int main(int argc, char* argv[])
 {
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleHandler, TRUE);
 
 	try
 	{
-		mtt::TorrentInfo torrent;
-		boost::asio::io_service io;
-		BasicPeerListener listener;
-
-		mtt::PeerCommunication2 peer(torrent, listener, io);
+		LocalWithTorrentFile test;
+		test.run();
 	}
 	catch (std::exception& e)
 	{

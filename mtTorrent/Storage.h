@@ -1,6 +1,6 @@
 #pragma once
 
-#include "TorrentDefines.h"
+#include "Interface2.h"
 
 namespace mtt
 {

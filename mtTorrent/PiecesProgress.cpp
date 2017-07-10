@@ -77,8 +77,3 @@ DataBuffer mtt::PiecesProgress::toBitfield()
 {
 	return{};
 }
-
-const std::map<uint32_t, bool>& mtt::PiecesProgress::get()
-{
-	return pieces;
-}
