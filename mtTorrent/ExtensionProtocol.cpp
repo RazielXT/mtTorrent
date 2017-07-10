@@ -20,10 +20,10 @@ PeerExchange::Message PeerExchange::load(BencodeParser::Object& data)
 			while (msg.added.size() - pos >= 6)
 			{
 				uint32_t ip = swap32(*reinterpret_cast<uint32_t*>(&msg.added[0] + pos));
+				uint16_t port = swap16(*reinterpret_cast<uint16_t*>(&msg.added[0] + pos + 4));
 
-				PeerInfo peer;
-				peer.setIp(ip);
-				peer.port = swap16(*reinterpret_cast<uint16_t*>(&msg.added[0] + pos + 4));
+				Addr peer;
+				peer.set((char*)&ip, port, false);
 
 				msg.addedPeers.push_back(peer);
 				pos += 6;
@@ -37,6 +37,9 @@ PeerExchange::Message PeerExchange::load(BencodeParser::Object& data)
 			msg.addedFlags = addF->second.txt;
 		}
 	}
+
+	if (onPexMessage)
+		onPexMessage(msg);
 }
 
 /*
@@ -64,13 +67,12 @@ void mtt::UtMetadataExtension::setSize(int s)
 
 UtMetadata::Message UtMetadata::load(BencodeParser::Object& data, const char* remainingData, size_t remainingSize)
 {
-	Message msg;
-	msg.size = size;
-
 	if (data.isMap())
 	{
 		if (auto msgType = data.getIntItem("msg_type"))
 		{
+			Message msg;
+			msg.size = size;
 			msg.id = (MessageId)*msgType;
 
 			if (msg.id == Request)
@@ -93,12 +95,31 @@ UtMetadata::Message UtMetadata::load(BencodeParser::Object& data, const char* re
 
 					msg.metadata.insert(msg.metadata.begin(), remainingData, remainingData + *piecesize);
 				}
+
+				if (onUtMetadataMessage)
+					onUtMetadataMessage(msg);
 			}
 			else if (msg.id == Reject)
 			{
 			}
 		}
 	}
+}
+
+DataBuffer mtt::ext::UtMetadata::createMetadataRequest(uint32_t index)
+{
+	PacketBuilder packet(32);
+	packet.add32(0);
+	packet.add(mtt::Extended);
+	packet.add(UtMetadataEx);
+	packet.add("d8:msg_typei0e5:piecei", 22);
+	auto idxStr = std::to_string(index);
+	packet.add(idxStr.data(), idxStr.length());
+	packet.add("ee", 2);
+
+	*reinterpret_cast<uint32_t*>(&packet.out[0]) = swap32((uint32_t)(packet.out.size() - sizeof(uint32_t)));
+
+	return packet.getBuffer();
 }
 
 MessageType ExtensionProtocol::load(char id, DataBuffer& data)
@@ -159,20 +180,9 @@ MessageType ExtensionProtocol::load(char id, DataBuffer& data)
 			auto msgType = messageIds[id];
 
 			if (msgType == PexEx)
-			{
-				auto msg = pex.load(parser.parsedData);
-
-				if (onPexMessage)
-					onPexMessage(msg);
-			}
-
-			if (msgType == UtMetadataEx)
-			{
-				auto msg = utm.load(parser.parsedData, parser.bodyEnd, parser.remainingData);
-
-				if (onUtMetadataMessage)
-					onUtMetadataMessage(msg);
-			}
+				pex.load(parser.parsedData);
+			else if (msgType == UtMetadataEx)
+				utm.load(parser.parsedData, parser.bodyEnd, parser.remainingData);
 
 			return msgType;
 		}

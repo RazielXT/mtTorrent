@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "TorrentDefines.h"
+#include "Interface2.h"
 
 namespace mtt
 {

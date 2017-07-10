@@ -4,8 +4,6 @@
 #include "Network.h"
 #include <iostream>
 
-extern int gcount;
-
 #define MT_NAME "mtTorrent 0.2"
 #define MT_HASH_NAME "MT-0-2-"
 
@@ -121,11 +119,12 @@ namespace mtt
 		Addr();
 		Addr(char* buffer, bool v6);
 
-		std::string str;
+		//std::string str;
 		std::vector<uint8_t> addrBytes;
 		uint16_t port;
 
 		bool isIpv6();
+		void set(char* ip, uint16_t port, bool isIpv6);
 		size_t parse(char* buffer, bool v6);
 	};
 }

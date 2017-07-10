@@ -1,7 +1,6 @@
 #pragma once
 #include "BencodeParser.h"
 #include <mutex>
-#include "TorrentDefines.h"
 
 namespace mtt
 {
@@ -21,10 +20,11 @@ namespace mtt
 			{
 				std::string added;
 				std::string addedFlags;
-				std::vector<PeerInfo> addedPeers;
+				std::vector<Addr> addedPeers;
 			};
 
 			Message load(BencodeParser::Object& data);
+			std::function<void(PeerExchange::Message&)> onPexMessage;
 		};
 
 		struct UtMetadata
@@ -44,17 +44,18 @@ namespace mtt
 				uint32_t size;
 			};
 
-			uint32_t size;
+			uint32_t size = 0;
+
 			Message load(BencodeParser::Object& data, const char* remainingData, size_t remainingSize);
+			DataBuffer createMetadataRequest(uint32_t index);
+
+			std::function<void(UtMetadata::Message&)> onUtMetadataMessage;
 		};
 
 		struct ExtensionProtocol
 		{
 			MessageType load(char id, DataBuffer& data);
 			DataBuffer getExtendedHandshakeMessage(bool enablePex = true, uint16_t metadataSize = 0);
-
-			std::function<void(PeerExchange::Message&)> onPexMessage;
-			std::function<void(UtMetadata::Message&)> onUtMetadataMessage;
 
 			PeerExchange pex;
 			UtMetadata utm;

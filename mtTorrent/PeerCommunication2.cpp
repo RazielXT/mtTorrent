@@ -5,7 +5,6 @@
 
 using namespace mtt;
 
-
 mtt::PeerStateInfo::PeerStateInfo()
 {
 	memset(id, 0, 20);
@@ -18,15 +17,15 @@ PeerCommunication2::PeerCommunication2(TorrentInfo& t, IPeerListener& l, boost::
 	stream.onCloseCallback = std::bind(&PeerCommunication2::connectionClosed, this);
 	stream.onReceiveCallback = std::bind(&PeerCommunication2::dataReceived, this);
 
-	ext.onPexMessage = std::bind(&mtt::IPeerListener::pexReceived, &listener);
-	ext.onUtMetadataMessage = std::bind(&mtt::IPeerListener::metadataPieceReceived, &listener);
+	ext.pex.onPexMessage = std::bind(&mtt::IPeerListener::pexReceived, &listener, std::placeholders::_1);
+	ext.utm.onUtMetadataMessage = std::bind(&mtt::IPeerListener::metadataPieceReceived, &listener, std::placeholders::_1);
 }
 
 void PeerCommunication2::startHandshake(Addr& address)
 {
 	if (state.action == PeerCommunicationState::Disconnected)
 	{
-		state.action = PeerCommunicationState::Handshake;
+		state.action = PeerCommunicationState::Connecting;
 		stream.connect(address.addrBytes.data(), address.port, address.isIpv6());
 	}
 }
@@ -49,9 +48,7 @@ void PeerCommunication2::connectionOpened()
 	if (!state.finishedHandshake)
 	{
 		state.action = PeerCommunicationState::Handshake;
-
-		auto requestData = mtt::bt::createHandshake(torrent.hash, mtt::config::internal.hashId);
-		stream.write(requestData);
+		stream.write(mtt::bt::createHandshake(torrent.hash, mtt::config::internal.hashId));
 	}
 }
 
@@ -63,9 +60,8 @@ void mtt::PeerCommunication2::stop()
 
 void mtt::PeerCommunication2::connectionClosed()
 {
-	listener.connectionClosed();
-
 	state.action = PeerCommunicationState::Disconnected;
+	listener.connectionClosed();
 }
 
 mtt::PeerMessage mtt::PeerCommunication2::readNextStreamMessage()
@@ -81,16 +77,34 @@ mtt::PeerMessage mtt::PeerCommunication2::readNextStreamMessage()
 	return msg;
 }
 
-void mtt::PeerCommunication2::sendInterested()
+bool mtt::PeerCommunication2::sendInterested()
 {
+	if (state.action != PeerCommunicationState::Idle)
+		return false;
+
 	state.amInterested = true;
 
 	stream.write(mtt::bt::createInterested());
+
+	return true;
 }
 
-bool mtt::PeerCommunication2::requestMetadataPiece()
+bool mtt::PeerCommunication2::requestMetadataPiece(uint32_t index)
 {
+	if (state.action != PeerCommunicationState::Idle)
+		return false;
 
+	if (ext.utm.size == 0)
+		return false;
+
+	stream.write(ext.utm.createMetadataRequest(index));
+
+	return true;
+}
+
+bool mtt::PeerCommunication2::hasMetadata()
+{
+	return ext.utm.size != 0;
 }
 
 bool mtt::PeerCommunication2::requestPiece(PieceDownloadInfo& pieceInfo)
@@ -108,10 +122,13 @@ bool mtt::PeerCommunication2::requestPiece(PieceDownloadInfo& pieceInfo)
 	downloadingPiece.index = scheduledPieceInfo.index;
 
 	requestPieceBlock();
+
+	return true;
 }
 
 void mtt::PeerCommunication2::sendHandshakeExt()
 {
+	state.action = PeerCommunicationState::Handshake;
 	stream.write(ext.getExtendedHandshakeMessage());
 }
 
@@ -120,6 +137,7 @@ void mtt::PeerCommunication2::requestPieceBlock()
 	auto& b = scheduledPieceInfo.blocksLeft.back();
 	scheduledPieceInfo.blocksLeft.pop_back();
 
+	state.action = PeerCommunicationState::TransferringData;
 	stream.write(mtt::bt::createBlockRequest(b));
 }
 
@@ -182,8 +200,11 @@ void mtt::PeerCommunication2::handleMessage(PeerMessage& message)
 			}
 		}
 
-		if(finished)
+		if (finished)
+		{
+			state.action = PeerCommunicationState::Idle;
 			listener.pieceReceived(success ? &downloadingPiece : nullptr);
+		}
 	}
 
 	if (message.id == Unchoke)
@@ -199,12 +220,15 @@ void mtt::PeerCommunication2::handleMessage(PeerMessage& message)
 
 		if (type == mtt::ext::HandshakeEx)
 		{
+			state.action = PeerCommunicationState::Idle;
 			listener.handshakeFinished();
 		}
 	}
 
 	if (message.id == Handshake)
 	{
+		state.action = PeerCommunicationState::Idle;
+
 		if (!state.finishedHandshake)
 		{
 			state.finishedHandshake = true;

@@ -234,6 +234,7 @@
     <ClCompile Include="DhtCommunication.cpp" />
     <ClCompile Include="ExtensionProtocol.cpp" />
     <ClCompile Include="HttpTrackerComm.cpp" />
+    <ClCompile Include="Interface2.cpp" />
     <ClCompile Include="PeerCommunication2.cpp" />
     <ClCompile Include="State.cpp" />
     <ClCompile Include="TcpAsyncServer.cpp" />
@@ -263,7 +264,7 @@
     <ClInclude Include="IPeerListener.h" />
     <ClInclude Include="PeerCommunication2.h" />
     <ClInclude Include="PeerMgr2.h" />
-    <ClInclude Include="ProgressState.h" />
+    <ClInclude Include="PiecesProgress.h" />
     <ClInclude Include="Scheduler.h" />
     <ClInclude Include="ServiceThreadpool.h" />
     <ClInclude Include="State.h" />

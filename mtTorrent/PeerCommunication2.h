@@ -3,9 +3,9 @@
 #include "TcpAsyncStream.h"
 #include "BencodeParser.h"
 #include "PeerMessage.h"
-#include "Interface2.h"
 #include "ExtensionProtocol.h"
 #include "IPeerListener.h"
+#include "PiecesProgress.h"
 
 namespace mtt
 {
@@ -24,9 +24,7 @@ namespace mtt
 			Disconnected,
 			Connecting,
 			Handshake,
-			Downloading,
-			Uploading,
-			Metadata,
+			TransferringData,
 			Idle
 		}
 		action = Disconnected;
@@ -51,13 +49,17 @@ namespace mtt
 		PeerCommunicationState state;
 
 		void startHandshake(Addr& address);
-		void sendInterested();
-		bool requestMetadataPiece();
+		bool sendInterested();
 		bool requestPiece(PieceDownloadInfo& pieceInfo);
 
 		void stop();
 
+		bool hasMetadata();
+		bool requestMetadataPiece(uint32_t index);
+
 	private:
+
+		ext::ExtensionProtocol ext;
 
 		TorrentInfo& torrent;
 		IPeerListener& listener;
@@ -65,8 +67,7 @@ namespace mtt
 		std::mutex schedule_mutex;
 		PieceDownloadInfo scheduledPieceInfo;
 		DownloadedPiece downloadingPiece;
-
-		ext::ExtensionProtocol ext;
+		
 		TcpAsyncStream stream;
 
 		std::mutex read_mutex;

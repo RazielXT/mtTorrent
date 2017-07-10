@@ -91,6 +91,9 @@
     <ClCompile Include="PeerCommunication2.cpp">
       <Filter>Source Files\Core\Proposal</Filter>
     </ClCompile>
+    <ClCompile Include="Interface2.cpp">
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PacketHelper.h">
@@ -165,9 +168,6 @@
     <ClInclude Include="PeerMgr2.h">
       <Filter>Source Files\Core\Proposal</Filter>
     </ClInclude>
-    <ClInclude Include="ProgressState.h">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClInclude>
     <ClInclude Include="Scheduler.h">
       <Filter>Source Files\Core\Proposal</Filter>
     </ClInclude>
@@ -193,6 +193,9 @@
       <Filter>Source Files\Core\Proposal</Filter>
     </ClInclude>
     <ClInclude Include="BTProtocol.h">
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClInclude>
+    <ClInclude Include="PiecesProgress.h">
       <Filter>Source Files\Core\Proposal</Filter>
     </ClInclude>
   </ItemGroup>

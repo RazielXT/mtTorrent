@@ -1,9 +1,9 @@
 #pragma once
-#include "TorrentDefines.h"
+#include "Interface2.h"
 
 namespace mtt
 {
-	struct ProgressState
+	struct PiecesProgress
 	{
 		void init(size_t size);
 
