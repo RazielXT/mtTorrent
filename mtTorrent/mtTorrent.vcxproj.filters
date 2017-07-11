@@ -82,6 +82,9 @@
     <ClCompile Include="ServiceThreadpool.cpp">
       <Filter>Source Files\Core\Proposal</Filter>
     </ClCompile>
+    <ClCompile Include="MetadataReconstruction.cpp">
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PacketHelper.h">
@@ -158,6 +161,9 @@
     </ClInclude>
     <ClInclude Include="Test.h">
       <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="MetadataReconstruction.h">
+      <Filter>Source Files\Core\Proposal</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -43,6 +43,9 @@ class LocalWithTorrentFile : public BasicPeerListener
 		failed = true;
 	}
 
+	mtt::ext::UtMetadata::Message utmMsg;
+	virtual void metadataPieceReceived(mtt::ext::UtMetadata::Message&) override;
+
 public:
 
 	void run();

@@ -145,11 +145,6 @@ bool mtt::PeerCommunication2::requestMetadataPiece(uint32_t index)
 	return true;
 }
 
-bool mtt::PeerCommunication2::hasMetadata()
-{
-	return ext.utm.size != 0;
-}
-
 bool mtt::PeerCommunication2::requestPiece(PieceDownloadInfo& pieceInfo)
 {
 	if (state.action != PeerCommunicationState::Idle)

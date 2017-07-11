@@ -2,6 +2,7 @@
 #include "BencodeParser.h"
 #include "ServiceThreadpool.h"
 #include "Configuration.h"
+#include "MetadataReconstruction.h"
 
 using namespace mtt;
 
@@ -13,6 +14,11 @@ void testInit()
 	{
 		mtt::config::internal.hashId[i] = (uint8_t)rand();
 	}
+}
+
+void LocalWithTorrentFile::metadataPieceReceived(mtt::ext::UtMetadata::Message& msg)
+{
+	utmMsg = msg;
 }
 
 void LocalWithTorrentFile::run()
@@ -30,12 +36,33 @@ void LocalWithTorrentFile::run()
 
 	Addr address;
 	address.addrBytes.insert(address.addrBytes.end(), { 127,0,0,1 });
-	address.port = 55391;
+	address.port = 56888;
 
 	peer.start(address);
 
 	WAITFOR(failed || peer.state.finishedHandshake)
 
+	WAITFOR(failed || peer.ext.utm.size)
+
 	if (failed)
 		return;
+
+	if(!peer.ext.utm.size)
+		return;
+
+	mtt::MetadataReconstruction metadata;
+	metadata.init(peer.ext.utm.size);
+
+	while (!metadata.finished() && !failed)
+	{
+		uint32_t mdPiece = metadata.getMissingPieceIndex();
+		peer.requestMetadataPiece(mdPiece);
+
+		WAITFOR(failed || !utmMsg.metadata.empty())
+
+		if (failed || utmMsg.id != mtt::ext::UtMetadata::Data)
+			return;
+
+		metadata.addPiece(utmMsg.metadata, utmMsg.piece);
+	}
 }

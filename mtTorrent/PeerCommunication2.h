@@ -54,12 +54,11 @@ namespace mtt
 
 		void stop();
 
-		bool hasMetadata();
 		bool requestMetadataPiece(uint32_t index);
 
-	private:
-
 		ext::ExtensionProtocol ext;
+
+	private:
 
 		TorrentInfo& torrent;
 		IPeerListener& listener;

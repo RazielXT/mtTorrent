@@ -248,6 +248,7 @@
     <ClCompile Include="TcpAsyncStream.cpp" />
     <ClCompile Include="BencodeParser.cpp" />
     <ClCompile Include="Test.cpp" />
+    <ClCompile Include="MetadataReconstruction.cpp" />
     <ClCompile Include="UdpTrackerComm.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -273,6 +274,7 @@
     <ClInclude Include="TcpAsyncStream.h" />
     <ClInclude Include="BencodeParser.h" />
     <ClInclude Include="Test.h" />
+    <ClInclude Include="MetadataReconstruction.h" />
     <ClInclude Include="TrackerManager.h" />
     <ClInclude Include="UdpTrackerComm.h" />
     <ClInclude Include="utils\Base32.h" />
