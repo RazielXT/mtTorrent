@@ -81,7 +81,7 @@ size_t NodeInfo::parse(char* buffer, bool v6)
 	id.copy(buffer);
 	buffer += 20;
 
-	return 20 + addr.parse(buffer, v6);
+	return 20 + addr.parse((uint8_t*)buffer, v6);
 }
 
 bool mtt::dht::NodeInfo::operator==(const NodeInfo& r)
@@ -202,7 +202,7 @@ GetPeersResponse Communication::parseGetPeersResponse(DataBuffer& message)
 				{
 					for (auto& v : *values->second.l)
 					{
-						response.values.emplace_back(Addr(&v.txt[0], v.txt.length() >= 18));
+						response.values.emplace_back(Addr((uint8_t*)&v.txt[0], v.txt.length() >= 18));
 					}
 				}
 
@@ -353,7 +353,7 @@ std::vector<mtt::Addr> Communication::get()
 
 					try
 					{
-						auto message = sendUdpRequest(node.addr.isIpv6() ? sock_v6 : sock_v4, firstWave ? packet.getBuffer() : ipv4packet.getBuffer(), node.addr.str.data(), node.addr.port, 3000);
+						auto message = sendUdpRequest(node.addr.ipv6 ? sock_v6 : sock_v4, firstWave ? packet.getBuffer() : ipv4packet.getBuffer(), node.addr.str.data(), node.addr.port, 3000);
 						resp = parseGetPeersResponse(message);
 					}
 					catch (const std::exception&e)
@@ -366,7 +366,7 @@ std::vector<mtt::Addr> Communication::get()
 #else
 				try
 				{
-					auto message = sendUdpRequest(node.addr.isIpv6() ? sock_v6 : sock_v4, firstWave ? packet.getBuffer() : ipv4packet.getBuffer(), node.addr.addrBytes.data(), node.addr.port, 3000);
+					auto message = sendUdpRequest(node.addr.ipv6 ? sock_v6 : sock_v4, firstWave ? packet.getBuffer() : ipv4packet.getBuffer(), node.addr.addrBytes, node.addr.port, 3000);
 					auto resp = parseGetPeersResponse(message);
 					mergeClosestNodes(nextNodes, resp.nodes, usedNodes, 16, minDistance, targetIdNode);
 

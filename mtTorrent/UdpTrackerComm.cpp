@@ -43,7 +43,7 @@ AnnounceResponse UdpTrackerComm::getAnnounceResponse(DataBuffer buffer)
 	for (size_t i = 0; i < count; i++)
 	{
 		uint32_t ip = packet.pop32();
-		resp.peers.push_back(Addr((char*)&ip, packet.pop16(), false));
+		resp.peers.push_back(Addr(ip, packet.pop16()));
 	}
 
 	return resp;

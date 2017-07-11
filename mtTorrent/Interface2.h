@@ -4,8 +4,8 @@
 #include "Network.h"
 #include <iostream>
 
-#define MT_NAME "mtTorrent 0.2"
-#define MT_HASH_NAME "MT-0-2-"
+#define MT_NAME "mtTorrent 0.5"
+#define MT_HASH_NAME "MT-0-5-"
 
 #define DHT_LOG(x) {std::cout << x;}
 //#define NETWORK_LOG(x) {std::cout << x;}
@@ -117,15 +117,18 @@ namespace mtt
 	struct Addr
 	{
 		Addr();
-		Addr(char* buffer, bool v6);
-		Addr(char* ip, uint16_t port, bool isIpv6);
+		Addr(uint8_t* buffer, bool v6);
+		Addr(uint8_t* ip, uint16_t port, bool isIpv6);
+		Addr(uint32_t ip, uint16_t port);
 
-		//std::string str;
-		std::vector<uint8_t> addrBytes;
+		uint8_t addrBytes[16];
 		uint16_t port;
+		bool ipv6;
 
-		bool isIpv6();
-		void set(char* ip, uint16_t port, bool isIpv6);
-		size_t parse(char* buffer, bool v6);
+		void set(uint8_t* ip, uint16_t port, bool isIpv6);
+		void set(DataBuffer ip, uint16_t port);
+		void set(uint32_t ip, uint16_t port);
+
+		size_t parse(uint8_t* buffer, bool v6);
 	};
 }

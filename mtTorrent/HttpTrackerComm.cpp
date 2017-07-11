@@ -129,7 +129,7 @@ mtt::AnnounceResponse mtt::HttpTrackerComm::getAnnounceResponse(DataBuffer buffe
 					for (size_t i = 0; i < count; i++)
 					{		
 						uint32_t addr = reader.pop32();
-						response.peers.push_back(Addr((char*)&addr, reader.pop16(), false));
+						response.peers.push_back(Addr(addr, reader.pop16()));
 					}
 				}
 			}

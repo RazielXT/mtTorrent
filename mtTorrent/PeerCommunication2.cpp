@@ -69,7 +69,7 @@ void PeerCommunication2::start(Addr& address)
 	if (state.action == PeerCommunicationState::Disconnected)
 	{
 		state.action = PeerCommunicationState::Connecting;
-		stream.connect(address.addrBytes.data(), address.port, address.isIpv6());
+		stream.connect(address.addrBytes, address.port, address.ipv6);
 	}
 }
 

@@ -35,9 +35,7 @@ void LocalWithTorrentFile::run()
 	PeerCommunication2 peer(torrent.info, *this, service.io);
 
 	Addr address;
-	address.addrBytes.insert(address.addrBytes.end(), { 127,0,0,1 });
-	address.port = 8999;
-
+	address.set({ 127,0,0,1 }, 55391);
 	peer.start(address);
 
 	WAITFOR(failed || peer.state.finishedHandshake)

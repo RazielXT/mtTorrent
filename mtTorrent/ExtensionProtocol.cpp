@@ -25,7 +25,7 @@ void PeerExchange::load(BencodeParser::Object& data)
 				uint16_t port = swap16(*reinterpret_cast<uint16_t*>(&msg.added[0] + pos + 4));
 
 				Addr peer;
-				peer.set((char*)&ip, port, false);
+				peer.set(ip, port);
 
 				msg.addedPeers.push_back(peer);
 				pos += 6;
