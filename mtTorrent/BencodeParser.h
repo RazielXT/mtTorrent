@@ -56,7 +56,8 @@ namespace mtt
 		Object parsedData;
 		DataBuffer infoHash;
 
-		TorrentFileInfo parseTorrentInfo();
+		TorrentFileInfo getTorrentFileInfo();
+		TorrentInfo parseTorrentInfo(const char* data, size_t length);
 
 		const char* bodyEnd = nullptr;
 		size_t remainingData = 0;
@@ -73,6 +74,7 @@ namespace mtt
 		const char* infoStart = nullptr;
 		const char* infoEnd = nullptr;
 
+		TorrentInfo parseTorrentInfo(BenDictionary& info);
 	};
 
 }

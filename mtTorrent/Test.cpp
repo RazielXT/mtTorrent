@@ -29,7 +29,7 @@ void LocalWithTorrentFile::run()
 	if (!file.parseFile("D:\\test.torrent"))
 		return;
 
-	auto torrent = file.parseTorrentInfo();
+	auto torrent = file.getTorrentFileInfo();
 
 	ServiceThreadpool service;
 	PeerCommunication2 peer(torrent.info, *this, service.io);
@@ -69,9 +69,7 @@ void LocalWithTorrentFile::run()
 	if (metadata.finished())
 	{
 		BencodeParser parse;
-		parse.parse(metadata.buffer.data(), metadata.buffer.size());
-
-		auto info = parse.parseTorrentInfo();
-		std::cout << info.info.files[0].path[0];
+		auto info = parse.parseTorrentInfo(metadata.buffer.data(), metadata.buffer.size());
+		std::cout << info.files[0].path[0];
 	}
 }

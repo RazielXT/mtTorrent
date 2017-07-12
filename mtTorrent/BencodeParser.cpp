@@ -63,10 +63,9 @@ uint32_t getPieceIndex(size_t pos, size_t pieceSize)
 	return static_cast<uint32_t>(p);
 }
 
-TorrentFileInfo BencodeParser::parseTorrentInfo()
+TorrentFileInfo BencodeParser::getTorrentFileInfo()
 {
 	TorrentFileInfo file;
-	TorrentInfo& info = file.info;
 
 	if (parsedData.type == Object::Dictionary)
 	{
@@ -92,72 +91,9 @@ TorrentFileInfo BencodeParser::parseTorrentInfo()
 
 		if (dictionary.find("info") != dictionary.end())
 		{
-			auto& infoDictionary = *dictionary["info"].dic;
-
-			info.pieceSize = infoDictionary["piece length"].i;
-
-			auto& piecesHash = infoDictionary["pieces"].txt;
-			
-			if (piecesHash.size() % 20 == 0)
-			{
-				PieceInfo temp;
-				auto end = piecesHash.data() + piecesHash.size();
-
-				for (auto it = piecesHash.data(); it != end; it += 20)
-				{
-					memcpy(&temp.hash, it, 20);
-					info.pieces.push_back(temp);
-				}
-			}
-
-			if (infoDictionary.find("files") != infoDictionary.end())
-			{
-				info.directory = infoDictionary["name"].txt;
-
-				size_t sizeSum = 0;
-				auto& files = *infoDictionary["files"].l;
-
-				int i = 0;
-				for (auto& f : files)
-				{
-					std::vector<std::string> path;
-					path.push_back(info.directory);
-
-					auto& pathList = *(*f.dic)["path"].l;
-					for (auto& p : pathList)
-					{
-						path.push_back(p.txt);
-					}
-
-					size_t size = (*f.dic)["length"].i;
-					auto startId = getPieceIndex(sizeSum, info.pieceSize);
-					auto startPos = sizeSum % info.pieceSize;
-					sizeSum += size;
-					auto endId = getPieceIndex(sizeSum, info.pieceSize);
-					auto endPos = sizeSum % info.pieceSize;
-
-					info.files.push_back({ i++, path,  size, startId, startPos, endId, endPos});
-				}
-
-				info.fullSize = sizeSum;
-			}
-			else
-			{
-				size_t size = infoDictionary["length"].i;
-				auto endPos = size % info.pieceSize;
-				info.files.push_back({ 0, {infoDictionary["name"].txt }, size, 0, 0, static_cast<uint32_t>(info.pieces.size() - 1), endPos});
-
-				info.fullSize = size;
-			}
-
-			auto piecesCount = info.pieces.size();
-			auto addExpected = piecesCount % 8 > 0 ? 1 : 0; //8 pieces in byte
-			info.expectedBitfieldSize = piecesCount / 8 + addExpected;
+			file.info = parseTorrentInfo(*dictionary["info"].dic);
 		}		
 	}
-
-	if(infoHash.size() == 20)
-		memcpy(info.hash, infoHash.data(), 20);
 
 	return file;
 }
@@ -309,6 +245,97 @@ int BencodeParser::parseInt(const char** body)
 mtt::BencodeParser::~BencodeParser()
 {
 	parsedData.cleanup();
+}
+
+mtt::TorrentInfo mtt::BencodeParser::parseTorrentInfo(const char* data, size_t length)
+{
+	parse(data, length);
+
+	if (parsedData.dic)
+	{
+		infoStart = data;
+		infoEnd = data + length;
+		infoHash.clear();
+
+		return parseTorrentInfo(*parsedData.dic);
+	}		
+	else
+		return mtt::TorrentInfo();
+}
+
+mtt::TorrentInfo mtt::BencodeParser::parseTorrentInfo(BenDictionary& infoDictionary)
+{
+	mtt::TorrentInfo info;
+
+	info.pieceSize = infoDictionary["piece length"].i;
+
+	auto& piecesHash = infoDictionary["pieces"].txt;
+
+	if (piecesHash.size() % 20 == 0)
+	{
+		PieceInfo temp;
+		auto end = piecesHash.data() + piecesHash.size();
+
+		for (auto it = piecesHash.data(); it != end; it += 20)
+		{
+			memcpy(&temp.hash, it, 20);
+			info.pieces.push_back(temp);
+		}
+	}
+
+	if (infoDictionary.find("files") != infoDictionary.end())
+	{
+		info.directory = infoDictionary["name"].txt;
+
+		size_t sizeSum = 0;
+		auto& files = *infoDictionary["files"].l;
+
+		int i = 0;
+		for (auto& f : files)
+		{
+			std::vector<std::string> path;
+			path.push_back(info.directory);
+
+			auto& pathList = *(*f.dic)["path"].l;
+			for (auto& p : pathList)
+			{
+				path.push_back(p.txt);
+			}
+
+			size_t size = (*f.dic)["length"].i;
+			auto startId = getPieceIndex(sizeSum, info.pieceSize);
+			auto startPos = sizeSum % info.pieceSize;
+			sizeSum += size;
+			auto endId = getPieceIndex(sizeSum, info.pieceSize);
+			auto endPos = sizeSum % info.pieceSize;
+
+			info.files.push_back({ i++, path,  size, startId, startPos, endId, endPos });
+		}
+
+		info.fullSize = sizeSum;
+	}
+	else
+	{
+		size_t size = infoDictionary["length"].i;
+		auto endPos = size % info.pieceSize;
+		info.files.push_back({ 0,{ infoDictionary["name"].txt }, size, 0, 0, static_cast<uint32_t>(info.pieces.size() - 1), endPos });
+
+		info.fullSize = size;
+	}
+
+	auto piecesCount = info.pieces.size();
+	auto addExpected = piecesCount % 8 > 0 ? 1 : 0; //8 pieces in byte
+	info.expectedBitfieldSize = piecesCount / 8 + addExpected;
+
+	if (infoStart && infoEnd)
+	{
+		if (infoHash.empty())
+			SHA1((const unsigned char*)infoStart, infoEnd - infoStart, (unsigned char*)&info.hash[0]);
+		else
+			memcpy(&info.hash[0], infoHash.data(), SHA_DIGEST_LENGTH);
+	}
+
+	return info;
 }
 
 BencodeParser::BenList* BencodeParser::Object::getListItem(const char* name)
