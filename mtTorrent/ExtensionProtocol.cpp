@@ -60,12 +60,13 @@ void UtMetadata::load(BencodeParser::Object& data, const char* remainingData, si
 			else if (msg.id == Data)
 			{
 				auto piece = data.getIntItem("piece");
-				auto piecesize = data.getIntItem("total_size");
+				auto totalsize = data.getIntItem("total_size");
+				msg.piece = *piece;
 
-				if (piece && piecesize && *piecesize <= remainingSize)
+				if (piece && totalsize && remainingSize <= 16*1024)
 				{
-					msg.metadata.clear();
-					msg.metadata.insert(msg.metadata.begin(), remainingData, remainingData + *piecesize);
+					msg.size = *totalsize;
+					msg.metadata.insert(msg.metadata.begin(), remainingData, remainingData + remainingSize);
 				}
 
 				if (onUtMetadataMessage)
@@ -83,7 +84,7 @@ DataBuffer mtt::ext::UtMetadata::createMetadataRequest(uint32_t index)
 	PacketBuilder packet(32);
 	packet.add32(0);
 	packet.add(mtt::Extended);
-	packet.add('2');
+	packet.add(UtMetadataEx);
 	packet.add("d8:msg_typei0e5:piecei", 22);
 	auto idxStr = std::to_string(index);
 	packet.add(idxStr.data(), idxStr.length());
@@ -170,34 +171,27 @@ DataBuffer ExtensionProtocol::getExtendedHandshakeMessage(bool enablePex, uint16
 	extDict.add(mtt::Extended);
 	extDict.add(HandshakeEx);
 
-	//std::string extDict = "d1:md11:LT_metadatai2e6:ut_pexi" + std::to_string(PexEx) + "ee1:pi" + std::to_string(mtt::getClientInfo()->listenPort) + "e1:v" + std::to_string(strlen(MT_NAME)) +":" + MT_NAME + "e";
-	
 	extDict.add('d');
 
 	if (enablePex || !metadataSize)
 	{
 		extDict.add("1:md", 4);
 
-		if (!metadataSize)
-		{
-			extDict.add("ut_metadatai", 12);
-			auto typeStr = std::to_string((char)UtMetadataEx);
-			extDict.add(typeStr.data(), typeStr.length());
-			extDict.add('e');
-		}
+		extDict.add("11:ut_metadatai", 15);
+		extDict.add('0' + UtMetadataEx);
+		extDict.add('e');
 
 		if (enablePex)
 		{
 			extDict.add("6:ut_pexi", 9);
-			auto typeStr = std::to_string((char)PexEx);
-			extDict.add(typeStr.data(), typeStr.length());
+			extDict.add('0' + PexEx);
 			extDict.add('e');
 		}
 
 		extDict.add('e');
 	}
 
-	if (!metadataSize)
+	if (metadataSize)
 	{
 		extDict.add("13:metadata_sizei", 17);
 		auto sizeStr = std::to_string(metadataSize);
@@ -211,12 +205,15 @@ DataBuffer ExtensionProtocol::getExtendedHandshakeMessage(bool enablePex, uint16
 	extDict.add('e');
 
 	extDict.add("1:v", 3);
-	auto nameLen = std::to_string(_countof(MT_NAME));
+	auto nameLen = std::to_string(13);
 	extDict.add(nameLen.data(), nameLen.length());
 	extDict.add(':');
-	extDict.add(MT_NAME, _countof(MT_NAME));
+	extDict.add(MT_NAME, 13);
 
 	extDict.add('e');
+
+	BencodeParser parse;
+	parse.parse(&extDict.out[0] + 6, extDict.out.size() - 6);
 
 	*reinterpret_cast<uint32_t*>(&extDict.out[0]) = swap32((uint32_t)(extDict.out.size() - sizeof(uint32_t)));
 

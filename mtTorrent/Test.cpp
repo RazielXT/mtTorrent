@@ -36,7 +36,7 @@ void LocalWithTorrentFile::run()
 
 	Addr address;
 	address.addrBytes.insert(address.addrBytes.end(), { 127,0,0,1 });
-	address.port = 56888;
+	address.port = 8999;
 
 	peer.start(address);
 
@@ -64,5 +64,14 @@ void LocalWithTorrentFile::run()
 			return;
 
 		metadata.addPiece(utmMsg.metadata, utmMsg.piece);
+	}
+
+	if (metadata.finished())
+	{
+		BencodeParser parse;
+		parse.parse(metadata.buffer.data(), metadata.buffer.size());
+
+		auto info = parse.parseTorrentInfo();
+		std::cout << info.info.files[0].path[0];
 	}
 }
