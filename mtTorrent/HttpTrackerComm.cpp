@@ -85,8 +85,10 @@ mtt::AnnounceResponse mtt::HttpTrackerComm::getAnnounceResponse(DataBuffer buffe
 {
 	AnnounceResponse response;
 
-	std::string success = "HTTP/1.1 200 OK";
-	if (buffer.size() > success.length() && std::string(buffer.data(), success.length()) == success)
+	const char* success = "HTTP/1.1 200 OK";
+	size_t succesLen = strlen(success);
+
+	if (buffer.size() > succesLen && strncmp(buffer.data(), success, succesLen) == 0)
 	{
 		size_t dataStart = 0;
 
