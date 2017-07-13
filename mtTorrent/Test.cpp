@@ -32,11 +32,9 @@ void LocalWithTorrentFile::run()
 	auto torrent = file.getTorrentFileInfo();
 
 	ServiceThreadpool service;
-	PeerCommunication2 peer(torrent.info, *this, service.io);
 
-	Addr address;
-	address.set({ 127,0,0,1 }, 55391);
-	peer.start(address);
+	PeerCommunication2 peer(torrent.info, *this, service.io);
+	peer.start(Addr({ 127,0,0,1 }, 55391));
 
 	WAITFOR(failed || peer.state.finishedHandshake)
 

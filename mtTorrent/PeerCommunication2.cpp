@@ -164,8 +164,9 @@ bool mtt::PeerCommunication2::requestPiece(PieceDownloadInfo& pieceInfo)
 	return true;
 }
 
-void mtt::PeerCommunication2::sendHandshakeExt()
+void mtt::PeerCommunication2::enableExtensions()
 {
+	ext.enabled;
 	state.action = PeerCommunicationState::Handshake;
 	stream.write(ext.getExtendedHandshakeMessage());
 }
@@ -276,7 +277,7 @@ void mtt::PeerCommunication2::handleMessage(PeerMessage& message)
 			memcpy(info.protocol, message.handshake.reservedBytes, 8);
 
 			if(info.protocol[5] & 0x10)
-				sendHandshakeExt();
+				enableExtensions();
 			else
 				listener.handshakeFinished();
 		}

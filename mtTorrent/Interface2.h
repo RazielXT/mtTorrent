@@ -120,6 +120,7 @@ namespace mtt
 		Addr(uint8_t* buffer, bool v6);
 		Addr(uint8_t* ip, uint16_t port, bool isIpv6);
 		Addr(uint32_t ip, uint16_t port);
+		Addr(DataBuffer ip, uint16_t port);
 
 		uint8_t addrBytes[16];
 		uint16_t port;

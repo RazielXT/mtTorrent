@@ -30,6 +30,11 @@ mtt::Addr::Addr()
 	memset(addrBytes, 0, 16);
 }
 
+mtt::Addr::Addr(DataBuffer ip, uint16_t port)
+{
+	set(ip, port);
+}
+
 mtt::Addr::Addr(uint32_t ip, uint16_t port)
 {
 	set(ip, port);

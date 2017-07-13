@@ -54,6 +54,16 @@ namespace mtt
 
 		struct ExtensionProtocol
 		{
+			struct
+			{
+				bool enabled = false;
+				std::string yourIp;
+				std::string client;
+			}
+			info;
+
+			bool isSupported(MessageType type);
+
 			MessageType load(char id, DataBuffer& data);
 			DataBuffer getExtendedHandshakeMessage(bool enablePex = true, uint16_t metadataSize = 0);
 

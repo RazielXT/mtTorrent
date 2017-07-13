@@ -140,17 +140,23 @@ MessageType ExtensionProtocol::load(char id, DataBuffer& data)
 						utm.size = 0;
 				}
 			}
+
+			if (auto version = parser.parsedData.getTxtItem("v"))
+				info.client = *version;
+
+			if (auto ip = parser.parsedData.getTxtItem("yourip"))
+				info.yourIp = *ip;
 		}
 
 		return HandshakeEx;
 	}
 	else
 	{
-		auto idIt = messageIds.find(id);
+		auto idType = messageIds.find(id);
 
-		if (idIt != messageIds.end())
+		if (idType != messageIds.end())
 		{
-			auto msgType = messageIds[id];
+			auto msgType = idType->second;
 
 			if (msgType == PexEx)
 				pex.load(parser.parsedData);
@@ -218,4 +224,13 @@ DataBuffer ExtensionProtocol::getExtendedHandshakeMessage(bool enablePex, uint16
 	*reinterpret_cast<uint32_t*>(&extDict.out[0]) = swap32((uint32_t)(extDict.out.size() - sizeof(uint32_t)));
 
 	return extDict.getBuffer();
+}
+
+bool mtt::ext::ExtensionProtocol::isSupported(MessageType type)
+{
+	for (auto&m : messageIds)
+		if (m.second == type)
+			return true;
+
+	return false;
 }
