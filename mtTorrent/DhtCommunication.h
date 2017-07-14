@@ -22,7 +22,7 @@ namespace mtt
 		struct NodeInfo
 		{
 			NodeId id;
-			mtt::Addr addr;
+			Addr addr;
 
 			size_t parse(char* buffer, bool v6);
 			bool operator==(const NodeInfo& r);
@@ -45,7 +45,7 @@ namespace mtt
 		{
 		public:
 
-			std::vector<mtt::Addr> get();
+			std::vector<Addr> get();
 
 		private:
 

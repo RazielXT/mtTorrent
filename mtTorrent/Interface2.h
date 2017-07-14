@@ -113,23 +113,4 @@ namespace mtt
 		void addBlock(PieceBlock& block);
 		size_t receivedBlocks = 0;
 	};
-
-	struct Addr
-	{
-		Addr();
-		Addr(uint8_t* buffer, bool v6);
-		Addr(uint8_t* ip, uint16_t port, bool isIpv6);
-		Addr(uint32_t ip, uint16_t port);
-		Addr(DataBuffer ip, uint16_t port);
-
-		uint8_t addrBytes[16];
-		uint16_t port;
-		bool ipv6;
-
-		void set(uint8_t* ip, uint16_t port, bool isIpv6);
-		void set(DataBuffer ip, uint16_t port);
-		void set(uint32_t ip, uint16_t port);
-
-		size_t parse(uint8_t* buffer, bool v6);
-	};
 }

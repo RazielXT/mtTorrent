@@ -14,6 +14,25 @@ typedef ssl::stream<tcp::socket> ssl_socket;
 
 using DataBuffer = std::vector<char>;
 
+struct Addr
+{
+	Addr();
+	Addr(uint8_t* buffer, bool v6);
+	Addr(uint8_t* ip, uint16_t port, bool isIpv6);
+	Addr(uint32_t ip, uint16_t port);
+	Addr(DataBuffer ip, uint16_t port);
+
+	uint8_t addrBytes[16];
+	uint16_t port;
+	bool ipv6;
+
+	void set(uint8_t* ip, uint16_t port, bool isIpv6);
+	void set(DataBuffer ip, uint16_t port);
+	void set(uint32_t ip, uint16_t port);
+
+	size_t parse(uint8_t* buffer, bool v6);
+};
+
 void openSslSocket(ssl_socket& sock, tcp::resolver& resolver, const char* hostname);
 std::string sendHttpsRequest(ssl_socket& socket, tcp::resolver& resolver, boost::asio::streambuf& request, const char* hostname);
 
