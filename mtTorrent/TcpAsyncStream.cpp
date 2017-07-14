@@ -55,11 +55,17 @@ void TcpAsyncStream::connect(const std::string& ip, uint16_t port)
 
 void TcpAsyncStream::close()
 {
+	if (state != Disconnected)
+		return;
+
 	io_service.post(std::bind(&TcpAsyncStream::do_close, this));
 }
 
 void TcpAsyncStream::write(const DataBuffer& data)
 {
+	if (state != Disconnected)
+		return;
+
 	io_service.post(std::bind(&TcpAsyncStream::do_write, this, data));
 }
 
@@ -92,7 +98,10 @@ void TcpAsyncStream::setAsConnected()
 
 void TcpAsyncStream::postFail(std::string place, const boost::system::error_code& error)
 {
-	std::cout << place << "-" << host << "-" << error.message() << "\n";
+	if(error)
+		std::cout << place << "-" << host << "-" << error.message() << "\n";
+
+	state = Disconnected;
 
 	if (onCloseCallback)
 		onCloseCallback();
@@ -109,7 +118,6 @@ void TcpAsyncStream::handle_resolve(const boost::system::error_code& error, tcp:
 	}
 	else
 	{
-		state = Disconnected;
 		postFail("Resolve", error);
 	}
 }
@@ -136,7 +144,6 @@ void TcpAsyncStream::handle_connect(const boost::system::error_code& error)
 	}
 	else
 	{
-		state = Disconnected;
 		postFail("Connect", error);
 	}
 }
@@ -148,10 +155,7 @@ void TcpAsyncStream::do_close()
 	if (socket.is_open())
 		socket.close(error);
 
-	state = Disconnected;
-
-	if(error)
-		postFail("Close", error);
+	postFail("Close", error);
 }
 
 void TcpAsyncStream::do_write(DataBuffer data)
@@ -196,15 +200,15 @@ void TcpAsyncStream::handle_receive(const boost::system::error_code& error, std:
 {
 	if (!error)
 	{
-	socket.async_receive(boost::asio::buffer(recv_buffer),
-		std::bind(&TcpAsyncStream::handle_receive, this,
-			std::placeholders::_1,
-			std::placeholders::_2));
+		appendData(recv_buffer.data(), bytes_transferred);
 
-	appendData(recv_buffer.data(), bytes_transferred);
+		socket.async_receive(boost::asio::buffer(recv_buffer),
+			std::bind(&TcpAsyncStream::handle_receive, this,
+				std::placeholders::_1,
+				std::placeholders::_2));
 
-	if (onReceiveCallback)
-		onReceiveCallback();
+		if (onReceiveCallback)
+			onReceiveCallback();
 	}
 	else
 	{
