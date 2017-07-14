@@ -85,6 +85,9 @@
     <ClCompile Include="MetadataReconstruction.cpp">
       <Filter>Source Files\Core\Proposal</Filter>
     </ClCompile>
+    <ClCompile Include="UdpAsyncClient.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PacketHelper.h">
@@ -164,6 +167,9 @@
     </ClInclude>
     <ClInclude Include="MetadataReconstruction.h">
       <Filter>Source Files\Core\Proposal</Filter>
+    </ClInclude>
+    <ClInclude Include="UdpAsyncClient.h">
+      <Filter>Source Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

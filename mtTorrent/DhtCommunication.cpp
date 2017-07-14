@@ -243,7 +243,7 @@ char fromHexa(char h)
 	return h;
 }
 
-std::vector<mtt::Addr> Communication::get()
+std::vector<Addr> Communication::get()
 {
 	/*NodeId testdata;
 	memset(testdata.data, 0, 20);
