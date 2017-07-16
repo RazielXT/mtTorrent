@@ -146,6 +146,8 @@ MessageType ExtensionProtocol::load(char id, DataBuffer& data)
 
 			if (auto ip = parser.parsedData.getTxtItem("yourip"))
 				info.yourIp = *ip;
+
+			info.enabled = true;
 		}
 
 		return HandshakeEx;

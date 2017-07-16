@@ -6,6 +6,11 @@ TcpAsyncStream::TcpAsyncStream(boost::asio::io_service& io) : io_service(io), so
 	
 }
 
+TcpAsyncStream::~TcpAsyncStream()
+{
+	onCloseCallback = nullptr;
+}
+
 void TcpAsyncStream::connect(const std::string& hostname, const std::string& port)
 {
 	if (state != Disconnected)
@@ -55,7 +60,7 @@ void TcpAsyncStream::connect(const std::string& ip, uint16_t port)
 
 void TcpAsyncStream::close()
 {
-	if (state != Disconnected)
+	if (state == Disconnected)
 		return;
 
 	io_service.post(std::bind(&TcpAsyncStream::do_close, this));
@@ -63,7 +68,7 @@ void TcpAsyncStream::close()
 
 void TcpAsyncStream::write(const DataBuffer& data)
 {
-	if (state != Disconnected)
+	if (state == Disconnected)
 		return;
 
 	io_service.post(std::bind(&TcpAsyncStream::do_write, this, data));

@@ -1,6 +1,8 @@
 #pragma once
 #include <vector>
 #include "Interface2.h"
+#include "ServiceThreadpool.h"
+#include "UdpAsyncClient.h"
 
 namespace mtt
 {
@@ -17,6 +19,7 @@ namespace mtt
 			bool closerThanThis(NodeId& distance, NodeId& target);
 			NodeId distance(NodeId& r);
 			uint8_t length();
+			void setMax();
 		};
 
 		struct NodeInfo
@@ -41,15 +44,47 @@ namespace mtt
 			std::vector<Addr> values;
 		};
 
+		class DhtListener
+		{
+		public:
+
+			virtual uint32_t onFoundPeers(uint8_t* hash, std::vector<Addr>& values) = 0;
+			virtual void findingPeersFinished(uint8_t* hash, uint32_t count) = 0;
+		};
+
 		class Communication
 		{
 		public:
 
-			std::vector<Addr> get();
+			Communication(DhtListener& listener);
+
+			void findPeers(uint8_t* hash);
 
 		private:
 
-			GetPeersResponse parseGetPeersResponse(DataBuffer& message);
+
+			struct Query
+			{
+				std::mutex requestsMutex;
+				std::vector<UdpRequest> requests;
+
+				std::mutex nodesMutex;
+				std::vector<NodeInfo> receivedNodes;
+				std::vector<NodeInfo> usedNodes;
+				NodeId minDistance;
+				NodeId targetIdNode;
+
+				uint32_t foundCount = 0;
+
+				DataBuffer createGetPeersRequest(uint8_t* hash, bool bothProtocols);
+				void onGetPeersResponse(DataBuffer* data, PackedUdpRequest* source);
+				GetPeersResponse parseGetPeersResponse(DataBuffer& message);
+			};
+			Query query;
+
+
+			ServiceThreadpool service;
+			DhtListener& listener;	
 		};
 	}
 }

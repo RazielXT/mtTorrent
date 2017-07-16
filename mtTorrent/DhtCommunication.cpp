@@ -5,6 +5,7 @@
 #include "PacketHelper.h"
 #include "utils/Base32.h"
 #include <future>
+#include "Configuration.h"
 
 using namespace mtt::dht;
 
@@ -19,8 +20,7 @@ NodeId::NodeId(const char* buffer)
 
 void NodeId::copy(const char* buffer)
 {
-	for (int i = 0; i < 20; i++)
-		data[i] = (uint8_t)buffer[i];
+	memcpy(data, buffer, 20);
 }
 
 bool mtt::dht::NodeId::closerThanThis(NodeId& maxDistance, NodeId& target)
@@ -74,6 +74,11 @@ uint8_t mtt::dht::NodeId::length()
 	}
 
 	return 0;
+}
+
+void mtt::dht::NodeId::setMax()
+{
+	memset(data, 0xFF, 20);
 }
 
 size_t NodeInfo::parse(char* buffer, bool v6)
@@ -149,7 +154,7 @@ NodeId getShortestDistance(std::vector<NodeInfo>& from, NodeId& target)
 	return id;
 }
 
-GetPeersResponse Communication::parseGetPeersResponse(DataBuffer& message)
+GetPeersResponse Communication::Query::parseGetPeersResponse(DataBuffer& message)
 {
 	GetPeersResponse response;
 
@@ -231,8 +236,107 @@ GetPeersResponse Communication::parseGetPeersResponse(DataBuffer& message)
 	return response;
 }
 
-//#define ASYNC_DHT
+static DhtListener* dhtListener = nullptr;
+boost::asio::io_service* serviceIo = nullptr;
 
+Communication::Communication(DhtListener& l) : listener(l)
+{
+	dhtListener = &listener;
+	service.start(3);
+	serviceIo = &service.io;
+}
+
+void Communication::findPeers(uint8_t* hash)
+{
+	const char* dhtRoot = "dht.transmissionbt.com";
+	const char* dhtRootPort = "6881";
+	auto dataReq = query.createGetPeersRequest(hash, true);
+	query.targetIdNode.copy((char*)hash);
+	query.minDistance.setMax();
+
+	std::lock_guard<std::mutex> guard(query.requestsMutex);
+	auto req = SendAsyncUdp(dhtRoot, dhtRootPort, true, dataReq, service.io, std::bind(&Communication::Query::onGetPeersResponse, &query, std::placeholders::_1, std::placeholders::_2));
+	query.requests.push_back(req);
+}
+
+void mtt::dht::Communication::Query::onGetPeersResponse(DataBuffer* data, PackedUdpRequest* source)
+{
+	if (data)
+	{
+		auto resp = parseGetPeersResponse(*data);
+
+		std::lock_guard<std::mutex> guard(nodesMutex);
+
+		if (!resp.values.empty())
+		{
+			foundCount += dhtListener->onFoundPeers(targetIdNode.data, resp.values);
+		}
+
+		if(!resp.nodes.empty())
+		{
+			mergeClosestNodes(receivedNodes, resp.nodes, usedNodes, 16, minDistance, targetIdNode);
+			minDistance = getShortestDistance(receivedNodes, targetIdNode);
+
+			std::cout << (int)minDistance.length() << "\n";
+		}
+	}
+
+	{
+		std::lock_guard<std::mutex> guard(requestsMutex);
+
+		for (auto it = requests.begin(); it != requests.end(); it++)
+		{
+			if ((*it).get() == source)
+			{
+				requests.erase(it);
+				break;
+			}
+		}
+
+
+		if (foundCount < 1)
+		{
+			std::lock_guard<std::mutex> guard(nodesMutex);
+
+			while (!receivedNodes.empty() && requests.size() < 4)
+			{
+				NodeInfo next = receivedNodes.front();
+				receivedNodes.erase(receivedNodes.begin());
+
+				auto dataReq = createGetPeersRequest(targetIdNode.data, false);
+				auto req = SendAsyncUdp(next.addr, dataReq, *serviceIo, std::bind(&Communication::Query::onGetPeersResponse, this, std::placeholders::_1, std::placeholders::_2));
+				requests.push_back(req);
+			}
+		}
+		else
+			dhtListener->findingPeersFinished(targetIdNode.data, foundCount);
+	}
+}
+
+DataBuffer mtt::dht::Communication::Query::createGetPeersRequest(uint8_t* hash, bool bothProtocols)
+{
+	PacketBuilder packet(104);
+	packet.add("d1:ad2:id20:", 12);
+	packet.add(mtt::config::internal.hashId, 20);
+	packet.add("9:info_hash20:", 14);
+	packet.add(hash, 20);
+
+	if (bothProtocols)
+		packet.add("4:wantl2:n42:n6e", 16);
+
+	const char* clientId = "mt02";
+	uint16_t transactionId = 54535;
+
+	packet.add("e1:q9:get_peers1:v4:", 20);
+	packet.add(clientId, 4);
+	packet.add("1:t2:", 5);
+	packet.add(reinterpret_cast<char*>(&transactionId), 2);
+	packet.add("1:y1:qe", 7);
+
+	return packet.getBuffer();
+}
+
+#ifdef true
 char fromHexa(char h)
 {
 	if (h <= '9')
@@ -429,3 +533,4 @@ std::vector<Addr> Communication::get()
 	return{};
 }
 
+#endif

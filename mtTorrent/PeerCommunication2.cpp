@@ -166,7 +166,7 @@ bool mtt::PeerCommunication2::requestPiece(PieceDownloadInfo& pieceInfo)
 
 void mtt::PeerCommunication2::enableExtensions()
 {
-	ext.enabled;
+	ext.info.enabled;
 	state.action = PeerCommunicationState::Handshake;
 	stream.write(ext.getExtendedHandshakeMessage());
 }

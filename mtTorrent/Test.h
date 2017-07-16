@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PeerCommunication2.h"
+#include "DhtCommunication.h"
 
 class BasicPeerListener : public mtt::IPeerListener
 {
@@ -34,8 +35,18 @@ public:
 	}
 };
 
-class LocalWithTorrentFile : public BasicPeerListener
+class LocalWithTorrentFile : public BasicPeerListener, public mtt::dht::DhtListener
 {
+public:
+
+	LocalWithTorrentFile();
+
+	void testMetadataReceive();
+	void testAsyncUdpRequest();
+	void testAsyncDhtGetPeers();
+
+private:
+
 	bool failed = false;
 
 	virtual void connectionClosed() override
@@ -46,7 +57,16 @@ class LocalWithTorrentFile : public BasicPeerListener
 	mtt::ext::UtMetadata::Message utmMsg;
 	virtual void metadataPieceReceived(mtt::ext::UtMetadata::Message&) override;
 
-public:
+	void onUdpReceived(DataBuffer* data, PackedUdpRequest* source);
+	DataBuffer udpResult;
 
-	void run();
+	virtual uint32_t onFoundPeers(uint8_t* hash, std::vector<Addr>& values) override;
+	virtual void findingPeersFinished(uint8_t* hash, uint32_t count) override;
+	struct 
+	{
+		uint32_t finalCount = -1;
+		std::vector<Addr> values;
+	}
+	dhtResult;
+
 };

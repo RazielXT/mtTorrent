@@ -37,8 +37,6 @@ namespace mtt
 		PiecesProgress pieces;
 		uint8_t id[20];
 		uint8_t protocol[8];
-
-		bool isSupported(ext::MessageType type);
 	};
 
 	class PeerCommunication2

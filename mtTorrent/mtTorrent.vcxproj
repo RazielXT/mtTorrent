@@ -251,6 +251,7 @@
     <ClCompile Include="MetadataReconstruction.cpp" />
     <ClCompile Include="UdpAsyncClient.cpp" />
     <ClCompile Include="UdpTrackerComm.cpp" />
+    <ClCompile Include="utils\Base32.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Configuration.h" />

@@ -17,6 +17,7 @@ class TcpAsyncStream
 public:
 
 	TcpAsyncStream(boost::asio::io_service& io_service);
+	~TcpAsyncStream();
 
 	void connect(const uint8_t* data, uint16_t port, bool ipv6);
 	void connect(const std::string& ip, uint16_t port);
