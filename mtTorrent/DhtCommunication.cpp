@@ -265,19 +265,22 @@ void mtt::dht::Communication::Query::onGetPeersResponse(DataBuffer* data, Packed
 	{
 		auto resp = parseGetPeersResponse(*data);
 
-		std::lock_guard<std::mutex> guard(nodesMutex);
-
-		if (!resp.values.empty())
+		if (memcmp(resp.id, targetIdNode.data, 20) == 0)
 		{
-			foundCount += dhtListener->onFoundPeers(targetIdNode.data, resp.values);
-		}
+			if (!resp.values.empty())
+			{
+				foundCount += dhtListener->onFoundPeers(targetIdNode.data, resp.values);
+			}
 
-		if(!resp.nodes.empty())
-		{
-			mergeClosestNodes(receivedNodes, resp.nodes, usedNodes, 16, minDistance, targetIdNode);
-			minDistance = getShortestDistance(receivedNodes, targetIdNode);
+			if (!resp.nodes.empty())
+			{
+				std::lock_guard<std::mutex> guard(nodesMutex);
 
-			std::cout << (int)minDistance.length() << "\n";
+				mergeClosestNodes(receivedNodes, resp.nodes, usedNodes, MaxCachedNodes, minDistance, targetIdNode);
+				minDistance = getShortestDistance(receivedNodes, targetIdNode);
+
+				std::cout << (int)minDistance.length() << "\n";
+			}
 		}
 	}
 
@@ -294,11 +297,11 @@ void mtt::dht::Communication::Query::onGetPeersResponse(DataBuffer* data, Packed
 		}
 
 
-		if (foundCount < 1)
+		if (foundCount < MaxReturnedValues)
 		{
 			std::lock_guard<std::mutex> guard(nodesMutex);
 
-			while (!receivedNodes.empty() && requests.size() < 4)
+			while (!receivedNodes.empty() && requests.size() < MaxSimultaneousConnections)
 			{
 				NodeInfo next = receivedNodes.front();
 				receivedNodes.erase(receivedNodes.begin());
@@ -315,7 +318,7 @@ void mtt::dht::Communication::Query::onGetPeersResponse(DataBuffer* data, Packed
 
 DataBuffer mtt::dht::Communication::Query::createGetPeersRequest(uint8_t* hash, bool bothProtocols)
 {
-	PacketBuilder packet(104);
+	PacketBuilder packet(128);
 	packet.add("d1:ad2:id20:", 12);
 	packet.add(mtt::config::internal.hashId, 20);
 	packet.add("9:info_hash20:", 14);

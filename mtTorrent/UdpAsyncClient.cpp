@@ -44,7 +44,7 @@ void UdpAsyncClient::setAddress(const std::string& hostname, const std::string& 
 
 void UdpAsyncClient::close()
 {
-	if (state == Clear)
+	if (state != Connected)
 		return;
 
 	io_service.post(std::bind(&UdpAsyncClient::do_close, this));
@@ -101,7 +101,8 @@ void UdpAsyncClient::postFail(std::string place, const boost::system::error_code
 	if(error)
 		std::cout << place << "-" << target_endpoint.address().to_string() << "-" << error.message() << "\n";
 
-	state = Clear;
+	if(state == Connected)
+		state = Initialized;
 
 	if (onCloseCallback)
 		onCloseCallback();

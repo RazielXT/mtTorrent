@@ -65,6 +65,10 @@ namespace mtt
 
 			struct Query
 			{
+				static const uint32_t MaxReturnedValues = 50;
+				static const uint32_t MaxCachedNodes = 16;
+				static const uint32_t MaxSimultaneousConnections = 4;
+
 				std::mutex requestsMutex;
 				std::vector<UdpRequest> requests;
 
