@@ -1,9 +1,9 @@
 #include "TcpAsyncStream.h"
 #include <iostream>
 
-TcpAsyncStream::TcpAsyncStream(boost::asio::io_service& io) : io_service(io), socket(io)
+TcpAsyncStream::TcpAsyncStream(boost::asio::io_service& io) : io_service(io), socket(io), timeoutTimer(io)
 {
-	
+	timeoutTimer.async_wait(std::bind(&TcpAsyncStream::checkTimeout, this));
 }
 
 TcpAsyncStream::~TcpAsyncStream()
@@ -207,6 +207,7 @@ void TcpAsyncStream::handle_receive(const boost::system::error_code& error, std:
 	{
 		appendData(recv_buffer.data(), bytes_transferred);
 
+		timeoutTimer.expires_from_now(boost::posix_time::seconds(60));
 		socket.async_receive(boost::asio::buffer(recv_buffer),
 			std::bind(&TcpAsyncStream::handle_receive, this,
 				std::placeholders::_1,
@@ -226,4 +227,19 @@ void TcpAsyncStream::appendData(char* data, size_t size)
 	std::lock_guard<std::mutex> guard(receiveBuffer_mutex);
 
 	receiveBuffer.insert(receiveBuffer.end(), data, data + size);
+}
+
+void TcpAsyncStream::checkTimeout()
+{
+	if (state == Disconnected)
+		return;
+
+	if (timeoutTimer.expires_at() <= boost::asio::deadline_timer::traits_type::now())
+	{
+		socket.close();
+		state = Disconnected;
+		timeoutTimer.expires_at(boost::posix_time::pos_infin);
+	}
+
+	timeoutTimer.async_wait(std::bind(&TcpAsyncStream::checkTimeout, this));
 }

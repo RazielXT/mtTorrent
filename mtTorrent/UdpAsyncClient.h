@@ -46,12 +46,16 @@ protected:
 	void do_write();
 	
 	DataBuffer messageBuffer;
+	DataBuffer responseBuffer;
 	void handle_write(const boost::system::error_code& error, size_t sz);
 	void handle_receive(const boost::system::error_code& error, std::size_t bytes_transferred);
 
+	void checkTimeout();
+	boost::asio::deadline_timer timeoutTimer;
+	uint8_t writeRetries = 0;
+
 	udp::endpoint target_endpoint;
 	udp::socket socket;
-
 	boost::asio::io_service& io_service;
 
 };

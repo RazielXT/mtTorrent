@@ -1,11 +1,9 @@
 #include "UdpAsyncClient.h"
 #include <iostream>
 
-UdpAsyncClient::UdpAsyncClient(boost::asio::io_service& io) : io_service(io), socket(io)
+UdpAsyncClient::UdpAsyncClient(boost::asio::io_service& io) : io_service(io), socket(io), timeoutTimer(io)
 {
-	int32_t timeout = 5;
-	setsockopt(socket.native(), SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
-	setsockopt(socket.native(), SOL_SOCKET, SO_SNDTIMEO, (const char*)&timeout, sizeof(timeout));
+	timeoutTimer.async_wait(std::bind(&UdpAsyncClient::checkTimeout, this));
 }
 
 UdpAsyncClient::~UdpAsyncClient()
@@ -86,11 +84,13 @@ void UdpAsyncClient::listenToResponse()
 		return;
 
 	listening = true;
-	messageBuffer.resize(2 * 1024);
+	responseBuffer.resize(2 * 1024);
 
 	std::cout << "listening\n";
 
-	socket.async_receive_from(boost::asio::buffer(messageBuffer.data(), 2 * 1024), target_endpoint,
+	timeoutTimer.expires_from_now(boost::posix_time::seconds(2));
+
+	socket.async_receive_from(boost::asio::buffer(responseBuffer.data(), responseBuffer.size()), target_endpoint,
 		std::bind(&UdpAsyncClient::handle_receive, this,
 			std::placeholders::_1,
 			std::placeholders::_2));
@@ -112,7 +112,7 @@ void UdpAsyncClient::handle_connect(const boost::system::error_code& error)
 	if (!error)
 	{
 		state = Connected;
-		do_write();
+		listenToResponse();
 	}
 	else
 	{
@@ -138,7 +138,7 @@ void UdpAsyncClient::do_write()
 	}
 	else if(state == Connected)
 	{
-		std::cout << "writing\n";
+		std::cout << "writing (" << (int)writeRetries << ")\n";
 
 		if (!messageBuffer.empty())
 		{
@@ -165,19 +165,44 @@ void UdpAsyncClient::handle_write(const boost::system::error_code& error, size_t
 void UdpAsyncClient::handle_receive(const boost::system::error_code& error, std::size_t bytes_transferred)
 {
 	listening = false;
-	std::cout << "received\n";
+	writeRetries = 0;
+	std::cout << "received" << bytes_transferred << "\n";
 
 	if (!error)
 	{
-		messageBuffer.resize(bytes_transferred);
+		responseBuffer.resize(bytes_transferred);
 
 		if (onReceiveCallback)
-			onReceiveCallback(messageBuffer);
+			onReceiveCallback(responseBuffer);
 	}
 	else
 	{
 		postFail("Receive", error);
 	}
+}
+
+void UdpAsyncClient::checkTimeout()
+{
+	if (!listening)
+		return;
+
+	if (timeoutTimer.expires_at() <= boost::asio::deadline_timer::traits_type::now())
+	{
+		if (writeRetries > 2)
+		{
+			socket.close();
+			state = Initialized;
+			listening = false;
+			timeoutTimer.expires_at(boost::posix_time::pos_infin);
+		}
+		else
+		{
+			writeRetries++;
+			do_write();
+		}
+	}
+
+	timeoutTimer.async_wait(std::bind(&UdpAsyncClient::checkTimeout, this));
 }
 
 UdpRequest SendAsyncUdp(Addr& addr, DataBuffer& data, boost::asio::io_service& io, std::function<void(DataBuffer* data, PackedUdpRequest* source)> onResult)

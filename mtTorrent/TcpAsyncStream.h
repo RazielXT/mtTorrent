@@ -60,6 +60,9 @@ protected:
 	std::mutex socket_mutex;
 	tcp::socket socket;
 
+	void checkTimeout();
+	boost::asio::deadline_timer timeoutTimer;
+
 	boost::asio::io_service& io_service;
 
 	std::string host;
