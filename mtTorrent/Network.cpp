@@ -234,3 +234,11 @@ size_t Addr::parse(uint8_t* buffer, bool v6)
 
 	return 2 + addrSize;
 }
+
+bool Addr::operator==(const Addr& r)
+{
+	if (r.ipv6 && !ipv6)
+		return false;
+
+	return memcmp(addrBytes, r.addrBytes, ipv6 ? 16 : 4) == 0;
+}

@@ -64,11 +64,14 @@ void LocalWithTorrentFile::testAsyncUdpRequest()
 		auto req = SendAsyncUdp(dhtRoot, dhtRootPort, true, packet.getBuffer(), service.io, std::bind(&LocalWithTorrentFile::onUdpReceived, this, std::placeholders::_1, std::placeholders::_2));
 
 		WAITFOR(!udpResult.empty());
-	}
 
+		req->client.close();
+	}
 	
 	if (udpResult.size() == 1)
 		return;
+
+	service.stop();
 }
 
 void LocalWithTorrentFile::testMetadataReceive()
@@ -176,9 +179,30 @@ void LocalWithTorrentFile::testAsyncDhtGetPeers()
 
 uint32_t LocalWithTorrentFile::onFoundPeers(uint8_t* hash, std::vector<Addr>& values)
 {
-	dhtResult.values.insert(dhtResult.values.end(), values.begin(), values.end());
+	std::lock_guard<std::mutex> guard(dhtResult.resultMutex);
 
-	return (uint32_t)values.size();
+	uint32_t count = 0;
+	for (auto& v : values)
+	{
+		bool found = false;
+
+		for (auto& old : dhtResult.values)
+		{
+			if (old == v)
+			{
+				found = true;
+				break;
+			}
+		}
+
+		if (!found)
+		{
+			dhtResult.values.push_back(v);
+			count++;
+		}
+	}
+
+	return count;
 }
 
 void LocalWithTorrentFile::findingPeersFinished(uint8_t* hash, uint32_t count)

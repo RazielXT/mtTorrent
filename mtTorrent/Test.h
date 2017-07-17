@@ -2,6 +2,7 @@
 
 #include "PeerCommunication2.h"
 #include "DhtCommunication.h"
+#include <mutex>
 
 class BasicPeerListener : public mtt::IPeerListener
 {
@@ -65,6 +66,8 @@ private:
 	struct 
 	{
 		uint32_t finalCount = -1;
+
+		std::mutex resultMutex;
 		std::vector<Addr> values;
 	}
 	dhtResult;

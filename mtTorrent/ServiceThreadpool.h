@@ -1,12 +1,15 @@
 #pragma once
 
 #include <boost/asio.hpp>
+#include <memory>
+#include <thread>
 
 class ServiceThreadpool
 {
 public:
 
 	ServiceThreadpool();
+	~ServiceThreadpool();
 
 	boost::asio::io_service io;
 
@@ -17,7 +20,8 @@ public:
 
 private:
 
-	boost::asio::io_service::work work;
+	std::shared_ptr<boost::asio::io_service::work> work;
 
+	std::thread myThreads[4];
 	uint32_t workers = 0;
 };

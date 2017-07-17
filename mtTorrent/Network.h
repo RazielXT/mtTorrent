@@ -31,6 +31,7 @@ struct Addr
 	void set(uint32_t ip, uint16_t port);
 
 	size_t parse(uint8_t* buffer, bool v6);
+	bool operator==(const Addr& r);
 };
 
 void openSslSocket(ssl_socket& sock, tcp::resolver& resolver, const char* hostname);

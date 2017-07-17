@@ -118,7 +118,7 @@ std::vector<mtt::PieceInfo> mtt::Storage::checkFileHash(File& file)
 		while (fileIn)
 		{
 			fileIn.read(buffer.data(), pieceSize);
-			SHA1((unsigned char*)buffer.data(), fileIn.gcount(), (unsigned char*)&info.hash);
+			SHA1((unsigned char*)buffer.data(), fileIn.gcount(), (unsigned char*)info.hash);
 			out.push_back(info);
 		}
 	}

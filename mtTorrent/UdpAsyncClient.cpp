@@ -47,7 +47,8 @@ void UdpAsyncClient::close()
 	if (state != Connected)
 		return;
 
-	io_service.post(std::bind(&UdpAsyncClient::do_close, this));
+	do_close();
+	//io_service.post(std::bind(&UdpAsyncClient::do_close, this));
 }
 
 bool UdpAsyncClient::write(const DataBuffer& data)
@@ -113,7 +114,7 @@ void UdpAsyncClient::handle_connect(const boost::system::error_code& error)
 	if (!error)
 	{
 		state = Connected;
-		listenToResponse();
+		do_write();
 	}
 	else
 	{
@@ -167,7 +168,7 @@ void UdpAsyncClient::handle_receive(const boost::system::error_code& error, std:
 {
 	listening = false;
 	writeRetries = 0;
-	std::cout << "received" << bytes_transferred << "\n";
+	std::cout << "received size: " << bytes_transferred << "\n";
 
 	if (!error)
 	{

@@ -278,7 +278,7 @@ mtt::TorrentInfo mtt::BencodeParser::parseTorrentInfo(BenDictionary& infoDiction
 
 		for (auto it = piecesHash.data(); it != end; it += 20)
 		{
-			memcpy(&temp.hash, it, 20);
+			memcpy(temp.hash, it, 20);
 			info.pieces.push_back(temp);
 		}
 	}

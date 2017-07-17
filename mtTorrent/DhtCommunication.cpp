@@ -246,6 +246,16 @@ Communication::Communication(DhtListener& l) : listener(l)
 	serviceIo = &service.io;
 }
 
+mtt::dht::Communication::~Communication()
+{
+	{
+		std::lock_guard<std::mutex> guard(query.requestsMutex);
+		query.requests.clear();
+	}
+
+	service.stop();
+}
+
 void Communication::findPeers(uint8_t* hash)
 {
 	const char* dhtRoot = "dht.transmissionbt.com";
@@ -265,7 +275,7 @@ void mtt::dht::Communication::Query::onGetPeersResponse(DataBuffer* data, Packed
 	{
 		auto resp = parseGetPeersResponse(*data);
 
-		if (memcmp(resp.id, targetIdNode.data, 20) == 0)
+		//if (memcmp(resp.id, targetIdNode.data, 20) == 0)
 		{
 			if (!resp.values.empty())
 			{
@@ -277,7 +287,10 @@ void mtt::dht::Communication::Query::onGetPeersResponse(DataBuffer* data, Packed
 				std::lock_guard<std::mutex> guard(nodesMutex);
 
 				mergeClosestNodes(receivedNodes, resp.nodes, usedNodes, MaxCachedNodes, minDistance, targetIdNode);
-				minDistance = getShortestDistance(receivedNodes, targetIdNode);
+				auto newMinDistance = getShortestDistance(receivedNodes, targetIdNode);
+
+				if (newMinDistance.length() < minDistance.length())
+					minDistance = newMinDistance;
 
 				std::cout << (int)minDistance.length() << "\n";
 			}
@@ -310,6 +323,9 @@ void mtt::dht::Communication::Query::onGetPeersResponse(DataBuffer* data, Packed
 				auto req = SendAsyncUdp(next.addr, dataReq, *serviceIo, std::bind(&Communication::Query::onGetPeersResponse, this, std::placeholders::_1, std::placeholders::_2));
 				requests.push_back(req);
 			}
+
+			if(receivedNodes.empty() && requests.empty())
+				dhtListener->findingPeersFinished(targetIdNode.data, foundCount);
 		}
 		else
 			dhtListener->findingPeersFinished(targetIdNode.data, foundCount);
@@ -535,5 +551,6 @@ std::vector<Addr> Communication::get()
 
 	return{};
 }
+
 
 #endif

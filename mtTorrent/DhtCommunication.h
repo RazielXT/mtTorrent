@@ -57,6 +57,7 @@ namespace mtt
 		public:
 
 			Communication(DhtListener& listener);
+			~Communication();
 
 			void findPeers(uint8_t* hash);
 
