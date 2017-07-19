@@ -14,7 +14,7 @@ using UdpRequest = std::shared_ptr<PackedUdpRequest>;
 UdpRequest SendAsyncUdp(const std::string& hostname, const std::string& port, bool ipv6, DataBuffer& data, boost::asio::io_service& io, std::function<void(DataBuffer* data, PackedUdpRequest* source)> onResult);
 UdpRequest SendAsyncUdp(Addr& addr, DataBuffer& data, boost::asio::io_service& io, std::function<void(DataBuffer* data, PackedUdpRequest* source)> onResult);
 
-class UdpAsyncClient
+class UdpAsyncClient : public std::enable_shared_from_this<UdpAsyncClient>
 {
 public:
 
@@ -35,20 +35,21 @@ protected:
 
 	enum { Clear, Initialized, Connected } state = Clear;
 
-	void handle_resolve(const boost::system::error_code& error, udp::resolver::iterator iterator, std::shared_ptr<udp::resolver> resolver);
-	void listenToResponse();
-	bool listening = false;
-
 	void postFail(std::string place, const boost::system::error_code& error);
 
+	void handle_resolve(const boost::system::error_code& error, udp::resolver::iterator iterator, std::shared_ptr<udp::resolver> resolver);
 	void handle_connect(const boost::system::error_code& err);
-	void do_close();
-	void do_write();
 	
+	void do_write();
+	void do_close();
+
 	DataBuffer messageBuffer;
 	DataBuffer responseBuffer;
 	void handle_write(const boost::system::error_code& error, size_t sz);
 	void handle_receive(const boost::system::error_code& error, std::size_t bytes_transferred);
+
+	void listenToResponse();
+	bool listening = false;
 
 	void checkTimeout();
 	boost::asio::deadline_timer timeoutTimer;
@@ -63,9 +64,10 @@ protected:
 struct PackedUdpRequest
 {
 	PackedUdpRequest(boost::asio::io_service& io);
+	~PackedUdpRequest();
 
 	bool write(DataBuffer& data);
-	UdpAsyncClient client;
+	std::shared_ptr<UdpAsyncClient> client;
 	void onFail();
 	void onSuccess(DataBuffer&);
 	std::function<void(DataBuffer* data, PackedUdpRequest* source)> onResult;

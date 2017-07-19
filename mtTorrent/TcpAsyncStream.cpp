@@ -3,12 +3,10 @@
 
 TcpAsyncStream::TcpAsyncStream(boost::asio::io_service& io) : io_service(io), socket(io), timeoutTimer(io)
 {
-	timeoutTimer.async_wait(std::bind(&TcpAsyncStream::checkTimeout, this));
 }
 
 TcpAsyncStream::~TcpAsyncStream()
 {
-	onCloseCallback = nullptr;
 }
 
 void TcpAsyncStream::connect(const std::string& hostname, const std::string& port)
@@ -22,10 +20,7 @@ void TcpAsyncStream::connect(const std::string& hostname, const std::string& por
 	tcp::resolver::query query(hostname, port);
 
 	auto resolver = std::make_shared<tcp::resolver>(io_service);
-	resolver->async_resolve(query,
-		std::bind(&TcpAsyncStream::handle_resolve, this,
-			std::placeholders::_1,
-			std::placeholders::_2, resolver));
+	resolver->async_resolve(query, std::bind(&TcpAsyncStream::handle_resolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2, resolver));
 }
 
 void TcpAsyncStream::connect(const uint8_t* ip, uint16_t port, bool ipv6)
@@ -36,12 +31,14 @@ void TcpAsyncStream::connect(const uint8_t* ip, uint16_t port, bool ipv6)
 	host.assign((const char*)ip, ipv6 ? 16 : 4);
 	state = Connecting;
 
+	timeoutTimer.async_wait(std::bind(&TcpAsyncStream::checkTimeout, this));
+	timeoutTimer.expires_from_now(boost::posix_time::seconds(10));
+
 	socket.async_connect(ipv6 ?
 		tcp::endpoint(boost::asio::ip::address_v6(*reinterpret_cast<const boost::asio::ip::address_v6::bytes_type*>(ip)), port) :
 		tcp::endpoint(boost::asio::ip::address_v4(*reinterpret_cast<const boost::asio::ip::address_v4::bytes_type*>(ip)), port)
 		,
-		std::bind(&TcpAsyncStream::handle_connect, this,
-			std::placeholders::_1));
+		std::bind(&TcpAsyncStream::handle_connect, shared_from_this(), std::placeholders::_1));
 }
 
 void TcpAsyncStream::connect(const std::string& ip, uint16_t port)
@@ -53,9 +50,7 @@ void TcpAsyncStream::connect(const std::string& ip, uint16_t port)
 	state = Connecting;
 
 	tcp::endpoint endpoint(boost::asio::ip::address::from_string(ip), port);
-	socket.async_connect(endpoint,
-		std::bind(&TcpAsyncStream::handle_connect, this,
-			std::placeholders::_1));
+	socket.async_connect(endpoint, std::bind(&TcpAsyncStream::handle_connect, shared_from_this(), std::placeholders::_1));
 }
 
 void TcpAsyncStream::close()
@@ -63,7 +58,7 @@ void TcpAsyncStream::close()
 	if (state == Disconnected)
 		return;
 
-	io_service.post(std::bind(&TcpAsyncStream::do_close, this));
+	io_service.post(std::bind(&TcpAsyncStream::do_close, shared_from_this()));
 }
 
 void TcpAsyncStream::write(const DataBuffer& data)
@@ -92,10 +87,7 @@ void TcpAsyncStream::setAsConnected()
 {
 	state = Connected;
 
-	socket.async_receive(boost::asio::buffer(recv_buffer),
-		std::bind(&TcpAsyncStream::handle_receive, this,
-			std::placeholders::_1,
-			std::placeholders::_2));
+	socket.async_receive(boost::asio::buffer(recv_buffer), std::bind(&TcpAsyncStream::handle_receive, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 
 	if (onConnectCallback)
 		onConnectCallback();
@@ -117,9 +109,7 @@ void TcpAsyncStream::handle_resolve(const boost::system::error_code& error, tcp:
 	if (!error)
 	{
 		tcp::endpoint endpoint = *iterator;
-		socket.async_connect(endpoint,
-			std::bind(&TcpAsyncStream::handle_resolver_connect, this,
-				std::placeholders::_1, ++iterator, resolver));
+		socket.async_connect(endpoint, std::bind(&TcpAsyncStream::handle_resolver_connect, shared_from_this(), std::placeholders::_1, ++iterator, resolver));
 	}
 	else
 	{
@@ -133,9 +123,7 @@ void TcpAsyncStream::handle_resolver_connect(const boost::system::error_code& er
 	{
 		socket.close();
 		tcp::endpoint endpoint = *iterator;
-		socket.async_connect(endpoint,
-			std::bind(&TcpAsyncStream::handle_resolver_connect, this,
-				std::placeholders::_1, ++iterator, resolver));
+		socket.async_connect(endpoint, std::bind(&TcpAsyncStream::handle_resolver_connect, shared_from_this(), std::placeholders::_1, ++iterator, resolver));
 	}
 	else
 		handle_connect(error);
@@ -172,10 +160,8 @@ void TcpAsyncStream::do_write(DataBuffer data)
 	if (!write_in_progress)
 	{
 		boost::asio::async_write(socket,
-			boost::asio::buffer(write_msgs.front().data(),
-				write_msgs.front().size()),
-			std::bind(&TcpAsyncStream::handle_write, this,
-				std::placeholders::_1));
+			boost::asio::buffer(write_msgs.front().data(), write_msgs.front().size()),
+			std::bind(&TcpAsyncStream::handle_write, shared_from_this(), std::placeholders::_1));
 	}
 }
 
@@ -189,10 +175,8 @@ void TcpAsyncStream::handle_write(const boost::system::error_code& error)
 		if (!write_msgs.empty())
 		{
 			boost::asio::async_write(socket,
-				boost::asio::buffer(write_msgs.front().data(),
-					write_msgs.front().size()),
-				std::bind(&TcpAsyncStream::handle_write, this,
-					std::placeholders::_1));
+				boost::asio::buffer(write_msgs.front().data(), write_msgs.front().size()),
+				std::bind(&TcpAsyncStream::handle_write, shared_from_this(), std::placeholders::_1));
 		}
 	}
 	else
@@ -209,9 +193,7 @@ void TcpAsyncStream::handle_receive(const boost::system::error_code& error, std:
 
 		timeoutTimer.expires_from_now(boost::posix_time::seconds(60));
 		socket.async_receive(boost::asio::buffer(recv_buffer),
-			std::bind(&TcpAsyncStream::handle_receive, this,
-				std::placeholders::_1,
-				std::placeholders::_2));
+			std::bind(&TcpAsyncStream::handle_receive, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 
 		if (onReceiveCallback)
 			onReceiveCallback();

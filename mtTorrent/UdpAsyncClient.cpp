@@ -3,12 +3,10 @@
 
 UdpAsyncClient::UdpAsyncClient(boost::asio::io_service& io) : io_service(io), socket(io), timeoutTimer(io)
 {
-	timeoutTimer.async_wait(std::bind(&UdpAsyncClient::checkTimeout, this));
 }
 
 UdpAsyncClient::~UdpAsyncClient()
 {
-	onCloseCallback = nullptr;
 }
 
 void UdpAsyncClient::setAddress(Addr& addr)
@@ -25,10 +23,7 @@ void UdpAsyncClient::setAddress(const std::string& hostname, const std::string& 
 	udp::resolver::query query(hostname, port);
 
 	auto resolver = std::make_shared<udp::resolver>(io_service);
-	resolver->async_resolve(query,
-		std::bind(&UdpAsyncClient::handle_resolve, this,
-			std::placeholders::_1,
-			std::placeholders::_2, resolver));
+	resolver->async_resolve(query, std::bind(&UdpAsyncClient::handle_resolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2, resolver));
 }
 
 void UdpAsyncClient::setAddress(const std::string& hostname, const std::string& port, bool ipv6)
@@ -36,19 +31,17 @@ void UdpAsyncClient::setAddress(const std::string& hostname, const std::string& 
 	udp::resolver::query query(ipv6 ? udp::v6() : udp::v4(), hostname, port);
 
 	auto resolver = std::make_shared<udp::resolver>(io_service);
-	resolver->async_resolve(query,
-		std::bind(&UdpAsyncClient::handle_resolve, this,
-			std::placeholders::_1,
-			std::placeholders::_2, resolver));
+	resolver->async_resolve(query, std::bind(&UdpAsyncClient::handle_resolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2, resolver));
 }
 
 void UdpAsyncClient::close()
 {
-	if (state != Connected)
-		return;
+	if (state == Connected)
+		state = Initialized;
 
-	do_close();
-	//io_service.post(std::bind(&UdpAsyncClient::do_close, this));
+	listening = false;
+
+	io_service.post(std::bind(&UdpAsyncClient::do_close, shared_from_this()));
 }
 
 bool UdpAsyncClient::write(const DataBuffer& data)
@@ -56,6 +49,7 @@ bool UdpAsyncClient::write(const DataBuffer& data)
 	if (listening)
 		return false;
 
+	timeoutTimer.async_wait(std::bind(&UdpAsyncClient::checkTimeout, shared_from_this()));
 	messageBuffer = data;
 
 	if (state != Clear)
@@ -92,9 +86,7 @@ void UdpAsyncClient::listenToResponse()
 	timeoutTimer.expires_from_now(boost::posix_time::seconds(2));
 
 	socket.async_receive_from(boost::asio::buffer(responseBuffer.data(), responseBuffer.size()), target_endpoint,
-		std::bind(&UdpAsyncClient::handle_receive, this,
-			std::placeholders::_1,
-			std::placeholders::_2));
+		std::bind(&UdpAsyncClient::handle_receive, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 }
 
 void UdpAsyncClient::postFail(std::string place, const boost::system::error_code& error)
@@ -124,19 +116,22 @@ void UdpAsyncClient::handle_connect(const boost::system::error_code& error)
 
 void UdpAsyncClient::do_close()
 {
+	timeoutTimer.cancel();
+
 	boost::system::error_code error;
 
 	if (socket.is_open())
+	{
+		socket.shutdown(boost::asio::socket_base::shutdown_both);
 		socket.close(error);
-
-	postFail("Close", error);
+	}	
 }
 
 void UdpAsyncClient::do_write()
 {
 	if (state == Initialized)
 	{
-		socket.async_connect(target_endpoint, std::bind(&UdpAsyncClient::handle_connect, this, std::placeholders::_1));
+		socket.async_connect(target_endpoint, std::bind(&UdpAsyncClient::handle_connect, shared_from_this(), std::placeholders::_1));
 	}
 	else if(state == Connected)
 	{
@@ -147,7 +142,7 @@ void UdpAsyncClient::do_write()
 			socket.async_send_to(
 				boost::asio::buffer(messageBuffer.data(), messageBuffer.size()),
 				target_endpoint,
-				std::bind(&UdpAsyncClient::handle_write, this, std::placeholders::_1, std::placeholders::_2));
+				std::bind(&UdpAsyncClient::handle_write, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 		}
 	}
 }
@@ -192,7 +187,9 @@ void UdpAsyncClient::checkTimeout()
 	{
 		if (writeRetries > 2)
 		{
-			socket.close();
+			if(socket.is_open())
+				socket.close();
+
 			state = Initialized;
 			listening = false;
 			timeoutTimer.expires_at(boost::posix_time::pos_infin);
@@ -204,17 +201,17 @@ void UdpAsyncClient::checkTimeout()
 		}
 	}
 
-	timeoutTimer.async_wait(std::bind(&UdpAsyncClient::checkTimeout, this));
+	timeoutTimer.async_wait(std::bind(&UdpAsyncClient::checkTimeout, shared_from_this()));
 }
 
 UdpRequest SendAsyncUdp(Addr& addr, DataBuffer& data, boost::asio::io_service& io, std::function<void(DataBuffer* data, PackedUdpRequest* source)> onResult)
 {
 	UdpRequest req = std::make_shared<PackedUdpRequest>(io);
-	req->client.setAddress(addr);
-	req->client.onCloseCallback = std::bind(&PackedUdpRequest::onFail, req);
-	req->client.onReceiveCallback = std::bind(&PackedUdpRequest::onSuccess, req, std::placeholders::_1);
+	req->client->setAddress(addr);
+	req->client->onCloseCallback = std::bind(&PackedUdpRequest::onFail, req.get());
+	req->client->onReceiveCallback = std::bind(&PackedUdpRequest::onSuccess, req.get(), std::placeholders::_1);
 	req->onResult = onResult;
-	req->client.write(data);
+	req->client->write(data);
 
 	return req;
 }
@@ -222,23 +219,30 @@ UdpRequest SendAsyncUdp(Addr& addr, DataBuffer& data, boost::asio::io_service& i
 UdpRequest SendAsyncUdp(const std::string& hostname, const std::string& port, bool ipv6, DataBuffer& data, boost::asio::io_service& io, std::function<void(DataBuffer* data, PackedUdpRequest* source)> onResult)
 {
 	UdpRequest req = std::make_shared<PackedUdpRequest>(io);
-	req->client.onCloseCallback = std::bind(&PackedUdpRequest::onFail, req);
-	req->client.onReceiveCallback = std::bind(&PackedUdpRequest::onSuccess, req, std::placeholders::_1);
+	req->client->onCloseCallback = std::bind(&PackedUdpRequest::onFail, req.get());
+	req->client->onReceiveCallback = std::bind(&PackedUdpRequest::onSuccess, req.get(), std::placeholders::_1);
 	req->onResult = onResult;
-	req->client.write(data);
-	req->client.setAddress(hostname, port, ipv6);
+	req->client->write(data);
+	req->client->setAddress(hostname, port, ipv6);
 
 	return req;
 }
 
-PackedUdpRequest::PackedUdpRequest(boost::asio::io_service& io) : client(io)
+PackedUdpRequest::PackedUdpRequest(boost::asio::io_service& io)
 {
+	client = std::make_shared<UdpAsyncClient>(io);
+	auto ptr = client->shared_from_this();
+}
 
+PackedUdpRequest::~PackedUdpRequest()
+{
+	client->onCloseCallback = nullptr;
+	client->onReceiveCallback = nullptr;
 }
 
 bool PackedUdpRequest::write(DataBuffer& data)
 {
-	return client.write(data);
+	return client->write(data);
 }
 
 void PackedUdpRequest::onFail()

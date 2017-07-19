@@ -64,8 +64,6 @@ void LocalWithTorrentFile::testAsyncUdpRequest()
 		auto req = SendAsyncUdp(dhtRoot, dhtRootPort, true, packet.getBuffer(), service.io, std::bind(&LocalWithTorrentFile::onUdpReceived, this, std::placeholders::_1, std::placeholders::_2));
 
 		WAITFOR(!udpResult.empty());
-
-		req->client.close();
 	}
 	
 	if (udpResult.size() == 1)
@@ -138,35 +136,58 @@ void LocalWithTorrentFile::testAsyncDhtGetPeers()
 	if (dhtResult.finalCount == 0)
 		return;
 
+	//dht.stopFindingPeers((uint8_t*)targetId.data());
+
 	TorrentInfo info;
 	memcpy(info.hash, targetId.data(), 20);
-	PeerCommunication2 peer(info, *this, service.io);
-	peer.start(dhtResult.values[0]);
+	std::shared_ptr<PeerCommunication2> peer;
+	uint32_t nextPeerIdx = 0;
 
-	WAITFOR(failed || peer.state.finishedHandshake);
+	while (true)
+	{
+		if (nextPeerIdx >= dhtResult.values.size())
+			return;
 
-	WAITFOR(failed || peer.ext.utm.size);
+		std::cout << "TRYING " << nextPeerIdx << "\n";
+		peer = std::make_shared<PeerCommunication2>(info, *this, service.io);
+		Addr nextAddr;
 
-	if (failed)
-		return;
+		{
+			std::lock_guard<std::mutex> guard(dhtResult.resultMutex);
+			nextAddr = dhtResult.values[nextPeerIdx++];
+		}
 
-	if (!peer.ext.utm.size)
-		return;
+		peer->start(nextAddr);
+
+		WAITFOR(failed || peer->state.finishedHandshake);
+
+		WAITFOR(failed || peer->ext.utm.size);
+
+		if (failed)
+			continue;
+		else if (!peer->ext.utm.size)
+			continue;
+		else
+			break;
+	}
+
 
 	mtt::MetadataReconstruction metadata;
-	metadata.init(peer.ext.utm.size);
+	metadata.init(peer->ext.utm.size);
 
 	while (!metadata.finished() && !failed)
 	{
 		uint32_t mdPiece = metadata.getMissingPieceIndex();
-		peer.requestMetadataPiece(mdPiece);
+		peer->requestMetadataPiece(mdPiece);
 
-		WAITFOR(failed || !utmMsg.metadata.empty())
+		WAITFOR(failed || !utmMsg.metadata.empty());
 
-			if (failed || utmMsg.id != mtt::ext::UtMetadata::Data)
-				return;
+		if (failed || utmMsg.id != mtt::ext::UtMetadata::Data)
+			return;
 
 		metadata.addPiece(utmMsg.metadata, utmMsg.piece);
+
+		utmMsg.metadata.clear();
 	}
 
 	if (metadata.finished())

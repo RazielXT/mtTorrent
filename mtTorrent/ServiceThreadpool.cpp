@@ -18,7 +18,7 @@ void ServiceThreadpool::start(uint32_t startWorkers)
 	if (workers >= startWorkers)
 		return;
 
-	startWorkers = std::min(startWorkers, (uint32_t)4);
+	startWorkers = std::min(startWorkers, (uint32_t)_countof(myThreads));
 
 	for (size_t i = workers; i < startWorkers; i++)
 	{
@@ -32,6 +32,8 @@ void ServiceThreadpool::stop()
 {
 	if (work)
 		work = nullptr;
+
+	io.stop();
 
 	for (size_t i = 0; i < workers; i++)
 	{

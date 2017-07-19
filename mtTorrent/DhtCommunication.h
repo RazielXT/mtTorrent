@@ -60,15 +60,18 @@ namespace mtt
 			~Communication();
 
 			void findPeers(uint8_t* hash);
+			void stopFindingPeers(uint8_t* hash);
 
 		private:
 
 
 			struct Query
 			{
-				static const uint32_t MaxReturnedValues = 50;
-				static const uint32_t MaxCachedNodes = 16;
-				static const uint32_t MaxSimultaneousConnections = 4;
+				~Query();
+
+				uint32_t MaxReturnedValues = 50;
+				uint32_t MaxCachedNodes = 16;
+				uint32_t MaxSimultaneousConnections = 4;
 
 				std::mutex requestsMutex;
 				std::vector<UdpRequest> requests;
@@ -84,6 +87,7 @@ namespace mtt
 				DataBuffer createGetPeersRequest(uint8_t* hash, bool bothProtocols);
 				void onGetPeersResponse(DataBuffer* data, PackedUdpRequest* source);
 				GetPeersResponse parseGetPeersResponse(DataBuffer& message);
+				void stop();
 			};
 			Query query;
 

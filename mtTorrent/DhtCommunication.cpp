@@ -256,6 +256,11 @@ mtt::dht::Communication::~Communication()
 	service.stop();
 }
 
+void mtt::dht::Communication::stopFindingPeers(uint8_t* hash)
+{
+	query.stop();
+}
+
 void Communication::findPeers(uint8_t* hash)
 {
 	const char* dhtRoot = "dht.transmissionbt.com";
@@ -287,12 +292,16 @@ void mtt::dht::Communication::Query::onGetPeersResponse(DataBuffer* data, Packed
 				std::lock_guard<std::mutex> guard(nodesMutex);
 
 				mergeClosestNodes(receivedNodes, resp.nodes, usedNodes, MaxCachedNodes, minDistance, targetIdNode);
-				auto newMinDistance = getShortestDistance(receivedNodes, targetIdNode);
 
-				if (newMinDistance.length() < minDistance.length())
-					minDistance = newMinDistance;
+				if (!receivedNodes.empty())
+				{
+					auto newMinDistance = getShortestDistance(receivedNodes, targetIdNode);
 
-				std::cout << (int)minDistance.length() << "\n";
+					if (newMinDistance.length() < minDistance.length())
+						minDistance = newMinDistance;
+
+					std::cout << (int)minDistance.length() << "\n";
+				}
 			}
 		}
 	}
@@ -330,6 +339,19 @@ void mtt::dht::Communication::Query::onGetPeersResponse(DataBuffer* data, Packed
 		else
 			dhtListener->findingPeersFinished(targetIdNode.data, foundCount);
 	}
+}
+
+void mtt::dht::Communication::Query::stop()
+{
+	std::lock_guard<std::mutex> guard(requestsMutex);
+
+	requests.clear();
+	MaxReturnedValues = 0;
+}
+
+mtt::dht::Communication::Query::~Query()
+{
+	stop();
 }
 
 DataBuffer mtt::dht::Communication::Query::createGetPeersRequest(uint8_t* hash, bool bothProtocols)

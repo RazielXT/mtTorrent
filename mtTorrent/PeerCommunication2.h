@@ -44,6 +44,7 @@ namespace mtt
 	public:
 
 		PeerCommunication2(TorrentInfo& torrent, IPeerListener& listener, boost::asio::io_service& io_service);
+		~PeerCommunication2();
 
 		PeerStateInfo info;
 		PeerCommunicationState state;
@@ -67,7 +68,7 @@ namespace mtt
 		PieceDownloadInfo scheduledPieceInfo;
 		DownloadedPiece downloadingPiece;
 		
-		TcpAsyncStream stream;
+		std::shared_ptr<TcpAsyncStream> stream;
 
 		std::mutex read_mutex;
 		mtt::PeerMessage readNextStreamMessage();

@@ -10,7 +10,7 @@
 
 class TcpAsyncServer;
 
-class TcpAsyncStream
+class TcpAsyncStream : public std::enable_shared_from_this<TcpAsyncStream>
 {
 	friend class TcpAsyncServer;
 
@@ -40,7 +40,7 @@ protected:
 
 	void postFail(std::string place, const boost::system::error_code& error);
 
-	enum { Disconnected, Connecting, Connected } state;
+	enum { Disconnected, Connecting, Connected } state = Disconnected;
 	void handle_resolve(const boost::system::error_code& error, tcp::resolver::iterator iterator, std::shared_ptr<tcp::resolver> resolver);
 	void handle_resolver_connect(const boost::system::error_code& err, tcp::resolver::iterator endpoint_iterator, std::shared_ptr<tcp::resolver> resolver);
 	void handle_connect(const boost::system::error_code& err);
