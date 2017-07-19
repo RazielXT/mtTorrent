@@ -31,7 +31,7 @@ void TcpAsyncStream::connect(const uint8_t* ip, uint16_t port, bool ipv6)
 	host.assign((const char*)ip, ipv6 ? 16 : 4);
 	state = Connecting;
 
-	timeoutTimer.async_wait(std::bind(&TcpAsyncStream::checkTimeout, this));
+	timeoutTimer.async_wait(std::bind(&TcpAsyncStream::checkTimeout, shared_from_this()));
 	timeoutTimer.expires_from_now(boost::posix_time::seconds(10));
 
 	socket.async_connect(ipv6 ?
@@ -223,5 +223,5 @@ void TcpAsyncStream::checkTimeout()
 		timeoutTimer.expires_at(boost::posix_time::pos_infin);
 	}
 
-	timeoutTimer.async_wait(std::bind(&TcpAsyncStream::checkTimeout, this));
+	timeoutTimer.async_wait(std::bind(&TcpAsyncStream::checkTimeout, shared_from_this()));
 }
