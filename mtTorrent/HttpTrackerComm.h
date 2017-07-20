@@ -1,28 +1,29 @@
 #pragma once
 
-#include "Interface2.h"
+#include "Interface.h"
+#include "TcpAsyncStream.h"
 
 namespace mtt
 {
-	struct AnnounceResponse
-	{
-		uint32_t interval = 5 * 60;
-
-		uint32_t leechCount = 0;
-		uint32_t seedCount = 0;
-
-		std::vector<Addr> peers;
-	};
-
 	class HttpTrackerComm
 	{
 	public:
 
-		HttpTrackerComm(TorrentFileInfo* tInfo);
+		HttpTrackerComm();
 
-		AnnounceResponse announceTracker(std::string host, std::string port);
+		void startTracker(std::string host, std::string port, boost::asio::io_service& io, TorrentFileInfo* torrent);
+
+		std::function<void(AnnounceResponse&)> onAnnounceResponse;
 
 	private:
+
+		void onTcpClosed();
+		void onTcpConnected();
+		void onTcpReceived();
+
+		std::string hostname;
+		std::string port;
+		std::shared_ptr<TcpAsyncStream> tcpComm;
 
 		DataBuffer createAnnounceRequest(std::string host, std::string port);
 		AnnounceResponse getAnnounceResponse(DataBuffer buffer);

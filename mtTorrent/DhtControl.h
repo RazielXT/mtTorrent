@@ -1,6 +1,6 @@
 #pragma once
 #include <functional>
-#include "Interface2.h"
+#include "Interface.h"
 
 namespace mtt
 {

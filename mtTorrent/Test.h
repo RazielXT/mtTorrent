@@ -1,6 +1,6 @@
 #pragma once
 
-#include "PeerCommunication2.h"
+#include "PeerCommunication.h"
 #include "DhtCommunication.h"
 #include <mutex>
 

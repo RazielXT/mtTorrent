@@ -1,54 +1,83 @@
 #include "PeerCommunication.h"
 #include "PacketHelper.h"
-#include <iostream>
-#include "ProgressScheduler.h"
+#include "Configuration.h"
 
 using namespace mtt;
 
-PeerCommunication::PeerCommunication(boost::asio::io_service* io_service, ProgressScheduler* sched) : scheduler(sched), stream(*io_service)
+namespace mtt
 {
-	stream.setOnConnectCallback(std::bind(&PeerCommunication::connectionOpened, this));
-	stream.setOnCloseCallback(std::bind(&PeerCommunication::connectionClosed, this));
-	stream.setOnReceiveCallback(std::bind(&PeerCommunication::dataReceived, this));
+	namespace bt
+	{
+		DataBuffer createHandshake(uint8_t* torrentHash, uint8_t* clientHash)
+		{
+			PacketBuilder packet(70);
+			packet.add(19);
+			packet.add("BitTorrent protocol", 19);
+
+			uint8_t reserved_byte[8] = { 0 };
+			reserved_byte[5] |= 0x10;	//Extension Protocol
+
+			packet.add(reserved_byte, 8);
+
+			packet.add(torrentHash, 20);
+			packet.add(clientHash, 20);
+
+			return packet.getBuffer();
+		}
+
+		DataBuffer createInterested()
+		{
+			PacketBuilder packet(5);
+			packet.add32(1);
+			packet.add(Interested);
+
+			return packet.getBuffer();
+		}
+
+		DataBuffer createBlockRequest(PieceBlockInfo& block)
+		{
+			PacketBuilder packet;
+			packet.add32(13);
+			packet.add(Request);
+			packet.add32(block.index);
+			packet.add32(block.begin);
+			packet.add32(block.length);
+
+			return packet.getBuffer();
+		}
+	}
 }
 
-void PeerCommunication::start(TorrentFileInfo* tInfo, PeerInfo info)
+mtt::PeerStateInfo::PeerStateInfo()
 {
-	active = true;
-	torrent = tInfo;
-	peerInfo = info;
-
-	/*auto port = std::to_string(peerInfo.port);
-	stream.connect(peerInfo.ipStr, port);*/
-
-	stream.connect((uint8_t*)&peerInfo.ip, peerInfo.port, false);
+	memset(id, 0, 20);
+	memset(protocol, 0, 8);
 }
 
-DataBuffer PeerCommunication::getHandshakeMessage()
+PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, boost::asio::io_service& io_service) : torrent(t), listener(l)
 {
-	PacketBuilder packet(70);
-	packet.add(19);
-	packet.add("BitTorrent protocol", 19);
+	stream = std::make_shared<TcpAsyncStream>(io_service);
+	stream->onConnectCallback = std::bind(&PeerCommunication::connectionOpened, this);
+	stream->onCloseCallback = std::bind(&PeerCommunication::connectionClosed, this);
+	stream->onReceiveCallback = std::bind(&PeerCommunication::dataReceived, this);
 
-	char reserved_byte[8] = { 0 };
-	reserved_byte[5] |= 0x10;	//Extension Protocol
-
-	packet.add(reserved_byte, 8);
-
-	packet.add(torrent->infoHash.data(), torrent->infoHash.size());
-	packet.add(mtt::getClientInfo()->hashId, 20);
-
-	return packet.getBuffer();
+	ext.pex.onPexMessage = std::bind(&mtt::IPeerListener::pexReceived, &listener, std::placeholders::_1);
+	ext.utm.onUtMetadataMessage = std::bind(&mtt::IPeerListener::metadataPieceReceived, &listener, std::placeholders::_1);
 }
 
-void PeerCommunication::handshake(PeerInfo& peerInfo)
+void PeerCommunication::start(Addr& address)
 {
-	auto requestData = getHandshakeMessage();
-	stream.write(requestData);
+	if (state.action == PeerCommunicationState::Disconnected)
+	{
+		state.action = PeerCommunicationState::Connecting;
+		stream->connect(address.addrBytes, address.port, address.ipv6);
+	}
 }
 
 void PeerCommunication::dataReceived()
 {
+	std::lock_guard<std::mutex> guard(read_mutex);
+
 	auto message = readNextStreamMessage();
 
 	while (message.id != Invalid)
@@ -60,113 +89,103 @@ void PeerCommunication::dataReceived()
 
 void PeerCommunication::connectionOpened()
 {
-	if(!state.finishedHandshake)
-		handshake(peerInfo);
-}
-
-bool mtt::PeerCommunication::validPiece()
-{
-	unsigned char hash[SHA_DIGEST_LENGTH];
-	SHA1((const unsigned char*)downloadingPiece.data.data(), downloadingPiece.dataSize, hash);
-	
-	return memcmp(hash, scheduledPieceInfo.hash, SHA_DIGEST_LENGTH) == 0;
+	if (!state.finishedHandshake)
+	{
+		state.action = PeerCommunicationState::Handshake;
+		stream->write(mtt::bt::createHandshake(torrent.hash, mtt::config::internal.hashId));
+	}
 }
 
 void mtt::PeerCommunication::stop()
 {
-	if (active)
-		stream.close();
-
-	//active = false;
+	if (state.action != PeerCommunicationState::Disconnected)
+		stream->close();
 }
 
 void mtt::PeerCommunication::connectionClosed()
 {
-	active = false;
+	state.action = PeerCommunicationState::Disconnected;
+	listener.connectionClosed();
 }
 
 mtt::PeerMessage mtt::PeerCommunication::readNextStreamMessage()
 {
-	std::lock_guard<std::mutex> guard(read_mutex);
-
-	auto data = stream.getReceivedData();
+	auto data = stream->getReceivedData();
 	PeerMessage msg(data);
 
 	if (msg.id != Invalid)
-		stream.consumeData(msg.messageSize);
+		stream->consumeData(msg.messageSize);
 	else if (!msg.messageSize)
-		stream.consumeData(data.size());
+		stream->consumeData(data.size());
 
 	return msg;
 }
 
-void mtt::PeerCommunication::sendInterested()
+mtt::PeerCommunication::~PeerCommunication()
 {
+	stream->onConnectCallback = nullptr;
+	stream->onCloseCallback = nullptr;
+	stream->onReceiveCallback = nullptr;
+}
+
+bool mtt::PeerCommunication::sendInterested()
+{
+	if (state.action != PeerCommunicationState::Idle)
+		return false;
+
 	state.amInterested = true;
 
-	PacketBuilder packet;
-	packet.add32(1);
-	packet.add(Interested);
+	stream->write(mtt::bt::createInterested());
 
-	auto interestedMsg = packet.getBuffer();
-	stream.write(interestedMsg);
+	return true;
 }
 
-void mtt::PeerCommunication::sendHandshakeExt()
+bool mtt::PeerCommunication::requestMetadataPiece(uint32_t index)
 {
-	auto data = ext.getExtendedHandshakeMessage();
-	stream.write(data);
+	if (state.action != PeerCommunicationState::Idle)
+		return false;
+
+	if (ext.utm.size == 0)
+		return false;
+
+	stream->write(ext.utm.createMetadataRequest(index));
+
+	return true;
 }
 
-void mtt::PeerCommunication::sendBlockRequest(PieceBlockInfo& block)
+bool mtt::PeerCommunication::requestPiece(PieceDownloadInfo& pieceInfo)
 {
-	PacketBuilder packet;
-	packet.add32(13);
-	packet.add(Request);
-	packet.add32(block.index);
-	packet.add32(block.begin);
-	packet.add32(block.length);
+	if (state.action != PeerCommunicationState::Idle)
+		return false;
 
-	stream.write(packet.getBuffer());
+	if (!info.pieces.hasPiece(pieceInfo.index))
+		return false;
+
+	std::lock_guard<std::mutex> guard(schedule_mutex);
+
+	scheduledPieceInfo = pieceInfo;
+	downloadingPiece.reset(torrent.pieceSize);
+	downloadingPiece.index = scheduledPieceInfo.index;
+
+	requestPieceBlock();
+
+	return true;
 }
 
-void mtt::PeerCommunication::schedulePieceDownload(bool forceNext)
+void mtt::PeerCommunication::enableExtensions()
 {
-	const int batchSize = 10;
-	const int nextBatchMin = 4;
-	static int pieceTodo = 0;
+	ext.info.enabled;
+	state.action = PeerCommunicationState::Handshake;
+	stream->write(ext.getExtendedHandshakeMessage());
+}
 
-	if (forceNext || downloadingPiece.receivedBlocks == scheduledPieceInfo.blocksCount)
-	{
-		scheduledPieceInfo = scheduler->getNextPieceDownload(peerPieces);
-		downloadingPiece.reset(torrent->pieceSize);
-		pieceTodo = 0;
-	}	
-	else
-		pieceTodo = std::max(0, pieceTodo - 1);
+void mtt::PeerCommunication::requestPieceBlock()
+{
+	auto& b = scheduledPieceInfo.blocksLeft.back();
+	scheduledPieceInfo.blocksLeft.pop_back();
 
-	/*if (!downloadingPieceInfo.blocksLeft.empty())
-	{
-		auto blocks = downloadingPieceInfo.blocksLeft;
-		downloadingPieceInfo.blocksLeft.clear();
-
-		for (auto& b : blocks)
-		{
-			downloadingPiece.index = b.index;
-			sendBlockRequest(b);
-		}
-	}*/
-
-	if(pieceTodo<nextBatchMin)
-	for (size_t i = 0; i < batchSize; i++)
-	if (!scheduledPieceInfo.blocksLeft.empty())
-	{
-		auto& b = scheduledPieceInfo.blocksLeft.back();
-		scheduledPieceInfo.blocksLeft.pop_back();
-		downloadingPiece.index = b.index;
-		sendBlockRequest(b);
-		pieceTodo++;
-	}
+	state.action = PeerCommunicationState::TransferringData;
+	stream->write(mtt::bt::createBlockRequest(b));
 }
 
 void mtt::PeerCommunication::handleMessage(PeerMessage& message)
@@ -176,81 +195,101 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 
 	if (message.id == KeepAlive)
 	{
-		schedulePieceDownload(true);
 	}
 
 	if (message.id == Bitfield)
 	{
-		PEER_LOG(peerInfo.ipStr << "BITFIELD size: " << std::to_string(message.bitfield.size()) << ", expected: " << std::to_string(torrent->expectedBitfieldSize) << "\n");
+		PEER_LOG(peerInfo.ipStr << " BITFIELD size: " << std::to_string(message.bitfield.size()) << ", expected: " << std::to_string(torrent->expectedBitfieldSize) << "\n");
 
-		peerPieces.fromBitfield(message.bitfield, torrent->pieces.size());
-		gcount++;
+		info.pieces.fromBitfield(message.bitfield, torrent.pieces.size());
 
-		PEER_LOG(peerInfo.ipStr << "Percentage: " << std::to_string(peerPieces.getPercentage()) << "\n");
+		PEER_LOG(peerInfo.ipStr << " new percentage: " << std::to_string(peerPieces.getPercentage()) << "\n");
+
+		listener.progressUpdated();
 	}
 
 	if (message.id == Have)
 	{
-		peerPieces.addPiece(message.havePieceIndex);
+		info.pieces.addPiece(message.havePieceIndex);
 
-		PEER_LOG(peerInfo.ipStr << "Percentage: " << std::to_string(peerPieces.getPercentage()) << "\n");
+		PEER_LOG(peerInfo.ipStr << " new percentage: " << std::to_string(peerPieces.getPercentage()) << "\n");
+
+		listener.progressUpdated();
 	}
 
 	if (message.id == Piece)
 	{
-		std::lock_guard<std::mutex> guard(schedule_mutex);
-			
 		PEER_LOG("Piece id: " << std::to_string(message.piece.info.index) << ", size: " << std::to_string(message.piece.info.length) << "\n");
 
-		if(message.piece.info.index != downloadingPiece.index)
-			PEER_LOG(peerInfo.ipStr << " Invalid block!! \n")
-		else
-		{
-			downloadingPiece.addBlock(message.piece);
-			//std::cout << peerInfo.ipStr << " block, index " << downloadingPiece.index << "==" << message.piece.info.index << " ,offset " << std::hex << message.piece.info.begin << "\n";
+		bool finished = false;
+		bool success = false;
 
-			if (downloadingPiece.receivedBlocks == scheduledPieceInfo.blocksCount)
+		{
+			std::lock_guard<std::mutex> guard(schedule_mutex);
+
+			if (message.piece.info.index != downloadingPiece.index)
 			{
-				if (validPiece())
+				PEER_LOG(peerInfo.ipStr << " Invalid block!! \n")
+				finished = true;
+			}
+			else
+			{
+				downloadingPiece.addBlock(message.piece);
+
+				if (downloadingPiece.receivedBlocks == scheduledPieceInfo.blocksCount)
 				{
-					scheduler->addDownloadedPiece(downloadingPiece);
-					PEER_LOG(peerInfo.ipStr << " Piece Added, Percentage: " << std::to_string(scheduler->getPercentage()) << "\n");
+					finished = success = true;
 				}
 				else
-					PEER_LOG(peerInfo.ipStr << " Invalid piece!! \n");
+				{
+					requestPieceBlock();
+				}
 			}
+		}
 
-			schedulePieceDownload();
+		if (finished)
+		{
+			state.action = PeerCommunicationState::Idle;
+			listener.pieceReceived(success ? &downloadingPiece : nullptr);
 		}
 	}
 
 	if (message.id == Unchoke)
 	{
-		std::lock_guard<std::mutex> guard(schedule_mutex);
-
-		if (state.amChoking)
-		{
-			state.amChoking = false;
-
-			schedulePieceDownload();
-		}
+		state.peerChoking = false;
 	}
 
 	if (message.id == Extended)
 	{
-		PEER_LOG(peerInfo.ipStr << " Ext msg: " << std::string(message.extended.data.begin(), message.extended.data.end()) << "\n");
-
 		auto type = ext.load(message.extended.id, message.extended.data);
 
-		PEER_LOG(peerInfo.ipStr << " Ext Type " << std::to_string(message.extended.id) << " resolve :" << std::to_string(type) << "\n");
+		PEER_LOG(peerInfo.ipStr << " Ext message type " std::to_string(type) << "\n");
+
+		if (type == mtt::ext::HandshakeEx)
+		{
+			state.action = PeerCommunicationState::Idle;
+			listener.handshakeFinished();
+		}
 	}
 
 	if (message.id == Handshake)
 	{
-		state.finishedHandshake = true;
-		PEER_LOG(peerInfo.ipStr << "_has peer id:" << std::string(message.peer_id, message.peer_id + 20) << "\n");
-		
-		sendHandshakeExt();
-		sendInterested();
+		state.action = PeerCommunicationState::Idle;
+
+		if (!state.finishedHandshake)
+		{
+			state.finishedHandshake = true;
+			PEER_LOG(peerInfo.ipStr << " finished handshake\n");
+
+			memcpy(info.id, message.handshake.peerId, 20);
+			memcpy(info.protocol, message.handshake.reservedBytes, 8);
+
+			if(info.protocol[5] & 0x10)
+				enableExtensions();
+			else
+				listener.handshakeFinished();
+		}
 	}
+
+	listener.messageReceived(message);
 }

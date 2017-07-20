@@ -1,65 +1,126 @@
 #pragma once
+#include <string>
 #include <vector>
+#include "Network.h"
+#include <iostream>
 
-namespace mttLib
+#define MT_NAME "mtTorrent 0.5"
+#define MT_HASH_NAME "MT-0-5-"
+
+#define DHT_LOG(x) {std::cout << x;}
+//#define NETWORK_LOG(x) {std::cout << x;}
+//#define PEER_LOG(x) {std::cout << x;}
+#define TRACKER_LOG(x) {std::cout << x;}
+//#define PARSER_LOG(x) {std::cout << x;}
+#define GENERAL_INFO_LOG(x) {std::cout << x;}
+
+#ifndef DHT_LOG
+#define DHT_LOG(x){}
+#endif
+#ifndef NETWORK_LOG
+#define NETWORK_LOG(x){}
+#endif
+#ifndef PEER_LOG
+#define PEER_LOG(x){}
+#endif
+#ifndef TRACKER_LOG
+#define TRACKER_LOG(x){}
+#endif
+#ifndef PARSER_LOG
+#define PARSER_LOG(x){}
+#endif
+#ifndef GENERAL_INFO_LOG
+#define GENERAL_INFO_LOG(x){}
+#endif
+
+namespace mtt
 {
-	enum ResultId
+	struct File
 	{
-		Ok,
-		CommandFailed,
-		BadFile
+		int id;
+		std::vector<std::string> path;
+		size_t size;
+		uint32_t startPieceIndex;
+		size_t startPiecePos;
+		uint32_t endPieceIndex;
+		size_t endPiecePos;
 	};
 
-	enum MessageId
+	struct PieceInfo
 	{
-		TorrentChangeNotify,
-
-		AddTorrentFile,
-		GetTorrents,
-		GetTorrentsInfo
-	};
-
-	struct AddTorrentFileParams
-	{
-		std::string path;
-
-		uint32_t id;
-	};
-
-	struct Torrent
-	{
-		uint32_t id;
-		std::string name;
-		bool active;
-	};
-
-	struct GetTorrentsParams
-	{
-		std::vector<Torrent> torrents;
+		uint8_t hash[20];
 	};
 
 	struct TorrentInfo
 	{
-		Torrent basic;
-		float progress;
-		uint32_t seeds;
-		uint32_t seedsConnected;
-		uint32_t peers;
-		uint32_t peersConnected;
+		uint8_t hash[20];
+
+		std::vector<PieceInfo> pieces;
+		size_t pieceSize;
+		size_t expectedBitfieldSize;
+
+		std::vector<File> files;
+		std::string directory;
+		size_t fullSize;
 	};
 
-	struct TorrentChangeNotifyParams
+	struct TorrentFileInfo
 	{
-		uint32_t id;
+		std::string announce;
+		std::vector<std::string> announceList;
 
-		enum ChangeType
-		{
-			State,
-			Progress
-		};
+		TorrentInfo info;
+	};
+
+	struct SelectedFile
+	{
+		File file;
+	};
+
+	struct DownloadSelection
+	{
+		std::vector<SelectedFile> files;
+	};
+
+	struct PieceBlockInfo
+	{
+		uint32_t index;
+		uint32_t begin;
+		uint32_t length;
+	};
+
+	struct PieceBlock
+	{
+		PieceBlockInfo info;
+		DataBuffer data;
+	};
+
+	struct PieceDownloadInfo
+	{
+		std::vector<PieceBlockInfo> blocksLeft;
+		size_t blocksCount = 0;
+		uint32_t index;
+	};
+
+	struct DownloadedPiece
+	{
+		DataBuffer data;
+		uint32_t index = -1;
+		size_t dataSize = 0;
+
+		bool isValid(char* expectedHash);
+		void reset(size_t maxPieceSize);
+		void addBlock(PieceBlock& block);
+		size_t receivedBlocks = 0;
+	};
+
+	struct AnnounceResponse
+	{
+		uint32_t interval = 5 * 60;
+
+		uint32_t leechCount = 0;
+		uint32_t seedCount = 0;
+
+		std::vector<Addr> peers;
 	};
 }
-
-#ifndef STANDALONE
-typedef mttLib::ResultId(*mtIoctl)(mttLib::MessageId, void*);
-#endif

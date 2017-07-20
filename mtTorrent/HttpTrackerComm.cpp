@@ -32,39 +32,49 @@ std::string url_encode(uint8_t* data, uint32_t size)
 	return e.str();
 }
 
-mtt::HttpTrackerComm::HttpTrackerComm(TorrentFileInfo* t) : torrent(t)
+mtt::HttpTrackerComm::HttpTrackerComm()
 {
 }
 
-mtt::AnnounceResponse mtt::HttpTrackerComm::announceTracker(std::string host, std::string port)
+void mtt::HttpTrackerComm::startTracker(std::string host, std::string p, boost::asio::io_service& io, TorrentFileInfo* t)
 {
-	TRACKER_LOG("Announcing to HTTP tracker " << host << "\n");
+	hostname = host;
+	port = p;
+	torrent = t;
 
-	AnnounceResponse announceMsg;
+	tcpComm = std::make_shared<TcpAsyncStream>(io);
+	tcpComm->onConnectCallback = std::bind(&HttpTrackerComm::onTcpConnected, this);
+	tcpComm->onCloseCallback = std::bind(&HttpTrackerComm::onTcpClosed, this);
+	tcpComm->onReceiveCallback = std::bind(&HttpTrackerComm::onTcpReceived, this);
 
-	boost::asio::io_service io_service;
-	tcp::resolver resolver(io_service);
+	TRACKER_LOG("Connecting to HTTP tracker " << hostname << "\n");
 
-	tcp::socket sock(io_service);
-	sock.open(tcp::v4());
+	tcpComm->connect(hostname, port);
+}
 
-	try
-	{
-		openTcpSocket(sock, resolver, host.data(), port.data());
+void mtt::HttpTrackerComm::onTcpClosed()
+{
+	tcpComm = nullptr;
+}
 
-		auto request = createAnnounceRequest(host, port);
-		auto resp = sendTcpRequest(sock, request);
+void mtt::HttpTrackerComm::onTcpConnected()
+{
+	TRACKER_LOG("Announcing to HTTP tracker " << hostname << "\n");
 
-		announceMsg = getAnnounceResponse(resp);
+	auto request = createAnnounceRequest(hostname, port);
 
-		TRACKER_LOG("Http Tracker " << host << " returned peers:" << std::to_string(announceMsg.peers.size()) << ", p: " << std::to_string(announceMsg.seedCount) << ", l: " << std::to_string(announceMsg.leechCount) << "\n");
-	}
-	catch (const std::exception&e)
-	{
-		TRACKER_LOG("Https " << host << " exception: " << e.what() << "\n");
-	}
+	tcpComm->write(request);
+}
 
-	return announceMsg;
+void mtt::HttpTrackerComm::onTcpReceived()
+{
+	auto resp = tcpComm->getReceivedData();
+	auto announceMsg = getAnnounceResponse(resp);
+
+	TRACKER_LOG("Http Tracker " << hostname << " returned peers:" << std::to_string(announceMsg.peers.size()) << ", p: " << std::to_string(announceMsg.seedCount) << ", l: " << std::to_string(announceMsg.leechCount) << "\n");
+
+	if (onAnnounceResponse)
+		onAnnounceResponse(announceMsg);
 }
 
 DataBuffer mtt::HttpTrackerComm::createAnnounceRequest(std::string host, std::string port)
@@ -103,37 +113,43 @@ mtt::AnnounceResponse mtt::HttpTrackerComm::getAnnounceResponse(DataBuffer buffe
 
 		if (dataStart != 0)
 		{
-			BencodeParser parser;
-			parser.parse(buffer.data() + dataStart, buffer.size() - dataStart - 4);
-
-			if (parser.parsedData.type == BencodeParser::Object::Dictionary)
+			try
 			{
-				auto& data = parser.parsedData;
+				BencodeParser parser;
+				parser.parse(buffer.data() + dataStart, buffer.size() - dataStart - 4);
 
-				auto interval  = data.getIntItem("min interval");
-				if(!interval)
-					interval = data.getIntItem("interval");
-
-				response.interval = interval ? *interval : 5 * 60;
-
-				auto seeds = data.getIntItem("complete");
-				response.seedCount = seeds ? *seeds : 0;
-
-				auto leechs = data.getIntItem("incomplete");
-				response.leechCount = leechs ? *leechs : 0;
-
-				auto peers = data.getTxtItem("peers");
-				if (peers && peers->length() % 6 == 0)
+				if (parser.parsedData.isMap())
 				{
-					PacketReader reader(peers->data(), peers->length());
+					auto& data = parser.parsedData;
 
-					auto count = peers->length() / 6;
-					for (size_t i = 0; i < count; i++)
-					{		
-						uint32_t addr = reader.pop32();
-						response.peers.push_back(Addr(addr, reader.pop16()));
+					auto interval = data.getIntItem("min interval");
+					if (!interval)
+						interval = data.getIntItem("interval");
+
+					response.interval = interval ? *interval : 5 * 60;
+
+					auto seeds = data.getIntItem("complete");
+					response.seedCount = seeds ? *seeds : 0;
+
+					auto leechs = data.getIntItem("incomplete");
+					response.leechCount = leechs ? *leechs : 0;
+
+					auto peers = data.getTxtItem("peers");
+					if (peers && peers->length() % 6 == 0)
+					{
+						PacketReader reader(peers->data(), peers->length());
+
+						auto count = peers->length() / 6;
+						for (size_t i = 0; i < count; i++)
+						{
+							uint32_t addr = reader.pop32();
+							response.peers.push_back(Addr(addr, reader.pop16()));
+						}
 					}
 				}
+			}
+			catch (...)
+			{
 			}
 		}
 	}

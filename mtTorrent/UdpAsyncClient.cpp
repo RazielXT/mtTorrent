@@ -208,10 +208,7 @@ UdpRequest SendAsyncUdp(Addr& addr, DataBuffer& data, boost::asio::io_service& i
 {
 	UdpRequest req = std::make_shared<PackedUdpRequest>(io);
 	req->client->setAddress(addr);
-	req->client->onCloseCallback = std::bind(&PackedUdpRequest::onFail, req.get());
-	req->client->onReceiveCallback = std::bind(&PackedUdpRequest::onSuccess, req.get(), std::placeholders::_1);
-	req->onResult = onResult;
-	req->client->write(data);
+	req->write(data, onResult);
 
 	return req;
 }
@@ -219,10 +216,7 @@ UdpRequest SendAsyncUdp(Addr& addr, DataBuffer& data, boost::asio::io_service& i
 UdpRequest SendAsyncUdp(const std::string& hostname, const std::string& port, bool ipv6, DataBuffer& data, boost::asio::io_service& io, std::function<void(DataBuffer* data, PackedUdpRequest* source)> onResult)
 {
 	UdpRequest req = std::make_shared<PackedUdpRequest>(io);
-	req->client->onCloseCallback = std::bind(&PackedUdpRequest::onFail, req.get());
-	req->client->onReceiveCallback = std::bind(&PackedUdpRequest::onSuccess, req.get(), std::placeholders::_1);
-	req->onResult = onResult;
-	req->client->write(data);
+	req->write(data, onResult);
 	req->client->setAddress(hostname, port, ipv6);
 
 	return req;
@@ -240,8 +234,12 @@ PackedUdpRequest::~PackedUdpRequest()
 	client->onReceiveCallback = nullptr;
 }
 
-bool PackedUdpRequest::write(DataBuffer& data)
+bool PackedUdpRequest::write(DataBuffer& data, std::function<void(DataBuffer* data, PackedUdpRequest* source)> onResult)
 {
+	this->onResult = onResult;
+	client->onCloseCallback = std::bind(&PackedUdpRequest::onFail, this);
+	client->onReceiveCallback = std::bind(&PackedUdpRequest::onSuccess, this, std::placeholders::_1);
+
 	return client->write(data);
 }
 

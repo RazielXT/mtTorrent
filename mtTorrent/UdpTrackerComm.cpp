@@ -6,7 +6,100 @@
 
 using namespace mtt;
 
-ConnectResponse UdpTrackerComm::getConnectResponse(DataBuffer buffer)
+mtt::UdpTrackerComm::UdpTrackerComm()
+{
+}
+
+void UdpTrackerComm::startTracker(std::string host, std::string port, boost::asio::io_service& io, TorrentFileInfo* t)
+{
+	hostname = host;
+	torrent = t;
+
+	TRACKER_LOG("Connecting to UDP tracker " << hostname << "\n");
+
+	udpComm = SendAsyncUdp(host, port, false, createConnectRequest(), io, std::bind(&UdpTrackerComm::onConnectUdpResponse, this, std::placeholders::_1, std::placeholders::_2));
+}
+
+DataBuffer UdpTrackerComm::createConnectRequest()
+{
+	auto transaction = (uint32_t)rand();
+	uint64_t connectId = 0x41727101980;
+
+	lastMessage = { Connnect, transaction };
+
+	PacketBuilder packet;
+	packet.add64(connectId);
+	packet.add32(Connnect);
+	packet.add32(transaction);
+
+	return packet.getBuffer();
+}
+
+void mtt::UdpTrackerComm::onConnectUdpResponse(DataBuffer* data, PackedUdpRequest* source)
+{
+	if (!data)
+		return;
+
+	auto response = getConnectResponse(*data);
+
+	if (validResponse(response))
+	{
+		connectionId = response.connectionId;
+
+		TRACKER_LOG("Announcing to UDP tracker " << hostname << "\n");
+
+		udpComm->write(createAnnounceRequest(), std::bind(&UdpTrackerComm::onAnnounceUdpResponse, this, std::placeholders::_1, std::placeholders::_2));
+	}
+}
+
+DataBuffer UdpTrackerComm::createAnnounceRequest()
+{
+	auto transaction = (uint32_t)rand();
+
+	lastMessage = { Announce, transaction };
+
+	PacketBuilder packet;
+	packet.add64(connectionId);
+	packet.add32(Announce);
+	packet.add32(transaction);
+
+	packet.add(torrent->info.hash, 20);
+	packet.add(mtt::config::internal.hashId, 20);
+
+	packet.add64(0);
+	packet.add64(0);
+	packet.add64(0);
+
+	packet.add32(Started);
+	packet.add32(0);
+
+	packet.add32(mtt::config::internal.key);
+	packet.add32(mtt::config::external.maxPeersPerRequest);
+	packet.add32(mtt::config::external.listenPort);
+	packet.add16(0);
+
+	return packet.getBuffer();
+}
+
+void mtt::UdpTrackerComm::onAnnounceUdpResponse(DataBuffer* data, PackedUdpRequest* source)
+{
+	if (!data)
+		return;
+
+	auto announceMsg = getAnnounceResponse(*data);
+
+	TRACKER_LOG("Udp Tracker " << hostname << " returned peers:" << std::to_string(announceMsg.peers.size()) << ", p: " << std::to_string(announceMsg.seedCount) << ", l: " << std::to_string(announceMsg.leechCount) << "\n");
+
+	if (onAnnounceResponse)
+		onAnnounceResponse(announceMsg);
+}
+
+bool mtt::UdpTrackerComm::validResponse(TrackerMessage& resp)
+{
+	return resp.action == lastMessage.action && resp.transaction == lastMessage.transaction;
+}
+
+UdpTrackerComm::ConnectResponse UdpTrackerComm::getConnectResponse(DataBuffer buffer)
 {
 	ConnectResponse out;
 
@@ -47,98 +140,4 @@ AnnounceResponse UdpTrackerComm::getAnnounceResponse(DataBuffer buffer)
 	}
 
 	return resp;
-}
-
-AnnounceResponse UdpTrackerComm::announceTracker(std::string host, std::string port)
-{
-	TRACKER_LOG("Announcing to UDP tracker " << host << "\n");
-
-	AnnounceResponse announceMsg;
-
-	boost::asio::io_service io_service;
-	udp::resolver resolver(io_service);
-
-	udp::socket sock(io_service);
-	sock.open(udp::v4());
-
-	/*boost::asio::ip::udp::endpoint local(
-	boost::asio::ip::address_v4::any(),
-	client->listenPort);
-	sock.bind(local);*/
-
-	auto messageData = createConnectRequest();
-
-	try
-	{
-		auto message = sendUdpRequest(sock, resolver, messageData, host.data(), port.data(), 5000);
-		auto response = getConnectResponse(message);
-
-		if (validResponse(response))
-		{
-			auto announce = createAnnounceRequest(response);
-			auto announceMsgBuffer = sendUdpRequest(sock, resolver, announce, host.data(), port.data());
-			announceMsg = getAnnounceResponse(announceMsgBuffer);
-		}
-
-		TRACKER_LOG("Udp Tracker " << host << " returned peers:" << std::to_string(announceMsg.peers.size()) << ", p: " << std::to_string(announceMsg.seedCount) << ", l: " << std::to_string(announceMsg.leechCount) << "\n");
-	}
-	catch (const std::exception&e)
-	{
-		TRACKER_LOG("Udp " << host << " exception: " << e.what() << "\n");
-	}
-
-	return announceMsg;
-}
-
-DataBuffer UdpTrackerComm::createAnnounceRequest(ConnectResponse& response)
-{
-	auto transaction = (uint32_t)rand();
-
-	lastMessage = { Announce, transaction };
-
-	PacketBuilder packet;
-	packet.add64(response.connectionId);
-	packet.add32(Announce);
-	packet.add32(transaction);
-
-	packet.add(torrent->info.hash, 20);
-	packet.add(mtt::config::internal.hashId, 20);
-
-	packet.add64(0);
-	packet.add64(0);
-	packet.add64(0);
-
-	packet.add32(Started);
-	packet.add32(0);
-
-	packet.add32(mtt::config::internal.key);
-	packet.add32(mtt::config::external.maxPeersPerRequest);
-	packet.add32(mtt::config::external.listenPort);
-	packet.add16(0);
-
-	return packet.getBuffer();
-}
-
-DataBuffer UdpTrackerComm::createConnectRequest()
-{
-	auto transaction = (uint32_t)rand();
-	uint64_t connectId = 0x41727101980;
-
-	lastMessage = { Connnect, transaction };
-
-	PacketBuilder packet;
-	packet.add64(connectId);
-	packet.add32(Connnect);
-	packet.add32(transaction);
-
-	return packet.getBuffer();
-}
-
-bool mtt::UdpTrackerComm::validResponse(TrackerMessage& resp)
-{
-	return resp.action == lastMessage.action && resp.transaction == lastMessage.transaction;
-}
-
-mtt::UdpTrackerComm::UdpTrackerComm(TorrentFileInfo* t) : torrent(t)
-{
 }

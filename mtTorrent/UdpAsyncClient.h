@@ -66,7 +66,7 @@ struct PackedUdpRequest
 	PackedUdpRequest(boost::asio::io_service& io);
 	~PackedUdpRequest();
 
-	bool write(DataBuffer& data);
+	bool write(DataBuffer& data, std::function<void(DataBuffer* data, PackedUdpRequest* source)> onResult);
 	std::shared_ptr<UdpAsyncClient> client;
 	void onFail();
 	void onSuccess(DataBuffer&);

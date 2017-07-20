@@ -1,13 +1,19 @@
 #pragma once
 
-#include "BencodeParser.h"
+#include "PeerCommunication.h"
 #include "TrackerCommunication.h"
-#include "TorrentDefines.h"
 #include "ProgressScheduler.h"
 
 namespace mtt
 {
-	class PeerMgr
+	enum PeerSource
+	{
+		Tracker,
+		Pex,
+		Dht
+	};
+
+	class PeerMgr : public IPeerListener
 	{
 	public:
 
@@ -15,8 +21,18 @@ namespace mtt
 
 		void start();
 
-		TorrentFileInfo* torrentInfo;
-		TrackerCollector trackers;	
+	private:
+
+		struct KnownPeer
+		{
+			Addr address;
+			PeerSource source;
+		};
+		std::vector<KnownPeer> knownPeers;
+		std::vector<std::shared_ptr<PeerCommunication>> activePeers;
+
+		TorrentInfo* torrentInfo;
+		TrackerCollector trackers;
 		ProgressScheduler& scheduler;
 	};
 }

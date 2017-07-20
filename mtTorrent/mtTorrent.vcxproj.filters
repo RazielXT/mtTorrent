@@ -64,12 +64,6 @@
     <ClCompile Include="TcpAsyncServer.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="PeerCommunication2.cpp">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClCompile>
-    <ClCompile Include="Interface2.cpp">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClCompile>
     <ClCompile Include="PiecesProgress.cpp">
       <Filter>Source Files\Core\Proposal</Filter>
     </ClCompile>
@@ -90,6 +84,12 @@
     </ClCompile>
     <ClCompile Include="utils\Base32.cpp">
       <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Interface.cpp">
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClCompile>
+    <ClCompile Include="PeerCommunication.cpp">
+      <Filter>Source Files\Core\Proposal</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -135,19 +135,10 @@
     <ClInclude Include="TcpAsyncServer.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="PeerCommunication2.h">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClInclude>
-    <ClInclude Include="PeerMgr2.h">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClInclude>
     <ClInclude Include="Scheduler.h">
       <Filter>Source Files\Core\Proposal</Filter>
     </ClInclude>
     <ClInclude Include="DhtControl.h">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClInclude>
-    <ClInclude Include="Interface2.h">
       <Filter>Source Files\Core\Proposal</Filter>
     </ClInclude>
     <ClInclude Include="Configuration.h">
@@ -173,6 +164,15 @@
     </ClInclude>
     <ClInclude Include="UdpAsyncClient.h">
       <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Interface.h">
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClInclude>
+    <ClInclude Include="PeerCommunication.h">
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClInclude>
+    <ClInclude Include="PeerMgr.h">
+      <Filter>Source Files\Core\Proposal</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

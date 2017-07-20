@@ -1,6 +1,6 @@
 #include "DhtCommunication.h"
 #include "Network.h"
-#include "Interface2.h"
+#include "Interface.h"
 #include "BencodeParser.h"
 #include "PacketHelper.h"
 #include "utils/Base32.h"

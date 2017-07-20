@@ -82,7 +82,7 @@ void LocalWithTorrentFile::testMetadataReceive()
 
 	ServiceThreadpool service;
 
-	PeerCommunication2 peer(torrent.info, *this, service.io);
+	PeerCommunication peer(torrent.info, *this, service.io);
 	peer.start(Addr({ 127,0,0,1 }, 55391));
 
 	WAITFOR(failed || peer.state.finishedHandshake)
@@ -140,7 +140,7 @@ void LocalWithTorrentFile::testAsyncDhtGetPeers()
 
 	TorrentInfo info;
 	memcpy(info.hash, targetId.data(), 20);
-	std::shared_ptr<PeerCommunication2> peer;
+	std::shared_ptr<PeerCommunication> peer;
 	uint32_t nextPeerIdx = 0;
 
 	while (true)
@@ -149,7 +149,7 @@ void LocalWithTorrentFile::testAsyncDhtGetPeers()
 			return;
 
 		std::cout << "TRYING " << nextPeerIdx << "\n";
-		peer = std::make_shared<PeerCommunication2>(info, *this, service.io);
+		peer = std::make_shared<PeerCommunication>(info, *this, service.io);
 		Addr nextAddr;
 
 		{

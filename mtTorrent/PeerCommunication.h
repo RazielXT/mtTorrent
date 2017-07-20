@@ -3,12 +3,13 @@
 #include "TcpAsyncStream.h"
 #include "BencodeParser.h"
 #include "PeerMessage.h"
-#include "TorrentDefines.h"
 #include "ExtensionProtocol.h"
+#include "IPeerListener.h"
+#include "PiecesProgress.h"
 
 namespace mtt
 {
-	struct PeerState
+	struct PeerCommunicationState
 	{
 		bool finishedHandshake = false;
 
@@ -17,52 +18,68 @@ namespace mtt
 
 		bool peerChoking = true;
 		bool peerInterested = false;
+
+		enum
+		{
+			Disconnected,
+			Connecting,
+			Handshake,
+			TransferringData,
+			Idle
+		}
+		action = Disconnected;
+	};
+
+	struct PeerStateInfo
+	{
+		PeerStateInfo();
+
+		PiecesProgress pieces;
+		uint8_t id[20];
+		uint8_t protocol[8];
 	};
 
 	class PeerCommunication
 	{
 	public:
 
-		PeerCommunication(boost::asio::io_service* io_service, ProgressScheduler* scheduler);
+		PeerCommunication(TorrentInfo& torrent, IPeerListener& listener, boost::asio::io_service& io_service);
+		~PeerCommunication();
 
-		ExtensionProtocol ext;
-		PeerState state;
+		PeerStateInfo info;
+		PeerCommunicationState state;
 
-		PeerInfo peerInfo;
-		TorrentFileInfo* torrent;
-		ProgressScheduler* scheduler;
+		void start(Addr& address);
+		bool sendInterested();
+		bool requestPiece(PieceDownloadInfo& pieceInfo);
 
-		PiecesProgress peerPieces;
+		void stop();
+
+		bool requestMetadataPiece(uint32_t index);
+
+		ext::ExtensionProtocol ext;
+
+	private:
+
+		TorrentInfo& torrent;
+		IPeerListener& listener;
 
 		std::mutex schedule_mutex;
 		PieceDownloadInfo scheduledPieceInfo;
 		DownloadedPiece downloadingPiece;
-
-		bool validPiece();
-
-		void start(TorrentFileInfo* torrent, PeerInfo peerInfo);
-		void stop();
-
-		void connectionOpened();
-		void handshake(PeerInfo& peerInfo);
-
-		void dataReceived();
-		void connectionClosed();
-		bool active = false;
-
-		DataBuffer getHandshakeMessage();
+		
+		std::shared_ptr<TcpAsyncStream> stream;
 
 		std::mutex read_mutex;
-		PeerMessage readNextStreamMessage();
-		TcpAsyncStream stream;
-
-		void sendInterested();
-		void sendHandshakeExt();
-
-		void sendBlockRequest(PieceBlockInfo& block);
-		void schedulePieceDownload(bool forceNext = false);
-
+		mtt::PeerMessage readNextStreamMessage();
 		void handleMessage(PeerMessage& msg);
+
+		void connectionOpened();
+		void dataReceived();
+		void connectionClosed();
+
+		void enableExtensions();
+		void requestPieceBlock();
 	};
 
 }
