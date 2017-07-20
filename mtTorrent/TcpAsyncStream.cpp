@@ -55,6 +55,12 @@ void TcpAsyncStream::connect(const std::string& ip, uint16_t port)
 
 void TcpAsyncStream::close()
 {
+	std::lock_guard<std::mutex> guard(callbackMutex);
+
+	onConnectCallback = nullptr;
+	onReceiveCallback = nullptr;
+	onCloseCallback = nullptr;
+
 	if (state == Disconnected)
 		return;
 
@@ -89,8 +95,12 @@ void TcpAsyncStream::setAsConnected()
 
 	socket.async_receive(boost::asio::buffer(recv_buffer), std::bind(&TcpAsyncStream::handle_receive, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 
-	if (onConnectCallback)
-		onConnectCallback();
+	{
+		std::lock_guard<std::mutex> guard(callbackMutex);
+
+		if (onConnectCallback)
+			onConnectCallback();
+	}
 }
 
 void TcpAsyncStream::postFail(std::string place, const boost::system::error_code& error)
@@ -100,8 +110,12 @@ void TcpAsyncStream::postFail(std::string place, const boost::system::error_code
 
 	state = Disconnected;
 
-	if (onCloseCallback)
-		onCloseCallback();
+	{
+		std::lock_guard<std::mutex> guard(callbackMutex);
+
+		if (onCloseCallback)
+			onCloseCallback();
+	}
 }
 
 void TcpAsyncStream::handle_resolve(const boost::system::error_code& error, tcp::resolver::iterator iterator, std::shared_ptr<tcp::resolver> resolver)
@@ -195,8 +209,12 @@ void TcpAsyncStream::handle_receive(const boost::system::error_code& error, std:
 		socket.async_receive(boost::asio::buffer(recv_buffer),
 			std::bind(&TcpAsyncStream::handle_receive, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 
-		if (onReceiveCallback)
-			onReceiveCallback();
+		{
+			std::lock_guard<std::mutex> guard(callbackMutex);
+
+			if (onReceiveCallback)
+				onReceiveCallback();
+		}
 	}
 	else
 	{

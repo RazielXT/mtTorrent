@@ -123,9 +123,7 @@ mtt::PeerMessage mtt::PeerCommunication::readNextStreamMessage()
 
 mtt::PeerCommunication::~PeerCommunication()
 {
-	stream->onConnectCallback = nullptr;
-	stream->onCloseCallback = nullptr;
-	stream->onReceiveCallback = nullptr;
+	stream->close();
 }
 
 bool mtt::PeerCommunication::sendInterested()

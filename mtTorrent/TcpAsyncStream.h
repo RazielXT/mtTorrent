@@ -36,6 +36,8 @@ public:
 
 protected:
 
+	std::mutex callbackMutex;
+
 	void setAsConnected();
 
 	void postFail(std::string place, const boost::system::error_code& error);

@@ -280,28 +280,25 @@ void mtt::dht::Communication::Query::onGetPeersResponse(DataBuffer* data, Packed
 	{
 		auto resp = parseGetPeersResponse(*data);
 
-		//if (memcmp(resp.id, targetIdNode.data, 20) == 0)
+		if (!resp.values.empty())
 		{
-			if (!resp.values.empty())
+			foundCount += dhtListener->onFoundPeers(targetIdNode.data, resp.values);
+		}
+
+		if (!resp.nodes.empty())
+		{
+			std::lock_guard<std::mutex> guard(nodesMutex);
+
+			mergeClosestNodes(receivedNodes, resp.nodes, usedNodes, MaxCachedNodes, minDistance, targetIdNode);
+
+			if (!receivedNodes.empty())
 			{
-				foundCount += dhtListener->onFoundPeers(targetIdNode.data, resp.values);
-			}
+				auto newMinDistance = getShortestDistance(receivedNodes, targetIdNode);
 
-			if (!resp.nodes.empty())
-			{
-				std::lock_guard<std::mutex> guard(nodesMutex);
+				if (newMinDistance.length() < minDistance.length())
+					minDistance = newMinDistance;
 
-				mergeClosestNodes(receivedNodes, resp.nodes, usedNodes, MaxCachedNodes, minDistance, targetIdNode);
-
-				if (!receivedNodes.empty())
-				{
-					auto newMinDistance = getShortestDistance(receivedNodes, targetIdNode);
-
-					if (newMinDistance.length() < minDistance.length())
-						minDistance = newMinDistance;
-
-					std::cout << (int)minDistance.length() << "\n";
-				}
+				std::cout << (int)minDistance.length() << "\n";
 			}
 		}
 	}
@@ -313,11 +310,11 @@ void mtt::dht::Communication::Query::onGetPeersResponse(DataBuffer* data, Packed
 		{
 			if ((*it).get() == source)
 			{
+				(*it)->clear();
 				requests.erase(it);
 				break;
 			}
 		}
-
 
 		if (foundCount < MaxReturnedValues)
 		{

@@ -10,6 +10,7 @@ namespace mtt
 	public:
 
 		HttpTrackerComm();
+		~HttpTrackerComm();
 
 		void startTracker(std::string host, std::string port, boost::asio::io_service& io, TorrentFileInfo* torrent);
 

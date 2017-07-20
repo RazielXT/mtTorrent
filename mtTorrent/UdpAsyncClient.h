@@ -33,6 +33,7 @@ public:
 
 protected:
 
+	std::mutex callbackMutex;
 	enum { Clear, Initialized, Connected } state = Clear;
 
 	void postFail(std::string place, const boost::system::error_code& error);
@@ -66,9 +67,10 @@ struct PackedUdpRequest
 	PackedUdpRequest(boost::asio::io_service& io);
 	~PackedUdpRequest();
 
-	bool write(DataBuffer& data, std::function<void(DataBuffer* data, PackedUdpRequest* source)> onResult);
+	void write(DataBuffer& data, std::function<void(DataBuffer* data, PackedUdpRequest* source)> onResult);
 	std::shared_ptr<UdpAsyncClient> client;
 	void onFail();
 	void onSuccess(DataBuffer&);
 	std::function<void(DataBuffer* data, PackedUdpRequest* source)> onResult;
+	void clear();
 };

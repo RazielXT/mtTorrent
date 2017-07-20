@@ -23,7 +23,6 @@ namespace mtt
 		void onConnectUdpResponse(DataBuffer* data, PackedUdpRequest* source);
 		void onAnnounceUdpResponse(DataBuffer* data, PackedUdpRequest* source);
 
-
 		struct TrackerMessage
 		{
 			uint32_t action;

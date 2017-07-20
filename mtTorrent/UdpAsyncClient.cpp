@@ -97,8 +97,12 @@ void UdpAsyncClient::postFail(std::string place, const boost::system::error_code
 	if(state == Connected)
 		state = Initialized;
 
-	if (onCloseCallback)
-		onCloseCallback();
+	{
+		std::lock_guard<std::mutex> guard(callbackMutex);
+
+		if (onCloseCallback)
+			onCloseCallback();
+	}
 }
 
 void UdpAsyncClient::handle_connect(const boost::system::error_code& error)
@@ -116,6 +120,13 @@ void UdpAsyncClient::handle_connect(const boost::system::error_code& error)
 
 void UdpAsyncClient::do_close()
 {
+	{
+		std::lock_guard<std::mutex> guard(callbackMutex);
+
+		onReceiveCallback = nullptr;
+		onCloseCallback = nullptr;
+	}
+
 	timeoutTimer.cancel();
 
 	boost::system::error_code error;
@@ -169,8 +180,12 @@ void UdpAsyncClient::handle_receive(const boost::system::error_code& error, std:
 	{
 		responseBuffer.resize(bytes_transferred);
 
-		if (onReceiveCallback)
-			onReceiveCallback(responseBuffer);
+		{
+			std::lock_guard<std::mutex> guard(callbackMutex);
+
+			if (onReceiveCallback)
+				onReceiveCallback(responseBuffer);
+		}
 	}
 	else
 	{
@@ -230,17 +245,15 @@ PackedUdpRequest::PackedUdpRequest(boost::asio::io_service& io)
 
 PackedUdpRequest::~PackedUdpRequest()
 {
-	client->onCloseCallback = nullptr;
-	client->onReceiveCallback = nullptr;
+	client->close();
 }
 
-bool PackedUdpRequest::write(DataBuffer& data, std::function<void(DataBuffer* data, PackedUdpRequest* source)> onResult)
+void PackedUdpRequest::write(DataBuffer& data, std::function<void(DataBuffer* data, PackedUdpRequest* source)> onResult)
 {
 	this->onResult = onResult;
 	client->onCloseCallback = std::bind(&PackedUdpRequest::onFail, this);
 	client->onReceiveCallback = std::bind(&PackedUdpRequest::onSuccess, this, std::placeholders::_1);
-
-	return client->write(data);
+	client->write(data);
 }
 
 void PackedUdpRequest::onFail()
@@ -251,4 +264,10 @@ void PackedUdpRequest::onFail()
 void PackedUdpRequest::onSuccess(DataBuffer& response)
 {
 	onResult(&response, this);
+}
+
+void PackedUdpRequest::clear()
+{
+	client->onReceiveCallback = nullptr;
+	client->onCloseCallback = nullptr;
 }
