@@ -37,6 +37,7 @@ void LocalWithTorrentFile::onUdpReceived(DataBuffer* data, PackedUdpRequest* sou
 		udpResult.push_back(6);
 }
 
+#define OFFICE
 void LocalWithTorrentFile::testAsyncUdpRequest()
 {
 	ServiceThreadpool service;
@@ -61,7 +62,12 @@ void LocalWithTorrentFile::testAsyncUdpRequest()
 	packet.add("1:y1:qe", 7);
 
 	{
+#ifndef OFFICE
 		auto req = SendAsyncUdp(dhtRoot, dhtRootPort, true, packet.getBuffer(), service.io, std::bind(&LocalWithTorrentFile::onUdpReceived, this, std::placeholders::_1, std::placeholders::_2));
+#else
+		auto req = SendAsyncUdp(Addr({8,65,4,4},55555), packet.getBuffer(), service.io, std::bind(&LocalWithTorrentFile::onUdpReceived, this, std::placeholders::_1, std::placeholders::_2));
+#endif
+
 
 		WAITFOR(!udpResult.empty());
 	}

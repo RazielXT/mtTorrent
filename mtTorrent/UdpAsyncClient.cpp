@@ -83,7 +83,7 @@ void UdpAsyncClient::listenToResponse()
 
 	std::cout << "listening\n";
 
-	timeoutTimer.expires_from_now(boost::posix_time::seconds(2));
+	timeoutTimer.expires_from_now(boost::posix_time::seconds(3));
 
 	socket.async_receive_from(boost::asio::buffer(responseBuffer.data(), responseBuffer.size()), target_endpoint,
 		std::bind(&UdpAsyncClient::handle_receive, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
@@ -200,7 +200,7 @@ void UdpAsyncClient::checkTimeout()
 
 	if (timeoutTimer.expires_at() <= boost::asio::deadline_timer::traits_type::now())
 	{
-		if (writeRetries > 2)
+		if (writeRetries >= 2)
 		{
 			if(socket.is_open())
 				socket.close();
