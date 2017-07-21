@@ -1,5 +1,5 @@
 #include "UdpAsyncClient.h"
-#include <iostream>
+#include "Logging.h"
 
 UdpAsyncClient::UdpAsyncClient(boost::asio::io_service& io) : io_service(io), socket(io), timeoutTimer(io)
 {
@@ -81,7 +81,7 @@ void UdpAsyncClient::listenToResponse()
 	listening = true;
 	responseBuffer.resize(2 * 1024);
 
-	std::cout << "listening\n";
+	UDP_LOG("listening");
 
 	timeoutTimer.expires_from_now(boost::posix_time::seconds(3));
 
@@ -92,7 +92,7 @@ void UdpAsyncClient::listenToResponse()
 void UdpAsyncClient::postFail(std::string place, const boost::system::error_code& error)
 {
 	if(error)
-		std::cout << place << "-" << target_endpoint.address().to_string() << "-" << error.message() << "\n";
+		UDP_LOG(place << "-" << target_endpoint.address().to_string() << "-" << error.message());
 
 	if(state == Connected)
 		state = Initialized;
@@ -146,7 +146,7 @@ void UdpAsyncClient::do_write()
 	}
 	else if(state == Connected)
 	{
-		std::cout << "writing (" << (int)writeRetries << ")\n";
+		UDP_LOG("writing (" << (int)writeRetries << ")");
 
 		if (!messageBuffer.empty())
 		{
@@ -174,7 +174,7 @@ void UdpAsyncClient::handle_receive(const boost::system::error_code& error, std:
 {
 	listening = false;
 	writeRetries = 0;
-	std::cout << "received size: " << bytes_transferred << "\n";
+	UDP_LOG("received size: " << bytes_transferred);
 
 	if (!error)
 	{

@@ -91,6 +91,9 @@
     <ClCompile Include="PeerCommunication.cpp">
       <Filter>Source Files\Core\Proposal</Filter>
     </ClCompile>
+    <ClCompile Include="Logging.cpp">
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PacketHelper.h">
@@ -122,9 +125,6 @@
     </ClInclude>
     <ClInclude Include="RiotRestApi.h">
       <Filter>Source Files\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Interface.h">
-      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="DhtCommunication.h">
       <Filter>Source Files\Core\Torrent\Dht</Filter>
@@ -172,6 +172,14 @@
       <Filter>Source Files\Core\Proposal</Filter>
     </ClInclude>
     <ClInclude Include="PeerMgr.h">
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClInclude>
+    <ClInclude Include="Interface.h" />
+    <ClInclude Include="Interface.h" />
+    <ClInclude Include="Interface.h">
+      <Filter>Source Files\Core\Proposal</Filter>
+    </ClInclude>
+    <ClInclude Include="Logging.h">
       <Filter>Source Files\Core\Proposal</Filter>
     </ClInclude>
   </ItemGroup>

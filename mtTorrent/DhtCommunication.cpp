@@ -296,9 +296,10 @@ void mtt::dht::Communication::Query::onGetPeersResponse(DataBuffer* data, Packed
 				auto newMinDistance = getShortestDistance(receivedNodes, targetIdNode);
 
 				if (newMinDistance.length() < minDistance.length())
+				{
 					minDistance = newMinDistance;
-
-				std::cout << (int)minDistance.length() << "\n";
+					DHT_LOG("min distance " << (int)minDistance.length());
+				}
 			}
 		}
 	}

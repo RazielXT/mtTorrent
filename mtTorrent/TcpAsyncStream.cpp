@@ -1,5 +1,5 @@
 #include "TcpAsyncStream.h"
-#include <iostream>
+#include "Logging.h"
 
 TcpAsyncStream::TcpAsyncStream(boost::asio::io_service& io) : io_service(io), socket(io), timeoutTimer(io)
 {
@@ -106,7 +106,7 @@ void TcpAsyncStream::setAsConnected()
 void TcpAsyncStream::postFail(std::string place, const boost::system::error_code& error)
 {
 	if(error)
-		std::cout << place << "-" << host << "-" << error.message() << "\n";
+		TCP_LOG("Stop on " << place << " (" << host << "): " << error.message());
 
 	state = Disconnected;
 

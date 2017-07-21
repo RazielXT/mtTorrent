@@ -159,12 +159,12 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost64-1.60.0-vs2015\include\boost-1_60;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\include64;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost_1_64_0;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\include64;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PreprocessorDefinitions>STANDALONE;_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\..\boost64-1.60.0-vs2015\lib;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\..\boost_1_64_0\lib64-msvc-14.0;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>ssleay32MTd.lib;libeay32MTd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -238,6 +238,7 @@
     <ClCompile Include="ExtensionProtocol.cpp" />
     <ClCompile Include="HttpTrackerComm.cpp" />
     <ClCompile Include="Interface.cpp" />
+    <ClCompile Include="Logging.cpp" />
     <ClCompile Include="PeerCommunication.cpp" />
     <ClCompile Include="PiecesProgress.cpp" />
     <ClCompile Include="ServiceThreadpool.cpp" />
@@ -262,6 +263,7 @@
     <ClInclude Include="ExtensionProtocol.h" />
     <ClInclude Include="Interface.h" />
     <ClInclude Include="IPeerListener.h" />
+    <ClInclude Include="Logging.h" />
     <ClInclude Include="PeerCommunication.h" />
     <ClInclude Include="PeerMgr.h" />
     <ClInclude Include="PiecesProgress.h" />

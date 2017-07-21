@@ -2,36 +2,10 @@
 #include <string>
 #include <vector>
 #include "Network.h"
-#include <iostream>
+#include "Logging.h"
 
 #define MT_NAME "mtTorrent 0.5"
 #define MT_HASH_NAME "MT-0-5-"
-
-#define DHT_LOG(x) {std::cout << x;}
-//#define NETWORK_LOG(x) {std::cout << x;}
-//#define PEER_LOG(x) {std::cout << x;}
-#define TRACKER_LOG(x) {std::cout << x;}
-//#define PARSER_LOG(x) {std::cout << x;}
-#define GENERAL_INFO_LOG(x) {std::cout << x;}
-
-#ifndef DHT_LOG
-#define DHT_LOG(x){}
-#endif
-#ifndef NETWORK_LOG
-#define NETWORK_LOG(x){}
-#endif
-#ifndef PEER_LOG
-#define PEER_LOG(x){}
-#endif
-#ifndef TRACKER_LOG
-#define TRACKER_LOG(x){}
-#endif
-#ifndef PARSER_LOG
-#define PARSER_LOG(x){}
-#endif
-#ifndef GENERAL_INFO_LOG
-#define GENERAL_INFO_LOG(x){}
-#endif
 
 namespace mtt
 {
