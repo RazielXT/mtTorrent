@@ -147,6 +147,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost64-1.60.0-vs2015\include\boost-1_60;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\include64;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(ProjectDir)..\..\boost64-1.60.0-vs2015\lib;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -160,7 +161,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost64-1.60.0-vs2015\include\boost-1_60;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\include64;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <PreprocessorDefinitions>STANDALONE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>STANDALONE;_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(ProjectDir)..\..\boost64-1.60.0-vs2015\lib;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -204,6 +205,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost64-1.60.0-vs2015\include\boost-1_60;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\include64;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
