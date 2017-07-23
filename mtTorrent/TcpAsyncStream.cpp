@@ -1,6 +1,8 @@
 #include "TcpAsyncStream.h"
 #include "Logging.h"
 
+#define TCP_LOG(x) WRITE_LOG("TCP: " << x)
+
 TcpAsyncStream::TcpAsyncStream(boost::asio::io_service& io) : io_service(io), socket(io), timeoutTimer(io)
 {
 }
@@ -28,17 +30,17 @@ void TcpAsyncStream::connect(const uint8_t* ip, uint16_t port, bool ipv6)
 	if (state != Disconnected)
 		return;
 
-	host.assign((const char*)ip, ipv6 ? 16 : 4);
+	auto endpoint = ipv6 ? tcp::endpoint(boost::asio::ip::address_v6(*reinterpret_cast<const boost::asio::ip::address_v6::bytes_type*>(ip)), port) :
+		tcp::endpoint(boost::asio::ip::address_v4(*reinterpret_cast<const boost::asio::ip::address_v4::bytes_type*>(ip)), port);
+	host = endpoint.address().to_string();
 	state = Connecting;
 
-	timeoutTimer.async_wait(std::bind(&TcpAsyncStream::checkTimeout, shared_from_this()));
-	timeoutTimer.expires_from_now(boost::posix_time::seconds(10));
+	TCP_LOG(host << " connecting");
 
-	socket.async_connect(ipv6 ?
-		tcp::endpoint(boost::asio::ip::address_v6(*reinterpret_cast<const boost::asio::ip::address_v6::bytes_type*>(ip)), port) :
-		tcp::endpoint(boost::asio::ip::address_v4(*reinterpret_cast<const boost::asio::ip::address_v4::bytes_type*>(ip)), port)
-		,
-		std::bind(&TcpAsyncStream::handle_connect, shared_from_this(), std::placeholders::_1));
+	timeoutTimer.async_wait(std::bind(&TcpAsyncStream::checkTimeout, shared_from_this()));
+	timeoutTimer.expires_from_now(boost::posix_time::seconds(5));
+
+	socket.async_connect(endpoint, std::bind(&TcpAsyncStream::handle_connect, shared_from_this(), std::placeholders::_1));
 }
 
 void TcpAsyncStream::connect(const std::string& ip, uint16_t port)
@@ -105,10 +107,16 @@ void TcpAsyncStream::setAsConnected()
 
 void TcpAsyncStream::postFail(std::string place, const boost::system::error_code& error)
 {
+	if (state == Disconnected)
+		return;
+
 	if(error)
-		TCP_LOG("Stop on " << place << " (" << host << "): " << error.message());
+		TCP_LOG(host << " error on " << place << ": " << error.message())
+	else
+		TCP_LOG(host << " end on " << place);
 
 	state = Disconnected;
+	timeoutTimer.cancel();
 
 	{
 		std::lock_guard<std::mutex> guard(callbackMutex);
@@ -169,6 +177,8 @@ void TcpAsyncStream::do_write(DataBuffer data)
 {
 	std::lock_guard<std::mutex> guard(write_msgs_mutex);
 
+	TCP_LOG(host << " writing " << data.size() << " bytes");
+
 	bool write_in_progress = !write_msgs.empty();
 	write_msgs.push_back(data);
 	if (!write_in_progress)
@@ -201,6 +211,8 @@ void TcpAsyncStream::handle_write(const boost::system::error_code& error)
 
 void TcpAsyncStream::handle_receive(const boost::system::error_code& error, std::size_t bytes_transferred)
 {
+	TCP_LOG(host << " received " << bytes_transferred << " bytes");
+
 	if (!error)
 	{
 		appendData(recv_buffer.data(), bytes_transferred);
@@ -236,9 +248,8 @@ void TcpAsyncStream::checkTimeout()
 
 	if (timeoutTimer.expires_at() <= boost::asio::deadline_timer::traits_type::now())
 	{
-		socket.close();
-		state = Disconnected;
 		timeoutTimer.expires_at(boost::posix_time::pos_infin);
+		postFail("timeout", boost::system::error_code());
 	}
 
 	timeoutTimer.async_wait(std::bind(&TcpAsyncStream::checkTimeout, shared_from_this()));

@@ -7,6 +7,8 @@
 #include <future>
 #include "Configuration.h"
 
+#define DHT_LOG(x) WRITE_LOG("DHT: " << x)
+
 using namespace mtt::dht;
 
 NodeId::NodeId()
@@ -270,7 +272,7 @@ void Communication::findPeers(uint8_t* hash)
 	query.minDistance.setMax();
 
 	std::lock_guard<std::mutex> guard(query.requestsMutex);
-	auto req = SendAsyncUdp(dhtRoot, dhtRootPort, true, dataReq, service.io, std::bind(&Communication::Query::onGetPeersResponse, &query, std::placeholders::_1, std::placeholders::_2));
+	auto req = SendAsyncUdp(/*Addr({ 82,222,203,131 }, 51930)*/dhtRoot, dhtRootPort, true, dataReq, service.io, std::bind(&Communication::Query::onGetPeersResponse, &query, std::placeholders::_1, std::placeholders::_2));
 	query.requests.push_back(req);
 }
 
@@ -324,6 +326,7 @@ void mtt::dht::Communication::Query::onGetPeersResponse(DataBuffer* data, Packed
 			while (!receivedNodes.empty() && requests.size() < MaxSimultaneousConnections)
 			{
 				NodeInfo next = receivedNodes.front();
+				usedNodes.push_back(next);
 				receivedNodes.erase(receivedNodes.begin());
 
 				auto dataReq = createGetPeersRequest(targetIdNode.data, false);

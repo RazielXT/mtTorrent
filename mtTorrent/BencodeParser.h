@@ -16,6 +16,7 @@ namespace mtt
 		bool parseFile(const char* filename);
 		bool parse(DataBuffer& buffer);
 		bool parse(std::string& str);
+		bool parse(const uint8_t* data, size_t length);
 		bool parse(const char* data, size_t length);
 
 		struct Object;
@@ -57,6 +58,7 @@ namespace mtt
 		DataBuffer infoHash;
 
 		TorrentFileInfo getTorrentFileInfo();
+		TorrentInfo parseTorrentInfo(const uint8_t* data, size_t length);
 		TorrentInfo parseTorrentInfo(const char* data, size_t length);
 
 		const char* bodyEnd = nullptr;

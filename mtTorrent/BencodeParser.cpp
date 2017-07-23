@@ -2,6 +2,8 @@
 #include <iostream>
 #include <openssl/sha.h>
 
+#define PARSER_LOG(x) {}//WRITE_LOG("PARSER: " << x)
+
 using namespace mtt;
 
 bool BencodeParser::parse(std::string& str)
@@ -11,7 +13,12 @@ bool BencodeParser::parse(std::string& str)
 
 bool BencodeParser::parse(DataBuffer& buffer)
 {
-	return parse(buffer.data(), buffer.size());
+	return parse((const char*)buffer.data(), buffer.size());
+}
+
+bool BencodeParser::parse(const uint8_t* data, size_t length)
+{
+	return parse((const char*)data, length);
 }
 
 bool BencodeParser::parse(const char* data, size_t length)
@@ -261,6 +268,11 @@ mtt::TorrentInfo mtt::BencodeParser::parseTorrentInfo(const char* data, size_t l
 	}		
 	else
 		return mtt::TorrentInfo();
+}
+
+mtt::TorrentInfo mtt::BencodeParser::parseTorrentInfo(const uint8_t* data, size_t length)
+{
+	return parseTorrentInfo((const char*)data, length);
 }
 
 mtt::TorrentInfo mtt::BencodeParser::parseTorrentInfo(BenDictionary& infoDictionary)

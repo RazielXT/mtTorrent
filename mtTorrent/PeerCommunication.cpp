@@ -2,6 +2,8 @@
 #include "PacketHelper.h"
 #include "Configuration.h"
 
+#define BT_LOG(x) {} WRITE_LOG("BT: " << x)
+
 using namespace mtt;
 
 namespace mtt
@@ -189,7 +191,7 @@ void mtt::PeerCommunication::requestPieceBlock()
 void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 {
 	if (message.id != Piece)
-		PEER_LOG(peerInfo.ipStr << "_ID:" << std::to_string(message.id) << ", size: " << std::to_string(message.messageSize) << "\n");
+		BT_LOG("MSG_ID:" << (int)message.id << ", size: " << message.messageSize);
 
 	if (message.id == KeepAlive)
 	{
@@ -197,11 +199,11 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 
 	if (message.id == Bitfield)
 	{
-		PEER_LOG(peerInfo.ipStr << " BITFIELD size: " << std::to_string(message.bitfield.size()) << ", expected: " << std::to_string(torrent->expectedBitfieldSize) << "\n");
+		//BT_LOG(peerInfo.ipStr << " BITFIELD size: " << std::to_string(message.bitfield.size()) << ", expected: " << std::to_string(torrent->expectedBitfieldSize) << "\n");
 
 		info.pieces.fromBitfield(message.bitfield, torrent.pieces.size());
 
-		PEER_LOG(peerInfo.ipStr << " new percentage: " << std::to_string(peerPieces.getPercentage()) << "\n");
+		//BT_LOG(peerInfo.ipStr << " new percentage: " << std::to_string(peerPieces.getPercentage()) << "\n");
 
 		listener.progressUpdated();
 	}
@@ -210,14 +212,14 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 	{
 		info.pieces.addPiece(message.havePieceIndex);
 
-		PEER_LOG(peerInfo.ipStr << " new percentage: " << std::to_string(peerPieces.getPercentage()) << "\n");
+		//BT_LOG("new percentage: " << std::to_string(peerPieces.getPercentage()) << "\n");
 
 		listener.progressUpdated();
 	}
 
 	if (message.id == Piece)
 	{
-		PEER_LOG("Piece id: " << std::to_string(message.piece.info.index) << ", size: " << std::to_string(message.piece.info.length) << "\n");
+		BT_LOG("Piece id: " << message.piece.info.index << ", size: " << message.piece.info.length);
 
 		bool finished = false;
 		bool success = false;
@@ -227,7 +229,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 
 			if (message.piece.info.index != downloadingPiece.index)
 			{
-				PEER_LOG(peerInfo.ipStr << " Invalid block!! \n")
+				BT_LOG("Invalid block!")
 				finished = true;
 			}
 			else
@@ -261,7 +263,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 	{
 		auto type = ext.load(message.extended.id, message.extended.data);
 
-		PEER_LOG(peerInfo.ipStr << " Ext message type " std::to_string(type) << "\n");
+		BT_LOG("Ext message type " << (int)type);
 
 		if (type == mtt::ext::HandshakeEx)
 		{
@@ -277,7 +279,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 		if (!state.finishedHandshake)
 		{
 			state.finishedHandshake = true;
-			PEER_LOG(peerInfo.ipStr << " finished handshake\n");
+			BT_LOG("finished handshake");
 
 			memcpy(info.id, message.handshake.peerId, 20);
 			memcpy(info.protocol, message.handshake.reservedBytes, 8);

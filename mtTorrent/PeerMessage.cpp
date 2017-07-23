@@ -10,7 +10,7 @@ PeerMessage::PeerMessage(DataBuffer& data)
 
 	if (data.size() >= 68 && data[0] == 19)
 	{
-		if (strncmp(data.data() + 1, "BitTorrent protocol", 19) == 0)
+		if (memcmp(data.data() + 1, "BitTorrent protocol", 19) == 0)
 		{
 			id = Handshake;
 

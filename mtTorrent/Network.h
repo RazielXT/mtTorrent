@@ -12,7 +12,7 @@ using boost::asio::ip::udp;
 namespace ssl = boost::asio::ssl;
 typedef ssl::stream<tcp::socket> ssl_socket;
 
-using DataBuffer = std::vector<char>;
+using DataBuffer = std::vector<uint8_t>;
 
 struct Addr
 {

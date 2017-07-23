@@ -121,8 +121,13 @@ void LocalWithTorrentFile::testMetadataReceive()
 	{
 		BencodeParser parse;
 		auto info = parse.parseTorrentInfo(metadata.buffer.data(), metadata.buffer.size());
-		std::cout << info.files[0].path[0];
+		WRITE_LOG(info.files[0].path[0]);
 	}
+}
+
+void LocalWithTorrentFile::connectionClosed()
+{
+	failed = true;
 }
 
 void LocalWithTorrentFile::testAsyncDhtGetPeers()
@@ -130,14 +135,14 @@ void LocalWithTorrentFile::testAsyncDhtGetPeers()
 	ServiceThreadpool service;
 	mtt::dht::Communication dht(*this);
 
-	std::string targetIdBase32 = "T323KFN5XLZAZZO2NDNCYX7OBMQTUV6U"; // "ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J";
+	//ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J
+	//6QBN6XVGKV7CWOT5QXKDYWF3LIMUVK4I
+	std::string targetIdBase32 = "6QBN6XVGKV7CWOT5QXKDYWF3LIMUVK4I"; 
 	auto targetId = base32decode(targetIdBase32);
 
 	dht.findPeers((uint8_t*)targetId.data());
 
 	WAITFOR(dhtResult.finalCount != -1 || !dhtResult.values.empty());
-
-	std::cout << dhtResult.finalCount;
 
 	if (dhtResult.finalCount == 0)
 		return;
@@ -151,10 +156,15 @@ void LocalWithTorrentFile::testAsyncDhtGetPeers()
 
 	while (true)
 	{
-		if (nextPeerIdx >= dhtResult.values.size())
-			return;
+		WAITFOR(dhtResult.finalCount != -1 || nextPeerIdx < dhtResult.values.size());
 
-		std::cout << "TRYING " << nextPeerIdx << "\n";
+		if (nextPeerIdx >= dhtResult.values.size())
+		{
+			WRITE_LOG("NO ACTIVE PEERS, RECEIVED: " << dhtResult.finalCount);
+			return;
+		}
+
+		WRITE_LOG("PEER " << nextPeerIdx);
 		peer = std::make_shared<PeerCommunication>(info, *this, service.io);
 		Addr nextAddr;
 
@@ -163,6 +173,7 @@ void LocalWithTorrentFile::testAsyncDhtGetPeers()
 			nextAddr = dhtResult.values[nextPeerIdx++];
 		}
 
+		failed = false;
 		peer->start(nextAddr);
 
 		WAITFOR(failed || peer->state.finishedHandshake);
@@ -200,7 +211,7 @@ void LocalWithTorrentFile::testAsyncDhtGetPeers()
 	{
 		BencodeParser parse;
 		auto info = parse.parseTorrentInfo(metadata.buffer.data(), metadata.buffer.size());
-		std::cout << info.files[0].path[0];
+		WRITE_LOG(info.files[0].path[0]);
 	}
 }
 

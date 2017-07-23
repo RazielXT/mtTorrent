@@ -5,6 +5,9 @@
 #include "PacketHelper.h"
 #include "Configuration.h"
 
+
+#define TRACKER_LOG(x) {}//WRITE_LOG("TRACKER: " << x)
+
 using namespace mtt;
 
 std::string url_encode(uint8_t* data, uint32_t size)
@@ -104,7 +107,7 @@ mtt::AnnounceResponse mtt::HttpTrackerComm::getAnnounceResponse(DataBuffer buffe
 	const char* success = "HTTP/1.1 200 OK";
 	size_t succesLen = strlen(success);
 
-	if (buffer.size() > succesLen && strncmp(buffer.data(), success, succesLen) == 0)
+	if (buffer.size() > succesLen && memcmp(buffer.data(), success, succesLen) == 0)
 	{
 		size_t dataStart = 0;
 

@@ -33,7 +33,7 @@ public:
 
 protected:
 
-	std::mutex callbackMutex;
+	std::mutex stateMutex;
 	enum { Clear, Initialized, Connected } state = Clear;
 
 	void postFail(std::string place, const boost::system::error_code& error);
@@ -46,6 +46,7 @@ protected:
 
 	DataBuffer messageBuffer;
 	DataBuffer responseBuffer;
+	void send_message();
 	void handle_write(const boost::system::error_code& error, size_t sz);
 	void handle_receive(const boost::system::error_code& error, std::size_t bytes_transferred);
 

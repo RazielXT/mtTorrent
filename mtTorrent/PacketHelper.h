@@ -48,7 +48,7 @@ struct PacketReader
 	{
 	}
 
-	PacketReader(const char* buf, size_t sz) : buffer(buf), size(sz)
+	PacketReader(const void* buf, size_t sz) : buffer((const uint8_t*)buf), size(sz)
 	{
 	}
 
@@ -59,7 +59,7 @@ struct PacketReader
 
 private:
 
-	const char* buffer = nullptr;
+	const uint8_t* buffer = nullptr;
 	size_t size = 0;
 	size_t pos = 0;
 };
@@ -121,7 +121,7 @@ struct PacketBuilder
 	void addAfter(const char* find, const char* b, size_t length)
 	{
 		auto findLen = strlen(find);
-		auto f = std::find_if(out.begin(), out.end() - length, [=](char& idx) { return strncmp(&idx, find, findLen) == 0; });
+		auto f = std::find_if(out.begin(), out.end() - length, [=](uint8_t& idx) { return memcmp(&idx, find, findLen) == 0; });
 
 		if (f != out.end())
 			f += findLen;

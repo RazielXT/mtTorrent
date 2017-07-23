@@ -132,7 +132,7 @@ void openTcpSocket(tcp::socket& socket, tcp::resolver& resolver, const char* hos
 DataBuffer sendTcpRequest(tcp::socket& socket, DataBuffer& request)
 {
 	boost::asio::streambuf sBuffer;
-	sBuffer.sputn(request.data(), request.size());
+	sBuffer.sputn((const char*)request.data(), request.size());
 
 	// Send the request.
 	boost::asio::write(socket, sBuffer);
@@ -148,7 +148,7 @@ DataBuffer sendTcpRequest(tcp::socket& socket, DataBuffer& request)
 		DataBuffer buffer;
 
 		buffer.resize(len);
-		response_stream.read(&buffer[0], len);
+		response_stream.read((char*)&buffer[0], len);
 
 		return buffer;
 	}
@@ -187,26 +187,27 @@ Addr::Addr(uint8_t* buffer, bool v6)
 void Addr::set(uint8_t* ip, uint16_t p, bool isIpv6)
 {
 	memcpy(addrBytes, ip, isIpv6 ? 16 : 4);
-	port = port;
+	port = p;
 	ipv6 = isIpv6;
 }
 
-void Addr::set(uint32_t ip, uint16_t port)
+void Addr::set(uint32_t ip, uint16_t p)
 {
 	memcpy(addrBytes, &ip, 4);
-	port = port;
+	port = p;
 	ipv6 = false;
 }
 
-void Addr::set(DataBuffer ip, uint16_t port)
+void Addr::set(DataBuffer ip, uint16_t p)
 {
 	memcpy(addrBytes, ip.data(), ip.size());
-	port = port;
+	port = p;
 	ipv6 = ip.size() > 4;
 }
 
 size_t Addr::parse(uint8_t* buffer, bool v6)
 {
+	ipv6 = v6;
 	size_t addrSize = v6 ? 16 : 4;
 	memcpy(addrBytes, buffer, addrSize);
 

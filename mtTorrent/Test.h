@@ -49,11 +49,7 @@ public:
 private:
 
 	bool failed = false;
-
-	virtual void connectionClosed() override
-	{
-		failed = true;
-	}
+	virtual void connectionClosed() override;
 
 	mtt::ext::UtMetadata::Message utmMsg;
 	virtual void metadataPieceReceived(mtt::ext::UtMetadata::Message&) override;

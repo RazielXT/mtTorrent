@@ -4,6 +4,8 @@
 #include <iostream>
 #include "Configuration.h"
 
+#define TRACKER_LOG(x) {}//WRITE_LOG("TRACKER: " << x)
+
 using namespace mtt;
 
 mtt::UdpTrackerComm::UdpTrackerComm()

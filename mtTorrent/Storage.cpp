@@ -87,7 +87,7 @@ void mtt::Storage::flush(File& file)
 	{	
 		auto piecePos = file.startPiecePos + (p.index - file.startPieceIndex)*pieceSize;
 		fileOut.seekp(piecePos);
-		fileOut.write(p.data.data(), p.dataSize);
+		fileOut.write((const char*)p.data.data(), p.dataSize);
 	}
 
 	unsavedPieces[file.id].clear();
