@@ -148,12 +148,12 @@ MessageType ExtensionProtocol::load(char id, DataBuffer& data)
 			}
 
 			if (auto version = parser.parsedData.getTxtItem("v"))
-				info.client = *version;
+				state.client = *version;
 
 			if (auto ip = parser.parsedData.getTxtItem("yourip"))
-				info.yourIp = *ip;
+				state.yourIp = *ip;
 
-			info.enabled = true;
+			state.enabled = true;
 		}
 
 		return HandshakeEx;

@@ -70,7 +70,7 @@ namespace mtt
 				~Query();
 
 				uint32_t MaxReturnedValues = 50;
-				uint32_t MaxCachedNodes = 32;
+				uint32_t MaxCachedNodes = 64;
 				uint32_t MaxSimultaneousConnections = 8;
 
 				std::mutex requestsMutex;

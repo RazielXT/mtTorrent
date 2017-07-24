@@ -60,7 +60,7 @@ namespace mtt
 				std::string yourIp;
 				std::string client;
 			}
-			info;
+			state;
 
 			bool isSupported(MessageType type);
 

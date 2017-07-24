@@ -27,6 +27,10 @@ public:
 	{
 	}
 
+	virtual void extHandshakeFinished() override
+	{
+	}
+
 	virtual void metadataPieceReceived(mtt::ext::UtMetadata::Message&) override
 	{
 	}

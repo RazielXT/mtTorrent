@@ -135,9 +135,10 @@ void LocalWithTorrentFile::testAsyncDhtGetPeers()
 	ServiceThreadpool service;
 	mtt::dht::Communication dht(*this);
 
-	//ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J
-	//6QBN6XVGKV7CWOT5QXKDYWF3LIMUVK4I
-	std::string targetIdBase32 = "6QBN6XVGKV7CWOT5QXKDYWF3LIMUVK4I"; 
+	//ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J	boku 26
+	//6QBN6XVGKV7CWOT5QXKDYWF3LIMUVK4I	owarimonogagtari batch
+	//56VYAWGYUTF7ETZZRB45C6FKJSKVBLRD	mushishi s2 22 rare
+	std::string targetIdBase32 = "ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J"; 
 	auto targetId = base32decode(targetIdBase32);
 
 	dht.findPeers((uint8_t*)targetId.data());
@@ -178,7 +179,10 @@ void LocalWithTorrentFile::testAsyncDhtGetPeers()
 
 		WAITFOR(failed || peer->state.finishedHandshake);
 
-		WAITFOR(failed || peer->ext.utm.size);
+		if (!peer->info.supportsExtensions())
+			continue;
+
+		WAITFOR(failed || peer->ext.state.enabled);
 
 		if (failed)
 			continue;
@@ -240,10 +244,14 @@ uint32_t LocalWithTorrentFile::onFoundPeers(uint8_t* hash, std::vector<Addr>& va
 		}
 	}
 
+	WRITE_LOG("DHT received values count :" << count)
+
 	return count;
 }
 
 void LocalWithTorrentFile::findingPeersFinished(uint8_t* hash, uint32_t count)
 {
+	WRITE_LOG("DHT final values count :" << count)
+
 	dhtResult.finalCount = count;
 }

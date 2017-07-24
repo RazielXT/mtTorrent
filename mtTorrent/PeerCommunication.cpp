@@ -56,6 +56,11 @@ mtt::PeerStateInfo::PeerStateInfo()
 	memset(protocol, 0, 8);
 }
 
+bool mtt::PeerStateInfo::supportsExtensions()
+{
+	return (protocol[5] & 0x10) != 0;
+}
+
 PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, boost::asio::io_service& io_service) : torrent(t), listener(l)
 {
 	stream = std::make_shared<TcpAsyncStream>(io_service);
@@ -174,7 +179,6 @@ bool mtt::PeerCommunication::requestPiece(PieceDownloadInfo& pieceInfo)
 
 void mtt::PeerCommunication::enableExtensions()
 {
-	ext.info.enabled;
 	state.action = PeerCommunicationState::Handshake;
 	stream->write(ext.getExtendedHandshakeMessage());
 }
@@ -268,7 +272,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 		if (type == mtt::ext::HandshakeEx)
 		{
 			state.action = PeerCommunicationState::Idle;
-			listener.handshakeFinished();
+			listener.extHandshakeFinished();
 		}
 	}
 
@@ -284,10 +288,10 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 			memcpy(info.id, message.handshake.peerId, 20);
 			memcpy(info.protocol, message.handshake.reservedBytes, 8);
 
-			if(info.protocol[5] & 0x10)
+			if(info.supportsExtensions())
 				enableExtensions();
-			else
-				listener.handshakeFinished();
+
+			listener.handshakeFinished();
 		}
 	}
 
