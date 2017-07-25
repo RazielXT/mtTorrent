@@ -7,44 +7,44 @@
 class BasicPeerListener : public mtt::IPeerListener
 {
 public:
-	virtual void handshakeFinished() override
+	virtual void handshakeFinished(mtt::PeerCommunication*) override
 	{
 	}
 
-	virtual void connectionClosed() override
+	virtual void connectionClosed(mtt::PeerCommunication*) override
 	{
 	}
 
-	virtual void messageReceived(mtt::PeerMessage&) override
+	virtual void messageReceived(mtt::PeerCommunication*, mtt::PeerMessage&) override
 	{
 	}
 
-	virtual void progressUpdated() override
+	virtual void progressUpdated(mtt::PeerCommunication*) override
 	{
 	}
 
-	virtual void pieceReceived(mtt::DownloadedPiece* piece) override
+	virtual void pieceReceived(mtt::PeerCommunication*, mtt::DownloadedPiece* piece) override
 	{
 	}
 
-	virtual void extHandshakeFinished() override
+	virtual void extHandshakeFinished(mtt::PeerCommunication*) override
 	{
 	}
 
-	virtual void metadataPieceReceived(mtt::ext::UtMetadata::Message&) override
+	virtual void metadataPieceReceived(mtt::PeerCommunication*, mtt::ext::UtMetadata::Message&) override
 	{
 	}
 
-	virtual void pexReceived(mtt::ext::PeerExchange::Message&) override
+	virtual void pexReceived(mtt::PeerCommunication*, mtt::ext::PeerExchange::Message&) override
 	{
 	}
 };
 
-class LocalWithTorrentFile : public BasicPeerListener, public mtt::dht::DhtListener
+class TorrentTest : public BasicPeerListener, public mtt::dht::DhtListener
 {
 public:
 
-	LocalWithTorrentFile();
+	TorrentTest();
 
 	void testMetadataReceive();
 	void testAsyncUdpRequest();
@@ -53,10 +53,10 @@ public:
 private:
 
 	bool failed = false;
-	virtual void connectionClosed() override;
+	virtual void connectionClosed(mtt::PeerCommunication*) override;
 
 	mtt::ext::UtMetadata::Message utmMsg;
-	virtual void metadataPieceReceived(mtt::ext::UtMetadata::Message&) override;
+	virtual void metadataPieceReceived(mtt::PeerCommunication*, mtt::ext::UtMetadata::Message&) override;
 
 	void onUdpReceived(DataBuffer* data, PackedUdpRequest* source);
 	DataBuffer udpResult;

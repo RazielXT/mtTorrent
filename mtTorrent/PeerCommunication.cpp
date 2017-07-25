@@ -68,8 +68,8 @@ PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, boost::as
 	stream->onCloseCallback = std::bind(&PeerCommunication::connectionClosed, this);
 	stream->onReceiveCallback = std::bind(&PeerCommunication::dataReceived, this);
 
-	ext.pex.onPexMessage = std::bind(&mtt::IPeerListener::pexReceived, &listener, std::placeholders::_1);
-	ext.utm.onUtMetadataMessage = std::bind(&mtt::IPeerListener::metadataPieceReceived, &listener, std::placeholders::_1);
+	ext.pex.onPexMessage = std::bind(&mtt::IPeerListener::pexReceived, &listener, this, std::placeholders::_1);
+	ext.utm.onUtMetadataMessage = std::bind(&mtt::IPeerListener::metadataPieceReceived, &listener, this, std::placeholders::_1);
 }
 
 void PeerCommunication::start(Addr& address)
@@ -112,7 +112,7 @@ void mtt::PeerCommunication::stop()
 void mtt::PeerCommunication::connectionClosed()
 {
 	state.action = PeerCommunicationState::Disconnected;
-	listener.connectionClosed();
+	listener.connectionClosed(this);
 }
 
 mtt::PeerMessage mtt::PeerCommunication::readNextStreamMessage()
@@ -180,7 +180,7 @@ bool mtt::PeerCommunication::requestPiece(PieceDownloadInfo& pieceInfo)
 void mtt::PeerCommunication::enableExtensions()
 {
 	state.action = PeerCommunicationState::Handshake;
-	stream->write(ext.getExtendedHandshakeMessage());
+	stream->write(ext.createExtendedHandshakeMessage());
 }
 
 void mtt::PeerCommunication::requestPieceBlock()
@@ -209,7 +209,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 
 		//BT_LOG(peerInfo.ipStr << " new percentage: " << std::to_string(peerPieces.getPercentage()) << "\n");
 
-		listener.progressUpdated();
+		listener.progressUpdated(this);
 	}
 
 	if (message.id == Have)
@@ -218,7 +218,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 
 		//BT_LOG("new percentage: " << std::to_string(peerPieces.getPercentage()) << "\n");
 
-		listener.progressUpdated();
+		listener.progressUpdated(this);
 	}
 
 	if (message.id == Piece)
@@ -254,7 +254,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 		if (finished)
 		{
 			state.action = PeerCommunicationState::Idle;
-			listener.pieceReceived(success ? &downloadingPiece : nullptr);
+			listener.pieceReceived(this, success ? &downloadingPiece : nullptr);
 		}
 	}
 
@@ -272,7 +272,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 		if (type == mtt::ext::HandshakeEx)
 		{
 			state.action = PeerCommunicationState::Idle;
-			listener.extHandshakeFinished();
+			listener.extHandshakeFinished(this);
 		}
 	}
 
@@ -291,9 +291,9 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 			if(info.supportsExtensions())
 				enableExtensions();
 
-			listener.handshakeFinished();
+			listener.handshakeFinished(this);
 		}
 	}
 
-	listener.messageReceived(message);
+	listener.messageReceived(this, message);
 }

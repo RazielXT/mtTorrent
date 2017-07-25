@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
 
 	try
 	{
-		LocalWithTorrentFile test;
+		TorrentTest test;
 		test.testAsyncDhtGetPeers();
 	}
 	catch (std::exception& e)

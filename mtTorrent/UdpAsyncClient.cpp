@@ -154,13 +154,11 @@ void UdpAsyncClient::send_message()
 	}
 	else if (state == Connected)
 	{
-		UDP_LOG(target_endpoint.address().to_string() << " writing (" << (int)writeRetries << ")");
-
 		if (!messageBuffer.empty())
 		{
-			socket.async_send_to(
-				boost::asio::buffer(messageBuffer.data(), messageBuffer.size()),
-				target_endpoint,
+			UDP_LOG(target_endpoint.address().to_string() << " writing (" << (int)writeRetries << ")");
+
+			socket.async_send_to(boost::asio::buffer(messageBuffer.data(), messageBuffer.size()), target_endpoint,
 				std::bind(&UdpAsyncClient::handle_write, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 		}
 	}

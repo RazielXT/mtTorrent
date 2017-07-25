@@ -5,21 +5,22 @@
 namespace mtt
 {
 	struct DownloadedPiece;
+	class PeerCommunication;
 
 	class IPeerListener
 	{
 	public:
 
-		virtual void handshakeFinished() = 0;
-		virtual void connectionClosed() = 0;
+		virtual void handshakeFinished(PeerCommunication*) = 0;
+		virtual void connectionClosed(PeerCommunication*) = 0;
 
-		virtual void messageReceived(PeerMessage&) = 0;
+		virtual void messageReceived(PeerCommunication*, PeerMessage&) = 0;
 
-		virtual void progressUpdated() = 0;
-		virtual void pieceReceived(DownloadedPiece* piece) = 0;
+		virtual void progressUpdated(PeerCommunication*) = 0;
+		virtual void pieceReceived(PeerCommunication*, DownloadedPiece* piece) = 0;
 
-		virtual void extHandshakeFinished() = 0;
-		virtual void metadataPieceReceived(ext::UtMetadata::Message&) = 0;
-		virtual void pexReceived(ext::PeerExchange::Message&) = 0;
+		virtual void extHandshakeFinished(PeerCommunication*) = 0;
+		virtual void metadataPieceReceived(PeerCommunication*, ext::UtMetadata::Message&) = 0;
+		virtual void pexReceived(PeerCommunication*, ext::PeerExchange::Message&) = 0;
 	};
 }

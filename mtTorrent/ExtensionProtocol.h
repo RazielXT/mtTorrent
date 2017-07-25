@@ -65,7 +65,7 @@ namespace mtt
 			bool isSupported(MessageType type);
 
 			MessageType load(char id, DataBuffer& data);
-			DataBuffer getExtendedHandshakeMessage(bool enablePex = true, uint16_t metadataSize = 0);
+			DataBuffer createExtendedHandshakeMessage(bool enablePex = true, uint16_t metadataSize = 0);
 
 			PeerExchange pex;
 			UtMetadata utm;

@@ -178,7 +178,7 @@ MessageType ExtensionProtocol::load(char id, DataBuffer& data)
 	return InvalidEx;
 }
 
-DataBuffer ExtensionProtocol::getExtendedHandshakeMessage(bool enablePex, uint16_t metadataSize)
+DataBuffer ExtensionProtocol::createExtendedHandshakeMessage(bool enablePex, uint16_t metadataSize)
 {
 	PacketBuilder extDict(100);
 	extDict.add32(0);

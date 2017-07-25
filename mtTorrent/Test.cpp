@@ -19,17 +19,17 @@ void testInit()
 	}
 }
 
-LocalWithTorrentFile::LocalWithTorrentFile()
+TorrentTest::TorrentTest()
 {
 	testInit();
 }
 
-void LocalWithTorrentFile::metadataPieceReceived(mtt::ext::UtMetadata::Message& msg)
+void TorrentTest::metadataPieceReceived(PeerCommunication*, mtt::ext::UtMetadata::Message& msg)
 {
 	utmMsg = msg;
 }
 
-void LocalWithTorrentFile::onUdpReceived(DataBuffer* data, PackedUdpRequest* source)
+void TorrentTest::onUdpReceived(DataBuffer* data, PackedUdpRequest* source)
 {
 	if (data)
 		udpResult = *data;
@@ -38,7 +38,7 @@ void LocalWithTorrentFile::onUdpReceived(DataBuffer* data, PackedUdpRequest* sou
 }
 
 #define OFFICE
-void LocalWithTorrentFile::testAsyncUdpRequest()
+void TorrentTest::testAsyncUdpRequest()
 {
 	ServiceThreadpool service;
 
@@ -63,9 +63,9 @@ void LocalWithTorrentFile::testAsyncUdpRequest()
 
 	{
 #ifndef OFFICE
-		auto req = SendAsyncUdp(dhtRoot, dhtRootPort, true, packet.getBuffer(), service.io, std::bind(&LocalWithTorrentFile::onUdpReceived, this, std::placeholders::_1, std::placeholders::_2));
+		auto req = SendAsyncUdp(dhtRoot, dhtRootPort, true, packet.getBuffer(), service.io, std::bind(&TorrentTest::onUdpReceived, this, std::placeholders::_1, std::placeholders::_2));
 #else
-		auto req = SendAsyncUdp(Addr({8,65,4,4},55555), packet.getBuffer(), service.io, std::bind(&LocalWithTorrentFile::onUdpReceived, this, std::placeholders::_1, std::placeholders::_2));
+		auto req = SendAsyncUdp(Addr({8,65,4,4},55555), packet.getBuffer(), service.io, std::bind(&TorrentTest::onUdpReceived, this, std::placeholders::_1, std::placeholders::_2));
 #endif
 
 
@@ -78,7 +78,7 @@ void LocalWithTorrentFile::testAsyncUdpRequest()
 	service.stop();
 }
 
-void LocalWithTorrentFile::testMetadataReceive()
+void TorrentTest::testMetadataReceive()
 {
 	BencodeParser file;	
 	if (!file.parseFile("D:\\test.torrent"))
@@ -125,12 +125,12 @@ void LocalWithTorrentFile::testMetadataReceive()
 	}
 }
 
-void LocalWithTorrentFile::connectionClosed()
+void TorrentTest::connectionClosed(PeerCommunication*)
 {
 	failed = true;
 }
 
-void LocalWithTorrentFile::testAsyncDhtGetPeers()
+void TorrentTest::testAsyncDhtGetPeers()
 {
 	ServiceThreadpool service;
 	mtt::dht::Communication dht(*this);
@@ -219,7 +219,7 @@ void LocalWithTorrentFile::testAsyncDhtGetPeers()
 	}
 }
 
-uint32_t LocalWithTorrentFile::onFoundPeers(uint8_t* hash, std::vector<Addr>& values)
+uint32_t TorrentTest::onFoundPeers(uint8_t* hash, std::vector<Addr>& values)
 {
 	std::lock_guard<std::mutex> guard(dhtResult.resultMutex);
 
@@ -249,7 +249,7 @@ uint32_t LocalWithTorrentFile::onFoundPeers(uint8_t* hash, std::vector<Addr>& va
 	return count;
 }
 
-void LocalWithTorrentFile::findingPeersFinished(uint8_t* hash, uint32_t count)
+void TorrentTest::findingPeersFinished(uint8_t* hash, uint32_t count)
 {
 	WRITE_LOG("DHT final values count :" << count)
 
