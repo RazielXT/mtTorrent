@@ -44,6 +44,8 @@ namespace mtt
 		std::vector<std::string> announceList;
 
 		TorrentInfo info;
+
+		bool parseMagnetLink(std::string link);
 	};
 
 	struct SelectedFile

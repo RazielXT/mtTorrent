@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 	try
 	{
 		TorrentTest test;
-		test.testAsyncDhtGetPeers();
+		test.start();
 	}
 	catch (std::exception& e)
 	{

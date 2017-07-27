@@ -1,4 +1,5 @@
 #include "Interface.h"
+#include "utils\Base32.h"
 
 using namespace mtt;
 
@@ -23,4 +24,61 @@ void DownloadedPiece::addBlock(PieceBlock& block)
 	receivedBlocks++;
 	dataSize += block.info.length;
 	memcpy(&data[0] + block.info.begin, block.data.data(), block.info.length);
+}
+
+static bool parseTorrentHash(std::string& from, uint8_t* to)
+{
+	if (from.length() == 32)
+	{
+		auto targetId = base32decode(from);
+
+		if (targetId.length() == 20)
+		{
+			memcpy(to, targetId.data(), 20);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool mtt::TorrentFileInfo::parseMagnetLink(std::string link)
+{
+	if (link.length() < 8 || strncmp("magnet:?", link.data(), 8) != 0)
+		return false;
+
+	size_t dataPos = 8;
+	bool correct = false;
+
+	while (dataPos < link.length())
+	{
+		auto elementEndPos = link.find_first_of('&', dataPos);
+		auto valueStartPos = link.find_first_of('=', dataPos);
+
+		if (valueStartPos < elementEndPos)
+		{
+			std::string name = link.substr(dataPos, valueStartPos - dataPos);
+			std::string value = link.substr(valueStartPos + 1, elementEndPos  - valueStartPos - 1);
+
+			if (name == "xt" && value.length() > 9 && strncmp("urn:btih:", value.data(), 9) == 0)
+				correct = parseTorrentHash(value.substr(9), info.hash);
+			else if (name == "tr")
+			{
+				if (announceList.empty())
+					announce = value;
+
+				announceList.push_back(value);
+			}
+		}
+
+		dataPos = elementEndPos;
+
+		if (dataPos != std::string::npos)
+			dataPos++;
+	}
+
+	if (!correct && link.length() == 32)
+		correct = parseTorrentHash(link, info.hash);
+
+	return correct;
 }

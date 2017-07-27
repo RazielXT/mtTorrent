@@ -49,7 +49,9 @@ public:
 	void testMetadataReceive();
 	void testAsyncUdpRequest();
 	void testAsyncDhtGetPeers();
+	void testMangetLink();
 
+	void start();
 private:
 
 	bool failed = false;
