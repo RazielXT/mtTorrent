@@ -263,6 +263,7 @@
     <ClInclude Include="ExtensionProtocol.h" />
     <ClInclude Include="Interface.h" />
     <ClInclude Include="IPeerListener.h" />
+    <ClInclude Include="ITracker.h" />
     <ClInclude Include="Logging.h" />
     <ClInclude Include="PeerCommunication.h" />
     <ClInclude Include="PeerMgr.h" />

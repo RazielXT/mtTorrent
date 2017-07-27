@@ -2,22 +2,21 @@
 
 #include "Interface.h"
 #include "UdpAsyncClient.h"
+#include "ITracker.h"
 
 namespace mtt
 {
-	class UdpTrackerComm
+	class UdpTrackerComm : public Tracker
 	{
 	public:
 
 		UdpTrackerComm();
 
-		void startTracker(std::string host, std::string port, boost::asio::io_service& io, TorrentFileInfo* torrent);
+		virtual void start(std::string host, std::string port, boost::asio::io_service& io, TorrentFileInfo* torrent) override;
 
-		std::function<void(AnnounceResponse&)> onAnnounceResponse;
+		virtual void announce() override;
 
 	private:
-
-		std::string hostname;
 
 		UdpRequest udpComm;
 		void onConnectUdpResponse(DataBuffer* data, PackedUdpRequest* source);
@@ -57,9 +56,9 @@ namespace mtt
 		AnnounceResponse getAnnounceResponse(DataBuffer buffer);
 
 		bool validResponse(TrackerMessage& resp);
+
 		TrackerMessage lastMessage;
 
 		uint64_t connectionId;
-		TorrentFileInfo* torrent;
 	};
 }

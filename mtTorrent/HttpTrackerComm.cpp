@@ -6,7 +6,7 @@
 #include "Configuration.h"
 
 
-#define TRACKER_LOG(x) {}//WRITE_LOG("TRACKER: " << x)
+#define TRACKER_LOG(x) {}//WRITE_LOG("HTTP tracker " << info.hostname << " " << x)
 
 using namespace mtt;
 
@@ -45,9 +45,9 @@ mtt::HttpTrackerComm::~HttpTrackerComm()
 		tcpComm->close();
 }
 
-void mtt::HttpTrackerComm::startTracker(std::string host, std::string p, boost::asio::io_service& io, TorrentFileInfo* t)
+void mtt::HttpTrackerComm::start(std::string host, std::string p, boost::asio::io_service& io, TorrentFileInfo* t)
 {
-	hostname = host;
+	info.hostname = host;
 	port = p;
 	torrent = t;
 
@@ -56,9 +56,10 @@ void mtt::HttpTrackerComm::startTracker(std::string host, std::string p, boost::
 	tcpComm->onCloseCallback = std::bind(&HttpTrackerComm::onTcpClosed, this);
 	tcpComm->onReceiveCallback = std::bind(&HttpTrackerComm::onTcpReceived, this);
 
-	TRACKER_LOG("Connecting to HTTP tracker " << hostname << "\n");
+	TRACKER_LOG("connecting");
+	state = Connecting;
 
-	tcpComm->connect(hostname, port);
+	tcpComm->connect(host, port);
 }
 
 void mtt::HttpTrackerComm::onTcpClosed()
@@ -68,9 +69,10 @@ void mtt::HttpTrackerComm::onTcpClosed()
 
 void mtt::HttpTrackerComm::onTcpConnected()
 {
-	TRACKER_LOG("Announcing to HTTP tracker " << hostname << "\n");
+	TRACKER_LOG("announcing");
+	state = Announcing;
 
-	auto request = createAnnounceRequest(hostname, port);
+	auto request = createAnnounceRequest(info.hostname, port);
 
 	tcpComm->write(request);
 }
@@ -79,11 +81,12 @@ void mtt::HttpTrackerComm::onTcpReceived()
 {
 	auto resp = tcpComm->getReceivedData();
 	auto announceMsg = getAnnounceResponse(resp);
+	state = Announced;
 
-	TRACKER_LOG("Http Tracker " << hostname << " returned peers:" << std::to_string(announceMsg.peers.size()) << ", p: " << std::to_string(announceMsg.seedCount) << ", l: " << std::to_string(announceMsg.leechCount) << "\n");
+	TRACKER_LOG("received peers:" << announceMsg.peers.size() << ", p: " << announceMsg.seedCount << ", l: " << announceMsg.leechCount);
 
-	if (onAnnounceResponse)
-		onAnnounceResponse(announceMsg);
+	if (onAnnounceResult)
+		onAnnounceResult(announceMsg);
 }
 
 DataBuffer mtt::HttpTrackerComm::createAnnounceRequest(std::string host, std::string port)

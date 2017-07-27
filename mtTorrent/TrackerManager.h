@@ -8,13 +8,19 @@ namespace mtt
 {
 	struct TrackerManager
 	{
+	public:
+
 		TrackerManager();
 
-		void setTorrentInfo(TorrentFileInfo* info);
-		
+		void init(TorrentFileInfo* info);
+		void addTrackers(std::vector<std::string> trackers);
+
 		void start();
 		void end();
 
-		std::function<void()> onAnnounceResult;
+	private:
+
+		std::vector<std::shared_ptr<Tracker>> activeTrackers;
+		std::vector<std::string> trackers
 	};
 }

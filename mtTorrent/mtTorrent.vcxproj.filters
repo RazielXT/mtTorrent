@@ -26,6 +26,9 @@
     <Filter Include="Source Files\Core\Proposal">
       <UniqueIdentifier>{f699ff89-bf4b-4991-84c0-809ff9af92c1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Core\Torrent\Tracker">
+      <UniqueIdentifier>{0c6791af-c20e-4aab-8674-a5965e4acb33}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -43,17 +46,11 @@
     <ClCompile Include="BencodeParser.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="UdpTrackerComm.cpp">
-      <Filter>Source Files\Core\Torrent\Protocol</Filter>
-    </ClCompile>
     <ClCompile Include="TcpAsyncStream.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
     <ClCompile Include="Network.cpp">
       <Filter>Source Files\Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="HttpTrackerComm.cpp">
-      <Filter>Source Files\Core\Torrent\Protocol</Filter>
     </ClCompile>
     <ClCompile Include="RiotRestApi.cpp">
       <Filter>Source Files\Utils</Filter>
@@ -94,6 +91,12 @@
     <ClCompile Include="Logging.cpp">
       <Filter>Source Files\Core\Proposal</Filter>
     </ClCompile>
+    <ClCompile Include="HttpTrackerComm.cpp">
+      <Filter>Source Files\Core\Torrent\Tracker</Filter>
+    </ClCompile>
+    <ClCompile Include="UdpTrackerComm.cpp">
+      <Filter>Source Files\Core\Torrent\Tracker</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PacketHelper.h">
@@ -101,9 +104,6 @@
     </ClInclude>
     <ClInclude Include="Storage.h">
       <Filter>Source Files\Core\Torrent\Download</Filter>
-    </ClInclude>
-    <ClInclude Include="UdpTrackerComm.h">
-      <Filter>Source Files\Core\Torrent\Protocol</Filter>
     </ClInclude>
     <ClInclude Include="TcpAsyncStream.h">
       <Filter>Source Files\Utils</Filter>
@@ -113,9 +113,6 @@
     </ClInclude>
     <ClInclude Include="Network.h">
       <Filter>Source Files\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="HttpTrackerComm.h">
-      <Filter>Source Files\Core\Torrent\Protocol</Filter>
     </ClInclude>
     <ClInclude Include="BencodeParser.h">
       <Filter>Source Files\Utils</Filter>
@@ -142,9 +139,6 @@
       <Filter>Source Files\Core\Proposal</Filter>
     </ClInclude>
     <ClInclude Include="Configuration.h">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClInclude>
-    <ClInclude Include="TrackerManager.h">
       <Filter>Source Files\Core\Proposal</Filter>
     </ClInclude>
     <ClInclude Include="IPeerListener.h">
@@ -181,6 +175,19 @@
     </ClInclude>
     <ClInclude Include="Logging.h">
       <Filter>Source Files\Core\Proposal</Filter>
+    </ClInclude>
+    <ClInclude Include="Interface.h" />
+    <ClInclude Include="TrackerManager.h">
+      <Filter>Source Files\Core\Torrent\Tracker</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpTrackerComm.h">
+      <Filter>Source Files\Core\Torrent\Tracker</Filter>
+    </ClInclude>
+    <ClInclude Include="UdpTrackerComm.h">
+      <Filter>Source Files\Core\Torrent\Tracker</Filter>
+    </ClInclude>
+    <ClInclude Include="ITracker.h">
+      <Filter>Source Files\Core\Torrent\Tracker</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

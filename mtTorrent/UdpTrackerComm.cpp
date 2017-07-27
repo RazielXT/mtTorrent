@@ -4,7 +4,7 @@
 #include <iostream>
 #include "Configuration.h"
 
-#define TRACKER_LOG(x) {}//WRITE_LOG("TRACKER: " << x)
+#define TRACKER_LOG(x) {}//WRITE_LOG("UDP Tracker " << info.hostname << " " << x)
 
 using namespace mtt;
 
@@ -12,12 +12,13 @@ mtt::UdpTrackerComm::UdpTrackerComm()
 {
 }
 
-void UdpTrackerComm::startTracker(std::string host, std::string port, boost::asio::io_service& io, TorrentFileInfo* t)
+void UdpTrackerComm::start(std::string host, std::string port, boost::asio::io_service& io, TorrentFileInfo* t)
 {
-	hostname = host;
+	info.hostname = host;
 	torrent = t;
 
-	TRACKER_LOG("Connecting to UDP tracker " << hostname << "\n");
+	TRACKER_LOG("connecting");
+	state = Connecting;
 
 	udpComm = SendAsyncUdp(host, port, false, createConnectRequest(), io, std::bind(&UdpTrackerComm::onConnectUdpResponse, this, std::placeholders::_1, std::placeholders::_2));
 }
@@ -40,7 +41,10 @@ DataBuffer UdpTrackerComm::createConnectRequest()
 void mtt::UdpTrackerComm::onConnectUdpResponse(DataBuffer* data, PackedUdpRequest* source)
 {
 	if (!data)
+	{
+		state = Disconnected;
 		return;
+	}
 
 	auto response = getConnectResponse(*data);
 
@@ -48,7 +52,8 @@ void mtt::UdpTrackerComm::onConnectUdpResponse(DataBuffer* data, PackedUdpReques
 	{
 		connectionId = response.connectionId;
 
-		TRACKER_LOG("Announcing to UDP tracker " << hostname << "\n");
+		TRACKER_LOG("announcing");
+		state = Announcing;
 
 		udpComm->write(createAnnounceRequest(), std::bind(&UdpTrackerComm::onAnnounceUdpResponse, this, std::placeholders::_1, std::placeholders::_2));
 	}
@@ -86,19 +91,30 @@ DataBuffer UdpTrackerComm::createAnnounceRequest()
 void mtt::UdpTrackerComm::onAnnounceUdpResponse(DataBuffer* data, PackedUdpRequest* source)
 {
 	if (!data)
+	{
+		state = Disconnected;
 		return;
+	}
 
 	auto announceMsg = getAnnounceResponse(*data);
 
-	TRACKER_LOG("Udp Tracker " << hostname << " returned peers:" << std::to_string(announceMsg.peers.size()) << ", p: " << std::to_string(announceMsg.seedCount) << ", l: " << std::to_string(announceMsg.leechCount) << "\n");
+	TRACKER_LOG("received peers:" << announceMsg.peers.size() << ", p: " << announceMsg.seedCount << ", l: " << announceMsg.leechCount);
+	state = Announced;
+	info.peers = announceMsg.leechCount;
+	info.seeds = announceMsg.seedCount;
+	info.announceInterval = announceMsg.interval;
 
-	if (onAnnounceResponse)
-		onAnnounceResponse(announceMsg);
+	if (onAnnounceResult)
+		onAnnounceResult(announceMsg);
 }
 
 bool mtt::UdpTrackerComm::validResponse(TrackerMessage& resp)
 {
 	return resp.action == lastMessage.action && resp.transaction == lastMessage.transaction;
+}
+
+void mtt::UdpTrackerComm::announce()
+{
 }
 
 UdpTrackerComm::ConnectResponse UdpTrackerComm::getConnectResponse(DataBuffer buffer)
