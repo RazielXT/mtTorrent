@@ -6,16 +6,40 @@ mtt::TrackerManager::TrackerManager(boost::asio::io_service& service, TrackerLis
 {
 }
 
-void mtt::TrackerManager::onAnnounce(AnnounceResponse& resp, Tracker*)
+void mtt::TrackerManager::onAnnounce(AnnounceResponse& resp, Tracker* t)
 {
 	std::lock_guard<std::mutex> guard(trackersMutex);
+
+	for (auto& tracker : trackers)
+	{
+		if (tracker.comm.get() == t)
+		{
+			if (!tracker.timer)
+				tracker.timer = TrackerTimer::create(io, std::bind(&Tracker::announce, t));
+
+			tracker.retryCount = 0;
+			tracker.timer->schedule(resp.interval);
+		}
+	}
 
 	listener.onAnnounceResult(resp, torrent);
 }
 
-void mtt::TrackerManager::onTrackerFail(Tracker*)
+void mtt::TrackerManager::onTrackerFail(Tracker* t)
 {
 	std::lock_guard<std::mutex> guard(trackersMutex);
+
+	for (auto& tracker : trackers)
+	{
+		if (tracker.comm.get() == t)
+		{
+			if (!tracker.timer)
+				tracker.timer = TrackerTimer::create(io, std::bind(&Tracker::announce, t));
+
+			tracker.retryCount++;
+			tracker.timer->schedule(5*60* tracker.retryCount);
+		}
+	}
 }
 
 std::string cutStringPart(std::string& source, DataBuffer endChars, int cutAdd)
@@ -91,4 +115,39 @@ void mtt::TrackerManager::stop()
 	{
 		t.comm = nullptr;
 	}
+}
+
+mtt::TrackerTimer::TrackerTimer(boost::asio::io_service& io, std::function<void()> callback) : timer(io), func(callback)
+{
+
+}
+
+void mtt::TrackerTimer::schedule(uint32_t secondsOffset)
+{
+	timer.async_wait(std::bind(&TrackerTimer::checkTimer, shared_from_this()));
+	timer.expires_from_now(boost::posix_time::seconds(secondsOffset));
+}
+
+void mtt::TrackerTimer::disable()
+{
+	func = nullptr;
+	timer.expires_at(boost::posix_time::pos_infin);
+}
+
+void mtt::TrackerTimer::checkTimer()
+{
+	if (timer.expires_at() <= boost::asio::deadline_timer::traits_type::now())
+	{
+		timer.expires_at(boost::posix_time::pos_infin);
+
+		if (func)
+			func();
+	}
+
+	timer.async_wait(std::bind(&TrackerTimer::checkTimer, shared_from_this()));
+}
+
+std::shared_ptr<mtt::TrackerTimer> mtt::TrackerTimer::create(boost::asio::io_service& io, std::function<void()> callback)
+{
+	return std::make_shared<mtt::TrackerTimer>(io, callback);
 }

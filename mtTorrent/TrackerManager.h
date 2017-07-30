@@ -14,6 +14,23 @@ namespace mtt
 		virtual void onAnnounceResult(AnnounceResponse&, TorrentFileInfo*) = 0;
 	};
 
+
+	struct TrackerTimer : public std::enable_shared_from_this<UdpAsyncClient>
+	{
+		static std::shared_ptr<TrackerTimer> create(boost::asio::io_service& io, std::function<void()> callback);
+
+		TrackerTimer(boost::asio::io_service& io, std::function<void()> callback);
+
+		void schedule(uint32_t secondsOffset);
+		void disable();
+
+	private:
+
+		void checkTimer();
+		std::function<void()> func;
+		boost::asio::deadline_timer timer;
+	};
+
 	struct TrackerManager
 	{
 	public:
@@ -38,6 +55,9 @@ namespace mtt
 		struct TrackerInfo
 		{
 			std::shared_ptr<Tracker> comm;
+			std::shared_ptr<TrackerTimer> timer;
+			uint32_t retryCount = 0;
+
 			std::string protocol;
 			std::string host;
 			std::string port;
