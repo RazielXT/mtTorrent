@@ -3,24 +3,47 @@
 #include "BencodeParser.h"
 #include "PeerCommunication.h"
 #include "UdpTrackerComm.h"
+#include "ServiceThreadpool.h"
 
 namespace mtt
 {
+	class TrackerListener
+	{
+	public:
+
+		virtual void onAnnounceResult(AnnounceResponse&, TorrentFileInfo*) = 0;
+	};
+
 	struct TrackerManager
 	{
 	public:
 
-		TrackerManager();
+		TrackerManager(boost::asio::io_service& io, TrackerListener& listener);
 
 		void init(TorrentFileInfo* info);
 		void addTrackers(std::vector<std::string> trackers);
 
 		void start();
-		void end();
+		void stop();
 
 	private:
 
-		std::vector<std::shared_ptr<Tracker>> activeTrackers;
-		std::vector<std::string> trackers
+		std::mutex trackersMutex;
+		void onAnnounce(AnnounceResponse&, Tracker*);
+		void onTrackerFail(Tracker*);
+
+		TrackerListener& listener;
+		TorrentFileInfo* torrent;
+
+		struct TrackerInfo
+		{
+			std::shared_ptr<Tracker> comm;
+			std::string protocol;
+			std::string host;
+			std::string port;
+		};
+		std::vector<TrackerInfo> trackers;
+
+		boost::asio::io_service& io;
 	};
 }

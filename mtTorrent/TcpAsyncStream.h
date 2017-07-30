@@ -19,6 +19,8 @@ public:
 	TcpAsyncStream(boost::asio::io_service& io_service);
 	~TcpAsyncStream();
 
+	void init(const std::string& hostname, const std::string& port);
+
 	void connect(const uint8_t* data, uint16_t port, bool ipv6);
 	void connect(const std::string& ip, uint16_t port);
 	void connect(const std::string& hostname, const std::string& port);
@@ -48,6 +50,7 @@ protected:
 	void handle_connect(const boost::system::error_code& err);
 	void do_close();
 
+	void check_write();
 	void do_write(DataBuffer data);
 	std::mutex write_msgs_mutex;
 	std::deque<DataBuffer> write_msgs;
@@ -67,6 +70,15 @@ protected:
 
 	boost::asio::io_service& io_service;
 
-	std::string host;
+	struct  
+	{
+		std::string host;
+		std::string port;
+		tcp::endpoint endpoint;
+		bool hostInitialized = false;
+		bool endInitialized = false;
+	}
+	info;
+
 	int32_t timeout = 15;
 };

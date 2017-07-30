@@ -49,7 +49,7 @@ public:
 	void testMetadataReceive();
 	void testAsyncUdpRequest();
 	void testAsyncDhtGetPeers();
-	void testMangetLink();
+	void testTrackers();
 
 	void start();
 private:

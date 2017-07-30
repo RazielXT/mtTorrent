@@ -112,6 +112,18 @@ struct PacketBuilder
 		out.insert(out.end(), b, b + length);
 	}
 
+	PacketBuilder& operator<<(const char* rhs)
+	{
+		addString(rhs);
+		return *this;
+	}
+
+	PacketBuilder& operator<<(std::string& rhs)
+	{
+		add(rhs.data(), rhs.length());
+		return *this;
+	}
+
 	template<typename T>
 	void add(const T* b, size_t length)
 	{

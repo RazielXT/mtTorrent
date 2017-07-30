@@ -252,6 +252,7 @@
     <ClCompile Include="BencodeParser.cpp" />
     <ClCompile Include="Test.cpp" />
     <ClCompile Include="MetadataReconstruction.cpp" />
+    <ClCompile Include="TrackerManager.cpp" />
     <ClCompile Include="UdpAsyncClient.cpp" />
     <ClCompile Include="UdpTrackerComm.cpp" />
     <ClCompile Include="utils\Base32.cpp" />

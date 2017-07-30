@@ -13,6 +13,7 @@ using UdpRequest = std::shared_ptr<PackedUdpRequest>;
 
 UdpRequest SendAsyncUdp(const std::string& hostname, const std::string& port, bool ipv6, DataBuffer& data, boost::asio::io_service& io, std::function<void(DataBuffer* data, PackedUdpRequest* source)> onResult);
 UdpRequest SendAsyncUdp(Addr& addr, DataBuffer& data, boost::asio::io_service& io, std::function<void(DataBuffer* data, PackedUdpRequest* source)> onResult);
+UdpRequest CreateAsyncUdp(const std::string& hostname, const std::string& port, boost::asio::io_service& io);
 
 class UdpAsyncClient : public std::enable_shared_from_this<UdpAsyncClient>
 {
@@ -41,7 +42,7 @@ protected:
 	void handle_resolve(const boost::system::error_code& error, udp::resolver::iterator iterator, std::shared_ptr<udp::resolver> resolver);
 	void handle_connect(const boost::system::error_code& err);
 	
-	void do_write();
+	void do_write(DataBuffer data);
 	void do_close();
 
 	DataBuffer messageBuffer;

@@ -80,5 +80,9 @@ bool mtt::TorrentFileInfo::parseMagnetLink(std::string link)
 	if (!correct && link.length() == 32)
 		correct = parseTorrentHash(link, info.hash);
 
+	info.expectedBitfieldSize = 0;
+	info.pieceSize = 0;
+	info.fullSize = 0;
+
 	return correct;
 }

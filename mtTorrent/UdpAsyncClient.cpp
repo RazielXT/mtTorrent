@@ -50,10 +50,8 @@ bool UdpAsyncClient::write(const DataBuffer& data)
 		return false;
 
 	timeoutTimer.async_wait(std::bind(&UdpAsyncClient::checkTimeout, shared_from_this()));
-	messageBuffer = data;
 
-	if (state != Clear)
-		io_service.post(std::bind(&UdpAsyncClient::do_write, this));
+	io_service.post(std::bind(&UdpAsyncClient::do_write, this, data));
 
 	return true;
 }
@@ -67,7 +65,8 @@ void UdpAsyncClient::handle_resolve(const boost::system::error_code& error, udp:
 		target_endpoint = *iterator;
 		state = Initialized;
 
-		send_message();
+		if (!messageBuffer.empty())
+			send_message();
 	}
 	else
 	{
@@ -139,11 +138,14 @@ void UdpAsyncClient::do_close()
 	}	
 }
 
-void UdpAsyncClient::do_write()
+void UdpAsyncClient::do_write(DataBuffer data)
 {
 	std::lock_guard<std::mutex> guard(stateMutex);
 
-	send_message();
+	messageBuffer = data;
+
+	if (state != Clear)
+		send_message();
 }
 
 void UdpAsyncClient::send_message()
@@ -234,6 +236,14 @@ UdpRequest SendAsyncUdp(const std::string& hostname, const std::string& port, bo
 	UdpRequest req = std::make_shared<PackedUdpRequest>(io);
 	req->write(data, onResult);
 	req->client->setAddress(hostname, port, ipv6);
+
+	return req;
+}
+
+UdpRequest CreateAsyncUdp(const std::string& hostname, const std::string& port, boost::asio::io_service& io)
+{
+	UdpRequest req = std::make_shared<PackedUdpRequest>(io);
+	req->client->setAddress(hostname, port);
 
 	return req;
 }

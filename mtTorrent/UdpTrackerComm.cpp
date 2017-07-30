@@ -4,7 +4,7 @@
 #include <iostream>
 #include "Configuration.h"
 
-#define TRACKER_LOG(x) {}//WRITE_LOG("UDP Tracker " << info.hostname << " " << x)
+#define TRACKER_LOG(x) WRITE_LOG("UDP Tracker " << info.hostname << " " << x)
 
 using namespace mtt;
 
@@ -12,15 +12,12 @@ mtt::UdpTrackerComm::UdpTrackerComm()
 {
 }
 
-void UdpTrackerComm::start(std::string host, std::string port, boost::asio::io_service& io, TorrentFileInfo* t)
+void UdpTrackerComm::init(std::string host, std::string port, boost::asio::io_service& io, TorrentFileInfo* t)
 {
 	info.hostname = host;
 	torrent = t;
 
-	TRACKER_LOG("connecting");
-	state = Connecting;
-
-	udpComm = SendAsyncUdp(host, port, false, createConnectRequest(), io, std::bind(&UdpTrackerComm::onConnectUdpResponse, this, std::placeholders::_1, std::placeholders::_2));
+	udpComm = CreateAsyncUdp(host, port, io);
 }
 
 DataBuffer UdpTrackerComm::createConnectRequest()
@@ -38,11 +35,25 @@ DataBuffer UdpTrackerComm::createConnectRequest()
 	return packet.getBuffer();
 }
 
+void mtt::UdpTrackerComm::fail()
+{
+	if (state < Connected)
+		state = Initialized;
+	else if (state < Announced)
+		state = Connected;
+	else
+		state = Announced;
+
+	if (onFail)
+		onFail();
+}
+
 void mtt::UdpTrackerComm::onConnectUdpResponse(DataBuffer* data, PackedUdpRequest* source)
 {
 	if (!data)
 	{
-		state = Disconnected;
+		fail();
+
 		return;
 	}
 
@@ -50,13 +61,13 @@ void mtt::UdpTrackerComm::onConnectUdpResponse(DataBuffer* data, PackedUdpReques
 
 	if (validResponse(response))
 	{
+		state = Connected;
 		connectionId = response.connectionId;
 
-		TRACKER_LOG("announcing");
-		state = Announcing;
-
-		udpComm->write(createAnnounceRequest(), std::bind(&UdpTrackerComm::onAnnounceUdpResponse, this, std::placeholders::_1, std::placeholders::_2));
+		announce();
 	}
+	else
+		fail();
 }
 
 DataBuffer UdpTrackerComm::createAnnounceRequest()
@@ -92,20 +103,34 @@ void mtt::UdpTrackerComm::onAnnounceUdpResponse(DataBuffer* data, PackedUdpReque
 {
 	if (!data)
 	{
-		state = Disconnected;
+		fail();
+
 		return;
 	}
 
 	auto announceMsg = getAnnounceResponse(*data);
 
-	TRACKER_LOG("received peers:" << announceMsg.peers.size() << ", p: " << announceMsg.seedCount << ", l: " << announceMsg.leechCount);
-	state = Announced;
-	info.peers = announceMsg.leechCount;
-	info.seeds = announceMsg.seedCount;
-	info.announceInterval = announceMsg.interval;
+	if (validResponse(announceMsg.udp))
+	{
+		TRACKER_LOG("received peers:" << announceMsg.peers.size() << ", p: " << announceMsg.seedCount << ", l: " << announceMsg.leechCount);
+		state = Announced;
+		info.peers = announceMsg.leechCount;
+		info.seeds = announceMsg.seedCount;
+		info.announceInterval = announceMsg.interval;
 
-	if (onAnnounceResult)
-		onAnnounceResult(announceMsg);
+		if (onAnnounceResult)
+			onAnnounceResult(announceMsg);
+	}
+	else
+		fail();
+}
+
+void mtt::UdpTrackerComm::connect()
+{
+	TRACKER_LOG("connect");
+	state = Connecting;
+
+	udpComm->write(createConnectRequest(), std::bind(&UdpTrackerComm::onConnectUdpResponse, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 bool mtt::UdpTrackerComm::validResponse(TrackerMessage& resp)
@@ -115,9 +140,22 @@ bool mtt::UdpTrackerComm::validResponse(TrackerMessage& resp)
 
 void mtt::UdpTrackerComm::announce()
 {
+	if (state < Connected)
+		connect();
+	else
+	{
+		TRACKER_LOG("announce");
+
+		if (state == Announced)
+			state = Reannouncing;
+		else
+			state = Announcing;
+
+		udpComm->write(createAnnounceRequest(), std::bind(&UdpTrackerComm::onAnnounceUdpResponse, this, std::placeholders::_1, std::placeholders::_2));
+	}
 }
 
-UdpTrackerComm::ConnectResponse UdpTrackerComm::getConnectResponse(DataBuffer buffer)
+UdpTrackerComm::ConnectResponse UdpTrackerComm::getConnectResponse(DataBuffer& buffer)
 {
 	ConnectResponse out;
 
@@ -133,16 +171,16 @@ UdpTrackerComm::ConnectResponse UdpTrackerComm::getConnectResponse(DataBuffer bu
 	return out;
 }
 
-AnnounceResponse UdpTrackerComm::getAnnounceResponse(DataBuffer buffer)
+UdpTrackerComm::UdpAnnounceResponse UdpTrackerComm::getAnnounceResponse(DataBuffer& buffer)
 {
 	PacketReader packet(buffer);
 
-	AnnounceResponse resp;
+	UdpAnnounceResponse resp;
 
-	auto action = packet.pop32();
-	auto transaction = packet.pop32();
+	resp.udp.action = packet.pop32();
+	resp.udp.transaction = packet.pop32();
 
-	if (!validResponse(TrackerMessage{ action, transaction }) || buffer.size() < 26)
+	if (buffer.size() < 26)
 		return resp;
 
 	resp.interval = packet.pop32();

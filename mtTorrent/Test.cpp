@@ -6,6 +6,7 @@
 #include "UdpAsyncClient.h"
 #include "utils\Base32.h"
 #include "PacketHelper.h"
+#include "TrackerManager.h"
 
 using namespace mtt;
 
@@ -219,17 +220,43 @@ void TorrentTest::testAsyncDhtGetPeers()
 	}
 }
 
-void TorrentTest::testMangetLink()
+void TorrentTest::testTrackers()
 {
-	std::string link = "magnet:?xt=urn:btih:4YOP2LK2CO2KYSBIVG6IOYNCY3OFMWPD&tr=http://nyaa.tracker.wf:7777/announce&tr=udp://tracker.coppersurfer.tk:6969/announce&tr=udp://tracker.internetwarriors.net:1337/announce&tr=udp://tracker.leechers-paradise.org:6969/announce&tr=http://tracker.internetwarriors.net:1337/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=http://tracker.opentrackr.org:1337/announce&tr=udp://tracker.zer0day.to:1337/announce&tr=http://explodie.org:6969/announce&tr=http://p4p.arenabg.com:1337/announce&tr=udp://p4p.arenabg.com:1337/announce&tr=http://mgtracker.org:6969/announce&tr=udp://mgtracker.org:6969/announce";
-	
+	//std::string link = "magnet:?xt=urn:btih:4YOP2LK2CO2KYSBIVG6IOYNCY3OFMWPD&tr=http://nyaa.tracker.wf:7777/announce&tr=udp://tracker.coppersurfer.tk:6969/announce&tr=udp://tracker.internetwarriors.net:1337/announce&tr=udp://tracker.leechers-paradise.org:6969/announce&tr=http://tracker.internetwarriors.net:1337/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=http://tracker.opentrackr.org:1337/announce&tr=udp://tracker.zer0day.to:1337/announce&tr=http://explodie.org:6969/announce&tr=http://p4p.arenabg.com:1337/announce&tr=udp://p4p.arenabg.com:1337/announce&tr=http://mgtracker.org:6969/announce&tr=udp://mgtracker.org:6969/announce";
+	//std::string link = "magnet:?xt=urn:btih:4YOP2LK2CO2KYSBIVG6IOYNCY3OFMWPD&tr=http://nyaa.tracker.wf:7777/announce";
+	std::string link = "magnet:?xt=urn:btih:4YOP2LK2CO2KYSBIVG6IOYNCY3OFMWPD&tr=udp://tracker.coppersurfer.tk:6969/announce";
+
 	mtt::TorrentFileInfo info;
 	info.parseMagnetLink(link);
+
+	ServiceThreadpool service;
+	service.start(2);
+
+	class TListener : public TrackerListener
+	{
+	public:
+
+		std::vector<Addr> peers;
+
+		virtual void onAnnounceResult(AnnounceResponse& resp, TorrentFileInfo*) override
+		{
+			peers = resp.peers;
+		}
+	}
+	tListener;
+
+	mtt::TrackerManager trackers(service.io, tListener);
+	trackers.init(&info);
+	trackers.start();
+
+	WAITFOR(!tListener.peers.empty());
+
+	WRITE_LOG("PEERS: " << tListener.peers.size());
 }
 
 void TorrentTest::start()
 {
-	testMangetLink();
+	testTrackers();
 }
 
 uint32_t TorrentTest::onFoundPeers(uint8_t* hash, std::vector<Addr>& values)

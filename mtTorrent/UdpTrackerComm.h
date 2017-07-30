@@ -12,11 +12,13 @@ namespace mtt
 
 		UdpTrackerComm();
 
-		virtual void start(std::string host, std::string port, boost::asio::io_service& io, TorrentFileInfo* torrent) override;
+		virtual void init(std::string host, std::string port, boost::asio::io_service& io, TorrentFileInfo* torrent) override;
 
 		virtual void announce() override;
 
 	private:
+
+		void fail();
 
 		UdpRequest udpComm;
 		void onConnectUdpResponse(DataBuffer* data, PackedUdpRequest* source);
@@ -31,6 +33,11 @@ namespace mtt
 		struct ConnectResponse : public TrackerMessage
 		{
 			uint64_t connectionId;
+		};
+
+		struct UdpAnnounceResponse : public AnnounceResponse
+		{
+			TrackerMessage udp;
 		};
 
 		enum Action
@@ -50,10 +57,11 @@ namespace mtt
 		};
 
 		DataBuffer createConnectRequest();
-		ConnectResponse getConnectResponse(DataBuffer buffer);
+		ConnectResponse getConnectResponse(DataBuffer& buffer);
+		void connect();
 
 		DataBuffer createAnnounceRequest();
-		AnnounceResponse getAnnounceResponse(DataBuffer buffer);
+		UdpAnnounceResponse getAnnounceResponse(DataBuffer& buffer);
 
 		bool validResponse(TrackerMessage& resp);
 

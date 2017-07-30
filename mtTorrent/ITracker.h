@@ -7,7 +7,7 @@ namespace mtt
 	{
 	public:
 
-		virtual void start(std::string host, std::string port, boost::asio::io_service& io, TorrentFileInfo* torrent) = 0;
+		virtual void init(std::string host, std::string port, boost::asio::io_service& io, TorrentFileInfo* torrent) = 0;
 
 		virtual void announce() = 0;
 
@@ -21,8 +21,9 @@ namespace mtt
 		}
 		info;
 		
-		enum { Clear, Connecting, Announcing, Announced, Disconnected } state = Clear;
+		enum { Clear, Initialized, Alive, Connecting, Connected, Announcing, Announced, Reannouncing } state = Clear;
 
+		std::function<void()> onFail;
 		std::function<void(AnnounceResponse&)> onAnnounceResult;
 
 		TorrentFileInfo* torrent;
