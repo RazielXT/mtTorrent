@@ -48,6 +48,13 @@ namespace mtt
 		bool parseMagnetLink(std::string link);
 	};
 
+	struct LoadedTorrent
+	{
+		TorrentInfo info;
+	};
+
+	using TorrentPtr = std::shared_ptr<LoadedTorrent>;
+
 	struct SelectedFile
 	{
 		File file;

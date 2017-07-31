@@ -226,11 +226,11 @@ void TorrentTest::testTrackers()
 	//std::string link = "magnet:?xt=urn:btih:4YOP2LK2CO2KYSBIVG6IOYNCY3OFMWPD&tr=http://nyaa.tracker.wf:7777/announce";
 	std::string link = "magnet:?xt=urn:btih:4YOP2LK2CO2KYSBIVG6IOYNCY3OFMWPD&tr=udp://tracker.coppersurfer.tk:6969/announce";
 
-	mtt::TorrentFileInfo info;
-	info.parseMagnetLink(link);
+	mtt::TorrentFileInfo parsedTorrent;
+	parsedTorrent.parseMagnetLink(link);
 
-	ServiceThreadpool service;
-	service.start(2);
+	TorrentPtr torrent = std::make_shared<mtt::LoadedTorrent>();
+	torrent->info = parsedTorrent.info;
 
 	class TListener : public TrackerListener
 	{
@@ -238,16 +238,16 @@ void TorrentTest::testTrackers()
 
 		std::vector<Addr> peers;
 
-		virtual void onAnnounceResult(AnnounceResponse& resp, TorrentFileInfo*) override
+		virtual void onAnnounceResult(AnnounceResponse& resp, TorrentPtr) override
 		{
 			peers = resp.peers;
 		}
 	}
 	tListener;
 
-	mtt::TrackerManager trackers(service.io, tListener);
-	trackers.init(&info);
-	trackers.start();
+	mtt::TrackerManager trackers;
+	trackers.add(torrent, parsedTorrent.announceList, tListener);
+	trackers.start(torrent);
 
 	WAITFOR(!tListener.peers.empty());
 
@@ -256,7 +256,7 @@ void TorrentTest::testTrackers()
 
 void TorrentTest::start()
 {
-	testTrackers();
+	//testTrackers();
 }
 
 uint32_t TorrentTest::onFoundPeers(uint8_t* hash, std::vector<Addr>& values)

@@ -12,7 +12,7 @@ namespace mtt
 
 		UdpTrackerComm();
 
-		virtual void init(std::string host, std::string port, boost::asio::io_service& io, TorrentFileInfo* torrent) override;
+		virtual void init(std::string host, std::string port, boost::asio::io_service& io, TorrentPtr torrent) override;
 
 		virtual void announce() override;
 

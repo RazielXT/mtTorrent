@@ -6,7 +6,7 @@
 
 namespace mtt
 {
-	enum PeerSource
+	enum class PeerSource
 	{
 		Tracker,
 		Pex,

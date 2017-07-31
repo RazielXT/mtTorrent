@@ -22,6 +22,6 @@ private:
 
 	std::shared_ptr<boost::asio::io_service::work> work;
 
-	std::thread myThreads[4];
+	std::thread myThreads[20];
 	uint32_t workers = 0;
 };

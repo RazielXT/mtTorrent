@@ -45,5 +45,6 @@ void ServiceThreadpool::stop()
 
 void ServiceThreadpool::adjust(uint32_t estimatedWork)
 {
-
+	uint32_t workers = ((uint32_t)estimatedWork*0.26f) + 2;
+	start(workers);
 }

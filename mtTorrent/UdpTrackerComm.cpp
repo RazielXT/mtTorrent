@@ -12,7 +12,7 @@ mtt::UdpTrackerComm::UdpTrackerComm()
 {
 }
 
-void UdpTrackerComm::init(std::string host, std::string port, boost::asio::io_service& io, TorrentFileInfo* t)
+void UdpTrackerComm::init(std::string host, std::string port, boost::asio::io_service& io, TorrentPtr t)
 {
 	info.hostname = host;
 	torrent = t;

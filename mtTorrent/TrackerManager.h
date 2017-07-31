@@ -11,11 +11,10 @@ namespace mtt
 	{
 	public:
 
-		virtual void onAnnounceResult(AnnounceResponse&, TorrentFileInfo*) = 0;
+		virtual void onAnnounceResult(AnnounceResponse&, TorrentPtr) = 0;
 	};
 
-
-	struct TrackerTimer : public std::enable_shared_from_this<UdpAsyncClient>
+	struct TrackerTimer : public std::enable_shared_from_this<TrackerTimer>
 	{
 		static std::shared_ptr<TrackerTimer> create(boost::asio::io_service& io, std::function<void()> callback);
 
@@ -35,35 +34,51 @@ namespace mtt
 	{
 	public:
 
-		TrackerManager(boost::asio::io_service& io, TrackerListener& listener);
+		TrackerManager();
 
-		void init(TorrentFileInfo* info);
-		void addTrackers(std::vector<std::string> trackers);
+		void add(TorrentPtr torrent, std::vector<std::string> trackers, TrackerListener& listener);
 
-		void start();
-		void stop();
+		void start(TorrentPtr torrent);
+		void stop(TorrentPtr torrent);
 
 	private:
 
-		std::mutex trackersMutex;
-		void onAnnounce(AnnounceResponse&, Tracker*);
-		void onTrackerFail(Tracker*);
-
-		TrackerListener& listener;
-		TorrentFileInfo* torrent;
-
-		struct TrackerInfo
+		struct TorrentTrackers
 		{
-			std::shared_ptr<Tracker> comm;
-			std::shared_ptr<TrackerTimer> timer;
-			uint32_t retryCount = 0;
+			TorrentTrackers(boost::asio::io_service& io, TrackerListener& l);
 
-			std::string protocol;
-			std::string host;
-			std::string port;
+			struct TrackerInfo
+			{
+				std::shared_ptr<Tracker> comm;
+				std::shared_ptr<TrackerTimer> timer;
+
+				std::string protocol;
+				std::string host;
+				std::string port;
+				bool httpFallback = false;
+
+				bool httpFallbackUsed = false;
+				uint32_t retryCount = 0;
+			};
+			std::vector<TrackerInfo> trackers;
+			std::mutex trackersMutex;
+
+			void addTracker(std::string addr);
+			void start(TrackerInfo*);
+			void startNext();
+			void stopAll();
+			TrackerInfo* findTrackerInfo(Tracker*);
+			TrackerInfo* findTrackerInfo(std::string host);
+
+			TorrentPtr torrent;
+			boost::asio::io_service& io;
+			TrackerListener& listener;
+
+			void onAnnounce(AnnounceResponse&, Tracker*);
+			void onTrackerFail(Tracker*);			
 		};
-		std::vector<TrackerInfo> trackers;
+		std::vector<std::shared_ptr<TorrentTrackers>> torrents;
 
-		boost::asio::io_service& io;
+		ServiceThreadpool service;
 	};
 }

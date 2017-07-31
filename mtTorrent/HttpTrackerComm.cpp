@@ -45,7 +45,7 @@ mtt::HttpTrackerComm::~HttpTrackerComm()
 		tcpComm->close();
 }
 
-void mtt::HttpTrackerComm::init(std::string host, std::string p, boost::asio::io_service& io, TorrentFileInfo* t)
+void mtt::HttpTrackerComm::init(std::string host, std::string p, boost::asio::io_service& io, TorrentPtr t)
 {
 	info.hostname = host;
 	port = p;
