@@ -7,9 +7,24 @@
 
 namespace mtt
 {
+	struct TrackerStateInfo
+	{
+		std::string host;
+
+		Tracker::State state;
+		uint32_t updateInterval;
+		uint32_t nextUpdate;
+
+		uint32_t peers;
+		uint32_t seeds;
+		uint32_t leechers;
+	};
+
 	class TrackerListener
 	{
 	public:
+
+		virtual void trackerStateChanged(TrackerStateInfo&, TorrentPtr) = 0;
 
 		virtual void onAnnounceResult(AnnounceResponse&, TorrentPtr) = 0;
 	};
@@ -22,6 +37,7 @@ namespace mtt
 
 		void schedule(uint32_t secondsOffset);
 		void disable();
+		uint32_t getSecondsTillNextUpdate();
 
 	private:
 
@@ -59,6 +75,8 @@ namespace mtt
 
 				bool httpFallbackUsed = false;
 				uint32_t retryCount = 0;
+
+				TrackerStateInfo getStateInfo();
 			};
 			std::vector<TrackerInfo> trackers;
 			std::mutex trackersMutex;

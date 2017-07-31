@@ -114,8 +114,9 @@ void mtt::UdpTrackerComm::onAnnounceUdpResponse(DataBuffer* data, PackedUdpReque
 	{
 		TRACKER_LOG("received peers:" << announceMsg.peers.size() << ", p: " << announceMsg.seedCount << ", l: " << announceMsg.leechCount);
 		state = Announced;
-		info.peers = announceMsg.leechCount;
+		info.leechers = announceMsg.leechCount;
 		info.seeds = announceMsg.seedCount;
+		info.peers = (uint32_t)announceMsg.peers.size();
 		info.announceInterval = announceMsg.interval;
 
 		if (onAnnounceResult)

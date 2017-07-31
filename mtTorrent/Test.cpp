@@ -237,11 +237,18 @@ void TorrentTest::testTrackers()
 	public:
 
 		std::vector<Addr> peers;
+		TrackerStateInfo info;
 
 		virtual void onAnnounceResult(AnnounceResponse& resp, TorrentPtr) override
 		{
 			peers = resp.peers;
 		}
+
+		virtual void trackerStateChanged(TrackerStateInfo& i, TorrentPtr) override
+		{
+			info = i;
+		}
+
 	}
 	tListener;
 

@@ -48,6 +48,8 @@ void mtt::TrackerManager::add(TorrentPtr torrent, std::vector<std::string> track
 	{
 		target->addTracker(t);
 	}
+
+	service.adjust((uint32_t)torrents.size());
 }
 
 void mtt::TrackerManager::start(TorrentPtr torrent)
@@ -116,6 +118,8 @@ void mtt::TrackerManager::TorrentTrackers::onAnnounce(AnnounceResponse& resp, Tr
 	{
 		trackerInfo->retryCount = 0;
 		trackerInfo->timer->schedule(resp.interval);
+
+		listener.trackerStateChanged(trackerInfo->getStateInfo(), torrent);
 	}
 
 	listener.onAnnounceResult(resp, torrent);
@@ -150,6 +154,8 @@ void mtt::TrackerManager::TorrentTrackers::onTrackerFail(Tracker* t)
 
 			startNext();
 		}
+
+		listener.trackerStateChanged(trackerInfo->getStateInfo(), torrent);
 	}
 }
 
@@ -206,6 +212,22 @@ mtt::TrackerManager::TorrentTrackers::TrackerInfo* mtt::TrackerManager::TorrentT
 	return nullptr;
 }
 
+mtt::TrackerStateInfo mtt::TrackerManager::TorrentTrackers::TrackerInfo::getStateInfo()
+{
+	TrackerStateInfo out;
+	out.host = protocol + "://" + host + ":" + port;
+
+	out.nextUpdate = timer ? timer->getSecondsTillNextUpdate() : 0;
+
+	out.updateInterval = comm->info.announceInterval;
+	out.state = comm->state;
+	out.peers = comm->info.peers;
+	out.seeds = comm->info.seeds;
+	out.leechers = comm->info.leechers;
+
+	return out;
+}
+
 mtt::TrackerManager::TorrentTrackers::TrackerInfo* mtt::TrackerManager::TorrentTrackers::findTrackerInfo(std::string host)
 {
 	std::lock_guard<std::mutex> guard(trackersMutex);
@@ -233,6 +255,19 @@ void mtt::TrackerTimer::disable()
 {
 	func = nullptr;
 	timer.expires_at(boost::posix_time::pos_infin);
+}
+
+uint32_t mtt::TrackerTimer::getSecondsTillNextUpdate()
+{
+	if (timer.expires_at().is_infinity())
+		return 0;
+	else if (timer.expires_at() <= boost::asio::deadline_timer::traits_type::now())
+		return 0;
+	else
+	{
+		auto time = timer.expires_at() - boost::asio::deadline_timer::traits_type::now();
+		return (uint32_t)time.total_seconds();
+	}
 }
 
 void mtt::TrackerTimer::checkTimer()

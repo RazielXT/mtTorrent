@@ -17,11 +17,12 @@ namespace mtt
 
 			uint32_t peers;
 			uint32_t seeds;
+			uint32_t leechers;
 			uint32_t announceInterval;
 		}
 		info;
 		
-		enum { Clear, Initialized, Alive, Connecting, Connected, Announcing, Announced, Reannouncing } state = Clear;
+		enum State{ Clear, Initialized, Alive, Connecting, Connected, Announcing, Announced, Reannouncing } state = Clear;
 
 		std::function<void()> onFail;
 		std::function<void(AnnounceResponse&)> onAnnounceResult;

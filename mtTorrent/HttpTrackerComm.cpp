@@ -107,8 +107,9 @@ void mtt::HttpTrackerComm::onTcpReceived()
 			tcpComm->consumeData(msgSize);
 			state = Announced;
 
-			info.peers = announceResp.leechCount;
+			info.leechers = announceResp.leechCount;
 			info.seeds = announceResp.seedCount;
+			info.peers = (uint32_t)announceResp.peers.size();
 			info.announceInterval = announceResp.interval;
 
 			TRACKER_LOG("received peers:" << announceResp.peers.size() << ", p: " << announceResp.seedCount << ", l: " << announceResp.leechCount);
