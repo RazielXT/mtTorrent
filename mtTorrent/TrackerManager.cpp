@@ -58,14 +58,15 @@ void mtt::TrackerManager::start(TorrentPtr torrent)
 	{
 		if(torrentTrackers->torrent == torrent)
 		{
-			auto& t = torrentTrackers->trackers[0];
-
-			if (!t.comm)
+			for (size_t i = 0; i < 3 && i < torrentTrackers->trackers.size(); i++)
 			{
-				torrentTrackers->start(&t);
-			}
+				auto& t = torrentTrackers->trackers[i];
 
-			t.comm->announce();
+				if (!t.comm)
+				{
+					torrentTrackers->start(&t);
+				}
+			}
 		}
 	}
 }
@@ -176,6 +177,8 @@ void mtt::TrackerManager::TorrentTrackers::start(TrackerInfo* tracker)
 	tracker->comm->init(tracker->host, tracker->port, io, torrent);
 	tracker->timer = TrackerTimer::create(io, std::bind(&Tracker::announce, tracker->comm.get()));
 	tracker->retryCount = 0;
+
+	tracker->comm->announce();
 }
 
 void mtt::TrackerManager::TorrentTrackers::startNext()
@@ -201,8 +204,6 @@ void mtt::TrackerManager::TorrentTrackers::stopAll()
 
 mtt::TrackerManager::TorrentTrackers::TrackerInfo* mtt::TrackerManager::TorrentTrackers::findTrackerInfo(Tracker* t)
 {
-	std::lock_guard<std::mutex> guard(trackersMutex);
-
 	for (auto& tracker : trackers)
 	{
 		if (tracker.comm.get() == t)
@@ -230,8 +231,6 @@ mtt::TrackerStateInfo mtt::TrackerManager::TorrentTrackers::TrackerInfo::getStat
 
 mtt::TrackerManager::TorrentTrackers::TrackerInfo* mtt::TrackerManager::TorrentTrackers::findTrackerInfo(std::string host)
 {
-	std::lock_guard<std::mutex> guard(trackersMutex);
-
 	for (auto& tracker : trackers)
 	{
 		if (tracker.host == host)

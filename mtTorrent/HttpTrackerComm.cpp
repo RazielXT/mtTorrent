@@ -77,7 +77,8 @@ void mtt::HttpTrackerComm::fail()
 
 void mtt::HttpTrackerComm::onTcpClosed()
 {
-	fail();
+	if(state != Announced)
+		fail();
 }
 
 void mtt::HttpTrackerComm::onTcpConnected()

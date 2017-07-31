@@ -222,9 +222,9 @@ void TorrentTest::testAsyncDhtGetPeers()
 
 void TorrentTest::testTrackers()
 {
-	//std::string link = "magnet:?xt=urn:btih:4YOP2LK2CO2KYSBIVG6IOYNCY3OFMWPD&tr=http://nyaa.tracker.wf:7777/announce&tr=udp://tracker.coppersurfer.tk:6969/announce&tr=udp://tracker.internetwarriors.net:1337/announce&tr=udp://tracker.leechers-paradise.org:6969/announce&tr=http://tracker.internetwarriors.net:1337/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=http://tracker.opentrackr.org:1337/announce&tr=udp://tracker.zer0day.to:1337/announce&tr=http://explodie.org:6969/announce&tr=http://p4p.arenabg.com:1337/announce&tr=udp://p4p.arenabg.com:1337/announce&tr=http://mgtracker.org:6969/announce&tr=udp://mgtracker.org:6969/announce";
+	std::string link = "magnet:?xt=urn:btih:4YOP2LK2CO2KYSBIVG6IOYNCY3OFMWPD&tr=http://nyaa.tracker.wf:7777/announce&tr=udp://tracker.coppersurfer.tk:6969/announce&tr=udp://tracker.internetwarriors.net:1337/announce&tr=udp://tracker.leechers-paradise.org:6969/announce&tr=http://tracker.internetwarriors.net:1337/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=http://tracker.opentrackr.org:1337/announce&tr=udp://tracker.zer0day.to:1337/announce&tr=http://explodie.org:6969/announce&tr=http://p4p.arenabg.com:1337/announce&tr=udp://p4p.arenabg.com:1337/announce&tr=http://mgtracker.org:6969/announce&tr=udp://mgtracker.org:6969/announce";
 	//std::string link = "magnet:?xt=urn:btih:4YOP2LK2CO2KYSBIVG6IOYNCY3OFMWPD&tr=http://nyaa.tracker.wf:7777/announce";
-	std::string link = "magnet:?xt=urn:btih:4YOP2LK2CO2KYSBIVG6IOYNCY3OFMWPD&tr=udp://tracker.coppersurfer.tk:6969/announce";
+	//std::string link = "magnet:?xt=urn:btih:4YOP2LK2CO2KYSBIVG6IOYNCY3OFMWPD&tr=udp://tracker.coppersurfer.tk:6969/announce";
 
 	mtt::TorrentFileInfo parsedTorrent;
 	parsedTorrent.parseMagnetLink(link);
@@ -247,6 +247,8 @@ void TorrentTest::testTrackers()
 		virtual void trackerStateChanged(TrackerStateInfo& i, TorrentPtr) override
 		{
 			info = i;
+
+			WRITE_LOG("UPDATE " << i.host << " " << i.state << " next update: " << i.updateInterval);
 		}
 
 	}
@@ -259,11 +261,13 @@ void TorrentTest::testTrackers()
 	WAITFOR(!tListener.peers.empty());
 
 	WRITE_LOG("PEERS: " << tListener.peers.size());
+
+	WAITFOR(false);
 }
 
 void TorrentTest::start()
 {
-	//testTrackers();
+	testTrackers();
 }
 
 uint32_t TorrentTest::onFoundPeers(uint8_t* hash, std::vector<Addr>& values)

@@ -67,7 +67,7 @@ void TcpAsyncStream::connect(const std::string& ip, uint16_t port)
 
 void TcpAsyncStream::close()
 {
-	std::lock_guard<std::mutex> guard(callbackMutex);
+	//std::lock_guard<std::mutex> guard(callbackMutex);
 
 	onConnectCallback = nullptr;
 	onReceiveCallback = nullptr;
