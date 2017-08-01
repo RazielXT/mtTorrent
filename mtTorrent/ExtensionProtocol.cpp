@@ -112,36 +112,19 @@ MessageType ExtensionProtocol::load(char id, DataBuffer& data)
 	{
 		if (parser.parsedData.type == BencodeParser::Object::Dictionary)
 		{
-			auto& ext = parser.parsedData.dic->find("m");
-
-			if (ext != parser.parsedData.dic->end() && ext->second.type == BencodeParser::Object::Dictionary)
+			if (auto extensionsInfo = parser.parsedData.getDictObject("m"))
 			{
-				auto& extensions = *ext->second.dic;
-
-				if (extensions.find("ut_pex") != extensions.end())
+				if (auto pexId = extensionsInfo->getIntItem("ut_pex"))
 				{
-					auto& pexInfo = extensions["ut_pex"];
-
-					if (pexInfo.type == BencodeParser::Object::Number)
-					{
-						messageIds[pexInfo.i] = PexEx;
-					}
+					messageIds[*pexId] = PexEx;
 				}
 
-				if (extensions.find("ut_metadata") != extensions.end())
+				if (auto utmId = extensionsInfo->getIntItem("ut_metadata"))
 				{
-					auto& utmInfo = extensions["ut_metadata"];
+					messageIds[*utmId] = UtMetadataEx;
 
-					if (utmInfo.type == BencodeParser::Object::Number)
-					{
-						messageIds[utmInfo.i] = UtMetadataEx;
-					}
-
-					auto& utmSize = parser.parsedData.dic->find("metadata_size");
-					if (utmSize != parser.parsedData.dic->end() && utmSize->second.type == BencodeParser::Object::Number)
-					{
-						utm.size = utmSize->second.i;
-					}
+					if (auto utmSize = parser.parsedData.getIntItem("metadata_size"))
+						utm.size = *utmSize;
 					else
 						utm.size = 0;
 				}
@@ -241,4 +224,19 @@ bool mtt::ext::ExtensionProtocol::isSupported(MessageType type)
 			return true;
 
 	return false;
+}
+
+void mtt::ext::ExtensionProtocol::sendHandshake()
+{
+	stream->write(createExtendedHandshakeMessage());
+}
+
+bool mtt::ext::ExtensionProtocol::requestMetadataPiece(uint32_t index)
+{
+	if (!state.enabled || utm.size == 0)
+		return false;
+
+	stream->write(utm.createMetadataRequest(index));
+
+	return true;
 }

@@ -36,6 +36,8 @@ public:
 	std::function<void()> onReceiveCallback;
 	std::function<void()> onCloseCallback;
 
+	std::string getName();
+
 protected:
 
 	std::mutex callbackMutex;

@@ -1,9 +1,12 @@
 #pragma once
 #include "BencodeParser.h"
 #include <mutex>
+#include "TcpAsyncStream.h"
 
 namespace mtt
 {
+	class PeerCommunication;
+
 	namespace ext
 	{
 		enum MessageType
@@ -54,6 +57,8 @@ namespace mtt
 
 		struct ExtensionProtocol
 		{
+			friend class PeerCommunication;
+
 			struct
 			{
 				bool enabled = false;
@@ -64,13 +69,20 @@ namespace mtt
 
 			bool isSupported(MessageType type);
 
-			MessageType load(char id, DataBuffer& data);
-			DataBuffer createExtendedHandshakeMessage(bool enablePex = true, uint16_t metadataSize = 0);
+			bool requestMetadataPiece(uint32_t index);
 
 			PeerExchange pex;
+
 			UtMetadata utm;
 
 		private:
+
+			void sendHandshake();
+
+			MessageType load(char id, DataBuffer& data);
+			DataBuffer createExtendedHandshakeMessage(bool enablePex = true, uint16_t metadataSize = 0);
+
+			std::shared_ptr<TcpAsyncStream> stream;
 
 			BencodeParser parser;
 			std::map<int, MessageType> messageIds;

@@ -75,5 +75,18 @@ void mtt::PiecesProgress::fromBitfield(DataBuffer& bitfield, size_t piecesCount)
 
 DataBuffer mtt::PiecesProgress::toBitfield()
 {
-	return{};
+	DataBuffer buffer;
+	buffer.resize((size_t)ceil(piecesStartCount / 8.0f));
+
+	for (int i = 0; i < piecesStartCount; i++)
+	{
+		if(!hasPiece(i))
+			continue;
+
+		size_t idx = static_cast<size_t>(i / 8.0f);
+		unsigned char bitmask = 128 >> i % 8;
+		buffer[idx] |= bitmask;
+	}
+
+	return buffer;
 }

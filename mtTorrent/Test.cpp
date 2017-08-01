@@ -90,16 +90,11 @@ void TorrentTest::testMetadataReceive()
 	ServiceThreadpool service;
 
 	PeerCommunication peer(torrent.info, *this, service.io);
-	peer.start(Addr({ 127,0,0,1 }, 55391));
+	peer.sendHandshake(Addr({ 127,0,0,1 }, 55391));
 
-	WAITFOR(failed || peer.state.finishedHandshake)
+	WAITFOR(failed || (peer.state.finishedHandshake && peer.ext.state.enabled))
 
-	WAITFOR(failed || peer.ext.utm.size)
-
-	if (failed)
-		return;
-
-	if(!peer.ext.utm.size)
+	if (failed || !peer.ext.utm.size)
 		return;
 
 	mtt::MetadataReconstruction metadata;
@@ -108,7 +103,7 @@ void TorrentTest::testMetadataReceive()
 	while (!metadata.finished() && !failed)
 	{
 		uint32_t mdPiece = metadata.getMissingPieceIndex();
-		peer.requestMetadataPiece(mdPiece);
+		peer.ext.requestMetadataPiece(mdPiece);
 
 		WAITFOR(failed || !utmMsg.metadata.empty())
 
@@ -176,23 +171,15 @@ void TorrentTest::testAsyncDhtGetPeers()
 		}
 
 		failed = false;
-		peer->start(nextAddr);
+		peer->sendHandshake(nextAddr);
 
-		WAITFOR(failed || peer->state.finishedHandshake);
+		WAITFOR(failed || (peer->state.finishedHandshake && peer->ext.state.enabled));
 
-		if (!peer->info.supportsExtensions())
-			continue;
-
-		WAITFOR(failed || peer->ext.state.enabled);
-
-		if (failed)
-			continue;
-		else if (!peer->ext.utm.size)
+		if (failed || !peer->ext.utm.size)
 			continue;
 		else
 			break;
 	}
-
 
 	mtt::MetadataReconstruction metadata;
 	metadata.init(peer->ext.utm.size);
@@ -200,7 +187,7 @@ void TorrentTest::testAsyncDhtGetPeers()
 	while (!metadata.finished() && !failed)
 	{
 		uint32_t mdPiece = metadata.getMissingPieceIndex();
-		peer->requestMetadataPiece(mdPiece);
+		peer->ext.requestMetadataPiece(mdPiece);
 
 		WAITFOR(failed || !utmMsg.metadata.empty());
 
@@ -267,7 +254,7 @@ void TorrentTest::testTrackers()
 
 void TorrentTest::start()
 {
-	testTrackers();
+	//testTrackers();
 }
 
 uint32_t TorrentTest::onFoundPeers(uint8_t* hash, std::vector<Addr>& values)

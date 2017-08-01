@@ -23,7 +23,7 @@ public:
 	{
 	}
 
-	virtual void pieceReceived(mtt::PeerCommunication*, mtt::DownloadedPiece* piece) override
+	virtual void pieceReceiveFinished(mtt::PeerCommunication*, mtt::DownloadedPiece* piece) override
 	{
 	}
 

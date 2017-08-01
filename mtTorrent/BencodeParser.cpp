@@ -366,6 +366,22 @@ BencodeParser::BenList* BencodeParser::Object::getListItem(const char* name)
 	return nullptr;
 }
 
+mtt::BencodeParser::Object* mtt::BencodeParser::Object::getDictObject(const char* name)
+{
+	if (type == BencodeParser::Object::Dictionary)
+	{
+		if (dic->find(name) != dic->end())
+		{
+			auto& item = (*dic)[name];
+
+			if (item.type == BencodeParser::Object::Dictionary)
+				return &item;
+		}
+	}
+
+	return nullptr;
+}
+
 BencodeParser::BenDictionary* mtt::BencodeParser::Object::getDictItem(const char* name)
 {
 	if (type == BencodeParser::Object::Dictionary)

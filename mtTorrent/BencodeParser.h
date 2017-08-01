@@ -45,6 +45,7 @@ namespace mtt
 
 			void cleanup();
 
+			Object* getDictObject(const char* name);
 			BenDictionary* getDictItem(const char* name);
 			BenList* getListItem(const char* name);
 			std::string* getTxtItem(const char* name);

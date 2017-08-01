@@ -98,6 +98,11 @@ void TcpAsyncStream::consumeData(size_t size)
 	receiveBuffer.erase(receiveBuffer.begin(), receiveBuffer.begin() + size);
 }
 
+std::string TcpAsyncStream::getName()
+{
+	return info.host;
+}
+
 void TcpAsyncStream::setAsConnected()
 {
 	state = Connected;

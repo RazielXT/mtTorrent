@@ -23,6 +23,7 @@ namespace mtt
 		{
 			Disconnected,
 			Connecting,
+			Connected,
 			Handshake,
 			TransferringData,
 			Idle
@@ -45,19 +46,21 @@ namespace mtt
 	{
 	public:
 
-		PeerCommunication(TorrentInfo& torrent, IPeerListener& listener, boost::asio::io_service& io_service);
+		PeerCommunication(TorrentInfo& torrent, IPeerListener& listener, boost::asio::io_service& io_service, std::shared_ptr<TcpAsyncStream> stream = nullptr);
 		~PeerCommunication();
 
 		PeerStateInfo info;
 		PeerCommunicationState state;
 
-		void start(Addr& address);
+		void sendHandshake(Addr& address);
+
 		bool sendInterested();
 		bool requestPiece(PieceDownloadInfo& pieceInfo);
 
-		void stop();
+		void sendBitfield(DataBuffer& bitfield);
+		void sendHave(uint32_t pieceIdx);
 
-		bool requestMetadataPiece(uint32_t index);
+		void stop();
 
 		ext::ExtensionProtocol ext;
 
@@ -80,7 +83,6 @@ namespace mtt
 		void dataReceived();
 		void connectionClosed();
 
-		void enableExtensions();
 		void requestPieceBlock();
 	};
 
