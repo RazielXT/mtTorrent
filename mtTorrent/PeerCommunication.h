@@ -31,9 +31,9 @@ namespace mtt
 		action = Disconnected;
 	};
 
-	struct PeerStateInfo
+	struct PeerInfo
 	{
-		PeerStateInfo();
+		PeerInfo();
 
 		PiecesProgress pieces;
 		uint8_t id[20];
@@ -49,13 +49,16 @@ namespace mtt
 		PeerCommunication(TorrentInfo& torrent, IPeerListener& listener, boost::asio::io_service& io_service, std::shared_ptr<TcpAsyncStream> stream = nullptr);
 		~PeerCommunication();
 
-		PeerStateInfo info;
+		PeerInfo info;
 		PeerCommunicationState state;
 
 		void sendHandshake(Addr& address);
 
-		bool sendInterested();
+		void setInterested(bool enabled);
+		void setChoke(bool enabled);
+
 		bool requestPiece(PieceDownloadInfo& pieceInfo);
+		bool isDownloading();
 
 		void sendBitfield(DataBuffer& bitfield);
 		void sendHave(uint32_t pieceIdx);
@@ -84,6 +87,8 @@ namespace mtt
 		void connectionClosed();
 
 		void requestPieceBlock();
+
+		void resetState();
 	};
 
 }

@@ -190,12 +190,7 @@ void TcpAsyncStream::handle_connect(const boost::system::error_code& error)
 
 void TcpAsyncStream::do_close()
 {
-	boost::system::error_code error;
-
-	if (socket.is_open())
-		socket.close(error);
-
-	postFail("Close", error);
+	postFail("Close", boost::system::error_code());
 }
 
 void TcpAsyncStream::check_write()

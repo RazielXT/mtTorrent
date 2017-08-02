@@ -27,11 +27,11 @@ namespace mtt
 			return packet.getBuffer();
 		}
 
-		DataBuffer createInterested()
+		DataBuffer createStateMessage(PeerMessageId id)
 		{
 			PacketBuilder packet(5);
 			packet.add32(1);
-			packet.add(Interested);
+			packet.add(id);
 
 			return packet.getBuffer();
 		}
@@ -70,13 +70,13 @@ namespace mtt
 	}
 }
 
-mtt::PeerStateInfo::PeerStateInfo()
+mtt::PeerInfo::PeerInfo()
 {
 	memset(id, 0, 20);
 	memset(protocol, 0, 8);
 }
 
-bool mtt::PeerStateInfo::supportsExtensions()
+bool mtt::PeerInfo::supportsExtensions()
 {
 	return (protocol[5] & 0x10) != 0;
 }
@@ -103,6 +103,8 @@ void PeerCommunication::sendHandshake(Addr& address)
 {
 	if (state.action == PeerCommunicationState::Disconnected)
 	{
+		resetState();
+
 		state.action = PeerCommunicationState::Connecting;
 		stream->connect(address.addrBytes, address.port, address.ipv6);
 	}
@@ -133,7 +135,10 @@ void PeerCommunication::connectionOpened()
 void mtt::PeerCommunication::stop()
 {
 	if (state.action != PeerCommunicationState::Disconnected)
+	{
+		state.action = PeerCommunicationState::Disconnected;
 		stream->close();
+	}
 }
 
 void mtt::PeerCommunication::connectionClosed()
@@ -160,16 +165,28 @@ mtt::PeerCommunication::~PeerCommunication()
 	stream->close();
 }
 
-bool mtt::PeerCommunication::sendInterested()
+void mtt::PeerCommunication::setInterested(bool enabled)
 {
-	if (state.action != PeerCommunicationState::Idle)
-		return false;
+	if (state.action <= PeerCommunicationState::Handshake)
+		return;
 
-	state.amInterested = true;
+	if (state.amInterested == enabled)
+		return;
 
-	stream->write(mtt::bt::createInterested());
+	state.amInterested = enabled;
+	stream->write(mtt::bt::createStateMessage(enabled ? Interested : NotInterested));
+}
 
-	return true;
+void mtt::PeerCommunication::setChoke(bool enabled)
+{
+	if (state.action <= PeerCommunicationState::Handshake)
+		return;
+
+	if (state.amChoking == enabled)
+		return;
+
+	state.amChoking = enabled;
+	stream->write(mtt::bt::createStateMessage(enabled ? Choke : Unchoke));
 }
 
 bool mtt::PeerCommunication::requestPiece(PieceDownloadInfo& pieceInfo)
@@ -189,6 +206,11 @@ bool mtt::PeerCommunication::requestPiece(PieceDownloadInfo& pieceInfo)
 	requestPieceBlock();
 
 	return true;
+}
+
+bool mtt::PeerCommunication::isDownloading()
+{
+	return state.action == PeerCommunicationState::TransferringData;
 }
 
 void mtt::PeerCommunication::sendHave(uint32_t pieceIdx)
@@ -216,6 +238,12 @@ void mtt::PeerCommunication::requestPieceBlock()
 	stream->write(mtt::bt::createBlockRequest(b));
 }
 
+void mtt::PeerCommunication::resetState()
+{
+	state = PeerCommunicationState();
+	info = PeerInfo();
+}
+
 void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 {
 	if (message.id != Piece)
@@ -224,8 +252,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 	if (message.id == KeepAlive)
 	{
 	}
-
-	if (message.id == Bitfield)
+	else if (message.id == Bitfield)
 	{
 		info.pieces.fromBitfield(message.bitfield, torrent.pieces.size());
 
@@ -233,8 +260,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 
 		listener.progressUpdated(this);
 	}
-
-	if (message.id == Have)
+	else if (message.id == Have)
 	{
 		info.pieces.addPiece(message.havePieceIndex);
 
@@ -242,8 +268,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 
 		listener.progressUpdated(this);
 	}
-
-	if (message.id == Piece)
+	else if (message.id == Piece)
 	{
 		bool finished = false;
 		bool success = false;
@@ -279,13 +304,23 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 			listener.pieceReceiveFinished(this, success ? &downloadingPiece : nullptr);
 		}
 	}
-
-	if (message.id == Unchoke)
+	else if (message.id == Unchoke)
 	{
 		state.peerChoking = false;
 	}
-
-	if (message.id == Extended)
+	else if (message.id == Choke)
+	{
+		state.peerChoking = true;
+	}
+	else if (message.id == NotInterested)
+	{
+		state.peerInterested = true;
+	}
+	else if (message.id == Interested)
+	{
+		state.peerInterested = false;
+	}
+	else if (message.id == Extended)
 	{
 		auto type = ext.load(message.extended.id, message.extended.data);
 
@@ -294,8 +329,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 		if (type == mtt::ext::HandshakeEx)
 			listener.extHandshakeFinished(this);
 	}
-
-	if (message.id == Handshake)
+	else if (message.id == Handshake)
 	{
 		if (state.action == PeerCommunicationState::Handshake || state.action == PeerCommunicationState::Connected)
 		{
@@ -318,6 +352,13 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 				listener.handshakeFinished(this);
 			}
 		}
+	}
+	else if (message.id == Request)
+	{
+		setChoke(true);
+	}
+	else if (message.id == Cancel)
+	{
 	}
 
 	listener.messageReceived(this, message);
