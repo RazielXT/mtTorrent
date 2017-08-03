@@ -13,6 +13,8 @@ namespace mtt
 		void setPath(std::string path);
 
 		void storePiece(DownloadedPiece& piece);
+		PieceBlock getPieceBlock(uint32_t pieceId, uint32_t blockOffset);
+
 		void selectFiles(std::vector<mtt::File>& files);
 		std::vector<PieceInfo> checkFileHash(mtt::File& file);
 		void flush();

@@ -216,7 +216,8 @@ mtt::TrackerManager::TorrentTrackers::TrackerInfo* mtt::TrackerManager::TorrentT
 mtt::TrackerStateInfo mtt::TrackerManager::TorrentTrackers::TrackerInfo::getStateInfo()
 {
 	TrackerStateInfo out;
-	out.host = protocol + "://" + host + ":" + port;
+	out.host = host;
+	out.fullAddress = protocol + "://" + host + ":" + port;
 
 	out.nextUpdate = timer ? timer->getSecondsTillNextUpdate() : 0;
 

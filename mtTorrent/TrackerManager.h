@@ -10,6 +10,7 @@ namespace mtt
 	struct TrackerStateInfo
 	{
 		std::string host;
+		std::string fullAddress;
 
 		Tracker::State state;
 		uint32_t updateInterval;

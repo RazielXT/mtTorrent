@@ -25,6 +25,13 @@ void mtt::Storage::storePiece(DownloadedPiece& piece)
 	}
 }
 
+mtt::PieceBlock mtt::Storage::getPieceBlock(uint32_t pieceId, uint32_t blockOffset)
+{
+	PieceBlock block;
+
+	return block;
+}
+
 void mtt::Storage::flush()
 {
 	for (auto& s : selection.files)
@@ -85,9 +92,12 @@ void mtt::Storage::flush(File& file)
 
 	for (auto& p : pieces)
 	{	
-		auto piecePos = file.startPiecePos + (p.index - file.startPieceIndex)*pieceSize;
-		fileOut.seekp(piecePos);
-		fileOut.write((const char*)p.data.data(), p.dataSize);
+		auto pieceDataPos = file.startPieceIndex == p.index ? file.startPiecePos : 0;
+		auto fileDataPos = file.startPieceIndex == p.index ? 0 : (pieceSize - file.startPiecePos + (p.index - file.startPieceIndex - 1)*pieceSize);
+		auto pieceDataSize = std::min(file.size, p.dataSize - pieceDataPos);
+
+		fileOut.seekp(fileDataPos);
+		fileOut.write((const char*)p.data.data() + pieceDataPos, pieceDataSize);
 	}
 
 	unsavedPieces[file.id].clear();
