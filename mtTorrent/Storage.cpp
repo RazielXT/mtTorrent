@@ -15,18 +15,20 @@ void mtt::Storage::setPath(std::string p)
 
 void mtt::Storage::storePiece(DownloadedPiece& piece)
 {
-	unsavedPieces.push_back(piece);
+	std::lock_guard<std::mutex> guard(storageMutex);
 
-	const int downloadedPiecesCacheSize = 5;
+	unsavedPieces.getNext() = piece;
 
-	if (unsavedPieces.size() > downloadedPiecesCacheSize)
-		flush();
+	if (unsavedPieces.count == unsavedPieces.data.size())
+		flushAllFiles();
 }
 
 mtt::PieceBlock mtt::Storage::getPieceBlock(PieceBlockInfo& block)
 {
 	PieceBlock out;
 	out.info = block;
+
+	std::lock_guard<std::mutex> guard(cacheMutex);
 
 	auto& piece = loadPiece(block.index);
 
@@ -43,19 +45,29 @@ const uint32_t blockRequestMaxSize = 16 * 1024;
 
 mtt::Storage::CachedPiece& mtt::Storage::loadPiece(uint32_t pieceId)
 {
-	for (auto& p : unsavedPieces)
 	{
-		if (p.index == pieceId)
-			cachedPieces.push_front({ p.index, p.data });
+		std::lock_guard<std::mutex> guard(storageMutex);
+
+		for (uint32_t i = 0; i < unsavedPieces.count; i++)
+		{
+			auto& p = unsavedPieces.data[i];
+
+			if (p.index == pieceId)
+			{
+				auto& c = cachedPieces.getNext();
+				c.data = p.data;
+				c.index = p.index;
+			}
+		}
 	}
 
-	for (auto& p : cachedPieces)
+	for (uint32_t i = 0; i < cachedPieces.count; i++)
 	{
-		if (p.index == pieceId)
-			return p;
+		if (cachedPieces.data[i].index == pieceId)
+			return cachedPieces.data[i];
 	}
 
-	CachedPiece piece;
+	auto& piece = cachedPieces.getNext();
 	piece.index = pieceId;
 	piece.data.resize(pieceSize);
 
@@ -71,14 +83,8 @@ mtt::Storage::CachedPiece& mtt::Storage::loadPiece(uint32_t pieceId)
 
 	if(selection.files.back().info.endPieceIndex == pieceId)
 		piece.data.resize(selection.files.back().info.endPiecePos);
-	
-	cachedPieces.push_front(piece);
 
-	const uint32_t maxCachedPieces = 32;
-	if (cachedPieces.size() > maxCachedPieces)
-		cachedPieces.pop_back();
-
-	return cachedPieces.front();
+	return piece;
 }
 
 void mtt::Storage::loadPiece(File& file, CachedPiece& piece)
@@ -128,23 +134,40 @@ std::vector<mtt::PieceBlockInfo> mtt::Storage::makePieceBlocksInfo(uint32_t inde
 
 void mtt::Storage::setSelection(DownloadSelection& newSelection)
 {
-	selection = newSelection;
-
-	for (auto& f : selection.files)
 	{
-		if(f.selected)
-			preallocate(f.info);
+		std::lock_guard<std::mutex> guard(storageMutex);
+
+		selection = newSelection;
+
+		for (auto& f : selection.files)
+		{
+			if (f.selected)
+				preallocate(f.info);
+		}
+	}
+
+	{
+		std::lock_guard<std::mutex> guard(cacheMutex);
+
+		cachedPieces.reset();
 	}
 }
 
 void mtt::Storage::flush()
+{
+	std::lock_guard<std::mutex> guard(storageMutex);
+
+	flushAllFiles();
+}
+
+void mtt::Storage::flushAllFiles()
 {
 	for (auto& s : selection.files)
 	{
 		flush(s.info);
 	}
 
-	unsavedPieces.clear();
+	unsavedPieces.reset();
 }
 
 void mtt::Storage::saveProgress()
@@ -160,8 +183,9 @@ void mtt::Storage::loadProgress()
 void mtt::Storage::flush(File& file)
 {
 	std::vector<DownloadedPiece*> filePieces;
-	for (auto&piece : unsavedPieces)
+	for (uint32_t i = 0; i < unsavedPieces.count; i++)
 	{
+		auto& piece = unsavedPieces.data[i];
 		if (file.startPieceIndex <= piece.index && file.endPieceIndex >= piece.index)
 			filePieces.push_back(&piece);
 	}
@@ -193,6 +217,8 @@ void mtt::Storage::flush(File& file)
 
 std::vector<mtt::PieceInfo> mtt::Storage::checkFileHash(File& file)
 {
+	std::lock_guard<std::mutex> guard(storageMutex);
+
 	std::vector<mtt::PieceInfo> out;
 
 	auto fullpath = getFullpath(file);

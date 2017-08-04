@@ -273,10 +273,12 @@ void TorrentTest::testStorage()
 	info.begin = 16 * 1024;
 	info.index = 1;
 	info.length = 16 * 1024;
-	storage.getPieceBlock(info);
-	storage.getPieceBlock(info);
-	info.index = 5;
-	storage.getPieceBlock(info);
+
+	for (uint32_t i = 0; i < 17; i++)
+	{
+		info.index = i;
+		storage.getPieceBlock(info);
+	}
 }
 
 void TorrentTest::start()
