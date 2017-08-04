@@ -255,6 +255,7 @@
     <ClCompile Include="TrackerManager.cpp" />
     <ClCompile Include="UdpAsyncClient.cpp" />
     <ClCompile Include="UdpTrackerComm.cpp" />
+    <ClCompile Include="UrlEncoding.cpp" />
     <ClCompile Include="utils\Base32.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -286,6 +287,7 @@
     <ClInclude Include="TrackerManager.h" />
     <ClInclude Include="UdpAsyncClient.h" />
     <ClInclude Include="UdpTrackerComm.h" />
+    <ClInclude Include="UrlEncoding.h" />
     <ClInclude Include="utils\Base32.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

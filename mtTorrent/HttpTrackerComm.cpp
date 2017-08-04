@@ -1,39 +1,13 @@
 #include "HttpTrackerComm.h"
-#include <iomanip>
-#include <iostream>
 #include "BencodeParser.h"
 #include "PacketHelper.h"
 #include "Configuration.h"
+#include "UrlEncoding.h"
 
 
 #define TRACKER_LOG(x) WRITE_LOG("HTTP tracker " << info.hostname << " " << x)
 
 using namespace mtt;
-
-std::string url_encode(uint8_t* data, uint32_t size)
-{
-	static const char lookup[] = "0123456789ABCDEF";
-	std::stringstream e;
-	for (size_t i = 0, ix = size; i < ix; i++)
-	{
-		uint8_t& c = data[i];
-		if ((48 <= c && c <= 57) ||//0-9
-			(65 <= c && c <= 90) ||//abc...xyz
-			(97 <= c && c <= 122) //ABC...XYZ
-			//(c == '-' || c == '_' || c == '.' || c == '~')
-			)
-		{
-			e << c;
-		}
-		else
-		{
-			e << '%';
-			e << lookup[(c & 0xF0) >> 4];
-			e << lookup[(c & 0x0F)];
-		}
-	}
-	return e.str();
-}
 
 mtt::HttpTrackerComm::HttpTrackerComm()
 {
@@ -124,8 +98,8 @@ void mtt::HttpTrackerComm::onTcpReceived()
 DataBuffer mtt::HttpTrackerComm::createAnnounceRequest(std::string host, std::string port)
 {
 	PacketBuilder builder(400);
-	builder << "GET /announce?info_hash=" << url_encode(torrent->info.hash, 20);
-	builder << "&peer_id=" << url_encode(mtt::config::internal.hashId, 20);
+	builder << "GET /announce?info_hash=" << UrlEncode(torrent->info.hash, 20);
+	builder << "&peer_id=" << UrlEncode(mtt::config::internal.hashId, 20);
 	builder << "&port=" << std::to_string(mtt::config::external.listenPort);
 	builder << "&uploaded=0&downloaded=0&left=" << std::to_string(torrent->info.fullSize);
 	builder << "&numwant=" << std::to_string(mtt::config::external.maxPeersPerRequest);

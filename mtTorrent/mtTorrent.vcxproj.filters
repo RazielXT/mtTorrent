@@ -100,6 +100,9 @@
     <ClCompile Include="TrackerManager.cpp">
       <Filter>Source Files\Core\Torrent\Tracker</Filter>
     </ClCompile>
+    <ClCompile Include="UrlEncoding.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PacketHelper.h">
@@ -193,5 +196,9 @@
       <Filter>Source Files\Core\Torrent\Tracker</Filter>
     </ClInclude>
     <ClInclude Include="Interface.h" />
+    <ClInclude Include="Interface.h" />
+    <ClInclude Include="UrlEncoding.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

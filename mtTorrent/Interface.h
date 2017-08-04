@@ -34,7 +34,7 @@ namespace mtt
 		size_t expectedBitfieldSize;
 
 		std::vector<File> files;
-		std::string directory;
+		std::string name;
 		size_t fullSize;
 	};
 

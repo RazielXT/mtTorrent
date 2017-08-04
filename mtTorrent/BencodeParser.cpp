@@ -297,7 +297,7 @@ mtt::TorrentInfo mtt::BencodeParser::parseTorrentInfo(BenDictionary& infoDiction
 
 	if (infoDictionary.find("files") != infoDictionary.end())
 	{
-		info.directory = infoDictionary["name"].txt;
+		info.name = infoDictionary["name"].txt;
 
 		size_t sizeSum = 0;
 		auto& files = *infoDictionary["files"].l;
@@ -306,7 +306,7 @@ mtt::TorrentInfo mtt::BencodeParser::parseTorrentInfo(BenDictionary& infoDiction
 		for (auto& f : files)
 		{
 			std::vector<std::string> path;
-			path.push_back(info.directory);
+			path.push_back(info.name);
 
 			auto& pathList = *(*f.dic)["path"].l;
 			for (auto& p : pathList)
@@ -330,7 +330,8 @@ mtt::TorrentInfo mtt::BencodeParser::parseTorrentInfo(BenDictionary& infoDiction
 	{
 		size_t size = infoDictionary["length"].i;
 		auto endPos = size % info.pieceSize;
-		info.files.push_back({ 0,{ infoDictionary["name"].txt }, size, 0, 0, static_cast<uint32_t>(info.pieces.size() - 1), (uint32_t)endPos });
+		info.name = infoDictionary["name"].txt;
+		info.files.push_back({ 0,{ info.name }, size, 0, 0, static_cast<uint32_t>(info.pieces.size() - 1), (uint32_t)endPos });
 
 		info.fullSize = size;
 	}
