@@ -110,6 +110,15 @@ void PeerCommunication::sendHandshake(Addr& address)
 	}
 }
 
+void mtt::PeerCommunication::sendHandshake()
+{
+	if (!state.finishedHandshake && state.action == PeerCommunicationState::Connected)
+	{
+		state.action = PeerCommunicationState::Handshake;
+		stream->write(mtt::bt::createHandshake(torrent.hash, mtt::config::internal.hashId));
+	}
+}
+
 void PeerCommunication::dataReceived()
 {
 	std::lock_guard<std::mutex> guard(read_mutex);
@@ -125,11 +134,9 @@ void PeerCommunication::dataReceived()
 
 void PeerCommunication::connectionOpened()
 {
-	if (!state.finishedHandshake)
-	{
-		state.action = PeerCommunicationState::Handshake;
-		stream->write(mtt::bt::createHandshake(torrent.hash, mtt::config::internal.hashId));
-	}
+	state.action = PeerCommunicationState::Connected;
+
+	sendHandshake();
 }
 
 void mtt::PeerCommunication::stop()

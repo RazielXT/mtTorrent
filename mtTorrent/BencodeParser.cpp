@@ -321,7 +321,7 @@ mtt::TorrentInfo mtt::BencodeParser::parseTorrentInfo(BenDictionary& infoDiction
 			auto endId = getPieceIndex(sizeSum, info.pieceSize);
 			auto endPos = sizeSum % info.pieceSize;
 
-			info.files.push_back({ i++, path,  size, startId, startPos, endId, endPos });
+			info.files.push_back({ i++, path,  size, startId, (uint32_t)startPos, endId, (uint32_t)endPos });
 		}
 
 		info.fullSize = sizeSum;
@@ -330,7 +330,7 @@ mtt::TorrentInfo mtt::BencodeParser::parseTorrentInfo(BenDictionary& infoDiction
 	{
 		size_t size = infoDictionary["length"].i;
 		auto endPos = size % info.pieceSize;
-		info.files.push_back({ 0,{ infoDictionary["name"].txt }, size, 0, 0, static_cast<uint32_t>(info.pieces.size() - 1), endPos });
+		info.files.push_back({ 0,{ infoDictionary["name"].txt }, size, 0, 0, static_cast<uint32_t>(info.pieces.size() - 1), (uint32_t)endPos });
 
 		info.fullSize = size;
 	}

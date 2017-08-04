@@ -15,9 +15,9 @@ namespace mtt
 		std::vector<std::string> path;
 		size_t size;
 		uint32_t startPieceIndex;
-		size_t startPiecePos;
+		uint32_t startPiecePos;
 		uint32_t endPieceIndex;
-		size_t endPiecePos;
+		uint32_t endPiecePos;
 	};
 
 	struct PieceInfo
@@ -30,7 +30,7 @@ namespace mtt
 		uint8_t hash[20];
 
 		std::vector<PieceInfo> pieces;
-		size_t pieceSize;
+		uint32_t pieceSize;
 		size_t expectedBitfieldSize;
 
 		std::vector<File> files;
@@ -55,14 +55,15 @@ namespace mtt
 
 	using TorrentPtr = std::shared_ptr<LoadedTorrent>;
 
-	struct SelectedFile
+	struct FileSelectionInfo
 	{
-		File file;
+		bool selected;
+		File info;
 	};
 
 	struct DownloadSelection
 	{
-		std::vector<SelectedFile> files;
+		std::vector<FileSelectionInfo> files;
 	};
 
 	struct PieceBlockInfo

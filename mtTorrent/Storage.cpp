@@ -2,9 +2,10 @@
 #include <fstream>
 #include <boost/filesystem.hpp>
 
-mtt::Storage::Storage(size_t piecesz)
+mtt::Storage::Storage(uint32_t piecesz)
 {
 	pieceSize = piecesz;
+	path = ".//";
 }
 
 void mtt::Storage::setPath(std::string p)
@@ -14,41 +15,136 @@ void mtt::Storage::setPath(std::string p)
 
 void mtt::Storage::storePiece(DownloadedPiece& piece)
 {
+	unsavedPieces.push_back(piece);
+
+	const int downloadedPiecesCacheSize = 5;
+
+	if (unsavedPieces.size() > downloadedPiecesCacheSize)
+		flush();
+}
+
+mtt::PieceBlock mtt::Storage::getPieceBlock(PieceBlockInfo& block)
+{
+	PieceBlock out;
+	out.info = block;
+
+	auto& piece = loadPiece(block.index);
+
+	if (piece.data.size() >= block.begin + block.length)
+	{
+		out.data.resize(block.length);
+		memcpy(out.data.data(), piece.data.data() + block.begin, block.length);
+	}
+
+	return out;
+}
+
+const uint32_t blockRequestMaxSize = 16 * 1024;
+
+mtt::Storage::CachedPiece& mtt::Storage::loadPiece(uint32_t pieceId)
+{
+	for (auto& p : unsavedPieces)
+	{
+		if (p.index == pieceId)
+			cachedPieces.push_front({ p.index, p.data });
+	}
+
+	for (auto& p : cachedPieces)
+	{
+		if (p.index == pieceId)
+			return p;
+	}
+
+	CachedPiece piece;
+	piece.index = pieceId;
+	piece.data.resize(pieceSize);
+
 	for (auto& s : selection.files)
 	{
-		auto& f = s.file;
+		auto& f = s.info;
 
 		if (f.startPieceIndex <= piece.index && f.endPieceIndex >= piece.index)
 		{
-			storePiece(f, piece);
+			loadPiece(f, piece);
 		}
+	}
+
+	if(selection.files.back().info.endPieceIndex == pieceId)
+		piece.data.resize(selection.files.back().info.endPiecePos);
+	
+	cachedPieces.push_front(piece);
+
+	const uint32_t maxCachedPieces = 32;
+	if (cachedPieces.size() > maxCachedPieces)
+		cachedPieces.pop_back();
+
+	return cachedPieces.front();
+}
+
+void mtt::Storage::loadPiece(File& file, CachedPiece& piece)
+{
+	size_t fileDataPos = (piece.index == file.startPieceIndex) ? 0 : pieceSize - file.startPiecePos;
+	if (piece.index > file.startPieceIndex + 1)
+		fileDataPos += (piece.index - file.startPieceIndex - 1)*(size_t)pieceSize;
+
+	uint32_t bufferDataPos = (piece.index == file.startPieceIndex) ? file.startPiecePos : 0;
+
+	auto dataSize = (uint32_t)std::min((size_t)pieceSize, file.size);
+	if (file.startPieceIndex == piece.index)
+		dataSize = std::min(pieceSize - file.startPiecePos, dataSize);
+	else if (file.endPieceIndex == piece.index)
+		dataSize = std::min(file.endPiecePos, dataSize);
+
+	if (dataSize > 0)
+	{
+		auto path = getFullpath(file);
+		std::ifstream fileOut(path, std::ios_base::binary | std::ios_base::in);
+
+		fileOut.seekg(fileDataPos);
+		fileOut.read((char*)piece.data.data() + bufferDataPos, dataSize);
 	}
 }
 
-mtt::PieceBlock mtt::Storage::getPieceBlock(uint32_t pieceId, uint32_t blockOffset)
+std::vector<mtt::PieceBlockInfo> mtt::Storage::makePieceBlocksInfo(uint32_t index)
 {
-	PieceBlock block;
+	std::vector<PieceBlockInfo> out;
+	uint32_t size = pieceSize;
 
-	return block;
+	if (index == selection.files.back().info.endPieceIndex)
+		size = selection.files.back().info.endPiecePos;
+
+	for (int i = 0; i*blockRequestMaxSize < size; i++)
+	{
+		PieceBlockInfo block;
+		block.begin = i*blockRequestMaxSize;
+		block.index = index;
+		block.length = std::min(size - block.begin, blockRequestMaxSize);
+
+		out.push_back(block);
+	}
+
+	return out;
+}
+
+void mtt::Storage::setSelection(DownloadSelection& newSelection)
+{
+	selection = newSelection;
+
+	for (auto& f : selection.files)
+	{
+		if(f.selected)
+			preallocate(f.info);
+	}
 }
 
 void mtt::Storage::flush()
 {
 	for (auto& s : selection.files)
 	{
-		flush(s.file);
+		flush(s.info);
 	}
-}
 
-void mtt::Storage::selectFiles(std::vector<mtt::File>& files)
-{
-	selection.files.clear();
-
-	for (auto& f : files)
-	{
-		selection.files.push_back({ f });
-		preallocate(f);
-	}
+	unsavedPieces.clear();
 }
 
 void mtt::Storage::saveProgress()
@@ -61,22 +157,18 @@ void mtt::Storage::loadProgress()
 
 }
 
-void mtt::Storage::storePiece(File& file, DownloadedPiece& piece)
-{
-	/*auto& outBuffer = filesBuffer[file.id];
-
-	size_t bufferStartOffset = (piece.index - file.startPieceIndex)*normalPieceSize;
-
-	memcpy(&outBuffer[0] + bufferStartOffset, piece.data.data(), normalPieceSize);
-	*/
-	unsavedPieces[file.id].push_back(piece);
-
-	if (unsavedPieces[file.id].size() > piecesCacheSize)
-		flush(file);
-}
-
 void mtt::Storage::flush(File& file)
 {
+	std::vector<DownloadedPiece*> filePieces;
+	for (auto&piece : unsavedPieces)
+	{
+		if (file.startPieceIndex <= piece.index && file.endPieceIndex >= piece.index)
+			filePieces.push_back(&piece);
+	}
+
+	if (filePieces.empty())
+		return;
+
 	auto path = getFullpath(file);
 	std::string dirPath = path.substr(0, path.find_last_of('\\'));
 	boost::filesystem::path dir(dirPath);
@@ -86,21 +178,17 @@ void mtt::Storage::flush(File& file)
 			return;
 	}
 
-	auto& pieces = unsavedPieces[file.id];
-
 	std::ofstream fileOut(path, std::ios_base::binary | std::ios_base::in);
 
-	for (auto& p : pieces)
-	{	
-		auto pieceDataPos = file.startPieceIndex == p.index ? file.startPiecePos : 0;
-		auto fileDataPos = file.startPieceIndex == p.index ? 0 : (pieceSize - file.startPiecePos + (p.index - file.startPieceIndex - 1)*pieceSize);
-		auto pieceDataSize = std::min(file.size, p.dataSize - pieceDataPos);
+	for (auto& p : filePieces)
+	{
+		auto pieceDataPos = file.startPieceIndex == p->index ? file.startPiecePos : 0;
+		auto fileDataPos = file.startPieceIndex == p->index ? 0 : (pieceSize - file.startPiecePos + (p->index - file.startPieceIndex - 1)*pieceSize);
+		auto pieceDataSize = std::min(file.size, p->dataSize - pieceDataPos);
 
 		fileOut.seekp(fileDataPos);
-		fileOut.write((const char*)p.data.data() + pieceDataPos, pieceDataSize);
+		fileOut.write((const char*)p->data.data() + pieceDataPos, pieceDataSize);
 	}
-
-	unsavedPieces[file.id].clear();
 }
 
 std::vector<mtt::PieceInfo> mtt::Storage::checkFileHash(File& file)

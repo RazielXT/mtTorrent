@@ -7,6 +7,7 @@
 #include "utils\Base32.h"
 #include "PacketHelper.h"
 #include "TrackerManager.h"
+#include "Storage.h"
 
 using namespace mtt;
 
@@ -252,9 +253,35 @@ void TorrentTest::testTrackers()
 	WAITFOR(false);
 }
 
+void TorrentTest::testStorage()
+{
+	BencodeParser file;
+	if (!file.parseFile("D:\\test.torrent"))
+		return;
+
+	auto torrent = file.getTorrentFileInfo();
+
+	mtt::Storage storage(torrent.info.pieceSize);
+	DownloadSelection selection;
+	for (auto&f : torrent.info.files)
+		selection.files.push_back({ true, f });
+
+	storage.setPath("D:\\");
+	storage.setSelection(selection);
+
+	PieceBlockInfo info;
+	info.begin = 16 * 1024;
+	info.index = 1;
+	info.length = 16 * 1024;
+	storage.getPieceBlock(info);
+	storage.getPieceBlock(info);
+	info.index = 5;
+	storage.getPieceBlock(info);
+}
+
 void TorrentTest::start()
 {
-	//testTrackers();
+	testStorage();
 }
 
 uint32_t TorrentTest::onFoundPeers(uint8_t* hash, std::vector<Addr>& values)

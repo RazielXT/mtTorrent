@@ -50,6 +50,7 @@ public:
 	void testAsyncUdpRequest();
 	void testAsyncDhtGetPeers();
 	void testTrackers();
+	void testStorage();
 
 	void start();
 private:

@@ -53,6 +53,7 @@ namespace mtt
 		PeerCommunicationState state;
 
 		void sendHandshake(Addr& address);
+		void sendHandshake();
 
 		void setInterested(bool enabled);
 		void setChoke(bool enabled);

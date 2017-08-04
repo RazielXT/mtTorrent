@@ -8,14 +8,14 @@ namespace mtt
 	{
 	public:
 
-		Storage(size_t pieceSize);
+		Storage(uint32_t pieceSize);
 
 		void setPath(std::string path);
 
 		void storePiece(DownloadedPiece& piece);
-		PieceBlock getPieceBlock(uint32_t pieceId, uint32_t blockOffset);
+		PieceBlock getPieceBlock(PieceBlockInfo& piece);
 
-		void selectFiles(std::vector<mtt::File>& files);
+		void setSelection(DownloadSelection& files);
 		std::vector<PieceInfo> checkFileHash(mtt::File& file);
 		void flush();
 
@@ -23,19 +23,29 @@ namespace mtt
 		void loadProgress();	
 
 		DownloadSelection selection;
-		size_t pieceSize;
+		uint32_t pieceSize;
 
 	private:
 
 		std::string getFullpath(File& file);
-		void storePiece(File& file, DownloadedPiece& piece);
 
-		const int piecesCacheSize = 5;
+		std::vector<PieceBlockInfo> makePieceBlocksInfo(uint32_t index);
+
 		void flush(File& file);
 		void preallocate(File& file);
 
 		std::string path;
-		std::map<int, std::vector<DownloadedPiece>> unsavedPieces;
+		std::vector<DownloadedPiece> unsavedPieces;
+
+		struct CachedPiece
+		{
+			uint32_t index;
+			DataBuffer data;
+		};
+		std::list<CachedPiece> cachedPieces;
+
+		CachedPiece& loadPiece(uint32_t pieceId);
+		void loadPiece(File& file, CachedPiece& piece);
 
 	};
 }
