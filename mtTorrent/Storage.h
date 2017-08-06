@@ -17,7 +17,7 @@ namespace mtt
 		PieceBlock getPieceBlock(PieceBlockInfo& piece);
 
 		void setSelection(DownloadSelection& files);
-		std::vector<PieceInfo> checkFileHash(mtt::File& file);
+		std::vector<uint8_t> checkStoredPieces(std::vector<PieceInfo>& piecesInfo);
 		void flush();
 
 		void saveProgress();
@@ -26,11 +26,12 @@ namespace mtt
 		DownloadSelection selection;
 		uint32_t pieceSize;
 
+		std::vector<PieceBlockInfo> makePieceBlocksInfo(uint32_t index);
+
 	private:
 
 		std::string getFullpath(File& file);
-
-		std::vector<PieceBlockInfo> makePieceBlocksInfo(uint32_t index);
+		void createPath(std::string& path);
 
 		void flushAllFiles();
 		void flush(File& file);

@@ -63,6 +63,7 @@ namespace mtt
 
 		void sendBitfield(DataBuffer& bitfield);
 		void sendHave(uint32_t pieceIdx);
+		void sendPieceBlock(PieceBlock& block);
 
 		void stop();
 

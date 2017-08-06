@@ -1,6 +1,7 @@
 #include "Storage.h"
 #include <fstream>
 #include <boost/filesystem.hpp>
+#include <iostream>
 
 mtt::Storage::Storage(uint32_t piecesz)
 {
@@ -11,6 +12,9 @@ mtt::Storage::Storage(uint32_t piecesz)
 void mtt::Storage::setPath(std::string p)
 {
 	path = p;
+
+	if (path.back() != '\\')
+		path += '\\';
 }
 
 void mtt::Storage::storePiece(DownloadedPiece& piece)
@@ -194,13 +198,7 @@ void mtt::Storage::flush(File& file)
 		return;
 
 	auto path = getFullpath(file);
-	std::string dirPath = path.substr(0, path.find_last_of('\\'));
-	boost::filesystem::path dir(dirPath);
-	if (!boost::filesystem::exists(dir))
-	{
-		if (!boost::filesystem::create_directory(dir))
-			return;
-	}
+	createPath(path);
 
 	std::ofstream fileOut(path, std::ios_base::binary | std::ios_base::in);
 
@@ -215,36 +213,62 @@ void mtt::Storage::flush(File& file)
 	}
 }
 
-std::vector<mtt::PieceInfo> mtt::Storage::checkFileHash(File& file)
+std::vector<uint8_t> mtt::Storage::checkStoredPieces(std::vector<PieceInfo>& piecesInfo)
 {
-	std::lock_guard<std::mutex> guard(storageMutex);
+	std::vector<uint8_t> out(piecesInfo.size());
+	size_t currentPieceIdx = 0;
 
-	std::vector<mtt::PieceInfo> out;
+	storageMutex.lock();
+	auto files = selection.files;
+	storageMutex.unlock();
+	if (files.empty())
+		return out;
 
-	auto fullpath = getFullpath(file);
-	boost::filesystem::path dir(fullpath);
-	if (boost::filesystem::exists(dir))
+	auto currentFile = &files.front();
+	auto lastFile = &files.back();
+	
+	std::ifstream fileIn;
+	DataBuffer readBuffer(pieceSize);
+	uint8_t shaBuffer[20] = { 0 };
+
+	while (currentPieceIdx < piecesInfo.size())
 	{
-		std::ifstream fileIn(fullpath, std::ios_base::binary);
-		std::vector<char> buffer(pieceSize);
-		size_t idx = 0;
-		
-		if (file.startPiecePos)
-		{
-			auto startOffset = pieceSize - (file.startPiecePos % pieceSize);
-			out.push_back(PieceInfo{});
-			fileIn.read(buffer.data(), startOffset);
-		}	
+		auto fullpath = getFullpath(currentFile->info);
+		boost::filesystem::path dir(fullpath);
 
-		PieceInfo info;
-		out.reserve(file.size % pieceSize);
-
-		while (fileIn)
+		if (boost::filesystem::exists(dir))
 		{
-			fileIn.read(buffer.data(), pieceSize);
-			SHA1((unsigned char*)buffer.data(), fileIn.gcount(), (unsigned char*)info.hash);
-			out.push_back(info);
+			fileIn.open(fullpath, std::ios_base::binary);
+
+			if (fileIn)
+			{
+				auto readSize = pieceSize - currentFile->info.startPiecePos;
+				auto readBufferPos = currentFile->info.startPiecePos;
+
+				fileIn.read((char*)readBuffer.data() + readBufferPos, readSize);
+
+				while (fileIn)
+				{
+					SHA1(readBuffer.data(), pieceSize, shaBuffer);
+					out[currentPieceIdx++] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
+					fileIn.read((char*)readBuffer.data(), pieceSize);
+				}
+
+				if (currentPieceIdx == currentFile->info.endPieceIndex && currentFile == lastFile)
+				{
+					SHA1(readBuffer.data(), currentFile->info.endPiecePos, shaBuffer);
+					out[currentPieceIdx++] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
+				}
+			}
+
+			fileIn.close();
 		}
+
+		if (currentPieceIdx < currentFile->info.endPieceIndex)
+			currentPieceIdx = currentFile->info.endPieceIndex;
+
+		if(++currentFile > lastFile)
+			break;
 	}
 
 	return out;
@@ -253,6 +277,7 @@ std::vector<mtt::PieceInfo> mtt::Storage::checkFileHash(File& file)
 void mtt::Storage::preallocate(File& file)
 {
 	auto fullpath = getFullpath(file);
+	createPath(fullpath);
 	boost::filesystem::path dir(fullpath);
 	if (!boost::filesystem::exists(dir) || boost::filesystem::file_size(dir) != file.size)
 	{
@@ -275,5 +300,22 @@ std::string mtt::Storage::getFullpath(File& file)
 	}
 
 	return path + filePath;
+}
+
+void mtt::Storage::createPath(std::string& path)
+{
+	for (uint32_t i = 0; i < path.length(); i++)
+	{
+		if (path[i] == '\\')
+		{
+			std::string dirPath = path.substr(0, i);
+			boost::filesystem::path dir(dirPath);
+			if (!boost::filesystem::exists(dir))
+			{
+				if (!boost::filesystem::create_directory(dir))
+					return;
+			}
+		}
+	}
 }
 

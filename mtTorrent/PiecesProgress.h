@@ -9,6 +9,7 @@ namespace mtt
 
 		void fromSelection(std::vector<File>& files);
 		void fromBitfield(DataBuffer& bitfield, size_t piecesCount);
+		void fromList(std::vector<uint8_t>& pieces);
 		DataBuffer toBitfield();
 
 		bool empty();

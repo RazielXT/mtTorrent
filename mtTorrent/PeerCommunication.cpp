@@ -67,6 +67,19 @@ namespace mtt
 
 			return packet.getBuffer();
 		}
+
+		DataBuffer createPiece(PieceBlock& block)
+		{
+			uint32_t dataSize = 1 + 8 + (uint32_t)block.data.size();
+			PacketBuilder packet(4 + dataSize);
+			packet.add32(dataSize);
+			packet.add(Piece);
+			packet.add32(block.info.index);
+			packet.add32(block.info.begin);
+			packet.add(block.data.data(), block.data.size());
+
+			return packet.getBuffer();
+		}
 	}
 }
 
@@ -97,6 +110,10 @@ PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, boost::as
 
 	ext.pex.onPexMessage = std::bind(&mtt::IPeerListener::pexReceived, &listener, this, std::placeholders::_1);
 	ext.utm.onUtMetadataMessage = std::bind(&mtt::IPeerListener::metadataPieceReceived, &listener, this, std::placeholders::_1);
+	ext.stream = stream;
+
+	if (s)
+		dataReceived();
 }
 
 void PeerCommunication::sendHandshake(Addr& address)
@@ -222,15 +239,23 @@ bool mtt::PeerCommunication::isDownloading()
 
 void mtt::PeerCommunication::sendHave(uint32_t pieceIdx)
 {
-	if (state.action != PeerCommunicationState::Idle)
+	if (state.action <= PeerCommunicationState::Handshake)
 		return;
 
 	stream->write(mtt::bt::createHave(pieceIdx));
 }
 
+void mtt::PeerCommunication::sendPieceBlock(PieceBlock& block)
+{
+	if (state.action <= PeerCommunicationState::Handshake)
+		return;
+
+	stream->write(mtt::bt::createPiece(block));
+}
+
 void mtt::PeerCommunication::sendBitfield(DataBuffer& bitfield)
 {
-	if (state.action != PeerCommunicationState::Idle)
+	if (state.action <= PeerCommunicationState::Handshake)
 		return;
 
 	stream->write(mtt::bt::createBitfield(bitfield));
@@ -340,8 +365,6 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 	{
 		if (state.action == PeerCommunicationState::Handshake || state.action == PeerCommunicationState::Connected)
 		{
-			state.action = PeerCommunicationState::Idle;
-
 			if (!state.finishedHandshake)
 			{
 				if(state.action == PeerCommunicationState::Connected)
@@ -356,13 +379,16 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 				if (info.supportsExtensions())
 					ext.sendHandshake();
 
+				state.action = PeerCommunicationState::Idle;
+
 				listener.handshakeFinished(this);
 			}
+			else
+				state.action = PeerCommunicationState::Idle;
 		}
 	}
 	else if (message.id == Request)
 	{
-		setChoke(true);
 	}
 	else if (message.id == Cancel)
 	{

@@ -137,6 +137,9 @@ MessageType ExtensionProtocol::load(char id, DataBuffer& data)
 				state.yourIp = *ip;
 
 			state.enabled = true;
+
+			if (!state.sentHandshake)
+				sendHandshake();
 		}
 
 		return HandshakeEx;
@@ -228,7 +231,10 @@ bool mtt::ext::ExtensionProtocol::isSupported(MessageType type)
 
 void mtt::ext::ExtensionProtocol::sendHandshake()
 {
-	stream->write(createExtendedHandshakeMessage());
+	if(!state.sentHandshake)
+		stream->write(createExtendedHandshakeMessage());
+
+	state.sentHandshake = true;
 }
 
 bool mtt::ext::ExtensionProtocol::requestMetadataPiece(uint32_t index)

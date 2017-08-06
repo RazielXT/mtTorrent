@@ -200,5 +200,6 @@
     <ClInclude Include="UrlEncoding.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="Interface.h" />
   </ItemGroup>
 </Project>

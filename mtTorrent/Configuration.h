@@ -7,7 +7,7 @@ namespace mtt
 	{
 		struct External
 		{
-			uint32_t listenPort = 80;
+			uint32_t listenPort = 55125;
 			uint32_t maxPeersPerRequest = 100;
 
 			std::string defaultDirectory;

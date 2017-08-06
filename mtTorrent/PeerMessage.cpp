@@ -15,8 +15,9 @@ PeerMessage::PeerMessage(DataBuffer& data)
 			id = Handshake;
 
 			messageSize = 68;
-			memcpy(handshake.peerId, &data[0] + 20 + 8 + 20, 20);
 			memcpy(handshake.reservedBytes, &data[0] + 20, 8);
+			memcpy(handshake.info, &data[0] + 20 + 8, 20);
+			memcpy(handshake.peerId, &data[0] + 20 + 8 + 20, 20);
 
 			return;
 		}

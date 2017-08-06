@@ -61,6 +61,7 @@ namespace mtt
 
 			struct
 			{
+				bool sentHandshake = false;
 				bool enabled = false;
 				std::string yourIp;
 				std::string client;

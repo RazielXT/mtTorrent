@@ -8,6 +8,7 @@
 #include "PacketHelper.h"
 #include "TrackerManager.h"
 #include "Storage.h"
+#include "TcpAsyncServer.h"
 
 using namespace mtt;
 
@@ -253,37 +254,160 @@ void TorrentTest::testTrackers()
 	WAITFOR(false);
 }
 
-void TorrentTest::testStorage()
+void TorrentTest::testStorageCheck()
 {
 	BencodeParser file;
-	if (!file.parseFile("D:\\Shoujo.torrent"))
+	if (!file.parseFile("D:\\wifi.torrent"))
 		return;
 
 	auto torrent = file.getTorrentFileInfo();
 
-	mtt::Storage storage(torrent.info.pieceSize);
 	DownloadSelection selection;
 	for (auto&f : torrent.info.files)
 		selection.files.push_back({ true, f });
 
-	storage.setPath("D:\\");
+	mtt::Storage storage(torrent.info.pieceSize);
+	storage.setPath("D:\\test");
 	storage.setSelection(selection);
 
-	PieceBlockInfo info;
-	info.begin = 16 * 1024;
-	info.index = 1;
-	info.length = 16 * 1024;
+	auto pieces = storage.checkStoredPieces(torrent.info.pieces);
+}
 
-	for (uint32_t i = 0; i < 17; i++)
+void TorrentTest::testStorageLoad()
+{
+	BencodeParser file;
+	if (!file.parseFile("D:\\wifi.torrent"))
+		return;
+
+	auto torrent = file.getTorrentFileInfo();
+
+	DownloadSelection selection;
+	for (auto&f : torrent.info.files)
+		selection.files.push_back({ true, f });
+
+	mtt::Storage storage(torrent.info.pieceSize);
+	storage.setPath("D:\\test");
+	storage.setSelection(selection);
+
+	mtt::Storage outStorage(torrent.info.pieceSize);
+	outStorage.setPath("D:\\test\\out");
+	outStorage.setSelection(selection);
+
+	for (uint32_t i = 0; i < torrent.info.pieces.size(); i++)
 	{
-		info.index = i;
-		storage.getPieceBlock(info);
+		auto blocksInfo = storage.makePieceBlocksInfo(i);
+
+		mtt::DownloadedPiece piece;
+		piece.index = i;
+		piece.dataSize = blocksInfo.back().begin + blocksInfo.back().length;
+		piece.data.resize(piece.dataSize);
+
+		for (auto& blockInfo : blocksInfo)
+		{
+			auto block = storage.getPieceBlock(blockInfo);
+			
+			memcpy(piece.data.data() + block.info.begin, block.data.data(), block.info.length);
+		}
+
+		outStorage.storePiece(piece);
+	}
+
+	outStorage.flush();
+}
+
+void TorrentTest::testPeerListen()
+{
+	BencodeParser file;
+	if (!file.parseFile("D:\\wifi.torrent"))
+		return;
+
+	auto torrent = file.getTorrentFileInfo();
+
+	DownloadSelection selection;
+	for (auto&f : torrent.info.files)
+		selection.files.push_back({ true, f });
+
+	mtt::Storage storage(torrent.info.pieceSize);
+	storage.setPath("D:\\test");
+	storage.setSelection(selection);
+
+	mtt::PiecesProgress progress;
+	progress.fromList(storage.checkStoredPieces(torrent.info.pieces));
+
+	ServiceThreadpool service;
+	service.start(2);
+
+	std::shared_ptr<TcpAsyncStream> peerStream;
+	TcpAsyncServer server(service.io, mtt::config::external.listenPort, false);
+	server.acceptCallback = [&](std::shared_ptr<TcpAsyncStream> c) { peerStream = c; };
+	server.listen();
+
+	WAITFOR(peerStream);
+
+	class MyListener : public BasicPeerListener
+	{
+	public:
+
+		virtual void handshakeFinished(PeerCommunication*) override
+		{
+			success = true;
+		}
+
+		virtual void connectionClosed(PeerCommunication*) override
+		{
+			fail = true;
+		}
+
+		virtual void messageReceived(PeerCommunication*, PeerMessage& msg) override
+		{
+			if (msg.id == Handshake)
+			{
+				success = memcmp(msg.handshake.info, torrent->info.hash, 20) == 0;
+			}
+			else if (msg.id == Interested)
+			{
+				comm->setChoke(false);
+			}
+			else if (msg.id == Request)
+			{
+				PieceBlockInfo blockInfo;
+				blockInfo.begin = msg.request.begin;
+				blockInfo.index = msg.request.index;
+				blockInfo.length = msg.request.length;
+
+				auto block = storage->getPieceBlock(blockInfo);
+				comm->sendPieceBlock(block);
+			}
+		}
+
+		Storage* storage;
+		PeerCommunication* comm;
+		TorrentFileInfo* torrent;
+		bool success = false;
+		bool fail = false;
+	}
+	listener;
+
+	listener.torrent = &torrent;
+	listener.storage = &storage;
+
+	PeerCommunication comm(torrent.info, listener, service.io, peerStream);
+
+	listener.comm = &comm;
+
+	WAITFOR(listener.success || listener.fail);
+
+	if (listener.success)
+	{
+		comm.sendBitfield(progress.toBitfield());
+
+		WAITFOR(listener.fail);
 	}
 }
 
 void TorrentTest::start()
 {
-	testTrackers();
+	testPeerListen();
 }
 
 uint32_t TorrentTest::onFoundPeers(uint8_t* hash, std::vector<Addr>& values)
@@ -321,4 +445,34 @@ void TorrentTest::findingPeersFinished(uint8_t* hash, uint32_t count)
 	WRITE_LOG("DHT final values count :" << count)
 
 	dhtResult.finalCount = count;
+}
+
+void TorrentTest::testGetCountry()
+{
+	// Create a context that uses the default paths for
+	// finding CA certificates.
+	ssl::context ctx(ssl::context::tlsv12);
+	ctx.set_default_verify_paths();
+
+	// Open a socket and connect it to the remote host.
+	boost::asio::io_service io_service;
+	ssl_socket sock(io_service, ctx);
+	tcp::resolver resolver(io_service);
+
+	const char* server = "tools.keycdn.com";
+	const char* req = "https://tools.keycdn.com/geo.json?host=";
+	const char* targetHost = "www.google.com";
+
+	// Form the request. We specify the "Connection: close" header so that the
+	// server will close the socket after transmitting the response. This will
+	// allow us to treat all data up until the EOF as the content.
+	boost::asio::streambuf request;
+	std::ostream request_stream(&request);
+	request_stream << "GET " << req << targetHost << " HTTP/1.1\r\n";
+	request_stream << "Host: " << server << "\r\n";
+	request_stream << "Accept: */*\r\n";
+	request_stream << "Connection: close\r\n\r\n";
+
+	
+	auto message = sendHttpsRequest(sock, resolver, request, server);
 }

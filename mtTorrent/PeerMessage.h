@@ -33,6 +33,7 @@ namespace mtt
 		{
 			uint8_t reservedBytes[8];
 			uint8_t peerId[20];
+			uint8_t info[20];
 		}
 		handshake;
 

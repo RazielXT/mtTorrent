@@ -73,6 +73,16 @@ void mtt::PiecesProgress::fromBitfield(DataBuffer& bitfield, size_t piecesCount)
 	}
 }
 
+void mtt::PiecesProgress::fromList(std::vector<uint8_t>& piecesList)
+{
+	pieces.clear();
+
+	for (uint32_t i = 0; i < piecesList.size(); i++)
+		pieces[i] = piecesList[i] != 0;
+
+	piecesStartCount = piecesList.size();
+}
+
 DataBuffer mtt::PiecesProgress::toBitfield()
 {
 	DataBuffer buffer;
