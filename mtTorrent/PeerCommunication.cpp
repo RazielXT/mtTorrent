@@ -191,7 +191,7 @@ mtt::PeerCommunication::~PeerCommunication()
 
 void mtt::PeerCommunication::setInterested(bool enabled)
 {
-	if (state.action <= PeerCommunicationState::Handshake)
+	if (!isEstablished())
 		return;
 
 	if (state.amInterested == enabled)
@@ -203,7 +203,7 @@ void mtt::PeerCommunication::setInterested(bool enabled)
 
 void mtt::PeerCommunication::setChoke(bool enabled)
 {
-	if (state.action <= PeerCommunicationState::Handshake)
+	if (!isEstablished())
 		return;
 
 	if (state.amChoking == enabled)
@@ -213,33 +213,27 @@ void mtt::PeerCommunication::setChoke(bool enabled)
 	stream->write(mtt::bt::createStateMessage(enabled ? Choke : Unchoke));
 }
 
-bool mtt::PeerCommunication::requestPiece(PieceDownloadInfo& pieceInfo)
+void mtt::PeerCommunication::requestPieceBlock(PieceBlockInfo& pieceInfo)
 {
-	if (state.action != PeerCommunicationState::Idle)
-		return false;
+	if (!isEstablished())
+		return;
 
-	if (!info.pieces.hasPiece(pieceInfo.index))
-		return false;
+	{
+		std::lock_guard<std::mutex> guard(requestsMutex);
+		requestedBlocks.push_back(pieceInfo);
+	}
 
-	std::lock_guard<std::mutex> guard(schedule_mutex);
-
-	scheduledPieceInfo = pieceInfo;
-	downloadingPiece.reset(torrent.pieceSize);
-	downloadingPiece.index = scheduledPieceInfo.index;
-
-	requestPieceBlock();
-
-	return true;
+	stream->write(mtt::bt::createBlockRequest(pieceInfo));
 }
 
-bool mtt::PeerCommunication::isDownloading()
+bool mtt::PeerCommunication::isEstablished()
 {
-	return state.action == PeerCommunicationState::TransferringData;
+	return state.action == PeerCommunicationState::Established;
 }
 
 void mtt::PeerCommunication::sendHave(uint32_t pieceIdx)
 {
-	if (state.action <= PeerCommunicationState::Handshake)
+	if (!isEstablished())
 		return;
 
 	stream->write(mtt::bt::createHave(pieceIdx));
@@ -247,7 +241,7 @@ void mtt::PeerCommunication::sendHave(uint32_t pieceIdx)
 
 void mtt::PeerCommunication::sendPieceBlock(PieceBlock& block)
 {
-	if (state.action <= PeerCommunicationState::Handshake)
+	if (!isEstablished())
 		return;
 
 	stream->write(mtt::bt::createPiece(block));
@@ -255,19 +249,10 @@ void mtt::PeerCommunication::sendPieceBlock(PieceBlock& block)
 
 void mtt::PeerCommunication::sendBitfield(DataBuffer& bitfield)
 {
-	if (state.action <= PeerCommunicationState::Handshake)
+	if (!isEstablished())
 		return;
 
 	stream->write(mtt::bt::createBitfield(bitfield));
-}
-
-void mtt::PeerCommunication::requestPieceBlock()
-{
-	auto& b = scheduledPieceInfo.blocksLeft.back();
-	scheduledPieceInfo.blocksLeft.pop_back();
-
-	state.action = PeerCommunicationState::TransferringData;
-	stream->write(mtt::bt::createBlockRequest(b));
 }
 
 void mtt::PeerCommunication::resetState()
@@ -302,38 +287,26 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 	}
 	else if (message.id == Piece)
 	{
-		bool finished = false;
 		bool success = false;
 
 		{
-			std::lock_guard<std::mutex> guard(schedule_mutex);
+			std::lock_guard<std::mutex> guard(requestsMutex);
 
-			if (message.piece.info.index != downloadingPiece.index)
+			for (auto it = requestedBlocks.begin(); it != requestedBlocks.end(); it++)
 			{
-				BT_LOG("Invalid block!")
-				finished = true;
-			}
-			else
-			{
-				BT_LOG("Piece " << message.piece.info.index << ", offset: " << message.piece.info.begin << ", size: " << message.piece.info.length);
-				downloadingPiece.addBlock(message.piece);
-
-				if (downloadingPiece.receivedBlocks == scheduledPieceInfo.blocksCount)
+				if (it->index == message.piece.info.index && it->begin == message.piece.info.begin)
 				{
-					finished = success = true;
-					BT_LOG("Finished piece " << message.piece.info.index);
-				}
-				else
-				{
-					requestPieceBlock();
+					success = true;
+					requestedBlocks.erase(it);
+					break;
 				}
 			}
 		}
 
-		if (finished)
+		if (!success)
 		{
-			state.action = PeerCommunicationState::Idle;
-			listener.pieceReceiveFinished(this, success ? &downloadingPiece : nullptr);
+			BT_LOG("Unrequested block!");
+			message.piece.info.index = -1;
 		}
 	}
 	else if (message.id == Unchoke)
@@ -379,12 +352,12 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 				if (info.supportsExtensions())
 					ext.sendHandshake();
 
-				state.action = PeerCommunicationState::Idle;
+				state.action = PeerCommunicationState::Established;
 
 				listener.handshakeFinished(this);
 			}
 			else
-				state.action = PeerCommunicationState::Idle;
+				state.action = PeerCommunicationState::Established;
 		}
 	}
 	else if (message.id == Request)

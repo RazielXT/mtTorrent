@@ -25,8 +25,7 @@ namespace mtt
 			Connecting,
 			Connected,
 			Handshake,
-			TransferringData,
-			Idle
+			Established
 		}
 		action = Disconnected;
 	};
@@ -58,8 +57,8 @@ namespace mtt
 		void setInterested(bool enabled);
 		void setChoke(bool enabled);
 
-		bool requestPiece(PieceDownloadInfo& pieceInfo);
-		bool isDownloading();
+		void requestPieceBlock(PieceBlockInfo& pieceInfo);
+		bool isEstablished();
 
 		void sendBitfield(DataBuffer& bitfield);
 		void sendHave(uint32_t pieceIdx);
@@ -74,11 +73,10 @@ namespace mtt
 		TorrentInfo& torrent;
 		IPeerListener& listener;
 
-		std::mutex schedule_mutex;
-		PieceDownloadInfo scheduledPieceInfo;
-		DownloadedPiece downloadingPiece;
-		
 		std::shared_ptr<TcpAsyncStream> stream;
+
+		std::mutex requestsMutex;
+		std::vector<PieceBlockInfo> requestedBlocks;
 
 		std::mutex read_mutex;
 		mtt::PeerMessage readNextStreamMessage();
@@ -87,8 +85,6 @@ namespace mtt
 		void connectionOpened();
 		void dataReceived();
 		void connectionClosed();
-
-		void requestPieceBlock();
 
 		void resetState();
 	};
