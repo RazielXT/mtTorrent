@@ -18,7 +18,9 @@ namespace mtt
 
 		private:
 
+			std::mutex queriesMutex;
 			std::vector<std::shared_ptr<Query>> queries;
+
 			Table table;
 
 			ServiceThreadpool service;

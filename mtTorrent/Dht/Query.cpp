@@ -78,9 +78,13 @@ GetPeersResponse Query::parseGetPeersResponse(DataBuffer& message)
 
 		if (parser.parsedData.isMap())
 		{
-			auto resp = parser.parsedData.getDictItem("r");
+			if (auto tr = parser.parsedData.getTxtItem("t"))
+			{
+				if (!tr->empty())
+					response.transaction = *reinterpret_cast<const uint16_t*>(tr->data());
+			}
 
-			if (resp)
+			if (auto resp = parser.parsedData.getDictItem("r"))
 			{
 				auto nodes = resp->find("nodes");
 				if (nodes != resp->end() && nodes->second.type == mtt::BencodeParser::Object::Text)
@@ -149,33 +153,40 @@ GetPeersResponse Query::parseGetPeersResponse(DataBuffer& message)
 	return response;
 }
 
-void mtt::dht::Query::onGetPeersResponse(DataBuffer* data, PackedUdpRequest* source)
+void mtt::dht::Query::onGetPeersResponse(DataBuffer* data, PackedUdpRequest* source, uint16_t transactionId)
 {
 	if (data)
 	{
 		auto resp = parseGetPeersResponse(*data);
 
-		if (!resp.values.empty())
+		if (resp.transaction == transactionId)
 		{
-			foundCount += dhtListener->onFoundPeers(targetIdNode.data, resp.values);
-		}
-
-		if (!resp.nodes.empty())
-		{
-			std::lock_guard<std::mutex> guard(nodesMutex);
-
-			mergeClosestNodes(receivedNodes, resp.nodes, usedNodes, MaxCachedNodes, minDistance, targetIdNode);
-
-			if (!receivedNodes.empty())
+			if (!resp.values.empty())
 			{
-				auto newMinDistance = getShortestDistance(receivedNodes, targetIdNode);
+				foundCount += dhtListener->onFoundPeers(targetIdNode.data, resp.values);
+			}
 
-				if (newMinDistance.length() < minDistance.length())
+			if (!resp.nodes.empty())
+			{
+				std::lock_guard<std::mutex> guard(nodesMutex);
+
+				mergeClosestNodes(receivedNodes, resp.nodes, usedNodes, MaxCachedNodes, minDistance, targetIdNode);
+
+				if (!receivedNodes.empty())
 				{
-					minDistance = newMinDistance;
-					DHT_LOG("min distance " << (int)minDistance.length());
+					auto newMinDistance = getShortestDistance(receivedNodes, targetIdNode);
+
+					if (newMinDistance.length() < minDistance.length())
+					{
+						minDistance = newMinDistance;
+						DHT_LOG("min distance " << (int)minDistance.length());
+					}
 				}
 			}
+		}
+		else
+		{
+			DHT_LOG("invalid get peers response transaction id, want " << transactionId << " have " << resp.transaction);
 		}
 	}
 
@@ -202,8 +213,9 @@ void mtt::dht::Query::onGetPeersResponse(DataBuffer* data, PackedUdpRequest* sou
 				usedNodes.push_back(next);
 				receivedNodes.erase(receivedNodes.begin());
 
-				auto dataReq = createGetPeersRequest(targetIdNode.data, false);
-				auto req = SendAsyncUdp(next.addr, dataReq, *serviceIo, std::bind(&Query::onGetPeersResponse, this, std::placeholders::_1, std::placeholders::_2));
+				auto tr = createTransactionId();
+				auto dataReq = createGetPeersRequest(targetIdNode.data, false, tr);
+				auto req = SendAsyncUdp(next.addr, dataReq, *serviceIo, std::bind(&Query::onGetPeersResponse, this, std::placeholders::_1, std::placeholders::_2, tr));
 				requests.push_back(req);
 			}
 
@@ -215,15 +227,23 @@ void mtt::dht::Query::onGetPeersResponse(DataBuffer* data, PackedUdpRequest* sou
 	}
 }
 
+uint16_t mtt::dht::Query::createTransactionId()
+{
+	static uint16_t adder = 900;
+	adder += 100;
+	return adder;
+}
+
 void mtt::dht::Query::start()
 {
 	const char* dhtRoot = "dht.transmissionbt.com";
 	const char* dhtRootPort = "6881";
 
-	auto dataReq = Query::createGetPeersRequest(targetIdNode.data, true);
+	auto tr = createTransactionId();
+	auto dataReq = Query::createGetPeersRequest(targetIdNode.data, true, tr);
 
 	std::lock_guard<std::mutex> guard(requestsMutex);
-	auto req = SendAsyncUdp(Addr({ 14,200,179,207 }, 63299), dataReq, *serviceIo, std::bind(&Query::onGetPeersResponse, this, std::placeholders::_1, std::placeholders::_2));
+	auto req = SendAsyncUdp(Addr({ 14,200,179,207 }, 63299), dataReq, *serviceIo, std::bind(&Query::onGetPeersResponse, this, std::placeholders::_1, std::placeholders::_2, tr));
 	//auto req = SendAsyncUdp(dhtRoot, dhtRootPort, true, dataReq, service.io, std::bind(&Communication::Query::onGetPeersResponse, &query, std::placeholders::_1, std::placeholders::_2));
 	requests.push_back(req);
 }
@@ -241,7 +261,7 @@ mtt::dht::Query::~Query()
 	stop();
 }
 
-DataBuffer mtt::dht::Query::createGetPeersRequest(uint8_t* hash, bool bothProtocols)
+DataBuffer mtt::dht::Query::createGetPeersRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId)
 {
 	PacketBuilder packet(128);
 	packet.add("d1:ad2:id20:", 12);
@@ -253,7 +273,6 @@ DataBuffer mtt::dht::Query::createGetPeersRequest(uint8_t* hash, bool bothProtoc
 		packet.add("4:wantl2:n42:n6e", 16);
 
 	const char* clientId = "mt02";
-	uint16_t transactionId = 54535;
 
 	packet.add("e1:q9:get_peers1:v4:", 20);
 	packet.add(clientId, 4);

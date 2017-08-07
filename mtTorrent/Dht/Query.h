@@ -18,6 +18,7 @@ namespace mtt
 		struct MessageResponse
 		{
 			int result = 0;
+			uint16_t transaction = 0;
 		};
 
 		struct GetPeersResponse : public MessageResponse
@@ -26,6 +27,29 @@ namespace mtt
 			std::string token;
 			std::vector<NodeInfo> nodes;
 			std::vector<Addr> values;
+		};
+
+		struct GetPeersRequest
+		{
+			uint8_t id[20];
+			uint8_t target[20];
+		};
+
+		struct FindNodeResponse : public MessageResponse
+		{
+			uint8_t id[20];
+			std::vector<NodeInfo> nodes;
+		};
+
+		struct FindNodeRequest
+		{
+			uint8_t id[20];
+			uint8_t target[20];
+		};
+
+		struct PingMessage
+		{
+			uint8_t id[20];
 		};
 
 		struct Query
@@ -47,9 +71,10 @@ namespace mtt
 
 			uint32_t foundCount = 0;
 
-			static DataBuffer createGetPeersRequest(uint8_t* hash, bool bothProtocols);
-			void onGetPeersResponse(DataBuffer* data, PackedUdpRequest* source);
+			static DataBuffer createGetPeersRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId);
+			void onGetPeersResponse(DataBuffer* data, PackedUdpRequest* source, uint16_t transactionId);
 			GetPeersResponse parseGetPeersResponse(DataBuffer& message);
+			uint16_t createTransactionId();
 
 			void start();
 			void stop();

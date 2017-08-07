@@ -13,6 +13,8 @@ mtt::dht::Communication::~Communication()
 
 void mtt::dht::Communication::stopFindingPeers(uint8_t* hash)
 {
+	std::lock_guard<std::mutex> guard(queriesMutex);
+
 	for (auto it = queries.begin(); it != queries.end(); it++)
 		if (memcmp((*it)->targetIdNode.data, hash, 20) == 0)
 		{
@@ -23,6 +25,14 @@ void mtt::dht::Communication::stopFindingPeers(uint8_t* hash)
 
 void mtt::dht::Communication::findPeers(uint8_t* hash)
 {
+	{
+		std::lock_guard<std::mutex> guard(queriesMutex);
+
+		for (auto it = queries.begin(); it != queries.end(); it++)
+			if (memcmp((*it)->targetIdNode.data, hash, 20) == 0)
+				return;
+	}
+
 	auto q = std::make_shared<Query>();
 	q->dhtListener = &listener;
 	q->serviceIo = &service.io;
