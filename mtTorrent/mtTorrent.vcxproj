@@ -234,7 +234,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Configuration.cpp" />
-    <ClCompile Include="DhtCommunication.cpp" />
+    <ClCompile Include="Dht\Communication.cpp" />
+    <ClCompile Include="Dht\Query.cpp" />
+    <ClCompile Include="Dht\Table.cpp" />
     <ClCompile Include="ExtensionProtocol.cpp" />
     <ClCompile Include="HttpTrackerComm.cpp" />
     <ClCompile Include="Interface.cpp" />
@@ -260,8 +262,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Configuration.h" />
-    <ClInclude Include="DhtCommunication.h" />
     <ClInclude Include="DhtControl.h" />
+    <ClInclude Include="Dht\Communication.h" />
+    <ClInclude Include="Dht\Query.h" />
+    <ClInclude Include="Dht\Table.h" />
     <ClInclude Include="ExtensionProtocol.h" />
     <ClInclude Include="Interface.h" />
     <ClInclude Include="IPeerListener.h" />

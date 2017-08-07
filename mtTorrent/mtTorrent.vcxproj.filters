@@ -55,9 +55,6 @@
     <ClCompile Include="RiotRestApi.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="DhtCommunication.cpp">
-      <Filter>Source Files\Core\Torrent\Dht</Filter>
-    </ClCompile>
     <ClCompile Include="TcpAsyncServer.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
@@ -103,6 +100,15 @@
     <ClCompile Include="UrlEncoding.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="Dht\Communication.cpp">
+      <Filter>Source Files\Core\Torrent\Dht</Filter>
+    </ClCompile>
+    <ClCompile Include="Dht\Query.cpp">
+      <Filter>Source Files\Core\Torrent\Dht</Filter>
+    </ClCompile>
+    <ClCompile Include="Dht\Table.cpp">
+      <Filter>Source Files\Core\Torrent\Dht</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PacketHelper.h">
@@ -128,9 +134,6 @@
     </ClInclude>
     <ClInclude Include="RiotRestApi.h">
       <Filter>Source Files\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="DhtCommunication.h">
-      <Filter>Source Files\Core\Torrent\Dht</Filter>
     </ClInclude>
     <ClInclude Include="utils\Base32.h">
       <Filter>Source Files\Utils</Filter>
@@ -201,5 +204,15 @@
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="Interface.h" />
+    <ClInclude Include="Interface.h" />
+    <ClInclude Include="Dht\Communication.h">
+      <Filter>Source Files\Core\Torrent\Dht</Filter>
+    </ClInclude>
+    <ClInclude Include="Dht\Query.h">
+      <Filter>Source Files\Core\Torrent\Dht</Filter>
+    </ClInclude>
+    <ClInclude Include="Dht\Table.h">
+      <Filter>Source Files\Core\Torrent\Dht</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

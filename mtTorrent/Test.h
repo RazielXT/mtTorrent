@@ -1,7 +1,7 @@
 #pragma once
 
 #include "PeerCommunication.h"
-#include "DhtCommunication.h"
+#include "Dht/Communication.h"
 #include <mutex>
 
 class BasicPeerListener : public mtt::IPeerListener
