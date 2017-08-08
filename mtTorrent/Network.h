@@ -29,6 +29,7 @@ struct Addr
 	void set(uint8_t* ip, uint16_t port, bool isIpv6);
 	void set(DataBuffer ip, uint16_t port);
 	void set(uint32_t ip, uint16_t port);
+	void set(const boost::asio::ip::address& addr, uint16_t port_num);
 
 	size_t parse(uint8_t* buffer, bool v6);
 	bool operator==(const Addr& r);

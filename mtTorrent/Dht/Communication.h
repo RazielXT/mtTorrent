@@ -18,8 +18,8 @@ namespace mtt
 
 		private:
 
-			std::mutex queriesMutex;
-			std::vector<std::shared_ptr<Query>> queries;
+			std::mutex peersQueriesMutex;
+			std::vector<std::shared_ptr<Query::FindPeers>> peersQueries;
 
 			Table table;
 

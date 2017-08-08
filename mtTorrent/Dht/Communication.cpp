@@ -7,18 +7,18 @@ mtt::dht::Communication::Communication(mtt::dht::DhtListener& l) : listener(l)
 
 mtt::dht::Communication::~Communication()
 {
-	queries.clear();
+	peersQueries.clear();
 	service.stop();
 }
 
 void mtt::dht::Communication::stopFindingPeers(uint8_t* hash)
 {
-	std::lock_guard<std::mutex> guard(queriesMutex);
+	std::lock_guard<std::mutex> guard(peersQueriesMutex);
 
-	for (auto it = queries.begin(); it != queries.end(); it++)
-		if (memcmp((*it)->targetIdNode.data, hash, 20) == 0)
+	for (auto it = peersQueries.begin(); it != peersQueries.end(); it++)
+		if (memcmp((*it)->targetId.data, hash, 20) == 0)
 		{
-			queries.erase(it);
+			peersQueries.erase(it);
 			break;
 		}	
 }
@@ -26,21 +26,17 @@ void mtt::dht::Communication::stopFindingPeers(uint8_t* hash)
 void mtt::dht::Communication::findPeers(uint8_t* hash)
 {
 	{
-		std::lock_guard<std::mutex> guard(queriesMutex);
+		std::lock_guard<std::mutex> guard(peersQueriesMutex);
 
-		for (auto it = queries.begin(); it != queries.end(); it++)
-			if (memcmp((*it)->targetIdNode.data, hash, 20) == 0)
+		for (auto it = peersQueries.begin(); it != peersQueries.end(); it++)
+			if (memcmp((*it)->targetId.data, hash, 20) == 0)
 				return;
 	}
 
-	auto q = std::make_shared<Query>();
-	q->dhtListener = &listener;
-	q->serviceIo = &service.io;
-	q->targetIdNode.copy((char*)hash);
-	q->minDistance.setMax();
-	queries.push_back(q);
+	auto q = std::make_shared<Query::FindPeers>();
+	peersQueries.push_back(q);
 
-	q->start();
+	q->start(hash, &table, &listener, &service.io);
 }
 
 #ifdef true

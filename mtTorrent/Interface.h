@@ -6,6 +6,7 @@
 
 #define MT_NAME "mtTorrent 0.5"
 #define MT_HASH_NAME "MT-0-5-"
+#define MT_NAME_SHORT "mt05"
 
 namespace mtt
 {

@@ -52,35 +52,65 @@ namespace mtt
 			uint8_t id[20];
 		};
 
-		struct Query
+		namespace Query
 		{
-			~Query();
+			struct RequestInfo
+			{
+				NodeInfo node;
+				uint16_t transactionId;
+			};
 
-			uint32_t MaxReturnedValues = 50;
-			uint32_t MaxCachedNodes = 64;
-			uint32_t MaxSimultaneousConnections = 8;
+			struct GenericQuery
+			{
+				~GenericQuery();
 
-			std::mutex requestsMutex;
-			std::vector<UdpRequest> requests;
+				void start(uint8_t* hash, Table* table, DhtListener* dhtListener, boost::asio::io_service* serviceIo);
+				void stop();
 
-			std::mutex nodesMutex;
-			std::vector<NodeInfo> receivedNodes;
-			std::vector<NodeInfo> usedNodes;
-			NodeId minDistance;
-			NodeId targetIdNode;
+				NodeId targetId;
 
-			uint32_t foundCount = 0;
+			protected:
 
-			static DataBuffer createGetPeersRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId);
-			void onGetPeersResponse(DataBuffer* data, PackedUdpRequest* source, uint16_t transactionId);
-			GetPeersResponse parseGetPeersResponse(DataBuffer& message);
-			uint16_t createTransactionId();
+				uint32_t MaxCachedNodes = 32;
+				uint32_t MaxSimultaneousRequests = 5;
 
-			void start();
-			void stop();
+				std::mutex requestsMutex;
+				std::vector<UdpRequest> requests;
 
-			DhtListener* dhtListener = nullptr;
-			boost::asio::io_service* serviceIo = nullptr;
-		};
+				std::mutex nodesMutex;
+				std::vector<NodeInfo> receivedNodes;
+				NodeId minDistance;
+
+				virtual DataBuffer createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId) = 0;
+				virtual void onResponse(DataBuffer* data, PackedUdpRequest* source, RequestInfo transactionId) = 0;
+
+				Table* table;
+				DhtListener* dhtListener = nullptr;
+				boost::asio::io_service* serviceIo = nullptr;
+			};
+
+			struct FindPeers : public GenericQuery
+			{
+			protected:
+
+				uint32_t MaxReturnedValues = 50;
+				uint32_t foundCount = 0;
+
+				std::vector<NodeInfo> usedNodes;
+
+				virtual DataBuffer createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId) override;
+				virtual void onResponse(DataBuffer* data, PackedUdpRequest* source, RequestInfo transactionId) override;
+				GetPeersResponse parseGetPeersResponse(DataBuffer& message);		
+			};
+
+			struct FindNode : public GenericQuery
+			{
+			protected:
+
+				virtual DataBuffer createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId) override;
+				virtual void onResponse(DataBuffer* data, PackedUdpRequest* source, RequestInfo transactionId) override;
+				FindNodeResponse parseFindNodeResponse(DataBuffer& message);
+			};
+		}
 	}
 }

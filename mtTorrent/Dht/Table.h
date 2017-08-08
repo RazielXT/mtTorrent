@@ -20,6 +20,8 @@ namespace mtt
 			NodeId distance(NodeId& r);
 			uint8_t length();
 			void setMax();
+
+			static uint8_t length(uint8_t* data);
 		};
 
 		struct NodeInfo
@@ -39,7 +41,7 @@ namespace mtt
 
 				struct Node
 				{
-					NodeInfo info;
+					Addr addr;
 				};
 
 				std::vector<Node> nodes;
@@ -50,7 +52,8 @@ namespace mtt
 
 			std::mutex tableMutex;
 
-			void checkNode(NodeInfo& info);
+			void nodeResponded(uint8_t* id, Addr& addr);
+			void nodeNotResponded(uint8_t* id, Addr& addr);
 		};
 	}
 }

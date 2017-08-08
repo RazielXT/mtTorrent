@@ -103,10 +103,10 @@
     <ClCompile Include="Dht\Communication.cpp">
       <Filter>Source Files\Core\Torrent\Dht</Filter>
     </ClCompile>
-    <ClCompile Include="Dht\Query.cpp">
+    <ClCompile Include="Dht\Table.cpp">
       <Filter>Source Files\Core\Torrent\Dht</Filter>
     </ClCompile>
-    <ClCompile Include="Dht\Table.cpp">
+    <ClCompile Include="Dht\Query.cpp">
       <Filter>Source Files\Core\Torrent\Dht</Filter>
     </ClCompile>
   </ItemGroup>
@@ -208,10 +208,11 @@
     <ClInclude Include="Dht\Communication.h">
       <Filter>Source Files\Core\Torrent\Dht</Filter>
     </ClInclude>
-    <ClInclude Include="Dht\Query.h">
+    <ClInclude Include="Dht\Table.h">
       <Filter>Source Files\Core\Torrent\Dht</Filter>
     </ClInclude>
-    <ClInclude Include="Dht\Table.h">
+    <ClInclude Include="Interface.h" />
+    <ClInclude Include="Dht\Query.h">
       <Filter>Source Files\Core\Torrent\Dht</Filter>
     </ClInclude>
   </ItemGroup>

@@ -205,6 +205,23 @@ void Addr::set(DataBuffer ip, uint16_t p)
 	ipv6 = ip.size() > 4;
 }
 
+void Addr::set(const boost::asio::ip::address& addr, uint16_t port_num)
+{
+	port = port_num;
+	ipv6 = addr.is_v6();
+
+	if (ipv6)
+	{
+		auto data = addr.to_v6().to_bytes();
+		memcpy(addrBytes, data.data(), data.size());
+	}
+	else
+	{
+		auto data = addr.to_v4().to_bytes();
+		memcpy(addrBytes, data.data(), data.size());
+	}
+}
+
 size_t Addr::parse(uint8_t* buffer, bool v6)
 {
 	ipv6 = v6;
