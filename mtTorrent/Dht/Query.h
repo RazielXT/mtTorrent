@@ -60,9 +60,9 @@ namespace mtt
 				uint16_t transactionId;
 			};
 
-			struct GenericQuery
+			struct GenericFindQuery
 			{
-				~GenericQuery();
+				~GenericFindQuery();
 
 				void start(uint8_t* hash, Table* table, DhtListener* dhtListener, boost::asio::io_service* serviceIo);
 				void stop();
@@ -83,14 +83,14 @@ namespace mtt
 				NodeId minDistance;
 
 				virtual DataBuffer createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId) = 0;
-				virtual void onResponse(DataBuffer* data, PackedUdpRequest* source, RequestInfo transactionId) = 0;
+				virtual void onResponse(DataBuffer* data, PackedUdpRequest* source, RequestInfo request) = 0;
 
 				Table* table;
 				DhtListener* dhtListener = nullptr;
 				boost::asio::io_service* serviceIo = nullptr;
 			};
 
-			struct FindPeers : public GenericQuery
+			struct FindPeers : public GenericFindQuery
 			{
 			protected:
 
@@ -98,17 +98,52 @@ namespace mtt
 				uint32_t foundCount = 0;
 
 				virtual DataBuffer createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId) override;
-				virtual void onResponse(DataBuffer* data, PackedUdpRequest* source, RequestInfo transactionId) override;
+				virtual void onResponse(DataBuffer* data, PackedUdpRequest* source, RequestInfo request) override;
 				GetPeersResponse parseGetPeersResponse(DataBuffer& message);		
 			};
 
-			struct FindNode : public GenericQuery
+			struct FindNode : public GenericFindQuery
 			{
+				void start(uint8_t* hash, Addr& addr, Table* table, DhtListener* dhtListener, boost::asio::io_service* serviceIo);
+
 			protected:
 
+				bool findClosest = true;
+
 				virtual DataBuffer createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId) override;
-				virtual void onResponse(DataBuffer* data, PackedUdpRequest* source, RequestInfo transactionId) override;
+				virtual void onResponse(DataBuffer* data, PackedUdpRequest* source, RequestInfo request) override;
 				FindNodeResponse parseFindNodeResponse(DataBuffer& message);
+			};
+
+			struct PingNodes
+			{
+				~PingNodes();
+
+				void start(Addr& node, uint8_t bucketId, Table* table, boost::asio::io_service* serviceIo);
+				void start(std::vector<Addr>& nodes, uint8_t bucketId, Table* table, boost::asio::io_service* serviceIo);
+				void stop();
+
+			protected:
+
+				Table* table;
+				boost::asio::io_service* serviceIo;
+				uint8_t bucketId;
+
+				uint32_t MaxSimultaneousRequests = 5;
+
+				std::mutex requestsMutex;
+				std::vector<UdpRequest> requests;
+				std::vector<Addr> nodesLeft;
+
+				DataBuffer createRequest(uint16_t transactionId);
+
+				struct PingInfo
+				{
+					uint16_t transactionId;
+					Addr addr;
+				};
+				void onResponse(DataBuffer* data, PackedUdpRequest* source, PingInfo request);
+				void sendRequest(Addr& addr);
 			};
 		}
 	}

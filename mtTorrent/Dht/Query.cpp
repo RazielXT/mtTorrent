@@ -74,12 +74,12 @@ static NodeId getShortestDistance(std::vector<NodeInfo>& from, NodeId& target)
 	return id;
 }
 
-mtt::dht::Query::GenericQuery::~GenericQuery()
+mtt::dht::Query::GenericFindQuery::~GenericFindQuery()
 {
 	stop();
 }
 
-void mtt::dht::Query::GenericQuery::start(uint8_t* hash, Table* t, DhtListener* listener, boost::asio::io_service* io)
+void mtt::dht::Query::GenericFindQuery::start(uint8_t* hash, Table* t, DhtListener* listener, boost::asio::io_service* io)
 {
 	table = t;
 	dhtListener = listener;
@@ -94,12 +94,12 @@ void mtt::dht::Query::GenericQuery::start(uint8_t* hash, Table* t, DhtListener* 
 	auto dataReq = createRequest(targetId.data, true, r.transactionId);
 
 	std::lock_guard<std::mutex> guard(requestsMutex);
-	auto req = SendAsyncUdp(Addr({ 14,200,179,207 }, 63299), dataReq, *serviceIo, std::bind(&GenericQuery::onResponse, this, std::placeholders::_1, std::placeholders::_2, r));
+	auto req = SendAsyncUdp(Addr({ 14,200,179,207 }, 63299), dataReq, *serviceIo, std::bind(&GenericFindQuery::onResponse, this, std::placeholders::_1, std::placeholders::_2, r));
 	//auto req = SendAsyncUdp(dhtRoot, dhtRootPort, true, dataReq, service.io, std::bind(&Communication::Query::onGetPeersResponse, &query, std::placeholders::_1, std::placeholders::_2));
 	requests.push_back(req);
 }
 
-void mtt::dht::Query::GenericQuery::stop()
+void mtt::dht::Query::GenericFindQuery::stop()
 {
 	std::lock_guard<std::mutex> guard(requestsMutex);
 
@@ -237,7 +237,7 @@ void Query::FindPeers::onResponse(DataBuffer* data, PackedUdpRequest* source, Re
 		}
 	}
 	else
-		table->nodeResponded(request.node.id.data, request.node.addr);
+		table->nodeNotResponded(request.node.id.data, request.node.addr);
 
 	{
 		std::lock_guard<std::mutex> guard(requestsMutex);
@@ -296,6 +296,21 @@ DataBuffer Query::FindPeers::createRequest(uint8_t* hash, bool bothProtocols, ui
 	return packet.getBuffer();
 }
 
+void mtt::dht::Query::FindNode::start(uint8_t* hash, Addr& addr, Table* t, DhtListener* listener, boost::asio::io_service* io)
+{
+	table = t;
+	dhtListener = listener;
+	serviceIo = io;
+	findClosest = false;
+
+	RequestInfo r = { NodeInfo(), createTransactionId() };
+	auto dataReq = createRequest(hash, true, r.transactionId);
+
+	std::lock_guard<std::mutex> guard(requestsMutex);
+	auto req = SendAsyncUdp(addr, dataReq, *serviceIo, std::bind(&FindNode::onResponse, this, std::placeholders::_1, std::placeholders::_2, r));
+	requests.push_back(req);
+}
+
 DataBuffer mtt::dht::Query::FindNode::createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId)
 {
 	PacketBuilder packet(128);
@@ -324,7 +339,7 @@ void mtt::dht::Query::FindNode::onResponse(DataBuffer* data, PackedUdpRequest* s
 
 		if (resp.transaction == request.transactionId)
 		{
-			if (!resp.nodes.empty())
+			if (!resp.nodes.empty() && findClosest)
 			{
 				auto newMinDistance = getShortestDistance(resp.nodes, targetId);
 
@@ -350,6 +365,7 @@ void mtt::dht::Query::FindNode::onResponse(DataBuffer* data, PackedUdpRequest* s
 		else
 		{
 			DHT_LOG("invalid find nodes response transaction id, want " << request.transactionId << " have " << resp.transaction);
+			table->nodeNotResponded(request.node.id.data, request.node.addr);
 		}
 	}
 	else
@@ -452,4 +468,98 @@ mtt::dht::FindNodeResponse mtt::dht::Query::FindNode::parseFindNodeResponse(Data
 	}
 
 	return response;
+}
+
+mtt::dht::Query::PingNodes::~PingNodes()
+{
+	stop();
+}
+
+void mtt::dht::Query::PingNodes::start(std::vector<Addr>& nodes, uint8_t bId, Table* t, boost::asio::io_service* io)
+{
+	uint32_t startQueriesCount = std::min(MaxSimultaneousRequests, (uint32_t)nodesLeft.size());
+
+	if (startQueriesCount > 0)
+		nodesLeft.insert(nodesLeft.begin(), nodes.begin() + startQueriesCount, nodes.end());
+
+	table = t;
+	serviceIo = io;
+	bucketId = bId;
+
+	std::lock_guard<std::mutex> guard(requestsMutex);
+	for (uint32_t i = 0; i < startQueriesCount; i++)
+	{
+		sendRequest(nodes[i]);
+	}
+}
+
+void mtt::dht::Query::PingNodes::start(Addr& node, uint8_t bId, Table* t, boost::asio::io_service* io)
+{
+	table = t;
+	serviceIo = io;
+	bucketId = bId;
+
+	sendRequest(node);
+}
+
+void mtt::dht::Query::PingNodes::stop()
+{
+	std::lock_guard<std::mutex> guard(requestsMutex);
+
+	for (auto r : requests)
+	{
+		r->clear();
+	}
+
+	requests.clear();
+	MaxSimultaneousRequests = 0;
+}
+
+DataBuffer mtt::dht::Query::PingNodes::createRequest(uint16_t transactionId)
+{
+	PacketBuilder packet(60);
+	packet.add("d1:ad2:id20:", 12);
+	packet.add(mtt::config::internal.hashId, 20);
+	packet.add("e1:q4:ping1:t2:", 15);
+	packet.add(reinterpret_cast<char*>(&transactionId), 2);
+	packet.add("1:y1:qe", 7);
+
+	return packet.getBuffer();
+}
+
+void mtt::dht::Query::PingNodes::onResponse(DataBuffer* data, PackedUdpRequest* source, PingInfo request)
+{
+	if (data)
+	{
+		//todo check msg
+		table->nodeResponded(bucketId, request.addr);
+	}
+	else
+		table->nodeNotResponded(bucketId, request.addr);
+
+	std::lock_guard<std::mutex> guard(requestsMutex);
+
+	for (auto it = requests.begin(); it != requests.end(); it++)
+	{
+		if ((*it).get() == source)
+		{
+			(*it)->clear();
+			requests.erase(it);
+			break;
+		}
+	}
+
+	if(!nodesLeft.empty())
+	{
+		sendRequest(nodesLeft.back());
+		nodesLeft.resize(nodesLeft.size() - 1);
+	}
+}
+
+void mtt::dht::Query::PingNodes::sendRequest(Addr& addr)
+{
+	PingInfo info = { createTransactionId(), addr };
+	auto dataReq = createRequest(info.transactionId);
+	auto req = SendAsyncUdp(addr, dataReq, *serviceIo, std::bind(&PingNodes::onResponse, this, std::placeholders::_1, std::placeholders::_2, info));
+	requests.push_back(req);
 }
