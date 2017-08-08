@@ -21,6 +21,7 @@ namespace mtt
 			uint8_t length();
 			void setMax();
 
+			static NodeId distance(uint8_t* l, uint8_t* r);
 			static uint8_t length(uint8_t* data);
 		};
 
@@ -35,6 +36,8 @@ namespace mtt
 
 		struct Table
 		{
+			std::vector<Addr> getClosestNodes(uint8_t* id, bool ipv6);
+
 			void nodeResponded(uint8_t* id, Addr& addr);
 			void nodeResponded(uint8_t bucketId, Addr& addr);
 
@@ -66,8 +69,10 @@ namespace mtt
 				Node* findCache(Addr& node);
 			};
 
-			std::array<Bucket, 160> buckets;
 			std::mutex tableMutex;
+			std::array<Bucket, 160> buckets;
+
+			uint8_t getBucketId(uint8_t* id);
 		};
 	}
 }
