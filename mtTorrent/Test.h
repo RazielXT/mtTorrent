@@ -50,6 +50,7 @@ public:
 	void testStorageCheck();
 	void testGetCountry();
 	void testPeerListen();
+	void testDhtTable();
 
 	void start();
 private:

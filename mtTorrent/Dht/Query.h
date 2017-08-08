@@ -67,6 +67,8 @@ namespace mtt
 				void start(uint8_t* hash, Table* table, DhtListener* dhtListener, boost::asio::io_service* serviceIo);
 				void stop();
 
+				bool finished();
+
 				NodeId targetId;
 
 			protected:
@@ -104,8 +106,10 @@ namespace mtt
 
 			struct FindNode : public GenericFindQuery
 			{
-				void start(uint8_t* hash, Addr& addr, Table* table, DhtListener* dhtListener, boost::asio::io_service* serviceIo);
+				void startOne(uint8_t* hash, Addr& addr, Table* table, DhtListener* dhtListener, boost::asio::io_service* serviceIo);
 
+				uint32_t resultCount = 0;
+				
 			protected:
 
 				bool findClosest = true;

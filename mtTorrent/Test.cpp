@@ -334,8 +334,7 @@ void TorrentTest::testPeerListen()
 	mtt::PiecesProgress progress;
 	progress.fromList(storage.checkStoredPieces(torrent.info.pieces));
 
-	ServiceThreadpool service;
-	service.start(2);
+	ServiceThreadpool service(2);
 
 	std::shared_ptr<TcpAsyncStream> peerStream;
 	TcpAsyncServer server(service.io, mtt::config::external.listenPort, false);
@@ -405,9 +404,29 @@ void TorrentTest::testPeerListen()
 	}
 }
 
+void TorrentTest::testDhtTable()
+{
+	BencodeParser file;
+	if (!file.parseFile("D:\\wifi.torrent"))
+		return;
+
+	auto torrent = file.getTorrentFileInfo();
+
+	ServiceThreadpool service(4);
+	mtt::dht::Table table;
+
+	mtt::dht::Query::FindPeers query;
+	query.start(torrent.info.hash, &table, this, &service.io);
+
+	WAITFOR(dhtResult.finalCount != -1);
+
+	auto n = table.getClosestNodes(torrent.info.hash, false);
+	auto n6 = table.getClosestNodes(torrent.info.hash, true);
+}
+
 void TorrentTest::start()
 {
-	testPeerListen();
+	testDhtTable();
 }
 
 uint32_t TorrentTest::onFoundPeers(uint8_t* hash, std::vector<Addr>& values)

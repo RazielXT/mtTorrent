@@ -9,6 +9,7 @@ class ServiceThreadpool
 public:
 
 	ServiceThreadpool();
+	ServiceThreadpool(uint32_t startWorkers);
 	~ServiceThreadpool();
 
 	boost::asio::io_service io;

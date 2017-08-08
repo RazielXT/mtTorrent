@@ -44,6 +44,8 @@ namespace mtt
 			void nodeNotResponded(uint8_t* id, Addr& addr);
 			void nodeNotResponded(uint8_t bucketId, Addr& addr);
 
+			bool empty = true;
+
 		private:
 
 			const uint32_t MaxBucketNodesCount = 8;

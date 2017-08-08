@@ -105,7 +105,7 @@ std::vector<Addr> mtt::dht::Table::getClosestNodes(uint8_t* id, bool ipv6)
 
 	std::lock_guard<std::mutex> guard(tableMutex);
 
-	while (i < 160 && out.size() < 8)
+	while (i > 0 && out.size() < 8)
 	{
 		auto& b = buckets[i];
 
@@ -115,7 +115,7 @@ std::vector<Addr> mtt::dht::Table::getClosestNodes(uint8_t* id, bool ipv6)
 				out.push_back(n.addr);
 		}
 
-		i++;
+		i--;
 	}
 
 	return out;
@@ -131,6 +131,8 @@ void mtt::dht::Table::nodeResponded(uint8_t* id, Addr& addr)
 void mtt::dht::Table::nodeResponded(uint8_t bucketId, Addr& addr)
 {
 	std::lock_guard<std::mutex> guard(tableMutex);
+
+	empty = false;
 
 	auto& bucket = buckets[bucketId];
 	uint32_t time = (uint32_t)::time(0);
