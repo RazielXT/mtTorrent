@@ -59,12 +59,6 @@ static void mergeClosestNodes(std::vector<NodeInfo>& to, std::vector<NodeInfo>& 
 	}
 }
 
-static void mergeClosestNodes(std::vector<NodeInfo>& to, std::vector<NodeInfo>& from, uint8_t maxSize, NodeId& minDistance, NodeId& target)
-{
-	std::vector<NodeInfo> blacklist;
-	mergeClosestNodes(to, from, blacklist, maxSize, minDistance, target);
-}
-
 static NodeId getShortestDistance(std::vector<NodeInfo>& from, NodeId& target)
 {
 	NodeId id = from[0].id;
@@ -336,12 +330,18 @@ void mtt::dht::Query::FindNode::onResponse(DataBuffer* data, PackedUdpRequest* s
 
 				std::lock_guard<std::mutex> guard(nodesMutex);
 
-				if (newMinDistance.length() < minDistance.length())
-				{
-					minDistance = newMinDistance;
-					mergeClosestNodes(receivedNodes, resp.nodes, MaxCachedNodes, minDistance, targetId);
+				auto nexMinL = newMinDistance.length();
+				auto minL = minDistance.length();
 
-					DHT_LOG("min distance " << (int)minDistance.length());
+				if (nexMinL <= minL)
+				{
+					if (nexMinL < minL)
+					{
+						minDistance = newMinDistance;
+						DHT_LOG("min distance " << (int)nexMinL);
+					}
+
+					mergeClosestNodes(receivedNodes, resp.nodes, usedNodes, MaxCachedNodes, minDistance, targetId);
 				}
 			}
 
@@ -373,6 +373,7 @@ void mtt::dht::Query::FindNode::onResponse(DataBuffer* data, PackedUdpRequest* s
 		while (!receivedNodes.empty() && requests.size() < MaxSimultaneousRequests)
 		{
 			NodeInfo next = receivedNodes.front();
+			usedNodes.push_back(next);
 			receivedNodes.erase(receivedNodes.begin());
 
 			RequestInfo r = { next, createTransactionId() };

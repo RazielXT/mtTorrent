@@ -79,6 +79,7 @@ namespace mtt
 
 				std::mutex nodesMutex;
 				std::vector<NodeInfo> receivedNodes;
+				std::vector<NodeInfo> usedNodes;
 				NodeId minDistance;
 
 				virtual DataBuffer createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId) = 0;
@@ -95,8 +96,6 @@ namespace mtt
 
 				uint32_t MaxReturnedValues = 50;
 				uint32_t foundCount = 0;
-
-				std::vector<NodeInfo> usedNodes;
 
 				virtual DataBuffer createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId) override;
 				virtual void onResponse(DataBuffer* data, PackedUdpRequest* source, RequestInfo transactionId) override;
