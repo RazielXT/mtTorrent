@@ -259,6 +259,7 @@
     <ClCompile Include="UdpTrackerComm.cpp" />
     <ClCompile Include="UrlEncoding.cpp" />
     <ClCompile Include="utils\Base32.cpp" />
+    <ClCompile Include="utils\UdpAsyncMgr.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Configuration.h" />
@@ -293,6 +294,7 @@
     <ClInclude Include="UdpTrackerComm.h" />
     <ClInclude Include="UrlEncoding.h" />
     <ClInclude Include="utils\Base32.h" />
+    <ClInclude Include="utils\UdpAsyncMgr.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

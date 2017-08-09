@@ -109,6 +109,9 @@
     <ClCompile Include="Dht\Query.cpp">
       <Filter>Source Files\Core\Torrent\Dht</Filter>
     </ClCompile>
+    <ClCompile Include="utils\UdpAsyncMgr.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PacketHelper.h">
@@ -214,6 +217,10 @@
     <ClInclude Include="Interface.h" />
     <ClInclude Include="Dht\Query.h">
       <Filter>Source Files\Core\Torrent\Dht</Filter>
+    </ClInclude>
+    <ClInclude Include="Interface.h" />
+    <ClInclude Include="utils\UdpAsyncMgr.h">
+      <Filter>Source Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
