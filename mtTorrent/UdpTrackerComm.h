@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Interface.h"
-#include "UdpAsyncClient.h"
+#include "utils\UdpAsyncMgr.h"
 #include "ITracker.h"
 
 namespace mtt
@@ -10,7 +10,7 @@ namespace mtt
 	{
 	public:
 
-		UdpTrackerComm();
+		UdpTrackerComm(UdpAsyncMgr& udp);
 
 		virtual void init(std::string host, std::string port, boost::asio::io_service& io, TorrentPtr torrent) override;
 
@@ -20,9 +20,11 @@ namespace mtt
 
 		void fail();
 
-		UdpRequest udpComm;
-		void onConnectUdpResponse(DataBuffer* data, PackedUdpRequest* source);
-		void onAnnounceUdpResponse(DataBuffer* data, PackedUdpRequest* source);
+		UdpAsyncMgr& udp;
+		UdpConnection comm;
+
+		bool onConnectUdpResponse(UdpConnection comm, DataBuffer* data);
+		bool onAnnounceUdpResponse(UdpConnection comm, DataBuffer* data);
 
 		struct TrackerMessage
 		{

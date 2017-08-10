@@ -3,34 +3,45 @@
 #include "Network.h"
 #include "UdpAsyncClient.h"
 
-namespace udp
+using UdpConnectionCallback = std::function<bool(UdpConnection, DataBuffer*)>;
+
+class UdpAsyncMgr
 {
-	using Connection = std::shared_ptr<UdpAsyncClient>;
+public:
 
-	class AsyncMgr
+	UdpAsyncMgr(boost::asio::io_service& io);
+
+	void setImplicitPort(uint16_t port);
+	void listen(uint16_t port, UdpConnectionCallback received);
+
+	UdpConnection create(std::string& host, std::string& port);
+	UdpConnection sendMessage(DataBuffer& data, std::string& host, std::string& port, UdpConnectionCallback response);
+	UdpConnection sendMessage(DataBuffer& data, Addr& addr, UdpConnectionCallback response);
+	void sendMessage(DataBuffer& data, UdpConnection target, UdpConnectionCallback response);
+
+private:
+
+	struct ResponseRetryInfo
 	{
-	public:
+		UdpConnection client;
+		DataBuffer writeData;
+		uint8_t writeRetries = 0;
+		UdpConnectionCallback onResponse;
 
-		AsyncMgr();
-
-		void listen(uint16_t port, std::function<void(Connection)>);
-		void setImplicitPort(uint16_t port);
-
-		using ResponseCallback = std::function<bool(Connection, DataBuffer*)>;
-		void sendMessage(DataBuffer& data, std::string& host, std::string& port, ResponseCallback onResult);
-		void sendMessage(DataBuffer& data, Addr& addr, ResponseCallback onResult);
-		void sendMessage(DataBuffer& data, Connection target, ResponseCallback onResult);
-
-	private:
-
-		struct ConnectionInfo
-		{
-			Connection client;
-			std::function<bool(DataBuffer*)> onResult;
-		};
-		std::vector<ConnectionInfo> pendingResponses;
-		std::mutex responsesMutex;
-
-		uint16_t implicitPort = 0;
+		std::shared_ptr<boost::asio::deadline_timer> timeoutTimer;
+		void checkTimeout();
 	};
-}
+
+	std::mutex responsesMutex;
+	std::vector<ResponseRetryInfo> pendingResponses;
+	void addPendingResponse(DataBuffer& data, UdpConnection target, UdpConnectionCallback response);
+	UdpConnection findPendingConnection(UdpConnection);
+
+	uint16_t implicitPort = 0;
+
+	void onUdpReceive(UdpConnection, DataBuffer&);
+	void onUdpClose(UdpConnection);
+	UdpConnectionCallback onReceive;
+
+	boost::asio::io_service& io;
+};

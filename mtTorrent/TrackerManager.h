@@ -92,6 +92,7 @@ namespace mtt
 			TorrentPtr torrent;
 			boost::asio::io_service& io;
 			TrackerListener& listener;
+			UdpAsyncMgr udpMgr;
 
 			void onAnnounce(AnnounceResponse&, Tracker*);
 			void onTrackerFail(Tracker*);			

@@ -107,7 +107,7 @@ void mtt::TrackerManager::TorrentTrackers::addTracker(std::string addr)
 	}
 }
 
-mtt::TrackerManager::TorrentTrackers::TorrentTrackers(boost::asio::io_service& service, TrackerListener& l) : io(service), listener(l)
+mtt::TrackerManager::TorrentTrackers::TorrentTrackers(boost::asio::io_service& service, TrackerListener& l) : io(service), listener(l), udpMgr(service)
 {
 }
 
@@ -163,7 +163,7 @@ void mtt::TrackerManager::TorrentTrackers::onTrackerFail(Tracker* t)
 void mtt::TrackerManager::TorrentTrackers::start(TrackerInfo* tracker)
 {
 	if (tracker->protocol == "udp")
-		tracker->comm = std::make_shared<UdpTrackerComm>();
+		tracker->comm = std::make_shared<UdpTrackerComm>(udpMgr);
 	else if (tracker->protocol == "http")
 		tracker->comm = std::make_shared<HttpTrackerComm>();
 	else

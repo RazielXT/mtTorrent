@@ -32,14 +32,6 @@ void TorrentTest::metadataPieceReceived(PeerCommunication*, mtt::ext::UtMetadata
 	utmMsg = msg;
 }
 
-void TorrentTest::onUdpReceived(DataBuffer* data, PackedUdpRequest* source)
-{
-	if (data)
-		udpResult = *data;
-	else
-		udpResult.push_back(6);
-}
-
 #define OFFICE
 void TorrentTest::testAsyncUdpRequest()
 {
@@ -68,15 +60,9 @@ void TorrentTest::testAsyncUdpRequest()
 #ifndef OFFICE
 		auto req = SendAsyncUdp(dhtRoot, dhtRootPort, true, packet.getBuffer(), service.io, std::bind(&TorrentTest::onUdpReceived, this, std::placeholders::_1, std::placeholders::_2));
 #else
-		auto req = SendAsyncUdp(Addr({8,65,4,4},55555), packet.getBuffer(), service.io, std::bind(&TorrentTest::onUdpReceived, this, std::placeholders::_1, std::placeholders::_2));
+		//auto req = SendAsyncUdp(Addr({8,65,4,4},55555), packet.getBuffer(), service.io, std::bind(&TorrentTest::onUdpReceived, this, std::placeholders::_1, std::placeholders::_2));
 #endif
-
-
-		WAITFOR(!udpResult.empty());
 	}
-	
-	if (udpResult.size() == 1)
-		return;
 
 	service.stop();
 }
@@ -416,7 +402,9 @@ void TorrentTest::testDhtTable()
 	mtt::dht::Table table;
 
 	mtt::dht::Query::FindPeers query;
-	query.start(torrent.info.hash, &table, this, &service.io);
+	mtt::dht::Communication dhtComm(*this);
+
+	query.start(torrent.info.hash, &table, &dhtComm);
 
 	WAITFOR(dhtResult.finalCount != -1);
 
@@ -456,14 +444,14 @@ uint32_t TorrentTest::onFoundPeers(uint8_t* hash, std::vector<Addr>& values)
 
 	WRITE_LOG("DHT received values count :" << count)
 
-	return count;
+		return count;
 }
 
 void TorrentTest::findingPeersFinished(uint8_t* hash, uint32_t count)
 {
 	WRITE_LOG("DHT final values count :" << count)
 
-	dhtResult.finalCount = count;
+		dhtResult.finalCount = count;
 }
 
 void TorrentTest::testGetCountry()

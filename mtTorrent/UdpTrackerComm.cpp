@@ -8,16 +8,16 @@
 
 using namespace mtt;
 
-mtt::UdpTrackerComm::UdpTrackerComm()
+mtt::UdpTrackerComm::UdpTrackerComm(UdpAsyncMgr& udpMgr) : udp(udpMgr)
 {
 }
 
-void UdpTrackerComm::init(std::string host, std::string port, boost::asio::io_service& io, TorrentPtr t)
+void UdpTrackerComm::init(std::string host, std::string port, boost::asio::io_service&, TorrentPtr t)
 {
 	info.hostname = host;
 	torrent = t;
 
-	udpComm = CreateAsyncUdp(host, port, io);
+	comm = udp.create(host, port);
 }
 
 DataBuffer UdpTrackerComm::createConnectRequest()
@@ -48,13 +48,13 @@ void mtt::UdpTrackerComm::fail()
 		onFail();
 }
 
-void mtt::UdpTrackerComm::onConnectUdpResponse(DataBuffer* data, PackedUdpRequest* source)
+bool mtt::UdpTrackerComm::onConnectUdpResponse(UdpConnection comm, DataBuffer* data)
 {
 	if (!data)
 	{
 		fail();
 
-		return;
+		return false;
 	}
 
 	auto response = getConnectResponse(*data);
@@ -65,9 +65,13 @@ void mtt::UdpTrackerComm::onConnectUdpResponse(DataBuffer* data, PackedUdpReques
 		connectionId = response.connectionId;
 
 		announce();
+
+		return true;
 	}
 	else
 		fail();
+
+	return false;
 }
 
 DataBuffer UdpTrackerComm::createAnnounceRequest()
@@ -99,13 +103,13 @@ DataBuffer UdpTrackerComm::createAnnounceRequest()
 	return packet.getBuffer();
 }
 
-void mtt::UdpTrackerComm::onAnnounceUdpResponse(DataBuffer* data, PackedUdpRequest* source)
+bool mtt::UdpTrackerComm::onAnnounceUdpResponse(UdpConnection comm, DataBuffer* data)
 {
 	if (!data)
 	{
 		fail();
 
-		return;
+		return false;
 	}
 
 	auto announceMsg = getAnnounceResponse(*data);
@@ -121,9 +125,13 @@ void mtt::UdpTrackerComm::onAnnounceUdpResponse(DataBuffer* data, PackedUdpReque
 
 		if (onAnnounceResult)
 			onAnnounceResult(announceMsg);
+
+		return true;
 	}
 	else
 		fail();
+
+	return false;
 }
 
 void mtt::UdpTrackerComm::connect()
@@ -131,7 +139,7 @@ void mtt::UdpTrackerComm::connect()
 	TRACKER_LOG("connect");
 	state = Connecting;
 
-	udpComm->write(createConnectRequest(), std::bind(&UdpTrackerComm::onConnectUdpResponse, this, std::placeholders::_1, std::placeholders::_2));
+	udp.sendMessage(createConnectRequest(), comm, std::bind(&UdpTrackerComm::onConnectUdpResponse, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 bool mtt::UdpTrackerComm::validResponse(TrackerMessage& resp)
@@ -152,7 +160,7 @@ void mtt::UdpTrackerComm::announce()
 		else
 			state = Announcing;
 
-		udpComm->write(createAnnounceRequest(), std::bind(&UdpTrackerComm::onAnnounceUdpResponse, this, std::placeholders::_1, std::placeholders::_2));
+		udp.sendMessage(createAnnounceRequest(), comm, std::bind(&UdpTrackerComm::onAnnounceUdpResponse, this, std::placeholders::_1, std::placeholders::_2));
 	}
 }
 

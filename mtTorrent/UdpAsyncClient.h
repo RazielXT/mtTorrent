@@ -8,12 +8,8 @@
 #include <functional>
 #include <deque>
 
-struct PackedUdpRequest;
-using UdpRequest = std::shared_ptr<PackedUdpRequest>;
-
-UdpRequest SendAsyncUdp(const std::string& hostname, const std::string& port, bool ipv6, DataBuffer& data, boost::asio::io_service& io, std::function<void(DataBuffer* data, PackedUdpRequest* source)> onResult);
-UdpRequest SendAsyncUdp(Addr& addr, DataBuffer& data, boost::asio::io_service& io, std::function<void(DataBuffer* data, PackedUdpRequest* source)> onResult);
-UdpRequest CreateAsyncUdp(const std::string& hostname, const std::string& port, boost::asio::io_service& io);
+class UdpAsyncClient;
+using UdpConnection = std::shared_ptr<UdpAsyncClient>;
 
 class UdpAsyncClient : public std::enable_shared_from_this<UdpAsyncClient>
 {
@@ -25,12 +21,13 @@ public:
 	void setAddress(Addr& addr);
 	void setAddress(const std::string& hostname, const std::string& port);
 	void setAddress(const std::string& hostname, const std::string& port, bool ipv6);
+	void setImplicitPort(uint16_t port);
 
 	bool write(const DataBuffer& data);
 	void close();
 
-	std::function<void(DataBuffer&)> onReceiveCallback;
-	std::function<void()> onCloseCallback;
+	std::function<void(UdpConnection, DataBuffer&)> onReceiveCallback;
+	std::function<void(UdpConnection)> onCloseCallback;
 
 protected:
 
@@ -53,26 +50,10 @@ protected:
 
 	void listenToResponse();
 	bool listening = false;
-
-	void checkTimeout();
-	boost::asio::deadline_timer timeoutTimer;
-	uint8_t writeRetries = 0;
+	uint16_t implicitPort = 0;
 
 	udp::endpoint target_endpoint;
 	udp::socket socket;
 	boost::asio::io_service& io_service;
 
-};
-
-struct PackedUdpRequest
-{
-	PackedUdpRequest(boost::asio::io_service& io);
-	~PackedUdpRequest();
-
-	void write(DataBuffer& data, std::function<void(DataBuffer* data, PackedUdpRequest* source)> onResult);
-	std::shared_ptr<UdpAsyncClient> client;
-	void onFail();
-	void onSuccess(DataBuffer&);
-	std::function<void(DataBuffer* data, PackedUdpRequest* source)> onResult;
-	void clear();
 };

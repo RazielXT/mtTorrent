@@ -36,7 +36,7 @@ public:
 	}
 };
 
-class TorrentTest : public BasicPeerListener, public mtt::dht::DhtListener
+class TorrentTest : public BasicPeerListener, public mtt::dht::ResultsListener
 {
 public:
 
@@ -53,6 +53,7 @@ public:
 	void testDhtTable();
 
 	void start();
+
 private:
 
 	bool failed = false;
@@ -61,11 +62,6 @@ private:
 	mtt::ext::UtMetadata::Message utmMsg;
 	virtual void metadataPieceReceived(mtt::PeerCommunication*, mtt::ext::UtMetadata::Message&) override;
 
-	void onUdpReceived(DataBuffer* data, PackedUdpRequest* source);
-	DataBuffer udpResult;
-
-	virtual uint32_t onFoundPeers(uint8_t* hash, std::vector<Addr>& values) override;
-	virtual void findingPeersFinished(uint8_t* hash, uint32_t count) override;
 	struct 
 	{
 		uint32_t finalCount = -1;
@@ -75,4 +71,6 @@ private:
 	}
 	dhtResult;
 
+	virtual uint32_t onFoundPeers(uint8_t* hash, std::vector<Addr>& values) override;
+	virtual void findingPeersFinished(uint8_t* hash, uint32_t count) override;
 };

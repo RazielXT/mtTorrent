@@ -1,6 +1,6 @@
 #include "Dht/Communication.h"
 
-mtt::dht::Communication::Communication(mtt::dht::DhtListener& l) : listener(l)
+mtt::dht::Communication::Communication(ResultsListener& l) : udpMgr(service.io), listener(l)
 {
 	service.start(3);
 }
@@ -23,6 +23,37 @@ void mtt::dht::Communication::stopFindingPeers(uint8_t* hash)
 		}	
 }
 
+uint32_t mtt::dht::Communication::onFoundPeers(uint8_t* hash, std::vector<Addr>& values)
+{
+	return listener.onFoundPeers(hash, values);
+}
+
+void mtt::dht::Communication::findingPeersFinished(uint8_t* hash, uint32_t count)
+{
+	{
+		std::lock_guard<std::mutex> guard(peersQueriesMutex);
+
+		for (auto it = peersQueries.begin(); it != peersQueries.end(); it++)
+			if (memcmp((*it)->targetId.data, hash, 20) == 0)
+			{
+				peersQueries.erase(it);
+				break;
+			}
+	}
+
+	findingPeersFinished(hash, count);
+}
+
+UdpConnection mtt::dht::Communication::sendMessage(Addr& addr, DataBuffer& data, UdpConnectionCallback response)
+{
+	return udpMgr.sendMessage(data, addr, response);
+}
+
+UdpConnection mtt::dht::Communication::sendMessage(std::string& host, std::string& port, DataBuffer& data, UdpConnectionCallback response)
+{
+	return udpMgr.sendMessage(data, host, port, response);
+}
+
 void mtt::dht::Communication::findPeers(uint8_t* hash)
 {
 	{
@@ -36,7 +67,7 @@ void mtt::dht::Communication::findPeers(uint8_t* hash)
 	auto q = std::make_shared<Query::FindPeers>();
 	peersQueries.push_back(q);
 
-	q->start(hash, &table, &listener, &service.io);
+	q->start(hash, &table, this);
 }
 
 #ifdef true
