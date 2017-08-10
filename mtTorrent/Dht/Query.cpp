@@ -108,8 +108,7 @@ void mtt::dht::Query::DhtQuery::start(uint8_t* hash, Table* t, DhtListener* dhtL
 		if (a)
 		{
 			used = true;
-			auto req = listener->sendMessage(*a, dataReq, std::bind(&DhtQuery::onResponse, this, std::placeholders::_1, std::placeholders::_2, r));
-			requests.push_back(req);
+			sendRequest(*a, dataReq, r);
 		}
 	}
 
@@ -117,8 +116,7 @@ void mtt::dht::Query::DhtQuery::start(uint8_t* hash, Table* t, DhtListener* dhtL
 	{
 		std::string dhtRoot = "dht.transmissionbt.com";
 		std::string dhtRootPort = "6881";
-		auto req = listener->sendMessage(dhtRoot, dhtRootPort, dataReq, std::bind(&DhtQuery::onResponse, this, std::placeholders::_1, std::placeholders::_2, r));
-		requests.push_back(req);
+		sendRequest(dhtRoot, dhtRootPort, dataReq, r);
 	}
 }
 
@@ -292,8 +290,7 @@ bool Query::FindPeers::onResponse(UdpConnection comm, DataBuffer* data, RequestI
 
 				RequestInfo r = { next, createTransactionId() };
 				auto dataReq = createRequest(targetId.data, false, r.transactionId);
-				auto req = listener->sendMessage(next.addr, dataReq, std::bind(&FindPeers::onResponse, this, std::placeholders::_1, std::placeholders::_2, r));
-				requests.push_back(req);
+				sendRequest(next.addr, dataReq, r);
 			}
 
 			if (receivedNodes.empty() && requests.empty())
@@ -336,8 +333,7 @@ void mtt::dht::Query::FindNode::startOne(uint8_t* hash, Addr& addr, Table* t, Dh
 	auto dataReq = createRequest(hash, true, r.transactionId);
 
 	std::lock_guard<std::mutex> guard(requestsMutex);
-	auto req = listener->sendMessage(addr, dataReq, std::bind(&FindNode::onResponse, this, std::placeholders::_1, std::placeholders::_2, r));
-	requests.push_back(req);
+	sendRequest(addr, dataReq, r);
 }
 
 DataBuffer mtt::dht::Query::FindNode::createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId)
@@ -432,12 +428,35 @@ bool mtt::dht::Query::FindNode::onResponse(UdpConnection comm, DataBuffer* data,
 
 			RequestInfo r = { next, createTransactionId() };
 			auto dataReq = createRequest(targetId.data, false, r.transactionId);
-			auto req = listener->sendMessage(next.addr, dataReq, std::bind(&FindNode::onResponse, this, std::placeholders::_1, std::placeholders::_2, r));
-			requests.push_back(req);
+			sendRequest(next.addr, dataReq, r);
 		}
 	}
 
 	return handled;
+}
+
+void mtt::dht::Query::FindNode::sendRequest(Addr& addr, DataBuffer& data, RequestInfo& info)
+{
+	auto req = listener->sendMessage(addr, data, std::bind(&FindNode::onResponse, shared_from_this(), std::placeholders::_1, std::placeholders::_2, info));
+	requests.push_back(req);
+}
+
+void mtt::dht::Query::FindNode::sendRequest(std::string& host, std::string& port, DataBuffer& data, RequestInfo& info)
+{
+	auto req = listener->sendMessage(host, port, data, std::bind(&FindNode::onResponse, shared_from_this(), std::placeholders::_1, std::placeholders::_2, info));
+	requests.push_back(req);
+}
+
+void mtt::dht::Query::FindPeers::sendRequest(Addr& addr, DataBuffer& data, RequestInfo& info)
+{
+	auto req = listener->sendMessage(addr, data, std::bind(&FindPeers::onResponse, shared_from_this(), std::placeholders::_1, std::placeholders::_2, info));
+	requests.push_back(req);
+}
+
+void mtt::dht::Query::FindPeers::sendRequest(std::string& host, std::string& port, DataBuffer& data, RequestInfo& info)
+{
+	auto req = listener->sendMessage(host, port, data, std::bind(&FindPeers::onResponse, shared_from_this(), std::placeholders::_1, std::placeholders::_2, info));
+	requests.push_back(req);
 }
 
 mtt::dht::FindNodeResponse mtt::dht::Query::FindNode::parseFindNodeResponse(DataBuffer& message)
@@ -596,6 +615,6 @@ void mtt::dht::Query::PingNodes::sendRequest(Addr& addr)
 {
 	PingInfo info = { createTransactionId(), addr };
 	auto dataReq = createRequest(info.transactionId);
-	auto req = listener->sendMessage(addr, dataReq, std::bind(&PingNodes::onResponse, this, std::placeholders::_1, std::placeholders::_2, info));
+	auto req = listener->sendMessage(addr, dataReq, std::bind(&PingNodes::onResponse, shared_from_this(), std::placeholders::_1, std::placeholders::_2, info));
 	requests.push_back(req);
 }

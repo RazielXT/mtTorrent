@@ -87,13 +87,15 @@ namespace mtt
 				NodeId minDistance;
 
 				virtual DataBuffer createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId) = 0;
+				virtual void sendRequest(Addr& addr, DataBuffer& data, RequestInfo& info) = 0;
+				virtual void sendRequest(std::string& host, std::string& port, DataBuffer& data, RequestInfo& info) = 0;
 				virtual bool onResponse(UdpConnection comm, DataBuffer* data, RequestInfo request) = 0;
 
 				Table* table;
 				DhtListener* listener = nullptr;
 			};
 
-			struct FindPeers : public DhtQuery
+			struct FindPeers : public DhtQuery, public std::enable_shared_from_this<FindPeers>
 			{
 			protected:
 
@@ -101,11 +103,13 @@ namespace mtt
 				uint32_t foundCount = 0;
 
 				virtual DataBuffer createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId) override;
+				virtual void sendRequest(Addr& addr, DataBuffer& data, RequestInfo& info);
+				virtual void sendRequest(std::string& host, std::string& port, DataBuffer& data, RequestInfo& info);
 				virtual bool onResponse(UdpConnection comm, DataBuffer* data, RequestInfo request) override;
 				GetPeersResponse parseGetPeersResponse(DataBuffer& message);		
 			};
 
-			struct FindNode : public DhtQuery
+			struct FindNode : public DhtQuery, public std::enable_shared_from_this<FindNode>
 			{
 				void startOne(uint8_t* hash, Addr& addr, Table* table, DhtListener* dhtListener, boost::asio::io_service* serviceIo);
 
@@ -116,11 +120,13 @@ namespace mtt
 				bool findClosest = true;
 
 				virtual DataBuffer createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId) override;
+				virtual void sendRequest(Addr& addr, DataBuffer& data, RequestInfo& info);
+				virtual void sendRequest(std::string& host, std::string& port, DataBuffer& data, RequestInfo& info);
 				virtual bool onResponse(UdpConnection comm, DataBuffer* data, RequestInfo request) override;
 				FindNodeResponse parseFindNodeResponse(DataBuffer& message);
 			};
 
-			struct PingNodes
+			struct PingNodes : public std::enable_shared_from_this<PingNodes>
 			{
 				~PingNodes();
 
