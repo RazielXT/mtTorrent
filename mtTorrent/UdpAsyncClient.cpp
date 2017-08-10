@@ -153,10 +153,18 @@ void UdpAsyncClient::send_message()
 {
 	if (state == Initialized)
 	{
-		if (implicitPort)
+		if (implicitPort && !socket.is_open())
 		{
-			socket.open(target_endpoint.protocol());
-			socket.bind(udp::endpoint(target_endpoint.protocol(), implicitPort));
+			boost::system::error_code ec;
+
+			socket.open(target_endpoint.protocol(), ec);
+			socket.bind(udp::endpoint(target_endpoint.protocol(), implicitPort), ec);
+
+			if (ec)
+			{
+				UDP_LOG("port bind error: " << ec.message());
+				return;
+			}
 		}
 
 		socket.async_connect(target_endpoint, std::bind(&UdpAsyncClient::handle_connect, shared_from_this(), std::placeholders::_1));
