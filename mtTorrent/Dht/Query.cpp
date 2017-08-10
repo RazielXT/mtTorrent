@@ -116,7 +116,8 @@ void mtt::dht::Query::DhtQuery::start(uint8_t* hash, Table* t, DhtListener* dhtL
 	{
 		std::string dhtRoot = "dht.transmissionbt.com";
 		std::string dhtRootPort = "6881";
-		sendRequest(dhtRoot, dhtRootPort, dataReq, r);
+		//sendRequest(dhtRoot, dhtRootPort, dataReq, r);
+		sendRequest(Addr({ 70,113,67,217 }, 57365), dataReq, r);
 	}
 }
 

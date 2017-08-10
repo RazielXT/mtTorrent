@@ -398,18 +398,12 @@ void TorrentTest::testDhtTable()
 
 	auto torrent = file.getTorrentFileInfo();
 
-	ServiceThreadpool service(4);
-	mtt::dht::Table table;
-
-	mtt::dht::Query::FindPeers query;
 	mtt::dht::Communication dhtComm(*this);
-
-	query.start(torrent.info.hash, &table, &dhtComm);
+	dhtComm.findPeers(torrent.info.hash);
 
 	WAITFOR(dhtResult.finalCount != -1);
 
-	auto n = table.getClosestNodes(torrent.info.hash, false);
-	auto n6 = table.getClosestNodes(torrent.info.hash, true);
+	WAITFOR(false);
 }
 
 void TorrentTest::start()

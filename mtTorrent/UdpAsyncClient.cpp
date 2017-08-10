@@ -203,3 +203,8 @@ void UdpAsyncClient::handle_receive(const boost::system::error_code& error, std:
 			onReceiveCallback(shared_from_this(), responseBuffer);
 	}
 }
+
+std::string UdpAsyncClient::getName()
+{
+	return target_endpoint.address().to_string();
+}

@@ -29,16 +29,17 @@ private:
 		UdpConnectionCallback onResponse;
 
 		std::shared_ptr<boost::asio::deadline_timer> timeoutTimer;
-		void checkTimeout();
+		void reset();
 	};
 
 	std::mutex responsesMutex;
-	std::vector<ResponseRetryInfo> pendingResponses;
+	std::vector<std::shared_ptr<ResponseRetryInfo>> pendingResponses;
 	void addPendingResponse(DataBuffer& data, UdpConnection target, UdpConnectionCallback response);
 	UdpConnection findPendingConnection(UdpConnection);
 
 	uint16_t implicitPort = 0;
 
+	void checkTimeout(std::shared_ptr<ResponseRetryInfo>);
 	void onUdpReceive(UdpConnection, DataBuffer&);
 	void onUdpClose(UdpConnection);
 	UdpConnectionCallback onReceive;

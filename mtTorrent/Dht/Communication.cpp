@@ -41,7 +41,7 @@ void mtt::dht::Communication::findingPeersFinished(uint8_t* hash, uint32_t count
 			}
 	}
 
-	findingPeersFinished(hash, count);
+	listener.findingPeersFinished(hash, count);
 }
 
 UdpConnection mtt::dht::Communication::sendMessage(Addr& addr, DataBuffer& data, UdpConnectionCallback response)

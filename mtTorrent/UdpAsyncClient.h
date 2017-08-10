@@ -22,6 +22,7 @@ public:
 	void setAddress(const std::string& hostname, const std::string& port);
 	void setAddress(const std::string& hostname, const std::string& port, bool ipv6);
 	void setImplicitPort(uint16_t port);
+	std::string getName();
 
 	bool write(const DataBuffer& data);
 	void close();
