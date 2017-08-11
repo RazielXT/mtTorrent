@@ -8,18 +8,18 @@
 #include <functional>
 #include <deque>
 
-class UdpAsyncServer;
-class UdpAsyncClient;
-using UdpConnection = std::shared_ptr<UdpAsyncClient>;
+class UdpAsyncReceiver;
+class UdpAsyncWriter;
+using UdpRequest = std::shared_ptr<UdpAsyncWriter>;
 
-class UdpAsyncClient : public std::enable_shared_from_this<UdpAsyncClient>
+class UdpAsyncWriter : public std::enable_shared_from_this<UdpAsyncWriter>
 {
-	friend class UdpAsyncServer;
+	friend class UdpAsyncReceiver;
 
 public:
 
-	UdpAsyncClient(boost::asio::io_service& io_service);
-	~UdpAsyncClient();
+	UdpAsyncWriter(boost::asio::io_service& io_service);
+	~UdpAsyncWriter();
 
 	void setAddress(Addr& addr);
 	void setAddress(udp::endpoint& addr);
@@ -34,7 +34,7 @@ public:
 	void write();
 	void close();
 
-	std::function<void(UdpConnection)> onCloseCallback;
+	std::function<void(UdpRequest)> onCloseCallback;
 
 protected:
 

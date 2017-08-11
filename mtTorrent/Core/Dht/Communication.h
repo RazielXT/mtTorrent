@@ -2,7 +2,7 @@
 #include <vector>
 #include "Dht/Query.h"
 #include "utils/ServiceThreadpool.h"
-#include "utils/UdpAsyncMgr.h"
+#include "utils/UdpAsyncComm.h"
 
 namespace mtt
 {
@@ -30,14 +30,14 @@ namespace mtt
 
 		protected:
 
-			bool onNewUdpPacket(UdpConnection, DataBuffer*);
+			bool onNewUdpPacket(UdpRequest, DataBuffer*);
 
 			virtual uint32_t onFoundPeers(uint8_t* hash, std::vector<Addr>& values) override;
 			virtual void findingPeersFinished(uint8_t* hash, uint32_t count) override;
-			virtual UdpConnection sendMessage(Addr&, DataBuffer&, UdpConnectionCallback response) override;
-			virtual UdpConnection sendMessage(std::string& host, std::string& port, DataBuffer&, UdpConnectionCallback response) override;
+			virtual UdpRequest sendMessage(Addr&, DataBuffer&, UdpResponseCallback response) override;
+			virtual UdpRequest sendMessage(std::string& host, std::string& port, DataBuffer&, UdpResponseCallback response) override;
 
-			UdpAsyncMgr udpMgr;
+			UdpAsyncComm udpMgr;
 
 		private:
 

@@ -222,7 +222,7 @@ GetPeersResponse mtt::dht::Query::FindPeers::parseGetPeersResponse(DataBuffer& m
 	return response;
 }
 
-bool mtt::dht::Query::FindPeers::onResponse(UdpConnection comm, DataBuffer* data, RequestInfo request)
+bool mtt::dht::Query::FindPeers::onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request)
 {
 	bool handled = false;
 
@@ -357,7 +357,7 @@ DataBuffer mtt::dht::Query::FindNode::createRequest(uint8_t* hash, bool bothProt
 	return packet.getBuffer();
 }
 
-bool mtt::dht::Query::FindNode::onResponse(UdpConnection comm, DataBuffer* data, RequestInfo request)
+bool mtt::dht::Query::FindNode::onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request)
 {
 	bool handled = false;
 
@@ -582,7 +582,7 @@ DataBuffer mtt::dht::Query::PingNodes::createRequest(uint16_t transactionId)
 	return packet.getBuffer();
 }
 
-bool mtt::dht::Query::PingNodes::onResponse(UdpConnection comm, DataBuffer* data, PingInfo request)
+bool mtt::dht::Query::PingNodes::onResponse(UdpRequest comm, DataBuffer* data, PingInfo request)
 {
 	if (data)
 	{

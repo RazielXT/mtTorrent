@@ -1,6 +1,6 @@
 #pragma once
 #include "Dht/Table.h"
-#include "utils/UdpAsyncMgr.h"
+#include "utils/UdpAsyncComm.h"
 
 namespace mtt
 {
@@ -13,8 +13,8 @@ namespace mtt
 			virtual uint32_t onFoundPeers(uint8_t* hash, std::vector<Addr>& values) = 0;
 			virtual void findingPeersFinished(uint8_t* hash, uint32_t count) = 0;
 
-			virtual UdpConnection sendMessage(Addr&, DataBuffer&, UdpConnectionCallback response) = 0;
-			virtual UdpConnection sendMessage(std::string& host, std::string& port, DataBuffer&, UdpConnectionCallback response) = 0;
+			virtual UdpRequest sendMessage(Addr&, DataBuffer&, UdpResponseCallback response) = 0;
+			virtual UdpRequest sendMessage(std::string& host, std::string& port, DataBuffer&, UdpResponseCallback response) = 0;
 		};
 
 		struct MessageResponse
@@ -79,7 +79,7 @@ namespace mtt
 				uint32_t MaxSimultaneousRequests = 5;
 
 				std::mutex requestsMutex;
-				std::vector<UdpConnection> requests;
+				std::vector<UdpRequest> requests;
 
 				std::mutex nodesMutex;
 				std::vector<NodeInfo> receivedNodes;
@@ -89,7 +89,7 @@ namespace mtt
 				virtual DataBuffer createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId) = 0;
 				virtual void sendRequest(Addr& addr, DataBuffer& data, RequestInfo& info) = 0;
 				virtual void sendRequest(std::string& host, std::string& port, DataBuffer& data, RequestInfo& info) = 0;
-				virtual bool onResponse(UdpConnection comm, DataBuffer* data, RequestInfo request) = 0;
+				virtual bool onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request) = 0;
 
 				Table* table;
 				DhtListener* listener = nullptr;
@@ -105,7 +105,7 @@ namespace mtt
 				virtual DataBuffer createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId) override;
 				virtual void sendRequest(Addr& addr, DataBuffer& data, RequestInfo& info);
 				virtual void sendRequest(std::string& host, std::string& port, DataBuffer& data, RequestInfo& info);
-				virtual bool onResponse(UdpConnection comm, DataBuffer* data, RequestInfo request) override;
+				virtual bool onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request) override;
 				GetPeersResponse parseGetPeersResponse(DataBuffer& message);		
 			};
 
@@ -122,7 +122,7 @@ namespace mtt
 				virtual DataBuffer createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId) override;
 				virtual void sendRequest(Addr& addr, DataBuffer& data, RequestInfo& info);
 				virtual void sendRequest(std::string& host, std::string& port, DataBuffer& data, RequestInfo& info);
-				virtual bool onResponse(UdpConnection comm, DataBuffer* data, RequestInfo request) override;
+				virtual bool onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request) override;
 				FindNodeResponse parseFindNodeResponse(DataBuffer& message);
 			};
 
@@ -143,7 +143,7 @@ namespace mtt
 				uint32_t MaxSimultaneousRequests = 5;
 
 				std::mutex requestsMutex;
-				std::vector<UdpConnection> requests;
+				std::vector<UdpRequest> requests;
 				std::vector<Addr> nodesLeft;
 
 				DataBuffer createRequest(uint16_t transactionId);
@@ -153,7 +153,7 @@ namespace mtt
 					uint16_t transactionId;
 					Addr addr;
 				};
-				bool onResponse(UdpConnection comm, DataBuffer* data, PingInfo request);
+				bool onResponse(UdpRequest comm, DataBuffer* data, PingInfo request);
 				void sendRequest(Addr& addr);
 			};
 		}

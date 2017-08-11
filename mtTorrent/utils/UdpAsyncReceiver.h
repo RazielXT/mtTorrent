@@ -1,17 +1,17 @@
-#include "UdpAsyncClient.h"
+#include "UdpAsyncWriter.h"
 
-using UdpConnectionCallback = std::function<bool(UdpConnection, DataBuffer*)>;
+using UdpResponseCallback = std::function<bool(UdpRequest, DataBuffer*)>;
 
-class UdpAsyncServer
+class UdpAsyncReceiver
 {
 public:
 
-	UdpAsyncServer(boost::asio::io_service& io_service, uint16_t port, bool ipv6);
+	UdpAsyncReceiver(boost::asio::io_service& io_service, uint16_t port, bool ipv6);
 
 	void listen();
 	void stop();
 
-	std::function<void(UdpConnection, DataBuffer&)> receiveCallback;
+	std::function<void(UdpRequest, DataBuffer&)> receiveCallback;
 
 private:
 

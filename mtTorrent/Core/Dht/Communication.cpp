@@ -45,7 +45,7 @@ void mtt::dht::Communication::pingNode(Addr& addr, uint8_t* hash)
 	q->start(addr, table.getBucketId(hash), &table, this);
 }
 
-bool mtt::dht::Communication::onNewUdpPacket(UdpConnection, DataBuffer*)
+bool mtt::dht::Communication::onNewUdpPacket(UdpRequest, DataBuffer*)
 {
 	return false;
 }
@@ -71,12 +71,12 @@ void mtt::dht::Communication::findingPeersFinished(uint8_t* hash, uint32_t count
 	listener.findingPeersFinished(hash, count);
 }
 
-UdpConnection mtt::dht::Communication::sendMessage(Addr& addr, DataBuffer& data, UdpConnectionCallback response)
+UdpRequest mtt::dht::Communication::sendMessage(Addr& addr, DataBuffer& data, UdpResponseCallback response)
 {
 	return udpMgr.sendMessage(data, addr, response);
 }
 
-UdpConnection mtt::dht::Communication::sendMessage(std::string& host, std::string& port, DataBuffer& data, UdpConnectionCallback response)
+UdpRequest mtt::dht::Communication::sendMessage(std::string& host, std::string& port, DataBuffer& data, UdpResponseCallback response)
 {
 	return udpMgr.sendMessage(data, host, port, response);
 }

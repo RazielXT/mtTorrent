@@ -259,9 +259,9 @@
     <ClCompile Include="utils\ServiceThreadpool.cpp" />
     <ClCompile Include="utils\TcpAsyncServer.cpp" />
     <ClCompile Include="utils\TcpAsyncStream.cpp" />
-    <ClCompile Include="utils\UdpAsyncClient.cpp" />
-    <ClCompile Include="utils\UdpAsyncMgr.cpp" />
-    <ClCompile Include="utils\UdpAsyncServer.cpp" />
+    <ClCompile Include="utils\UdpAsyncWriter.cpp" />
+    <ClCompile Include="utils\UdpAsyncComm.cpp" />
+    <ClCompile Include="utils\UdpAsyncReceiver.cpp" />
     <ClCompile Include="utils\UrlEncoding.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -294,9 +294,9 @@
     <ClInclude Include="utils\ServiceThreadpool.h" />
     <ClInclude Include="utils\TcpAsyncServer.h" />
     <ClInclude Include="utils\TcpAsyncStream.h" />
-    <ClInclude Include="utils\UdpAsyncClient.h" />
-    <ClInclude Include="utils\UdpAsyncMgr.h" />
-    <ClInclude Include="utils\UdpAsyncServer.h" />
+    <ClInclude Include="utils\UdpAsyncWriter.h" />
+    <ClInclude Include="utils\UdpAsyncComm.h" />
+    <ClInclude Include="utils\UdpAsyncReceiver.h" />
     <ClInclude Include="utils\UrlEncoding.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

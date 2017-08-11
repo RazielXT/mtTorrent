@@ -3,7 +3,7 @@
 #include "utils/ServiceThreadpool.h"
 #include "Configuration.h"
 #include "MetadataReconstruction.h"
-#include "utils/UdpAsyncClient.h"
+#include "utils/UdpAsyncWriter.h"
 #include "utils/Base32.h"
 #include "utils/PacketHelper.h"
 #include "TrackerManager.h"

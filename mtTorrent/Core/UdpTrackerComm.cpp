@@ -8,7 +8,7 @@
 
 using namespace mtt;
 
-mtt::UdpTrackerComm::UdpTrackerComm(UdpAsyncMgr& udpMgr) : udp(udpMgr)
+mtt::UdpTrackerComm::UdpTrackerComm(UdpAsyncComm& udpMgr) : udp(udpMgr)
 {
 }
 
@@ -48,7 +48,7 @@ void mtt::UdpTrackerComm::fail()
 		onFail();
 }
 
-bool mtt::UdpTrackerComm::onConnectUdpResponse(UdpConnection comm, DataBuffer* data)
+bool mtt::UdpTrackerComm::onConnectUdpResponse(UdpRequest comm, DataBuffer* data)
 {
 	if (!data)
 	{
@@ -103,7 +103,7 @@ DataBuffer UdpTrackerComm::createAnnounceRequest()
 	return packet.getBuffer();
 }
 
-bool mtt::UdpTrackerComm::onAnnounceUdpResponse(UdpConnection comm, DataBuffer* data)
+bool mtt::UdpTrackerComm::onAnnounceUdpResponse(UdpRequest comm, DataBuffer* data)
 {
 	if (!data)
 	{

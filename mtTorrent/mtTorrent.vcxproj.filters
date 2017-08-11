@@ -103,15 +103,6 @@
     <ClCompile Include="utils\TcpAsyncStream.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="utils\UdpAsyncClient.cpp">
-      <Filter>Source Files\Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="utils\UdpAsyncMgr.cpp">
-      <Filter>Source Files\Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="utils\UdpAsyncServer.cpp">
-      <Filter>Source Files\Utils</Filter>
-    </ClCompile>
     <ClCompile Include="utils\UrlEncoding.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
@@ -126,6 +117,15 @@
     </ClCompile>
     <ClCompile Include="Core\Dht\Node.cpp">
       <Filter>Source Files\Core\Torrent\Dht</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\UdpAsyncWriter.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\UdpAsyncComm.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\UdpAsyncReceiver.cpp">
+      <Filter>Source Files\Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -204,22 +204,10 @@
     <ClInclude Include="utils\TcpAsyncStream.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="utils\UdpAsyncClient.h">
-      <Filter>Source Files\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="utils\UdpAsyncMgr.h">
-      <Filter>Source Files\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="utils\UdpAsyncServer.h">
-      <Filter>Source Files\Utils</Filter>
-    </ClInclude>
     <ClInclude Include="utils\UrlEncoding.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="Core\Configuration.h">
-      <Filter>Source Files\Core\General</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Interface.h">
       <Filter>Source Files\Core\General</Filter>
     </ClInclude>
     <ClInclude Include="Core\Logging.h">
@@ -230,6 +218,15 @@
     </ClInclude>
     <ClInclude Include="Core\Test.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\UdpAsyncWriter.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\UdpAsyncComm.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\UdpAsyncReceiver.h">
+      <Filter>Source Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
