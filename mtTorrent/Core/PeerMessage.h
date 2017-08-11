@@ -16,9 +16,9 @@ namespace mtt
 		Piece,
 		Cancel,
 		Port,
-		KeepAlive,
 		Extended = 20,
 		Handshake,
+		KeepAlive,
 		Invalid
 	};
 

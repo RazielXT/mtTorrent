@@ -235,6 +235,7 @@
   <ItemGroup>
     <ClCompile Include="Core\Configuration.cpp" />
     <ClCompile Include="Core\Dht\Communication.cpp" />
+    <ClCompile Include="Core\Dht\Node.cpp" />
     <ClCompile Include="Core\Dht\Query.cpp" />
     <ClCompile Include="Core\Dht\Table.cpp" />
     <ClCompile Include="Core\ExtensionProtocol.cpp" />
@@ -266,10 +267,10 @@
   <ItemGroup>
     <ClInclude Include="Core\Configuration.h" />
     <ClInclude Include="Core\Dht\Communication.h" />
+    <ClInclude Include="Core\Dht\Node.h" />
     <ClInclude Include="Core\Dht\Query.h" />
     <ClInclude Include="Core\Dht\Table.h" />
     <ClInclude Include="Core\ExtensionProtocol.h" />
-    <ClInclude Include="Core\Interface.h" />
     <ClInclude Include="Core\IPeerListener.h" />
     <ClInclude Include="Core\ITracker.h" />
     <ClInclude Include="Core\Logging.h" />
@@ -278,7 +279,6 @@
     <ClInclude Include="Core\PiecesProgress.h" />
     <ClInclude Include="Core\Scheduler.h" />
     <ClInclude Include="Core\HttpTrackerComm.h" />
-    <ClInclude Include="Core\Interface.h" />
     <ClInclude Include="Core\PeerMessage.h" />
     <ClInclude Include="Core\Storage.h" />
     <ClInclude Include="Core\Test.h" />

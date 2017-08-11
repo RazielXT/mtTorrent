@@ -19,6 +19,9 @@ namespace mtt
 			uint8_t reserved_byte[8] = { 0 };
 			reserved_byte[5] |= 0x10;	//Extension Protocol
 
+			if (mtt::config::external.enableDht)
+				reserved_byte[7] |= 0x80;
+
 			packet.add(reserved_byte, 8);
 
 			packet.add(torrentHash, 20);
@@ -58,6 +61,16 @@ namespace mtt
 			return packet.getBuffer();
 		}
 
+		DataBuffer createPort(uint16_t port)
+		{
+			PacketBuilder packet(9);
+			packet.add32(3);
+			packet.add(Port);
+			packet.add16(port);
+
+			return packet.getBuffer();
+		}
+
 		DataBuffer createBitfield(DataBuffer& bitfield)
 		{
 			PacketBuilder packet(5 + (uint32_t)bitfield.size());
@@ -92,6 +105,11 @@ mtt::PeerInfo::PeerInfo()
 bool mtt::PeerInfo::supportsExtensions()
 {
 	return (protocol[5] & 0x10) != 0;
+}
+
+bool mtt::PeerInfo::supportsDht()
+{
+	return (protocol[8] & 0x80) != 0;
 }
 
 PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, boost::asio::io_service& io_service, std::shared_ptr<TcpAsyncStream> s) : torrent(t), listener(l)
@@ -163,6 +181,13 @@ void mtt::PeerCommunication::stop()
 		state.action = PeerCommunicationState::Disconnected;
 		stream->close();
 	}
+}
+
+Addr mtt::PeerCommunication::getAddress()
+{
+	Addr out;
+	out.set(stream->getEndpoint().address(), stream->getEndpoint().port());
+	return out;
 }
 
 void mtt::PeerCommunication::connectionClosed()
@@ -261,15 +286,20 @@ void mtt::PeerCommunication::resetState()
 	info = PeerInfo();
 }
 
+void mtt::PeerCommunication::sendPort(uint16_t port)
+{
+	if (!isEstablished())
+		return;
+
+	stream->write(mtt::bt::createPort(port));
+}
+
 void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 {
 	if (message.id != Piece)
 		BT_LOG("MSG_ID:" << (int)message.id << ", size: " << message.messageSize);
 
-	if (message.id == KeepAlive)
-	{
-	}
-	else if (message.id == Bitfield)
+	if (message.id == Bitfield)
 	{
 		info.pieces.fromBitfield(message.bitfield, torrent.pieces.size());
 
@@ -343,6 +373,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 				if(state.action == PeerCommunicationState::Connected)
 					stream->write(mtt::bt::createHandshake(torrent.hash, mtt::config::internal.hashId));
 
+				state.action = PeerCommunicationState::Established;
 				state.finishedHandshake = true;
 				BT_LOG("finished handshake");
 
@@ -352,19 +383,14 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 				if (info.supportsExtensions())
 					ext.sendHandshake();
 
-				state.action = PeerCommunicationState::Established;
+				if (info.supportsDht() && mtt::config::external.enableDht)
+					sendPort(mtt::config::external.listenPortUdp);
 
 				listener.handshakeFinished(this);
 			}
 			else
 				state.action = PeerCommunicationState::Established;
 		}
-	}
-	else if (message.id == Request)
-	{
-	}
-	else if (message.id == Cancel)
-	{
 	}
 
 	listener.messageReceived(this, message);

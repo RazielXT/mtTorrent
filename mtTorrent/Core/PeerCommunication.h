@@ -39,6 +39,7 @@ namespace mtt
 		uint8_t protocol[8];
 
 		bool supportsExtensions();
+		bool supportsDht();
 	};
 
 	class PeerCommunication
@@ -64,9 +65,13 @@ namespace mtt
 		void sendHave(uint32_t pieceIdx);
 		void sendPieceBlock(PieceBlock& block);
 
+		void sendPort(uint16_t port);
+
 		void stop();
 
 		ext::ExtensionProtocol ext;
+
+		Addr getAddress();
 
 	private:
 

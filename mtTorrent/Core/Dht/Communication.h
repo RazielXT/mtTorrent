@@ -26,6 +26,8 @@ namespace mtt
 			void findPeers(uint8_t* hash);
 			void stopFindingPeers(uint8_t* hash);
 
+			void pingNode(Addr& addr, uint8_t* hash);
+
 		protected:
 
 			virtual uint32_t onFoundPeers(uint8_t* hash, std::vector<Addr>& values) override;

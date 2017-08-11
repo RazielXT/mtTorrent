@@ -37,6 +37,7 @@ public:
 	std::function<void()> onCloseCallback;
 
 	std::string getName();
+	tcp::endpoint& getEndpoint();
 
 protected:
 

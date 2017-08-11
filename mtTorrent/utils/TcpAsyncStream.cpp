@@ -103,6 +103,11 @@ std::string TcpAsyncStream::getName()
 	return info.host;
 }
 
+tcp::endpoint& TcpAsyncStream::getEndpoint()
+{
+	return info.endpoint;
+}
+
 void TcpAsyncStream::setAsConnected()
 {
 	state = Connected;

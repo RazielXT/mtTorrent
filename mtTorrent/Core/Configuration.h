@@ -11,6 +11,7 @@ namespace mtt
 			uint32_t listenPortUdp = 55126;
 
 			std::string defaultDirectory;
+			bool enableDht = false;
 		};
 
 		struct Internal

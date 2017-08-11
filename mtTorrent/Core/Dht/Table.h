@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "Interface.h"
+#include "Node.h"
 #include <mutex>
 #include <deque>
 
@@ -8,32 +8,6 @@ namespace mtt
 {
 	namespace dht
 	{
-		struct NodeId
-		{
-			uint8_t data[20];
-
-			NodeId();
-			NodeId(const char* buffer);
-			void copy(const char* buffer);
-			bool closerThan(NodeId& r, NodeId& target);
-			bool closerThanThis(NodeId& distance, NodeId& target);
-			NodeId distance(NodeId& r);
-			uint8_t length();
-			void setMax();
-
-			static NodeId distance(uint8_t* l, uint8_t* r);
-			static uint8_t length(uint8_t* data);
-		};
-
-		struct NodeInfo
-		{
-			NodeId id;
-			Addr addr;
-
-			size_t parse(char* buffer, bool v6);
-			bool operator==(const NodeInfo& r);
-		};
-
 		struct Table
 		{
 			std::vector<Addr> getClosestNodes(uint8_t* id, bool ipv6);
@@ -43,6 +17,8 @@ namespace mtt
 
 			void nodeNotResponded(uint8_t* id, Addr& addr);
 			void nodeNotResponded(uint8_t bucketId, Addr& addr);
+
+			uint8_t getBucketId(uint8_t* id);
 
 			bool empty = true;
 
@@ -73,8 +49,6 @@ namespace mtt
 
 			std::mutex tableMutex;
 			std::array<Bucket, 160> buckets;
-
-			uint8_t getBucketId(uint8_t* id);
 		};
 	}
 }
