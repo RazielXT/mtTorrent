@@ -3,6 +3,7 @@
 mtt::dht::Communication::Communication(ResultsListener& l) : udpMgr(service.io), listener(l)
 {
 	service.start(3);
+	udpMgr.listen(std::bind(&Communication::onNewUdpPacket, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 mtt::dht::Communication::~Communication()
@@ -42,6 +43,11 @@ void mtt::dht::Communication::pingNode(Addr& addr, uint8_t* hash)
 {
 	auto q = std::make_shared<Query::PingNodes>();
 	q->start(addr, table.getBucketId(hash), &table, this);
+}
+
+bool mtt::dht::Communication::onNewUdpPacket(UdpConnection, DataBuffer*)
+{
+	return false;
 }
 
 uint32_t mtt::dht::Communication::onFoundPeers(uint8_t* hash, std::vector<Addr>& values)

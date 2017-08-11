@@ -50,20 +50,19 @@ void UdpAsyncClient::setImplicitPort(uint16_t port)
 
 void UdpAsyncClient::close()
 {
-	onReceiveCallback = nullptr;
 	onCloseCallback = nullptr;
 
 	io_service.post(std::bind(&UdpAsyncClient::do_close, shared_from_this()));
 }
 
-bool UdpAsyncClient::write(const DataBuffer& data, bool listenToResponse)
+void UdpAsyncClient::write(const DataBuffer& data)
 {
-	if (!listen)
-		listenToResponse = listen;
-
 	io_service.post(std::bind(&UdpAsyncClient::do_write, this, data));
+}
 
-	return true;
+void UdpAsyncClient::write()
+{
+	io_service.post(std::bind(&UdpAsyncClient::do_rewrite, this));
 }
 
 void UdpAsyncClient::handle_resolve(const boost::system::error_code& error, udp::resolver::iterator iterator, std::shared_ptr<udp::resolver> resolver)
@@ -82,21 +81,6 @@ void UdpAsyncClient::handle_resolve(const boost::system::error_code& error, udp:
 	{
 		postFail("Resolve", error);
 	}
-}
-
-void UdpAsyncClient::listenToResponse()
-{
-	if (state != Connected)
-		return;
-
-	listen = false;
-	listening = true;
-	responseBuffer.resize(2 * 1024);
-
-	UDP_LOG("listening");
-
-	socket.async_receive_from(boost::asio::buffer(responseBuffer.data(), responseBuffer.size()), target_endpoint,
-		std::bind(&UdpAsyncClient::handle_receive, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 }
 
 void UdpAsyncClient::postFail(std::string place, const boost::system::error_code& error)
@@ -130,13 +114,10 @@ void UdpAsyncClient::do_close()
 {
 	std::lock_guard<std::mutex> guard(stateMutex);
 
-	onReceiveCallback = nullptr;
 	onCloseCallback = nullptr;
 
 	if (state == Connected)
 		state = Initialized;
-
-	listening = false;
 
 	boost::system::error_code error;
 
@@ -145,6 +126,14 @@ void UdpAsyncClient::do_close()
 		socket.shutdown(boost::asio::socket_base::shutdown_both);
 		socket.close(error);
 	}	
+}
+
+void UdpAsyncClient::do_rewrite()
+{
+	std::lock_guard<std::mutex> guard(stateMutex);
+
+	if (state != Clear)
+		send_message();
 }
 
 void UdpAsyncClient::do_write(DataBuffer data)
@@ -166,6 +155,7 @@ void UdpAsyncClient::send_message()
 			boost::system::error_code ec;
 
 			socket.open(target_endpoint.protocol(), ec);
+			socket.set_option(boost::asio::socket_base::reuse_address(true),ec);
 			socket.bind(udp::endpoint(target_endpoint.protocol(), implicitPort), ec);
 
 			if (ec)
@@ -193,34 +183,19 @@ void UdpAsyncClient::handle_write(const boost::system::error_code& error, size_t
 {
 	std::lock_guard<std::mutex> guard(stateMutex);
 
-	if (!error)
-	{
-		if(listen && !listening)
-			listenToResponse();
-	}
-	else
+	if (error)
 	{
 		postFail("Write", error);
 	}
 }
 
-void UdpAsyncClient::handle_receive(const boost::system::error_code& error, std::size_t bytes_transferred)
-{
-	std::lock_guard<std::mutex> guard(stateMutex);
-
-	listening = false;
-	UDP_LOG("received size: " << bytes_transferred);
-
-	if (!error)
-	{
-		responseBuffer.resize(bytes_transferred);
-
-		if (onReceiveCallback)
-			onReceiveCallback(shared_from_this(), responseBuffer);
-	}
-}
 
 std::string UdpAsyncClient::getName()
 {
 	return target_endpoint.address().to_string() + ":" + std::to_string(target_endpoint.port());
+}
+
+udp::endpoint& UdpAsyncClient::getEndpoint()
+{
+	return target_endpoint;
 }

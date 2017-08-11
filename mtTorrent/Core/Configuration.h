@@ -7,8 +7,8 @@ namespace mtt
 	{
 		struct External
 		{
-			uint32_t listenPort = 55125;
-			uint32_t listenPortUdp = 55126;
+			uint16_t listenPort = 55125;
+			uint16_t listenPortUdp = 55556;
 
 			std::string defaultDirectory;
 			bool enableDht = false;

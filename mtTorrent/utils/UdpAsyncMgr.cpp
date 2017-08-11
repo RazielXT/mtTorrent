@@ -1,26 +1,29 @@
 #include "UdpAsyncMgr.h"
 #include "Logging.h"
+#include "Configuration.h"
 
 #define UDP_LOG(x) WRITE_LOG("UDP MGR: " << x)
 
-UdpAsyncMgr::UdpAsyncMgr(boost::asio::io_service& io_service) : io(io_service)
+UdpAsyncMgr::UdpAsyncMgr(boost::asio::io_service& io_service) : io(io_service), udpPort(mtt::config::external.listenPortUdp)
 {
-
 }
 
-void UdpAsyncMgr::listen(uint16_t port, UdpConnectionCallback received)
+void UdpAsyncMgr::listen(UdpConnectionCallback receive)
 {
-	listener = std::make_shared<UdpAsyncServer>(io, port, false);
-	listener->receiveCallback = received;
+	listener = std::make_shared<UdpAsyncServer>(io, udpPort, false);
+	listener->receiveCallback = std::bind(&UdpAsyncMgr::onUdpReceive, this, std::placeholders::_1, std::placeholders::_2);
 	listener->listen();
 
-	onReceive = received;
+	onUnhandledReceive = receive;
 }
 
 UdpConnection UdpAsyncMgr::create(std::string& host, std::string& port)
 {
 	UdpConnection c = std::make_shared<UdpAsyncClient>(io);
 	c->setAddress(host, port);
+
+	if (udpPort)
+		c->setImplicitPort(udpPort);
 
 	return c;
 }
@@ -32,8 +35,11 @@ UdpConnection UdpAsyncMgr::sendMessage(DataBuffer& data, std::string& host, std:
 	if (response)
 		addPendingResponse(data, c, response);
 
+	if (udpPort)
+		c->setImplicitPort(udpPort);
+
 	c->setAddress(host, port);
-	c->write(data, response != nullptr);
+	c->write(data);
 
 	return c;
 }
@@ -43,7 +49,10 @@ void UdpAsyncMgr::sendMessage(DataBuffer& data, UdpConnection c, UdpConnectionCa
 	if (response)
 		addPendingResponse(data, c, response);
 
-	c->write(data, response != nullptr);
+	if (udpPort)
+		c->setImplicitPort(udpPort);
+
+	c->write(data);
 }
 
 UdpConnection UdpAsyncMgr::sendMessage(DataBuffer& data, Addr& addr, UdpConnectionCallback response)
@@ -53,8 +62,11 @@ UdpConnection UdpAsyncMgr::sendMessage(DataBuffer& data, Addr& addr, UdpConnecti
 	if(response)
 		addPendingResponse(data, c, response);
 
+	if (udpPort)
+		c->setImplicitPort(udpPort);
+
 	c->setAddress(addr);
-	c->write(data, response != nullptr);
+	c->write(data);
 
 	return c;
 }
@@ -63,14 +75,11 @@ void UdpAsyncMgr::addPendingResponse(DataBuffer& data, UdpConnection c, UdpConne
 {
 	auto info = std::make_shared<ResponseRetryInfo>();
 	info->client = c;
-	info->writeData = data;
-	info->tryCount = 1;
 	info->timeoutTimer = std::make_shared<boost::asio::deadline_timer>(io);
 	info->timeoutTimer->async_wait(std::bind(&UdpAsyncMgr::checkTimeout, this, info));
 	info->timeoutTimer->expires_from_now(boost::posix_time::seconds(1));
 	info->onResponse = response;
 
-	c->onReceiveCallback = std::bind(&UdpAsyncMgr::onUdpReceive, this, std::placeholders::_1, std::placeholders::_2);
 	c->onCloseCallback = std::bind(&UdpAsyncMgr::onUdpClose, this, std::placeholders::_1);
 
 	std::lock_guard<std::mutex> guard(responsesMutex);
@@ -102,7 +111,7 @@ void UdpAsyncMgr::onUdpReceive(UdpConnection source, DataBuffer& data)
 		auto it = pendingResponses.begin();
 		while (it != pendingResponses.end())
 		{
-			if ((*it)->client == source)
+			if ((*it)->client == source || (*it)->client->getEndpoint() == source->getEndpoint())
 			{
 				foundPendingResponses.push_back(*it);
 				it = pendingResponses.erase(it);
@@ -132,8 +141,8 @@ void UdpAsyncMgr::onUdpReceive(UdpConnection source, DataBuffer& data)
 		}
 	}
 
-	if (!handled && onReceive)
-		onReceive(source, &data);
+	if (!handled && onUnhandledReceive)
+		onUnhandledReceive(source, &data);
 }
 
 void UdpAsyncMgr::onUdpClose(UdpConnection source)
@@ -164,18 +173,18 @@ void UdpAsyncMgr::onUdpClose(UdpConnection source)
 
 	UDP_LOG(source->getName() << " closed, handled response:" << !foundPendingResponses.empty());
 
-	if (foundPendingResponses.empty() && onReceive)
-		onReceive(source, nullptr);
+	if (foundPendingResponses.empty() && onUnhandledReceive)
+		onUnhandledReceive(source, nullptr);
 }
 
 void UdpAsyncMgr::checkTimeout(std::shared_ptr<ResponseRetryInfo> info)
 {
-	if (info->tryCount == 255)
+	if (info->retries == 255)
 		return;
 
 	if (info->timeoutTimer->expires_at() <= boost::asio::deadline_timer::traits_type::now())
 	{
-		if (info->tryCount > 2)
+		if (info->retries > 0)
 		{
 			UDP_LOG(info->client->getName() << " response timeout");
 			info->timeoutTimer->expires_at(boost::posix_time::pos_infin);
@@ -184,9 +193,9 @@ void UdpAsyncMgr::checkTimeout(std::shared_ptr<ResponseRetryInfo> info)
 		else
 		{
 			UDP_LOG(info->client->getName() << " request retry");
-			info->tryCount++;
+			info->retries++;
 			info->timeoutTimer->expires_from_now(boost::posix_time::seconds(1));
-			info->client->write(info->writeData);
+			info->client->write();
 		}
 	}
 
@@ -195,6 +204,6 @@ void UdpAsyncMgr::checkTimeout(std::shared_ptr<ResponseRetryInfo> info)
 
 void UdpAsyncMgr::ResponseRetryInfo::reset()
 {
-	tryCount = 255;
+	retries = 255;
 	timeoutTimer->cancel();
 }

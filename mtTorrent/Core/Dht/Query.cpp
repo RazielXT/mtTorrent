@@ -136,7 +136,7 @@ bool mtt::dht::Query::DhtQuery::finished()
 	return requests.empty() && receivedNodes.empty();
 }
 
-GetPeersResponse Query::FindPeers::parseGetPeersResponse(DataBuffer& message)
+GetPeersResponse mtt::dht::Query::FindPeers::parseGetPeersResponse(DataBuffer& message)
 {
 	GetPeersResponse response;
 
@@ -222,7 +222,7 @@ GetPeersResponse Query::FindPeers::parseGetPeersResponse(DataBuffer& message)
 	return response;
 }
 
-bool Query::FindPeers::onResponse(UdpConnection comm, DataBuffer* data, RequestInfo request)
+bool mtt::dht::Query::FindPeers::onResponse(UdpConnection comm, DataBuffer* data, RequestInfo request)
 {
 	bool handled = false;
 
@@ -272,7 +272,7 @@ bool Query::FindPeers::onResponse(UdpConnection comm, DataBuffer* data, RequestI
 
 		for (auto it = requests.begin(); it != requests.end(); it++)
 		{
-			if ((*it) == comm)
+			if ((*it)->getEndpoint() == comm->getEndpoint())
 			{
 				requests.erase(it);
 				break;
@@ -304,7 +304,7 @@ bool Query::FindPeers::onResponse(UdpConnection comm, DataBuffer* data, RequestI
 	return handled;
 }
 
-DataBuffer Query::FindPeers::createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId)
+DataBuffer mtt::dht::Query::FindPeers::createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId)
 {
 	PacketBuilder packet(128);
 	packet.add("d1:ad2:id20:", 12);

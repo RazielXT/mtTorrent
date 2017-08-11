@@ -9,7 +9,7 @@ public:
 
 	UdpAsyncMgr(boost::asio::io_service& io);
 
-	void listen(uint16_t port, UdpConnectionCallback received);
+	void listen(UdpConnectionCallback received);
 
 	UdpConnection create(std::string& host, std::string& port);
 	UdpConnection sendMessage(DataBuffer& data, std::string& host, std::string& port, UdpConnectionCallback response);
@@ -21,8 +21,7 @@ private:
 	struct ResponseRetryInfo
 	{
 		UdpConnection client;
-		DataBuffer writeData;
-		uint8_t tryCount = 0;
+		uint8_t retries = 0;
 		UdpConnectionCallback onResponse;
 
 		std::shared_ptr<boost::asio::deadline_timer> timeoutTimer;
@@ -37,9 +36,10 @@ private:
 	void checkTimeout(std::shared_ptr<ResponseRetryInfo>);
 	void onUdpReceive(UdpConnection, DataBuffer&);
 	void onUdpClose(UdpConnection);
-	UdpConnectionCallback onReceive;
+	UdpConnectionCallback onUnhandledReceive;
 
 	std::shared_ptr<UdpAsyncServer> listener;
+	uint16_t& udpPort;
 
 	boost::asio::io_service& io;
 };

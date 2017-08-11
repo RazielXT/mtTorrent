@@ -1,7 +1,11 @@
 #include "UdpAsyncServer.h"
 
-UdpAsyncServer::UdpAsyncServer(boost::asio::io_service& io_service, uint16_t port, bool ipv6) : socket_(io_service, udp::endpoint(ipv6 ? udp::v6() : udp::v4(), port))
+UdpAsyncServer::UdpAsyncServer(boost::asio::io_service& io_service, uint16_t port, bool ipv6) : socket_(io_service)
 {
+	auto myEndpoint = udp::endpoint(ipv6 ? udp::v6() : udp::v4(), port);
+	socket_.open(myEndpoint.protocol());
+	socket_.set_option(boost::asio::socket_base::reuse_address(true));
+	socket_.bind(myEndpoint);
 }
 
 void UdpAsyncServer::listen()
@@ -26,7 +30,7 @@ void UdpAsyncServer::handle_receive(const boost::system::error_code& error, std:
 		connection->setAddress(remote_endpoint_);
 		buffer.resize(bytes_transferred);
 
-		receiveCallback(connection, &buffer);
+		receiveCallback(connection, buffer);
 	}
 
 	listen();

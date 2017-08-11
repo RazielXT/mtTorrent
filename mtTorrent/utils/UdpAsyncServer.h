@@ -11,7 +11,7 @@ public:
 	void listen();
 	void stop();
 
-	UdpConnectionCallback receiveCallback;
+	std::function<void(UdpConnection, DataBuffer&)> receiveCallback;
 
 private:
 

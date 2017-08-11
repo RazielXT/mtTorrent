@@ -26,12 +26,14 @@ public:
 	void setAddress(const std::string& hostname, const std::string& port);
 	void setAddress(const std::string& hostname, const std::string& port, bool ipv6);
 	void setImplicitPort(uint16_t port);
-	std::string getName();
 
-	bool write(const DataBuffer& data, bool listenToResponse = true);
+	std::string getName();
+	udp::endpoint& getEndpoint();
+
+	void write(const DataBuffer& data);
+	void write();
 	void close();
 
-	std::function<void(UdpConnection, DataBuffer&)> onReceiveCallback;
 	std::function<void(UdpConnection)> onCloseCallback;
 
 protected:
@@ -45,17 +47,14 @@ protected:
 	void handle_connect(const boost::system::error_code& err);
 	
 	void do_write(DataBuffer data);
+	void do_rewrite();
 	void do_close();
 
 	DataBuffer messageBuffer;
-	DataBuffer responseBuffer;
+
 	void send_message();
 	void handle_write(const boost::system::error_code& error, size_t sz);
-	void handle_receive(const boost::system::error_code& error, std::size_t bytes_transferred);
 
-	void listenToResponse();
-	bool listening = false;
-	bool listen = false;
 	uint16_t implicitPort = 0;
 
 	udp::endpoint target_endpoint;
