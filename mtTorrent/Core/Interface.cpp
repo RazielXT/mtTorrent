@@ -1,6 +1,7 @@
 #include "Interface.h"
-#include "utils\Base32.h"
-#include "UrlEncoding.h"
+#include "utils/Base32.h"
+#include "utils/UrlEncoding.h"
+#include "utils/HexEncoding.h"
 
 using namespace mtt;
 
@@ -27,16 +28,6 @@ void DownloadedPiece::addBlock(PieceBlock& block)
 	memcpy(&data[0] + block.info.begin, block.data.data(), block.info.length);
 }
 
-static uint8_t fromHexa(char h)
-{
-	if (h <= '9')
-		h = h - '0';
-	else
-		h = h - 'a' + 10;
-
-	return h;
-}
-
 static bool parseTorrentHash(std::string& from, uint8_t* to)
 {
 	if (from.length() == 32)
@@ -49,30 +40,9 @@ static bool parseTorrentHash(std::string& from, uint8_t* to)
 			return true;
 		}
 	}
-	if (from.length() == 40)
+	if (from.length() == 40 && decodeHexa(from, to))
 	{
-		std::transform(from.begin(), from.end(), from.begin(), std::tolower);
-		bool hexaForm = true;
-		for (auto c : from)
-		{
-			if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'))
-				continue;
-			else
-				hexaForm = false;
-		}
-
-		if (hexaForm)
-		{
-			for (size_t i = 0; i < 20; i++)
-			{
-				uint8_t f = fromHexa(from[i * 2]);
-				uint8_t s = fromHexa(from[i * 2 + 1]);
-
-				to[i] = (f << 4) + s;
-			}
-
-			return true;
-		}
+		return true;
 	}
 
 	return false;

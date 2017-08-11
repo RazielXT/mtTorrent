@@ -1,8 +1,8 @@
 #include "HttpTrackerComm.h"
-#include "BencodeParser.h"
-#include "PacketHelper.h"
+#include "utils/BencodeParser.h"
+#include "utils/PacketHelper.h"
 #include "Configuration.h"
-#include "UrlEncoding.h"
+#include "utils/UrlEncoding.h"
 
 
 #define TRACKER_LOG(x) WRITE_LOG("HTTP tracker " << info.hostname << " " << x)
@@ -102,7 +102,7 @@ DataBuffer mtt::HttpTrackerComm::createAnnounceRequest(std::string host, std::st
 	builder << "&peer_id=" << UrlEncode(mtt::config::internal.hashId, 20);
 	builder << "&port=" << std::to_string(mtt::config::external.listenPort);
 	builder << "&uploaded=0&downloaded=0&left=" << std::to_string(torrent->info.fullSize);
-	builder << "&numwant=" << std::to_string(mtt::config::external.maxPeersPerRequest);
+	builder << "&numwant=" << std::to_string(mtt::config::internal.maxPeersPerTrackerRequest);
 	builder << "&compact=1&no_peer_id=0&key=" << std::to_string(mtt::config::internal.key);
 	builder << "&event=started HTTP/1.0\r\n";
 	builder << "User-Agent: " << MT_NAME << "\r\n";

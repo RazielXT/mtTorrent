@@ -1,5 +1,5 @@
 #include "ExtensionProtocol.h"
-#include "PacketHelper.h"
+#include "utils/PacketHelper.h"
 #include "PeerMessage.h"
 #include "Configuration.h"
 

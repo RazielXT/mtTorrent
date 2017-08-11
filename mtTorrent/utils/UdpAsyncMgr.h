@@ -1,9 +1,7 @@
 #pragma once
 
-#include "Network.h"
-#include "UdpAsyncClient.h"
-
-using UdpConnectionCallback = std::function<bool(UdpConnection, DataBuffer*)>;
+#include "utils\Network.h"
+#include "UdpAsyncServer.h"
 
 class UdpAsyncMgr
 {
@@ -11,7 +9,6 @@ public:
 
 	UdpAsyncMgr(boost::asio::io_service& io);
 
-	void setImplicitPort(uint16_t port);
 	void listen(uint16_t port, UdpConnectionCallback received);
 
 	UdpConnection create(std::string& host, std::string& port);
@@ -25,7 +22,7 @@ private:
 	{
 		UdpConnection client;
 		DataBuffer writeData;
-		uint8_t writeRetries = 0;
+		uint8_t tryCount = 0;
 		UdpConnectionCallback onResponse;
 
 		std::shared_ptr<boost::asio::deadline_timer> timeoutTimer;
@@ -37,12 +34,12 @@ private:
 	void addPendingResponse(DataBuffer& data, UdpConnection target, UdpConnectionCallback response);
 	UdpConnection findPendingConnection(UdpConnection);
 
-	uint16_t implicitPort = 0;
-
 	void checkTimeout(std::shared_ptr<ResponseRetryInfo>);
 	void onUdpReceive(UdpConnection, DataBuffer&);
 	void onUdpClose(UdpConnection);
 	UdpConnectionCallback onReceive;
+
+	std::shared_ptr<UdpAsyncServer> listener;
 
 	boost::asio::io_service& io;
 };

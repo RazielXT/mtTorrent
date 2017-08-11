@@ -1,14 +1,14 @@
 #include "Test.h"
-#include "BencodeParser.h"
-#include "ServiceThreadpool.h"
+#include "utils/BencodeParser.h"
+#include "utils/ServiceThreadpool.h"
 #include "Configuration.h"
 #include "MetadataReconstruction.h"
-#include "UdpAsyncClient.h"
-#include "utils\Base32.h"
-#include "PacketHelper.h"
+#include "utils/UdpAsyncClient.h"
+#include "utils/Base32.h"
+#include "utils/PacketHelper.h"
 #include "TrackerManager.h"
 #include "Storage.h"
-#include "TcpAsyncServer.h"
+#include "utils/TcpAsyncServer.h"
 
 using namespace mtt;
 

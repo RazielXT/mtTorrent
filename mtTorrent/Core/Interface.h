@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
-#include "Network.h"
+#include "utils\Network.h"
 #include "Logging.h"
 
 #define MT_NAME "mtTorrent 0.5"

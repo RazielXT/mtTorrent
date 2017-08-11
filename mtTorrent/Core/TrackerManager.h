@@ -1,9 +1,9 @@
 #pragma once
 
-#include "BencodeParser.h"
+#include "utils/BencodeParser.h"
+#include "utils/ServiceThreadpool.h"
 #include "PeerCommunication.h"
 #include "UdpTrackerComm.h"
-#include "ServiceThreadpool.h"
 
 namespace mtt
 {

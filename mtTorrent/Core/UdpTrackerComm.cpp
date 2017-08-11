@@ -1,8 +1,8 @@
 #include "UdpTrackerComm.h"
-#include "PacketHelper.h"
-#include "Network.h"
-#include <iostream>
+#include "utils/PacketHelper.h"
+#include "utils/Network.h"
 #include "Configuration.h"
+#include "Logging.h"
 
 #define TRACKER_LOG(x) WRITE_LOG("UDP Tracker " << info.hostname << " " << x)
 
@@ -96,7 +96,7 @@ DataBuffer UdpTrackerComm::createAnnounceRequest()
 	packet.add32(0);
 
 	packet.add32(mtt::config::internal.key);
-	packet.add32(mtt::config::external.maxPeersPerRequest);
+	packet.add32(mtt::config::internal.maxPeersPerTrackerRequest);
 	packet.add32(mtt::config::external.listenPort);
 	packet.add16(0);
 

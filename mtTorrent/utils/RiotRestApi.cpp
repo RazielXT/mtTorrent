@@ -1,7 +1,7 @@
 #pragma once
 
 #include "RiotRestApi.h"
-#include "Network.h"
+#include "utils\Network.h"
 #include <fstream>
 
 std::string tabs;

@@ -11,216 +11,216 @@
     <Filter Include="Source Files\Core\Torrent">
       <UniqueIdentifier>{913e770b-8b3a-45b7-aa70-a9db2c8abc47}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Core\Torrent\Download">
-      <UniqueIdentifier>{1bd05d52-d5e4-41d5-adc5-9252f5314b8c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Core\Torrent\Protocol">
-      <UniqueIdentifier>{fc624ad9-2e00-45a6-b029-64de25ae3d7b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Utils">
       <UniqueIdentifier>{8c576c55-78ce-47ad-97d2-3968987cb6c6}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Core\Torrent\Dht">
       <UniqueIdentifier>{2be78120-b9ea-4798-81cf-9059ab6bc814}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Core\Proposal">
-      <UniqueIdentifier>{f699ff89-bf4b-4991-84c0-809ff9af92c1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Core\Torrent\Tracker">
       <UniqueIdentifier>{0c6791af-c20e-4aab-8674-a5965e4acb33}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Core\Torrent\Peer">
+      <UniqueIdentifier>{f699ff89-bf4b-4991-84c0-809ff9af92c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Core\Torrent\Peer\Protocol">
+      <UniqueIdentifier>{fc624ad9-2e00-45a6-b029-64de25ae3d7b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Core\Torrent\Files">
+      <UniqueIdentifier>{1bd05d52-d5e4-41d5-adc5-9252f5314b8c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Core\Torrent\Control">
+      <UniqueIdentifier>{e067254d-f095-4c48-b4c0-e3205484075e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Core\General">
+      <UniqueIdentifier>{7854d554-0259-41b2-825f-836e7e52140a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="Core\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ExtensionProtocol.cpp">
-      <Filter>Source Files\Core\Torrent\Protocol</Filter>
+    <ClCompile Include="Core\ExtensionProtocol.cpp">
+      <Filter>Source Files\Core\Torrent\Peer\Protocol</Filter>
     </ClCompile>
-    <ClCompile Include="PeerMessage.cpp">
-      <Filter>Source Files\Core\Torrent\Protocol</Filter>
+    <ClCompile Include="Core\PeerMessage.cpp">
+      <Filter>Source Files\Core\Torrent\Peer\Protocol</Filter>
     </ClCompile>
-    <ClCompile Include="Storage.cpp">
-      <Filter>Source Files\Core\Torrent\Download</Filter>
+    <ClCompile Include="Core\Storage.cpp">
+      <Filter>Source Files\Core\Torrent\Files</Filter>
     </ClCompile>
-    <ClCompile Include="BencodeParser.cpp">
-      <Filter>Source Files\Utils</Filter>
+    <ClCompile Include="Core\MetadataReconstruction.cpp">
+      <Filter>Source Files\Core\Torrent\Peer</Filter>
     </ClCompile>
-    <ClCompile Include="TcpAsyncStream.cpp">
-      <Filter>Source Files\Utils</Filter>
+    <ClCompile Include="Core\PeerCommunication.cpp">
+      <Filter>Source Files\Core\Torrent\Peer</Filter>
     </ClCompile>
-    <ClCompile Include="Network.cpp">
-      <Filter>Source Files\Utils</Filter>
+    <ClCompile Include="Core\HttpTrackerComm.cpp">
+      <Filter>Source Files\Core\Torrent\Tracker</Filter>
     </ClCompile>
-    <ClCompile Include="RiotRestApi.cpp">
-      <Filter>Source Files\Utils</Filter>
+    <ClCompile Include="Core\UdpTrackerComm.cpp">
+      <Filter>Source Files\Core\Torrent\Tracker</Filter>
     </ClCompile>
-    <ClCompile Include="TcpAsyncServer.cpp">
-      <Filter>Source Files\Utils</Filter>
+    <ClCompile Include="Core\TrackerManager.cpp">
+      <Filter>Source Files\Core\Torrent\Tracker</Filter>
     </ClCompile>
-    <ClCompile Include="PiecesProgress.cpp">
-      <Filter>Source Files\Core\Proposal</Filter>
+    <ClCompile Include="Core\Dht\Communication.cpp">
+      <Filter>Source Files\Core\Torrent\Dht</Filter>
     </ClCompile>
-    <ClCompile Include="Configuration.cpp">
-      <Filter>Source Files\Core\Proposal</Filter>
+    <ClCompile Include="Core\Dht\Table.cpp">
+      <Filter>Source Files\Core\Torrent\Dht</Filter>
     </ClCompile>
-    <ClCompile Include="Test.cpp">
-      <Filter>Source Files\Utils</Filter>
+    <ClCompile Include="Core\Dht\Query.cpp">
+      <Filter>Source Files\Core\Torrent\Dht</Filter>
     </ClCompile>
-    <ClCompile Include="ServiceThreadpool.cpp">
-      <Filter>Source Files\Core\Proposal</Filter>
+    <ClCompile Include="Core\Test.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MetadataReconstruction.cpp">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClCompile>
-    <ClCompile Include="UdpAsyncClient.cpp">
-      <Filter>Source Files\Utils</Filter>
+    <ClCompile Include="Core\PiecesProgress.cpp">
+      <Filter>Source Files\Core\Torrent\Files</Filter>
     </ClCompile>
     <ClCompile Include="utils\Base32.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="Interface.cpp">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClCompile>
-    <ClCompile Include="PeerCommunication.cpp">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClCompile>
-    <ClCompile Include="Logging.cpp">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClCompile>
-    <ClCompile Include="HttpTrackerComm.cpp">
-      <Filter>Source Files\Core\Torrent\Tracker</Filter>
-    </ClCompile>
-    <ClCompile Include="UdpTrackerComm.cpp">
-      <Filter>Source Files\Core\Torrent\Tracker</Filter>
-    </ClCompile>
-    <ClCompile Include="TrackerManager.cpp">
-      <Filter>Source Files\Core\Torrent\Tracker</Filter>
-    </ClCompile>
-    <ClCompile Include="UrlEncoding.cpp">
+    <ClCompile Include="utils\BencodeParser.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="Dht\Communication.cpp">
-      <Filter>Source Files\Core\Torrent\Dht</Filter>
+    <ClCompile Include="utils\HexEncoding.cpp">
+      <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="Dht\Table.cpp">
-      <Filter>Source Files\Core\Torrent\Dht</Filter>
+    <ClCompile Include="utils\Network.cpp">
+      <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="Dht\Query.cpp">
-      <Filter>Source Files\Core\Torrent\Dht</Filter>
+    <ClCompile Include="utils\RiotRestApi.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\ServiceThreadpool.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\TcpAsyncServer.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\TcpAsyncStream.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\UdpAsyncClient.cpp">
+      <Filter>Source Files\Utils</Filter>
     </ClCompile>
     <ClCompile Include="utils\UdpAsyncMgr.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="utils\UdpAsyncServer.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\UrlEncoding.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Configuration.cpp">
+      <Filter>Source Files\Core\General</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Interface.cpp">
+      <Filter>Source Files\Core\General</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Logging.cpp">
+      <Filter>Source Files\Core\General</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="PacketHelper.h">
-      <Filter>Source Files\Utils</Filter>
+    <ClInclude Include="Core\Storage.h">
+      <Filter>Source Files\Core\Torrent\Files</Filter>
     </ClInclude>
-    <ClInclude Include="Storage.h">
-      <Filter>Source Files\Core\Torrent\Download</Filter>
+    <ClInclude Include="Core\PeerMessage.h">
+      <Filter>Source Files\Core\Torrent\Peer\Protocol</Filter>
     </ClInclude>
-    <ClInclude Include="TcpAsyncStream.h">
-      <Filter>Source Files\Utils</Filter>
+    <ClInclude Include="Core\ExtensionProtocol.h">
+      <Filter>Source Files\Core\Torrent\Peer\Protocol</Filter>
     </ClInclude>
-    <ClInclude Include="PeerMessage.h">
-      <Filter>Source Files\Core\Torrent\Protocol</Filter>
+    <ClInclude Include="Core\IPeerListener.h">
+      <Filter>Source Files\Core\Torrent\Peer</Filter>
     </ClInclude>
-    <ClInclude Include="Network.h">
-      <Filter>Source Files\Utils</Filter>
+    <ClInclude Include="Core\MetadataReconstruction.h">
+      <Filter>Source Files\Core\Torrent\Peer</Filter>
     </ClInclude>
-    <ClInclude Include="BencodeParser.h">
-      <Filter>Source Files\Utils</Filter>
+    <ClInclude Include="Core\PeerCommunication.h">
+      <Filter>Source Files\Core\Torrent\Peer</Filter>
     </ClInclude>
-    <ClInclude Include="ExtensionProtocol.h">
-      <Filter>Source Files\Core\Torrent\Protocol</Filter>
+    <ClInclude Include="Core\TrackerManager.h">
+      <Filter>Source Files\Core\Torrent\Tracker</Filter>
     </ClInclude>
-    <ClInclude Include="RiotRestApi.h">
-      <Filter>Source Files\Utils</Filter>
+    <ClInclude Include="Core\HttpTrackerComm.h">
+      <Filter>Source Files\Core\Torrent\Tracker</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\UdpTrackerComm.h">
+      <Filter>Source Files\Core\Torrent\Tracker</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\ITracker.h">
+      <Filter>Source Files\Core\Torrent\Tracker</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Dht\Communication.h">
+      <Filter>Source Files\Core\Torrent\Dht</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Dht\Table.h">
+      <Filter>Source Files\Core\Torrent\Dht</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Dht\Query.h">
+      <Filter>Source Files\Core\Torrent\Dht</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\PiecesProgress.h">
+      <Filter>Source Files\Core\Torrent\Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\PeerMgr.h">
+      <Filter>Source Files\Core\Torrent\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Scheduler.h">
+      <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClInclude>
     <ClInclude Include="utils\Base32.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="TcpAsyncServer.h">
+    <ClInclude Include="utils\BencodeParser.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Scheduler.h">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClInclude>
-    <ClInclude Include="DhtControl.h">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClInclude>
-    <ClInclude Include="Configuration.h">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClInclude>
-    <ClInclude Include="IPeerListener.h">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClInclude>
-    <ClInclude Include="ServiceThreadpool.h">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClInclude>
-    <ClInclude Include="PiecesProgress.h">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClInclude>
-    <ClInclude Include="Test.h">
+    <ClInclude Include="utils\HexEncoding.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="MetadataReconstruction.h">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClInclude>
-    <ClInclude Include="UdpAsyncClient.h">
+    <ClInclude Include="utils\Network.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Interface.h">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClInclude>
-    <ClInclude Include="PeerCommunication.h">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClInclude>
-    <ClInclude Include="PeerMgr.h">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClInclude>
-    <ClInclude Include="Interface.h" />
-    <ClInclude Include="Interface.h" />
-    <ClInclude Include="Interface.h">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClInclude>
-    <ClInclude Include="Logging.h">
-      <Filter>Source Files\Core\Proposal</Filter>
-    </ClInclude>
-    <ClInclude Include="Interface.h" />
-    <ClInclude Include="TrackerManager.h">
-      <Filter>Source Files\Core\Torrent\Tracker</Filter>
-    </ClInclude>
-    <ClInclude Include="HttpTrackerComm.h">
-      <Filter>Source Files\Core\Torrent\Tracker</Filter>
-    </ClInclude>
-    <ClInclude Include="UdpTrackerComm.h">
-      <Filter>Source Files\Core\Torrent\Tracker</Filter>
-    </ClInclude>
-    <ClInclude Include="ITracker.h">
-      <Filter>Source Files\Core\Torrent\Tracker</Filter>
-    </ClInclude>
-    <ClInclude Include="Interface.h" />
-    <ClInclude Include="Interface.h" />
-    <ClInclude Include="UrlEncoding.h">
+    <ClInclude Include="utils\PacketHelper.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Interface.h" />
-    <ClInclude Include="Interface.h" />
-    <ClInclude Include="Dht\Communication.h">
-      <Filter>Source Files\Core\Torrent\Dht</Filter>
+    <ClInclude Include="utils\RiotRestApi.h">
+      <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Dht\Table.h">
-      <Filter>Source Files\Core\Torrent\Dht</Filter>
+    <ClInclude Include="utils\ServiceThreadpool.h">
+      <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Interface.h" />
-    <ClInclude Include="Dht\Query.h">
-      <Filter>Source Files\Core\Torrent\Dht</Filter>
+    <ClInclude Include="utils\TcpAsyncServer.h">
+      <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Interface.h" />
+    <ClInclude Include="utils\TcpAsyncStream.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\UdpAsyncClient.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
     <ClInclude Include="utils\UdpAsyncMgr.h">
       <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\UdpAsyncServer.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\UrlEncoding.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Configuration.h">
+      <Filter>Source Files\Core\General</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Interface.h">
+      <Filter>Source Files\Core\General</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Logging.h">
+      <Filter>Source Files\Core\General</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

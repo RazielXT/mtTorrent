@@ -1,7 +1,6 @@
 #pragma once
-#include "BencodeParser.h"
-#include <mutex>
-#include "TcpAsyncStream.h"
+#include "utils/BencodeParser.h"
+#include "utils/TcpAsyncStream.h"
 
 namespace mtt
 {

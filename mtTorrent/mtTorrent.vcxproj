@@ -145,7 +145,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost64-1.60.0-vs2015\include\boost-1_60;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\include64;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost64-1.60.0-vs2015\include\boost-1_60;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\include64;$(ProjectDir)\Core;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -159,7 +159,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost_1_64_0;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\include64;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost_1_64_0;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\include64;$(ProjectDir);$(ProjectDir)\Core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PreprocessorDefinitions>STANDALONE;_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -203,7 +203,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost64-1.60.0-vs2015\include\boost-1_60;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\include64;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost64-1.60.0-vs2015\include\boost-1_60;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\include64;$(ProjectDir);$(ProjectDir)\Core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -221,7 +221,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost_1_64_0;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\include64;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost_1_64_0;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\include64;$(ProjectDir);$(ProjectDir)\Core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PreprocessorDefinitions>STANDALONE;_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -233,68 +233,71 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Configuration.cpp" />
-    <ClCompile Include="Dht\Communication.cpp" />
-    <ClCompile Include="Dht\Query.cpp" />
-    <ClCompile Include="Dht\Table.cpp" />
-    <ClCompile Include="ExtensionProtocol.cpp" />
-    <ClCompile Include="HttpTrackerComm.cpp" />
-    <ClCompile Include="Interface.cpp" />
-    <ClCompile Include="Logging.cpp" />
-    <ClCompile Include="PeerCommunication.cpp" />
-    <ClCompile Include="PiecesProgress.cpp" />
-    <ClCompile Include="ServiceThreadpool.cpp" />
-    <ClCompile Include="TcpAsyncServer.cpp" />
-    <ClCompile Include="Network.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="PeerMessage.cpp" />
-    <ClCompile Include="RiotRestApi.cpp" />
-    <ClCompile Include="Storage.cpp" />
-    <ClCompile Include="TcpAsyncStream.cpp" />
-    <ClCompile Include="BencodeParser.cpp" />
-    <ClCompile Include="Test.cpp" />
-    <ClCompile Include="MetadataReconstruction.cpp" />
-    <ClCompile Include="TrackerManager.cpp" />
-    <ClCompile Include="UdpAsyncClient.cpp" />
-    <ClCompile Include="UdpTrackerComm.cpp" />
-    <ClCompile Include="UrlEncoding.cpp" />
+    <ClCompile Include="Core\Configuration.cpp" />
+    <ClCompile Include="Core\Dht\Communication.cpp" />
+    <ClCompile Include="Core\Dht\Query.cpp" />
+    <ClCompile Include="Core\Dht\Table.cpp" />
+    <ClCompile Include="Core\ExtensionProtocol.cpp" />
+    <ClCompile Include="Core\HttpTrackerComm.cpp" />
+    <ClCompile Include="Core\Interface.cpp" />
+    <ClCompile Include="Core\Logging.cpp" />
+    <ClCompile Include="Core\PeerCommunication.cpp" />
+    <ClCompile Include="Core\PiecesProgress.cpp" />
+    <ClCompile Include="Core\main.cpp" />
+    <ClCompile Include="Core\PeerMessage.cpp" />
+    <ClCompile Include="Core\Storage.cpp" />
+    <ClCompile Include="Core\Test.cpp" />
+    <ClCompile Include="Core\MetadataReconstruction.cpp" />
+    <ClCompile Include="Core\TrackerManager.cpp" />
+    <ClCompile Include="Core\UdpTrackerComm.cpp" />
     <ClCompile Include="utils\Base32.cpp" />
+    <ClCompile Include="utils\BencodeParser.cpp" />
+    <ClCompile Include="utils\HexEncoding.cpp" />
+    <ClCompile Include="utils\Network.cpp" />
+    <ClCompile Include="utils\RiotRestApi.cpp" />
+    <ClCompile Include="utils\ServiceThreadpool.cpp" />
+    <ClCompile Include="utils\TcpAsyncServer.cpp" />
+    <ClCompile Include="utils\TcpAsyncStream.cpp" />
+    <ClCompile Include="utils\UdpAsyncClient.cpp" />
     <ClCompile Include="utils\UdpAsyncMgr.cpp" />
+    <ClCompile Include="utils\UdpAsyncServer.cpp" />
+    <ClCompile Include="utils\UrlEncoding.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Configuration.h" />
-    <ClInclude Include="DhtControl.h" />
-    <ClInclude Include="Dht\Communication.h" />
-    <ClInclude Include="Dht\Query.h" />
-    <ClInclude Include="Dht\Table.h" />
-    <ClInclude Include="ExtensionProtocol.h" />
-    <ClInclude Include="Interface.h" />
-    <ClInclude Include="IPeerListener.h" />
-    <ClInclude Include="ITracker.h" />
-    <ClInclude Include="Logging.h" />
-    <ClInclude Include="PeerCommunication.h" />
-    <ClInclude Include="PeerMgr.h" />
-    <ClInclude Include="PiecesProgress.h" />
-    <ClInclude Include="Scheduler.h" />
-    <ClInclude Include="ServiceThreadpool.h" />
-    <ClInclude Include="TcpAsyncServer.h" />
-    <ClInclude Include="HttpTrackerComm.h" />
-    <ClInclude Include="Interface.h" />
-    <ClInclude Include="Network.h" />
-    <ClInclude Include="PacketHelper.h" />
-    <ClInclude Include="PeerMessage.h" />
-    <ClInclude Include="RiotRestApi.h" />
-    <ClInclude Include="Storage.h" />
-    <ClInclude Include="TcpAsyncStream.h" />
-    <ClInclude Include="BencodeParser.h" />
-    <ClInclude Include="Test.h" />
-    <ClInclude Include="MetadataReconstruction.h" />
-    <ClInclude Include="TrackerManager.h" />
-    <ClInclude Include="UdpAsyncClient.h" />
-    <ClInclude Include="UdpTrackerComm.h" />
-    <ClInclude Include="UrlEncoding.h" />
+    <ClInclude Include="Core\Configuration.h" />
+    <ClInclude Include="Core\Dht\Communication.h" />
+    <ClInclude Include="Core\Dht\Query.h" />
+    <ClInclude Include="Core\Dht\Table.h" />
+    <ClInclude Include="Core\ExtensionProtocol.h" />
+    <ClInclude Include="Core\Interface.h" />
+    <ClInclude Include="Core\IPeerListener.h" />
+    <ClInclude Include="Core\ITracker.h" />
+    <ClInclude Include="Core\Logging.h" />
+    <ClInclude Include="Core\PeerCommunication.h" />
+    <ClInclude Include="Core\PeerMgr.h" />
+    <ClInclude Include="Core\PiecesProgress.h" />
+    <ClInclude Include="Core\Scheduler.h" />
+    <ClInclude Include="Core\HttpTrackerComm.h" />
+    <ClInclude Include="Core\Interface.h" />
+    <ClInclude Include="Core\PeerMessage.h" />
+    <ClInclude Include="Core\Storage.h" />
+    <ClInclude Include="Core\Test.h" />
+    <ClInclude Include="Core\MetadataReconstruction.h" />
+    <ClInclude Include="Core\TrackerManager.h" />
+    <ClInclude Include="Core\UdpTrackerComm.h" />
     <ClInclude Include="utils\Base32.h" />
+    <ClInclude Include="utils\BencodeParser.h" />
+    <ClInclude Include="utils\HexEncoding.h" />
+    <ClInclude Include="utils\Network.h" />
+    <ClInclude Include="utils\PacketHelper.h" />
+    <ClInclude Include="utils\RiotRestApi.h" />
+    <ClInclude Include="utils\ServiceThreadpool.h" />
+    <ClInclude Include="utils\TcpAsyncServer.h" />
+    <ClInclude Include="utils\TcpAsyncStream.h" />
+    <ClInclude Include="utils\UdpAsyncClient.h" />
     <ClInclude Include="utils\UdpAsyncMgr.h" />
+    <ClInclude Include="utils\UdpAsyncServer.h" />
+    <ClInclude Include="utils\UrlEncoding.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,7 +1,7 @@
 #include "UdpAsyncClient.h"
 #include "Logging.h"
 
-#define UDP_LOG(x) WRITE_LOG("UDP: " << target_endpoint.address().to_string() << " " << x)
+#define UDP_LOG(x) WRITE_LOG("UDP: " << getName() << " " << x)
 
 UdpAsyncClient::UdpAsyncClient(boost::asio::io_service& io) : io_service(io), socket(io)
 {
@@ -36,6 +36,13 @@ void UdpAsyncClient::setAddress(const std::string& hostname, const std::string& 
 	resolver->async_resolve(query, std::bind(&UdpAsyncClient::handle_resolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2, resolver));
 }
 
+void UdpAsyncClient::setAddress(udp::endpoint& addr)
+{
+	target_endpoint = addr;
+
+	state = Initialized;
+}
+
 void UdpAsyncClient::setImplicitPort(uint16_t port)
 {
 	implicitPort = port;
@@ -49,10 +56,10 @@ void UdpAsyncClient::close()
 	io_service.post(std::bind(&UdpAsyncClient::do_close, shared_from_this()));
 }
 
-bool UdpAsyncClient::write(const DataBuffer& data)
+bool UdpAsyncClient::write(const DataBuffer& data, bool listenToResponse)
 {
-	if (listening)
-		return false;
+	if (!listen)
+		listenToResponse = listen;
 
 	io_service.post(std::bind(&UdpAsyncClient::do_write, this, data));
 
@@ -82,6 +89,7 @@ void UdpAsyncClient::listenToResponse()
 	if (state != Connected)
 		return;
 
+	listen = false;
 	listening = true;
 	responseBuffer.resize(2 * 1024);
 
@@ -187,7 +195,7 @@ void UdpAsyncClient::handle_write(const boost::system::error_code& error, size_t
 
 	if (!error)
 	{
-		if(!listening)
+		if(listen && !listening)
 			listenToResponse();
 	}
 	else
@@ -214,5 +222,5 @@ void UdpAsyncClient::handle_receive(const boost::system::error_code& error, std:
 
 std::string UdpAsyncClient::getName()
 {
-	return target_endpoint.address().to_string();
+	return target_endpoint.address().to_string() + ":" + std::to_string(target_endpoint.port());
 }

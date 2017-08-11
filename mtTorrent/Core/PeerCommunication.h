@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
-#include "TcpAsyncStream.h"
-#include "BencodeParser.h"
+#include "utils/TcpAsyncStream.h"
+#include "utils/BencodeParser.h"
 #include "PeerMessage.h"
 #include "ExtensionProtocol.h"
 #include "IPeerListener.h"

@@ -1,6 +1,6 @@
 #include "Dht/Query.h"
-#include "BencodeParser.h"
-#include "PacketHelper.h"
+#include "utils/BencodeParser.h"
+#include "utils/PacketHelper.h"
 #include "Configuration.h"
 
 #define DHT_LOG(x) WRITE_LOG("DHT: " << x)

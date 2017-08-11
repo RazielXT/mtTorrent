@@ -1,5 +1,5 @@
 #include "PeerCommunication.h"
-#include "PacketHelper.h"
+#include "utils/PacketHelper.h"
 #include "Configuration.h"
 
 #define BT_LOG(x) {} WRITE_LOG("PEER " << stream->getName() << ": " << x)
