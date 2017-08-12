@@ -43,9 +43,9 @@ void UdpAsyncWriter::setAddress(udp::endpoint& addr)
 	state = Initialized;
 }
 
-void UdpAsyncWriter::setImplicitPort(uint16_t port)
+void UdpAsyncWriter::setBindPort(uint16_t port)
 {
-	implicitPort = port;
+	bindPort = port;
 }
 
 void UdpAsyncWriter::close()
@@ -150,18 +150,17 @@ void UdpAsyncWriter::send_message()
 {
 	if (state == Initialized)
 	{
-		if (implicitPort && !socket.is_open())
+		if (bindPort && !socket.is_open())
 		{
 			boost::system::error_code ec;
 
 			socket.open(target_endpoint.protocol(), ec);
 			socket.set_option(boost::asio::socket_base::reuse_address(true),ec);
-			socket.bind(udp::endpoint(target_endpoint.protocol(), implicitPort), ec);
+			socket.bind(udp::endpoint(target_endpoint.protocol(), bindPort), ec);
 
 			if (ec)
 			{
 				UDP_LOG("port bind error: " << ec.message());
-				return;
 			}
 		}
 

@@ -1,6 +1,7 @@
 #include "Dht/Communication.h"
+#include "Configuration.h"
 
-mtt::dht::Communication::Communication(ResultsListener& l) : udpMgr(service.io), listener(l)
+mtt::dht::Communication::Communication(ResultsListener& l) : udpMgr(service.io, mtt::config::external.listenPortUdp), listener(l)
 {
 	service.start(3);
 	udpMgr.listen(std::bind(&Communication::onNewUdpPacket, this, std::placeholders::_1, std::placeholders::_2));

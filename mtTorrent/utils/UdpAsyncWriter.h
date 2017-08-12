@@ -25,7 +25,7 @@ public:
 	void setAddress(udp::endpoint& addr);
 	void setAddress(const std::string& hostname, const std::string& port);
 	void setAddress(const std::string& hostname, const std::string& port, bool ipv6);
-	void setImplicitPort(uint16_t port);
+	void setBindPort(uint16_t port);
 
 	std::string getName();
 	udp::endpoint& getEndpoint();
@@ -55,7 +55,7 @@ protected:
 	void send_message();
 	void handle_write(const boost::system::error_code& error, size_t sz);
 
-	uint16_t implicitPort = 0;
+	uint16_t bindPort = 0;
 
 	udp::endpoint target_endpoint;
 	udp::socket socket;

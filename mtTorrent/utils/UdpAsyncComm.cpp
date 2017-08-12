@@ -4,13 +4,13 @@
 
 #define UDP_LOG(x) WRITE_LOG("UDP MGR: " << x)
 
-UdpAsyncComm::UdpAsyncComm(boost::asio::io_service& io_service) : io(io_service), udpPort(mtt::config::external.listenPortUdp)
+UdpAsyncComm::UdpAsyncComm(boost::asio::io_service& io_service, uint16_t port) : io(io_service), bindPort(port)
 {
 }
 
 void UdpAsyncComm::listen(UdpResponseCallback receive)
 {
-	listener = std::make_shared<UdpAsyncReceiver>(io, udpPort, false);
+	listener = std::make_shared<UdpAsyncReceiver>(io, bindPort, false);
 	listener->receiveCallback = std::bind(&UdpAsyncComm::onUdpReceive, this, std::placeholders::_1, std::placeholders::_2);
 	listener->listen();
 
@@ -21,9 +21,7 @@ UdpRequest UdpAsyncComm::create(std::string& host, std::string& port)
 {
 	UdpRequest c = std::make_shared<UdpAsyncWriter>(io);
 	c->setAddress(host, port);
-
-	if (udpPort)
-		c->setImplicitPort(udpPort);
+	c->setBindPort(bindPort);
 
 	return c;
 }
@@ -35,10 +33,8 @@ UdpRequest UdpAsyncComm::sendMessage(DataBuffer& data, std::string& host, std::s
 	if (response)
 		addPendingResponse(data, c, response);
 
-	if (udpPort)
-		c->setImplicitPort(udpPort);
-
 	c->setAddress(host, port);
+	c->setBindPort(bindPort);
 	c->write(data);
 
 	return c;
@@ -48,9 +44,6 @@ void UdpAsyncComm::sendMessage(DataBuffer& data, UdpRequest c, UdpResponseCallba
 {
 	if (response)
 		addPendingResponse(data, c, response);
-
-	if (udpPort)
-		c->setImplicitPort(udpPort);
 
 	c->write(data);
 }
@@ -62,10 +55,8 @@ UdpRequest UdpAsyncComm::sendMessage(DataBuffer& data, Addr& addr, UdpResponseCa
 	if(response)
 		addPendingResponse(data, c, response);
 
-	if (udpPort)
-		c->setImplicitPort(udpPort);
-
 	c->setAddress(addr);
+	c->setBindPort(bindPort);
 	c->write(data);
 
 	return c;

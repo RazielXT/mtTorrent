@@ -7,7 +7,7 @@ class UdpAsyncComm
 {
 public:
 
-	UdpAsyncComm(boost::asio::io_service& io);
+	UdpAsyncComm(boost::asio::io_service& io, uint16_t port);
 
 	void listen(UdpResponseCallback received);
 
@@ -39,7 +39,7 @@ private:
 	UdpResponseCallback onUnhandledReceive;
 
 	std::shared_ptr<UdpAsyncReceiver> listener;
-	uint16_t& udpPort;
+	uint16_t bindPort;
 
 	boost::asio::io_service& io;
 };

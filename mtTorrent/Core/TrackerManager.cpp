@@ -1,6 +1,7 @@
 #include "TrackerManager.h"
 #include "HttpTrackerComm.h"
 #include "UdpTrackerComm.h"
+#include "Configuration.h"
 
 mtt::TrackerManager::TrackerManager()
 {
@@ -107,7 +108,7 @@ void mtt::TrackerManager::TorrentTrackers::addTracker(std::string addr)
 	}
 }
 
-mtt::TrackerManager::TorrentTrackers::TorrentTrackers(boost::asio::io_service& service, TrackerListener& l) : io(service), listener(l), udpMgr(service)
+mtt::TrackerManager::TorrentTrackers::TorrentTrackers(boost::asio::io_service& service, TrackerListener& l) : io(service), listener(l), udpMgr(service, mtt::config::external.listenPortUdp)
 {
 }
 
