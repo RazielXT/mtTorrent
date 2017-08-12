@@ -112,16 +112,23 @@ bool mtt::PeerInfo::supportsDht()
 	return (protocol[8] & 0x80) != 0;
 }
 
-PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, boost::asio::io_service& io_service, std::shared_ptr<TcpAsyncStream> s) : torrent(t), listener(l)
+PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, std::shared_ptr<TcpAsyncStream> s) : torrent(t), listener(l)
 {
-	if(!s)
-		stream = std::make_shared<TcpAsyncStream>(io_service);
-	else
-	{
-		stream = s;
-		state.action = PeerCommunicationState::Connected;
-	}
+	stream = s;
+	state.action = PeerCommunicationState::Connected;
+	
+	initializeCallbacks();
+	dataReceived();
+}
 
+PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, boost::asio::io_service& io_service) : torrent(t), listener(l)
+{
+	stream = std::make_shared<TcpAsyncStream>(io_service);
+	initializeCallbacks();
+}
+
+void mtt::PeerCommunication::initializeCallbacks()
+{
 	stream->onConnectCallback = std::bind(&PeerCommunication::connectionOpened, this);
 	stream->onCloseCallback = std::bind(&PeerCommunication::connectionClosed, this);
 	stream->onReceiveCallback = std::bind(&PeerCommunication::dataReceived, this);
@@ -129,9 +136,6 @@ PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, boost::as
 	ext.pex.onPexMessage = std::bind(&mtt::IPeerListener::pexReceived, &listener, this, std::placeholders::_1);
 	ext.utm.onUtMetadataMessage = std::bind(&mtt::IPeerListener::metadataPieceReceived, &listener, this, std::placeholders::_1);
 	ext.stream = stream;
-
-	if (s)
-		dataReceived();
 }
 
 void PeerCommunication::sendHandshake(Addr& address)

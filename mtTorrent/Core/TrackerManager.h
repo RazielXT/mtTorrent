@@ -51,54 +51,44 @@ namespace mtt
 	{
 	public:
 
-		TrackerManager();
+		TrackerManager(TorrentPtr torrent, std::vector<std::string> trackers, TrackerListener& listener, boost::asio::io_service& io, UdpAsyncComm& udp);
 
-		void add(TorrentPtr torrent, std::vector<std::string> trackers, TrackerListener& listener);
-
-		void start(TorrentPtr torrent);
-		void stop(TorrentPtr torrent);
+		void start();
+		void stop();
 
 	private:
 
-		struct TorrentTrackers
+		struct TrackerInfo
 		{
-			TorrentTrackers(boost::asio::io_service& io, TrackerListener& l);
+			std::shared_ptr<Tracker> comm;
+			std::shared_ptr<TrackerTimer> timer;
 
-			struct TrackerInfo
-			{
-				std::shared_ptr<Tracker> comm;
-				std::shared_ptr<TrackerTimer> timer;
+			std::string protocol;
+			std::string host;
+			std::string port;
+			bool httpFallback = false;
 
-				std::string protocol;
-				std::string host;
-				std::string port;
-				bool httpFallback = false;
+			bool httpFallbackUsed = false;
+			uint32_t retryCount = 0;
 
-				bool httpFallbackUsed = false;
-				uint32_t retryCount = 0;
-
-				TrackerStateInfo getStateInfo();
-			};
-			std::vector<TrackerInfo> trackers;
-			std::mutex trackersMutex;
-
-			void addTracker(std::string addr);
-			void start(TrackerInfo*);
-			void startNext();
-			void stopAll();
-			TrackerInfo* findTrackerInfo(Tracker*);
-			TrackerInfo* findTrackerInfo(std::string host);
-
-			TorrentPtr torrent;
-			boost::asio::io_service& io;
-			TrackerListener& listener;
-			UdpAsyncComm udpMgr;
-
-			void onAnnounce(AnnounceResponse&, Tracker*);
-			void onTrackerFail(Tracker*);			
+			TrackerStateInfo getStateInfo();
 		};
-		std::vector<std::shared_ptr<TorrentTrackers>> torrents;
+		std::vector<TrackerInfo> trackers;
+		std::mutex trackersMutex;
 
-		ServiceThreadpool service;
+		void addTracker(std::string addr);
+		void start(TrackerInfo*);
+		void startNext();
+		void stopAll();
+		TrackerInfo* findTrackerInfo(Tracker*);
+		TrackerInfo* findTrackerInfo(std::string host);
+
+		void onAnnounce(AnnounceResponse&, Tracker*);
+		void onTrackerFail(Tracker*);
+
+		TorrentPtr torrent;
+		boost::asio::io_service& io;
+		TrackerListener& listener;
+		UdpAsyncComm& udp;
 	};
 }

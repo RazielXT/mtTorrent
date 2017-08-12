@@ -3,8 +3,12 @@
 #include "UdpTrackerComm.h"
 #include "Configuration.h"
 
-mtt::TrackerManager::TrackerManager()
+mtt::TrackerManager::TrackerManager(TorrentPtr t, std::vector<std::string> tr, TrackerListener& l, boost::asio::io_service& ioService, UdpAsyncComm& udpMgr) : udp(udpMgr), io(ioService), listener(l), torrent(t)
 {
+	for (auto& t : tr)
+	{
+		addTracker(t);
+	}
 }
 
 std::string cutStringPart(std::string& source, DataBuffer endChars, int cutAdd)
@@ -28,64 +32,29 @@ std::string cutStringPart(std::string& source, DataBuffer endChars, int cutAdd)
 	return ret;
 }
 
-void mtt::TrackerManager::add(TorrentPtr torrent, std::vector<std::string> trackers, TrackerListener& listener)
+void mtt::TrackerManager::start()
 {
-	std::shared_ptr<TorrentTrackers> target;
-
-	for (auto& torrentTrackers : torrents)
+	for (size_t i = 0; i < 3 && i < trackers.size(); i++)
 	{
-		if (torrentTrackers->torrent == torrent)
-			target = torrentTrackers;
-	}
+		auto& t = trackers[i];
 
-	if (!target)
-	{
-		target = std::make_shared<TorrentTrackers>(service.io, listener);
-		target->torrent = torrent;
-		torrents.push_back(target);
-	}
-
-	for (auto& t : trackers)
-	{
-		target->addTracker(t);
-	}
-
-	service.adjust((uint32_t)torrents.size());
-}
-
-void mtt::TrackerManager::start(TorrentPtr torrent)
-{
-	for (auto& torrentTrackers : torrents)
-	{
-		if(torrentTrackers->torrent == torrent)
+		if (!t.comm)
 		{
-			for (size_t i = 0; i < 3 && i < torrentTrackers->trackers.size(); i++)
-			{
-				auto& t = torrentTrackers->trackers[i];
-
-				if (!t.comm)
-				{
-					torrentTrackers->start(&t);
-				}
-			}
+			start(&t);
 		}
 	}
 }
 
-void mtt::TrackerManager::stop(TorrentPtr torrent)
+void mtt::TrackerManager::stop()
 {
-	for (auto& torrentTrackers : torrents)
-	{
-		if (torrentTrackers->torrent == torrent)
-			torrentTrackers->stopAll();
-	}
+	stopAll();
 }
 
-void mtt::TrackerManager::TorrentTrackers::addTracker(std::string addr)
+void mtt::TrackerManager::addTracker(std::string addr)
 {
 	std::lock_guard<std::mutex> guard(trackersMutex);
 
-	TorrentTrackers::TrackerInfo info;
+	TrackerInfo info;
 
 	info.protocol = cutStringPart(addr, { ':' }, 2);
 	info.host = cutStringPart(addr, { ':', '/' }, 0);
@@ -108,11 +77,7 @@ void mtt::TrackerManager::TorrentTrackers::addTracker(std::string addr)
 	}
 }
 
-mtt::TrackerManager::TorrentTrackers::TorrentTrackers(boost::asio::io_service& service, TrackerListener& l) : io(service), listener(l), udpMgr(service, mtt::config::external.listenPortUdp)
-{
-}
-
-void mtt::TrackerManager::TorrentTrackers::onAnnounce(AnnounceResponse& resp, Tracker* t)
+void mtt::TrackerManager::onAnnounce(AnnounceResponse& resp, Tracker* t)
 {
 	std::lock_guard<std::mutex> guard(trackersMutex);
 
@@ -129,7 +94,7 @@ void mtt::TrackerManager::TorrentTrackers::onAnnounce(AnnounceResponse& resp, Tr
 	startNext();
 }
 
-void mtt::TrackerManager::TorrentTrackers::onTrackerFail(Tracker* t)
+void mtt::TrackerManager::onTrackerFail(Tracker* t)
 {
 	std::lock_guard<std::mutex> guard(trackersMutex);
 
@@ -161,10 +126,10 @@ void mtt::TrackerManager::TorrentTrackers::onTrackerFail(Tracker* t)
 	}
 }
 
-void mtt::TrackerManager::TorrentTrackers::start(TrackerInfo* tracker)
+void mtt::TrackerManager::start(TrackerInfo* tracker)
 {
 	if (tracker->protocol == "udp")
-		tracker->comm = std::make_shared<UdpTrackerComm>(udpMgr);
+		tracker->comm = std::make_shared<UdpTrackerComm>(udp);
 	else if (tracker->protocol == "http")
 		tracker->comm = std::make_shared<HttpTrackerComm>();
 	else
@@ -172,8 +137,8 @@ void mtt::TrackerManager::TorrentTrackers::start(TrackerInfo* tracker)
 
 	tracker->comm = std::make_shared<HttpTrackerComm>();
 
-	tracker->comm->onFail = std::bind(&TrackerManager::TorrentTrackers::onTrackerFail, this, tracker->comm.get());
-	tracker->comm->onAnnounceResult = std::bind(&TrackerManager::TorrentTrackers::onAnnounce, this, std::placeholders::_1, tracker->comm.get());
+	tracker->comm->onFail = std::bind(&TrackerManager::onTrackerFail, this, tracker->comm.get());
+	tracker->comm->onAnnounceResult = std::bind(&TrackerManager::onAnnounce, this, std::placeholders::_1, tracker->comm.get());
 
 	tracker->comm->init(tracker->host, tracker->port, io, torrent);
 	tracker->timer = TrackerTimer::create(io, std::bind(&Tracker::announce, tracker->comm.get()));
@@ -182,7 +147,7 @@ void mtt::TrackerManager::TorrentTrackers::start(TrackerInfo* tracker)
 	tracker->comm->announce();
 }
 
-void mtt::TrackerManager::TorrentTrackers::startNext()
+void mtt::TrackerManager::startNext()
 {
 	for (auto& tracker : trackers)
 	{
@@ -191,7 +156,7 @@ void mtt::TrackerManager::TorrentTrackers::startNext()
 	}
 }
 
-void mtt::TrackerManager::TorrentTrackers::stopAll()
+void mtt::TrackerManager::stopAll()
 {
 	std::lock_guard<std::mutex> guard(trackersMutex);
 
@@ -203,7 +168,7 @@ void mtt::TrackerManager::TorrentTrackers::stopAll()
 	}
 }
 
-mtt::TrackerManager::TorrentTrackers::TrackerInfo* mtt::TrackerManager::TorrentTrackers::findTrackerInfo(Tracker* t)
+mtt::TrackerManager::TrackerInfo* mtt::TrackerManager::findTrackerInfo(Tracker* t)
 {
 	for (auto& tracker : trackers)
 	{
@@ -214,7 +179,7 @@ mtt::TrackerManager::TorrentTrackers::TrackerInfo* mtt::TrackerManager::TorrentT
 	return nullptr;
 }
 
-mtt::TrackerStateInfo mtt::TrackerManager::TorrentTrackers::TrackerInfo::getStateInfo()
+mtt::TrackerStateInfo mtt::TrackerManager::TrackerInfo::getStateInfo()
 {
 	TrackerStateInfo out;
 	out.host = host;
@@ -231,7 +196,7 @@ mtt::TrackerStateInfo mtt::TrackerManager::TorrentTrackers::TrackerInfo::getStat
 	return out;
 }
 
-mtt::TrackerManager::TorrentTrackers::TrackerInfo* mtt::TrackerManager::TorrentTrackers::findTrackerInfo(std::string host)
+mtt::TrackerManager::TrackerInfo* mtt::TrackerManager::findTrackerInfo(std::string host)
 {
 	for (auto& tracker : trackers)
 	{

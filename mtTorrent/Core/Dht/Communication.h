@@ -16,7 +16,7 @@ namespace mtt
 			virtual void findingPeersFinished(uint8_t* hash, uint32_t count) = 0;
 		};
 
-		class Communication : public DhtListener
+		class Communication : public QueryListener
 		{
 		public:
 
@@ -34,6 +34,7 @@ namespace mtt
 
 			virtual uint32_t onFoundPeers(uint8_t* hash, std::vector<Addr>& values) override;
 			virtual void findingPeersFinished(uint8_t* hash, uint32_t count) override;
+
 			virtual UdpRequest sendMessage(Addr&, DataBuffer&, UdpResponseCallback response) override;
 			virtual UdpRequest sendMessage(std::string& host, std::string& port, DataBuffer&, UdpResponseCallback response) override;
 

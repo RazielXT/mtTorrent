@@ -229,9 +229,10 @@ void TorrentTest::testTrackers()
 	}
 	tListener;
 
-	mtt::TrackerManager trackers;
-	trackers.add(torrent, parsedTorrent.announceList, tListener);
-	trackers.start(torrent);
+	ServiceThreadpool service(2);
+	UdpAsyncComm udp(service.io, mtt::config::external.listenPortUdp);
+	mtt::TrackerManager trackers(torrent, parsedTorrent.announceList, tListener, service.io, udp);
+	trackers.start();
 
 	WAITFOR(!tListener.peers.empty());
 
@@ -376,7 +377,7 @@ void TorrentTest::testPeerListen()
 	listener.torrent = &torrent;
 	listener.storage = &storage;
 
-	PeerCommunication comm(torrent.info, listener, service.io, peerStream);
+	PeerCommunication comm(torrent.info, listener, peerStream);
 
 	listener.comm = &comm;
 

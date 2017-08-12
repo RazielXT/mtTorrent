@@ -6,7 +6,7 @@ namespace mtt
 {
 	namespace dht
 	{
-		class DhtListener
+		class QueryListener
 		{
 		public:
 
@@ -66,7 +66,7 @@ namespace mtt
 			{
 				~DhtQuery();
 
-				void start(uint8_t* hash, Table* table, DhtListener* dhtListener);
+				void start(uint8_t* hash, Table* table, QueryListener* dhtListener);
 				void stop();
 
 				bool finished();
@@ -92,7 +92,7 @@ namespace mtt
 				virtual bool onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request) = 0;
 
 				Table* table;
-				DhtListener* listener = nullptr;
+				QueryListener* listener = nullptr;
 			};
 
 			struct FindPeers : public DhtQuery, public std::enable_shared_from_this<FindPeers>
@@ -111,7 +111,7 @@ namespace mtt
 
 			struct FindNode : public DhtQuery, public std::enable_shared_from_this<FindNode>
 			{
-				void startOne(uint8_t* hash, Addr& addr, Table* table, DhtListener* dhtListener, boost::asio::io_service* serviceIo);
+				void startOne(uint8_t* hash, Addr& addr, Table* table, QueryListener* dhtListener, boost::asio::io_service* serviceIo);
 
 				uint32_t resultCount = 0;
 				
@@ -130,14 +130,14 @@ namespace mtt
 			{
 				~PingNodes();
 
-				void start(Addr& node, uint8_t bucketId, Table* table, DhtListener* dhtListener);
-				void start(std::vector<Addr>& nodes, uint8_t bucketId, Table* table, DhtListener* dhtListener);
+				void start(Addr& node, uint8_t bucketId, Table* table, QueryListener* dhtListener);
+				void start(std::vector<Addr>& nodes, uint8_t bucketId, Table* table, QueryListener* dhtListener);
 				void stop();
 
 			protected:
 
 				Table* table;
-				DhtListener* listener;
+				QueryListener* listener;
 				uint8_t bucketId;
 
 				uint32_t MaxSimultaneousRequests = 5;

@@ -46,7 +46,8 @@ namespace mtt
 	{
 	public:
 
-		PeerCommunication(TorrentInfo& torrent, IPeerListener& listener, boost::asio::io_service& io_service, std::shared_ptr<TcpAsyncStream> stream = nullptr);
+		PeerCommunication(TorrentInfo& torrent, IPeerListener& listener, boost::asio::io_service& io_service);
+		PeerCommunication(TorrentInfo& torrent, IPeerListener& listener, std::shared_ptr<TcpAsyncStream> stream);
 		~PeerCommunication();
 
 		PeerInfo info;
@@ -91,6 +92,7 @@ namespace mtt
 		void dataReceived();
 		void connectionClosed();
 
+		void initializeCallbacks();
 		void resetState();
 	};
 
