@@ -141,7 +141,7 @@ GetPeersResponse mtt::dht::Query::FindPeers::parseGetPeersResponse(DataBuffer& m
 		{
 			if (auto tr = root->getTxtItem("t"))
 			{
-				if (tr->length)
+				if (tr->size)
 					response.transaction = *reinterpret_cast<const uint16_t*>(tr->data);
 			}
 
@@ -151,7 +151,7 @@ GetPeersResponse mtt::dht::Query::FindPeers::parseGetPeersResponse(DataBuffer& m
 				{
 					auto& receivedNodes = response.nodes;
 
-					for (int pos = 0; pos < nodes->length;)
+					for (int pos = 0; pos < nodes->size;)
 					{
 						NodeInfo info;
 						pos += info.parse(nodes->data + pos, false);
@@ -165,7 +165,7 @@ GetPeersResponse mtt::dht::Query::FindPeers::parseGetPeersResponse(DataBuffer& m
 				{
 					auto& receivedNodes = response.nodes;
 
-					for (int pos = 0; pos < nodes->length;)
+					for (int pos = 0; pos < nodes->size;)
 					{
 						NodeInfo info;
 						pos += info.parse(nodes->data + pos, true);
@@ -178,10 +178,10 @@ GetPeersResponse mtt::dht::Query::FindPeers::parseGetPeersResponse(DataBuffer& m
 				if (auto values = resp->getListItem("values"))
 				{
 					auto o = values->getFirstItem();
-					for (int i = 0; i < values->data.list.size; i++)
+					for (int i = 0; i < values->info.size; i++)
 					{
 						if(o->isText())
-							response.values.emplace_back(Addr((uint8_t*)o->data.text.data, o->data.text.length >= 18));
+							response.values.emplace_back(Addr((uint8_t*)o->info.data, o->info.size >= 18));
 
 						o = o->getNextSibling();
 					}
@@ -189,12 +189,12 @@ GetPeersResponse mtt::dht::Query::FindPeers::parseGetPeersResponse(DataBuffer& m
 
 				if (auto token = root->getTxtItem("token"))
 				{
-					response.token = std::string(token->data, token->length);
+					response.token = std::string(token->data, token->size);
 				}
 
 				if (auto id = root->getTxtItem("id"))
 				{
-					if (id->length == 20)
+					if (id->size == 20)
 					{
 						memcpy(response.id, id->data, 20);
 					}
@@ -454,7 +454,7 @@ mtt::dht::FindNodeResponse mtt::dht::Query::FindNode::parseFindNodeResponse(Data
 		{
 			if (auto tr = root->getTxtItem("t"))
 			{
-				if (tr->length)
+				if (tr->size)
 					response.transaction = *reinterpret_cast<const uint16_t*>(tr->data);
 			}
 
@@ -464,7 +464,7 @@ mtt::dht::FindNodeResponse mtt::dht::Query::FindNode::parseFindNodeResponse(Data
 				{
 					auto& receivedNodes = response.nodes;
 
-					for (int pos = 0; pos < nodes->length;)
+					for (int pos = 0; pos < nodes->size;)
 					{
 						NodeInfo info;
 						pos += info.parse(nodes->data + pos, false);
@@ -478,7 +478,7 @@ mtt::dht::FindNodeResponse mtt::dht::Query::FindNode::parseFindNodeResponse(Data
 				{
 					auto& receivedNodes = response.nodes;
 
-					for (int pos = 0; pos < nodes->length;)
+					for (int pos = 0; pos < nodes->size;)
 					{
 						NodeInfo info;
 						pos += info.parse(nodes->data + pos, true);
@@ -490,7 +490,7 @@ mtt::dht::FindNodeResponse mtt::dht::Query::FindNode::parseFindNodeResponse(Data
 
 				if (auto id = resp->getTxtItem("id"))
 				{
-					if(id->length == 20)
+					if(id->size == 20)
 						memcpy(response.id, id->data, 20);
 				}
 			}
@@ -610,14 +610,14 @@ mtt::dht::PingMessage mtt::dht::Query::PingNodes::parseResponse(DataBuffer& mess
 		{
 			if (auto tr = root->getTxtItem("t"))
 			{
-				if (tr->length)
+				if (tr->size)
 					response.transaction = *reinterpret_cast<const uint16_t*>(tr->data);
 			}
 
 			if (auto resp = root->getDictItem("r"))
 			{
 				auto idNode = resp->getTxtItem("id");
-				if (idNode && idNode->length == 20)
+				if (idNode && idNode->size == 20)
 				{
 					memcpy(response.id, idNode->data, 20);
 				}

@@ -9,6 +9,7 @@
 #include "TrackerManager.h"
 #include "Storage.h"
 #include "utils/TcpAsyncServer.h"
+#include "utils/BencodeParserLite.h"
 
 using namespace mtt;
 
@@ -429,6 +430,9 @@ void TorrentTest::testDhtTable()
 		if (inFile)
 			saveFile = std::string((std::istreambuf_iterator<char>(inFile)), std::istreambuf_iterator<char>());
 	}
+
+	mtt::BencodeParserLite::Object obj;
+	auto s = sizeof(obj);
 
 	BencodeParser file;
 	if (!file.parseFile("D:\\wifi.torrent"))

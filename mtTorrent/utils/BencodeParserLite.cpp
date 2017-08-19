@@ -62,23 +62,22 @@ mtt::BencodeParserLite::Object* mtt::BencodeParserLite::parseList(const char** b
 
 	int rootId = (int)objects.size();
 	objects.emplace_back(mtt::BencodeParserLite::Object());
-	objects.back().type = Object::Type_List;
-	objects.back().data.list.size = 0;
+	objects.back().info.type = Object::Item::List;
 
 	int count = 0;
 	while (**body != 'e' && (*body < bodyEnd))
 	{
-		int objPos = (int)objects.size();
+		auto objPos = (uint16_t)objects.size();
 		auto o = internalParse(body);
 
 		if (o)
 		{
-			o->nextSiblingOffset = (int)objects.size() - objPos;
+			o->info.nextSiblingOffset = (uint16_t)objects.size() - objPos;
 			count++;
 		}
 	}
 
-	objects[rootId].data.list.size = count;
+	objects[rootId].info.size = count;
 
 	(*body)++;
 
@@ -99,8 +98,7 @@ mtt::BencodeParserLite::Object* mtt::BencodeParserLite::parseDictionary(const ch
 
 	int rootId = (int)objects.size();
 	objects.emplace_back(mtt::BencodeParserLite::Object());
-	objects.back().type = Object::Type_Dictionary;
-	objects.back().data.list.size = 0;
+	objects.back().info.type = Object::Item::Dictionary;
 
 	int count = 0;
 	while (**body != 'e' && (*body < bodyEnd))
@@ -109,18 +107,18 @@ mtt::BencodeParserLite::Object* mtt::BencodeParserLite::parseDictionary(const ch
 
 		if (s)
 		{
-			int objPos = (int)objects.size();
+			auto objPos = (uint16_t)objects.size();
 			auto o = internalParse(body);
 
 			if (o)
 			{
-				o->nextSiblingOffset = (int)objects.size() - objPos;
+				o->info.nextSiblingOffset = (uint16_t)objects.size() - objPos;
 				count++;
 			}
 		}
 	}
 
-	objects[rootId].data.map.size = count;
+	objects[rootId].info.size = count;
 
 	(*body)++;
 
@@ -135,10 +133,10 @@ mtt::BencodeParserLite::Object* mtt::BencodeParserLite::parseString(const char**
 {
 	mtt::BencodeParserLite::Object obj;
 	char* endPtr = 0;
-	obj.data.text.length = strtol(*body, &endPtr, 10);
+	obj.info.size = strtol(*body, &endPtr, 10);
 	*body = endPtr;
 
-	if (**body != ':' || (bodyEnd - *body) < obj.data.text.length)
+	if (**body != ':' || (bodyEnd - *body) < obj.info.size)
 	{
 		parseError(body);
 		return nullptr;
@@ -146,9 +144,9 @@ mtt::BencodeParserLite::Object* mtt::BencodeParserLite::parseString(const char**
 
 	(*body)++;
 
-	obj.type = Object::Type_Text;
-	obj.data.text.data = *body;
-	(*body) += obj.data.text.length;
+	obj.info.type = Object::Item::Text;
+	obj.info.data = *body;
+	(*body) += obj.info.size;
 
 	PARSER_LOG("String " << std::string(obj.data.text.data, obj.data.text.length));
 
@@ -161,12 +159,11 @@ mtt::BencodeParserLite::Object* mtt::BencodeParserLite::parseInt(const char** bo
 	(*body)++;
 
 	mtt::BencodeParserLite::Object obj;
-	obj.data.number.length = 0;
-	obj.data.number.data = *body;
+	obj.info.data = *body;
 
-	while ((IS_NUM_CHAR(**body) || (**body == '-' && obj.data.number.length == 0)) && *body != bodyEnd)
+	while ((IS_NUM_CHAR(**body) || (**body == '-' && obj.info.size == 0)) && *body != bodyEnd)
 	{
-		obj.data.number.length++;
+		obj.info.size++;
 		(*body)++;
 	}
 
@@ -178,8 +175,8 @@ mtt::BencodeParserLite::Object* mtt::BencodeParserLite::parseInt(const char** bo
 
 	(*body)++;
 
-	obj.type = Object::Type_Number;
-	PARSER_LOG("Number " << std::string(obj.data.number.data, obj.data.number.length));
+	obj.info.type = Object::Item::Number;
+	PARSER_LOG("Number " << std::string(obj.info.data, obj.info.size));
 
 	objects.push_back(obj);
 	return &objects.back();
@@ -192,7 +189,7 @@ mtt::BencodeParserLite::Object* mtt::BencodeParserLite::getRoot()
 
 mtt::BencodeParserLite::Object* mtt::BencodeParserLite::Object::getNextSibling()
 {
-	return nextSiblingOffset ? this + nextSiblingOffset : nullptr;
+	return info.nextSiblingOffset ? this + info.nextSiblingOffset : nullptr;
 }
 
 mtt::BencodeParserLite::Object* mtt::BencodeParserLite::Object::getDictItem(const char* name)
@@ -200,7 +197,7 @@ mtt::BencodeParserLite::Object* mtt::BencodeParserLite::Object::getDictItem(cons
 	auto obj = getFirstItem();
 	auto len = strlen(name);
 
-	for (int i = 0; i < data.map.size; i++)
+	for (int i = 0; i < info.size; i++)
 	{
 		if (obj->equals(name, len) && (obj + 1)->isMap())
 			return obj + 1;
@@ -216,7 +213,7 @@ mtt::BencodeParserLite::Object* mtt::BencodeParserLite::Object::getListItem(cons
 	auto obj = getFirstItem();
 	auto len = strlen(name);
 
-	for (int i = 0; i < data.map.size; i++)
+	for (int i = 0; i < info.size; i++)
 	{
 		if (obj->equals(name, len) && (obj + 1)->isList())
 			return obj + 1;
@@ -227,15 +224,15 @@ mtt::BencodeParserLite::Object* mtt::BencodeParserLite::Object::getListItem(cons
 	return nullptr;
 }
 
-mtt::BencodeParserLite::Object::Text* mtt::BencodeParserLite::Object::getTxtItem(const char* name)
+mtt::BencodeParserLite::Object::Item* mtt::BencodeParserLite::Object::getTxtItem(const char* name)
 {
 	auto obj = getFirstItem();
 	auto len = strlen(name);
 
-	for (int i = 0; i < data.map.size; i++)
+	for (int i = 0; i < info.size; i++)
 	{
 		if (obj->equals(name, len) && (obj + 1)->isText())
-			return &(obj + 1)->data.text;
+			return &(obj + 1)->info;
 
 		obj = (obj + 1)->getNextSibling();
 	}
@@ -248,7 +245,7 @@ mtt::BencodeParserLite::Object* mtt::BencodeParserLite::Object::getNumItem(const
 	auto obj = getFirstItem();
 	auto len = strlen(name);
 
-	for (int i = 0; i < data.map.size; i++)
+	for (int i = 0; i < info.size; i++)
 	{
 		if (obj->equals(name, len) && (obj + 1)->isInt())
 			return obj + 1;
@@ -267,7 +264,7 @@ int mtt::BencodeParserLite::Object::getInt(const char* name)
 
 int mtt::BencodeParserLite::Object::getInt()
 {
-	return strtol(data.number.data, 0, 10);
+	return strtol(info.data, 0, 10);
 }
 
 mtt::BencodeParserLite::Object* mtt::BencodeParserLite::Object::getFirstItem()
@@ -277,25 +274,25 @@ mtt::BencodeParserLite::Object* mtt::BencodeParserLite::Object::getFirstItem()
 
 bool mtt::BencodeParserLite::Object::equals(const char* txt, size_t l)
 {
-	return l != data.text.length ? false : strncmp(txt, data.text.data, data.text.length) == 0;
+	return l != info.size ? false : strncmp(txt, info.data, info.size) == 0;
 }
 
 bool mtt::BencodeParserLite::Object::isMap()
 {
-	return type == Type_Dictionary;
+	return info.type == Item::Dictionary;
 }
 
 bool mtt::BencodeParserLite::Object::isList()
 {
-	return type == Type_List;
+	return info.type == Item::List;
 }
 
 bool mtt::BencodeParserLite::Object::isInt()
 {
-	return type == Type_Number;
+	return info.type == Item::Number;
 }
 
 bool mtt::BencodeParserLite::Object::isText()
 {
-	return type == Type_Text;
+	return info.type == Item::Text;
 }

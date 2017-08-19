@@ -14,47 +14,21 @@ namespace mtt
 		
 		struct Object
 		{
-			enum Type { Type_None, Type_Number, Type_Text, Type_List, Type_Dictionary } type = Type_None;
-
-			struct Text
+			struct Item
 			{
-				const char* data;
-				int length;
-			};
+				const char* data = nullptr;
+				int size = 0;
 
-			struct Number
-			{
-				const char* data;
-				int length;
-			};
-
-			struct List
-			{
-				int size;
-			};
-
-			struct Dictionary
-			{
-				int size;
-			};
-
-			int nextSiblingOffset = 0;
-			Object* getNextSibling();
-
-			union
-			{
-				Text text;
-				Number number;
-				List list;
-				Dictionary map;
+				uint16_t nextSiblingOffset = 0;
+				enum Type : uint8_t { None, Number, Text, List, Dictionary } type = None;
 			}
-			data;
-
-			std::vector<Object>* objects;
+			info;
+		
+			Object* getNextSibling();
 
 			Object* getDictItem(const char* name);
 			Object* getListItem(const char* name);
-			Text* getTxtItem(const char* name);
+			Item* getTxtItem(const char* name);
 			Object* getNumItem(const char* name);
 			int getInt(const char* name);
 			int getInt();
