@@ -38,6 +38,7 @@ private:
 	void onUdpClose(UdpRequest);
 	UdpResponseCallback onUnhandledReceive;
 
+	void startListening();
 	std::shared_ptr<UdpAsyncReceiver> listener;
 	uint16_t bindPort;
 

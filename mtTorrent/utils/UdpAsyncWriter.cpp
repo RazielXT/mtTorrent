@@ -13,9 +13,7 @@ UdpAsyncWriter::~UdpAsyncWriter()
 
 void UdpAsyncWriter::setAddress(Addr& addr)
 {
-	target_endpoint = addr.ipv6 ?
-		udp::endpoint(boost::asio::ip::address_v6(*reinterpret_cast<boost::asio::ip::address_v6::bytes_type*>(addr.addrBytes)), addr.port) :
-		udp::endpoint(boost::asio::ip::address_v4(*reinterpret_cast<boost::asio::ip::address_v4::bytes_type*>(addr.addrBytes)), addr.port);
+	target_endpoint = addr.toUdpEndpoint();
 
 	state = Initialized;
 }

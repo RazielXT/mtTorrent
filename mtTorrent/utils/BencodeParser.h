@@ -34,7 +34,7 @@ namespace mtt
 			BenDictionary* dic;
 			//};
 
-			enum Type { None, Number, Text, List, Dictionary } type;
+			enum Type { None, Number, Text, List, Dictionary } type = None;
 
 			Object() { type = None; }
 			Object(Object& r) { type = r.type; txt = r.txt; i = r.i; l = r.l; dic = r.dic; r.type = None; }
@@ -73,6 +73,7 @@ namespace mtt
 		BenDictionary* parseDictionary(const char** body);
 		std::string parseString(const char** body);
 		int parseInt(const char** body);
+		void parseError(const char** body);
 
 		const char* infoStart = nullptr;
 		const char* infoEnd = nullptr;

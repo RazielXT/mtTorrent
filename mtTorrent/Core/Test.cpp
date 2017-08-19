@@ -13,6 +13,7 @@
 using namespace mtt;
 
 #define WAITFOR(x) { while (!(x)) Sleep(50); }
+#define WAITFOR2(x, y) { while (!(x)) { y; Sleep(50);} }
 
 void testInit()
 {
@@ -20,6 +21,12 @@ void testInit()
 	{
 		mtt::config::internal.hashId[i] = (uint8_t)rand();
 	}
+
+	mtt::config::internal.trackerKey = 1111;
+
+	mtt::config::internal.defaultRootHosts = { { "dht.transmissionbt.com", "6881" },{ "router.bittorrent.com" , "6881" } };
+
+	mtt::config::external.tcpPort = mtt::config::external.udpPort = 55125;
 }
 
 TorrentTest::TorrentTest()
@@ -32,13 +39,12 @@ void TorrentTest::metadataPieceReceived(PeerCommunication*, mtt::ext::UtMetadata
 	utmMsg = msg;
 }
 
-#define OFFICE
 void TorrentTest::testAsyncUdpRequest()
 {
 	ServiceThreadpool service;
 
-	const char* dhtRoot = "dht.transmissionbt.com";
-	const char* dhtRootPort = "6881";
+	std::string dhtRoot = "dht.transmissionbt.com";
+	std::string dhtRootPort = "6881";
 
 	std::string targetIdBase32 = "T323KFN5XLZAZZO2NDNCYX7OBMQTUV6U"; // "ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J";
 	auto targetId = base32decode(targetIdBase32);
@@ -56,15 +62,15 @@ void TorrentTest::testAsyncUdpRequest()
 	packet.add(reinterpret_cast<char*>(&transactionId), 2);
 	packet.add("1:y1:qe", 7);
 
-	{
-#ifndef OFFICE
-		auto req = SendAsyncUdp(dhtRoot, dhtRootPort, true, packet.getBuffer(), service.io, std::bind(&TorrentTest::onUdpReceived, this, std::placeholders::_1, std::placeholders::_2));
-#else
-		//auto req = SendAsyncUdp(Addr({8,65,4,4},55555), packet.getBuffer(), service.io, std::bind(&TorrentTest::onUdpReceived, this, std::placeholders::_1, std::placeholders::_2));
-#endif
-	}
+	/*UdpAsyncComm udp(service.io, 55466);
 
-	service.stop();
+	auto req = udp.sendMessage(packet.getBuffer(), dhtRoot, dhtRootPort, nullptr);*/
+
+	UdpRequest c = std::make_shared<UdpAsyncWriter>(service.io);
+	c->setAddress(dhtRoot, dhtRootPort, true);
+	c->write(packet.getBuffer());
+
+	WAITFOR(false);
 }
 
 void TorrentTest::testMetadataReceive()
@@ -117,7 +123,7 @@ void TorrentTest::connectionClosed(PeerCommunication*)
 void TorrentTest::testAsyncDhtGetPeers()
 {
 	ServiceThreadpool service;
-	mtt::dht::Communication dht(*this);
+	mtt::dht::Communication dht;
 
 	//ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J	boku 26
 	//6QBN6XVGKV7CWOT5QXKDYWF3LIMUVK4I	owarimonogagtari batch
@@ -125,7 +131,7 @@ void TorrentTest::testAsyncDhtGetPeers()
 	std::string targetIdBase32 = "ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J"; 
 	auto targetId = base32decode(targetIdBase32);
 
-	dht.findPeers((uint8_t*)targetId.data());
+	dht.findPeers((uint8_t*)targetId.data(), this);
 
 	WAITFOR(dhtResult.finalCount != -1 || !dhtResult.values.empty());
 
@@ -200,7 +206,8 @@ void TorrentTest::testTrackers()
 	//std::string link = "magnet:?xt=urn:btih:4YOP2LK2CO2KYSBIVG6IOYNCY3OFMWPD&tr=http://nyaa.tracker.wf:7777/announce&tr=udp://tracker.coppersurfer.tk:6969/announce&tr=udp://tracker.internetwarriors.net:1337/announce&tr=udp://tracker.leechers-paradise.org:6969/announce&tr=http://tracker.internetwarriors.net:1337/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=http://tracker.opentrackr.org:1337/announce&tr=udp://tracker.zer0day.to:1337/announce&tr=http://explodie.org:6969/announce&tr=http://p4p.arenabg.com:1337/announce&tr=udp://p4p.arenabg.com:1337/announce&tr=http://mgtracker.org:6969/announce&tr=udp://mgtracker.org:6969/announce";
 	//std::string link = "magnet:?xt=urn:btih:4YOP2LK2CO2KYSBIVG6IOYNCY3OFMWPD&tr=http://nyaa.tracker.wf:7777/announce";
 	//std::string link = "magnet:?xt=urn:btih:4YOP2LK2CO2KYSBIVG6IOYNCY3OFMWPD&tr=udp://tracker.coppersurfer.tk:6969/announce";
-	std::string link = "magnet:?xt=urn:btih:7bbed572352ab881e9788a933decd884f6ccc58f&dn=%28Ebook+Martial+Arts%29+Aikido+-+Pressure+Points.pdf&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Fzer0day.ch%3A1337&tr=udp%3A%2F%2Fopen.demonii.com%3A1337&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Fexodus.desync.com%3A6969";
+	//std::string link = "magnet:?xt=urn:btih:7bbed572352ab881e9788a933decd884f6ccc58f&dn=%28Ebook+Martial+Arts%29+Aikido+-+Pressure+Points.pdf&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Fzer0day.ch%3A1337&tr=udp%3A%2F%2Fopen.demonii.com%3A1337&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Fexodus.desync.com%3A6969";
+	std::string link = "magnet:?xt=urn:btih:EQGRANKXR4EP6WH2HEEVUWDRU37YWEJQ&dn=%5BEdo%5D+Kizumonogatari+Trilogy+%28BD+1920x1080+FLAC%29&tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.doko.moe%3A6969";
 	mtt::TorrentFileInfo parsedTorrent;
 	parsedTorrent.parseMagnetLink(link);
 
@@ -223,14 +230,14 @@ void TorrentTest::testTrackers()
 		{
 			info = i;
 
-			WRITE_LOG("UPDATE " << i.host << " " << i.state << " next update: " << i.updateInterval);
+			WRITE_LOG("UPDATE " << i.host << " " << i.state << " next update: " << i.nextUpdate);
 		}
 
 	}
 	tListener;
 
 	ServiceThreadpool service(2);
-	UdpAsyncComm udp(service.io, mtt::config::external.listenPortUdp);
+	UdpAsyncComm udp(service.io, mtt::config::external.udpPort);
 	mtt::TrackerManager trackers(torrent, parsedTorrent.announceList, tListener, service.io, udp);
 	trackers.start();
 
@@ -241,23 +248,43 @@ void TorrentTest::testTrackers()
 	WAITFOR(false);
 }
 
+std::string findFileByPiece(mtt::TorrentFileInfo& file, uint32_t piece)
+{
+	for (auto& f : file.info.files)
+	{
+		if (f.startPieceIndex <= piece && f.endPieceIndex >= piece)
+			return f.path.back();
+	}
+
+	return "";
+}
+
 void TorrentTest::testStorageCheck()
 {
 	BencodeParser file;
-	if (!file.parseFile("D:\\wifi.torrent"))
+	if (!file.parseFile("D:\\hunter.torrent"))
 		return;
 
 	auto torrent = file.getTorrentFileInfo();
 
 	DownloadSelection selection;
 	for (auto&f : torrent.info.files)
-		selection.files.push_back({ true, f });
+		selection.files.push_back({ false, f });
 
 	mtt::Storage storage(torrent.info.pieceSize);
-	storage.setPath("D:\\test");
+	storage.setPath("D:\\Torrent");
 	storage.setSelection(selection);
 
-	auto pieces = storage.checkStoredPieces(torrent.info.pieces);
+	ServiceThreadpool pool;
+
+	bool finished = false;
+	auto onFinish = [&]() { finished = true; WRITE_LOG("Finished"); };
+
+	auto checking = storage.checkStoredPiecesAsync(torrent.info.pieces, pool.io, onFinish);
+
+	WAITFOR2(finished, WRITE_LOG(checking->piecesChecked << "/" << checking->piecesCount));
+
+	WAITFOR(false);
 }
 
 void TorrentTest::testStorageLoad()
@@ -324,7 +351,7 @@ void TorrentTest::testPeerListen()
 	ServiceThreadpool service(2);
 
 	std::shared_ptr<TcpAsyncStream> peerStream;
-	TcpAsyncServer server(service.io, mtt::config::external.listenPort, false);
+	TcpAsyncServer server(service.io, mtt::config::external.tcpPort, false);
 	server.acceptCallback = [&](std::shared_ptr<TcpAsyncStream> c) { peerStream = c; };
 	server.listen();
 
@@ -393,16 +420,43 @@ void TorrentTest::testPeerListen()
 
 void TorrentTest::testDhtTable()
 {
+	std::string saveFilePath = ".\\dht.sv";
+	std::string saveFile;
+
+	{
+		std::ifstream inFile(saveFilePath, std::ios_base::binary | std::ios_base::in);
+
+		if (inFile)
+			saveFile = std::string((std::istreambuf_iterator<char>(inFile)), std::istreambuf_iterator<char>());
+	}
+
 	BencodeParser file;
 	if (!file.parseFile("D:\\wifi.torrent"))
 		return;
 
 	auto torrent = file.getTorrentFileInfo();
 
-	mtt::dht::Communication dhtComm(*this);
-	dhtComm.findPeers(torrent.info.hash);
+	mtt::dht::Communication dhtComm;
+	dhtComm.load(saveFile);
 
+	//ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J	boku 26
+	//6QBN6XVGKV7CWOT5QXKDYWF3LIMUVK4I	owarimonogagtari batch
+	//56VYAWGYUTF7ETZZRB45C6FKJSKVBLRD	mushishi s2 22 rare
+	std::string targetIdBase32 = "56VYAWGYUTF7ETZZRB45C6FKJSKVBLRD";
+	auto targetId = base32decode(targetIdBase32);
+
+	dhtComm.findPeers((uint8_t*)targetId.data(), this);
 	WAITFOR(dhtResult.finalCount != -1);
+
+	//dhtComm.findNode(mtt::config::internal.hashId);
+	//Sleep(10000);
+
+	saveFile = dhtComm.save();
+
+	{
+		std::ofstream out(saveFilePath, std::ios_base::binary);
+		out << saveFile;
+	}
 
 	WAITFOR(false);
 }

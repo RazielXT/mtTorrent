@@ -10,7 +10,7 @@ namespace mtt
 	{
 		struct Table
 		{
-			std::vector<Addr> getClosestNodes(uint8_t* id, bool ipv6);
+			std::vector<Addr> getClosestNodes(uint8_t* id);
 
 			void nodeResponded(uint8_t* id, Addr& addr);
 			void nodeResponded(uint8_t bucketId, Addr& addr);
@@ -20,13 +20,25 @@ namespace mtt
 
 			uint8_t getBucketId(uint8_t* id);
 
-			bool empty = true;
+			bool empty();
+
+			std::string save();
+			uint32_t load(std::string&);
+
+			struct BucketNode
+			{
+				uint8_t bucketId;
+				Addr addr;
+			};
+
+			std::vector<BucketNode> getInactiveNodes();
 
 		private:
 
 			const uint32_t MaxBucketNodesCount = 8;
 			const uint32_t MaxBucketCacheSize = 8;
 			const uint32_t MaxBucketNodeInactiveTime = 15*60;
+			const uint32_t MaxBucketFreshNodeInactiveTime = 0;
 
 			struct Bucket
 			{

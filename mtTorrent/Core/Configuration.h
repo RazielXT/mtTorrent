@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <vector>
 
 namespace mtt
 {
@@ -7,8 +8,8 @@ namespace mtt
 	{
 		struct External
 		{
-			uint16_t listenPort = 55125;
-			uint16_t listenPortUdp = 55556;
+			uint16_t tcpPort;
+			uint16_t udpPort;
 
 			std::string defaultDirectory;
 			bool enableDht = false;
@@ -17,9 +18,10 @@ namespace mtt
 		struct Internal
 		{
 			uint8_t hashId[20];
-			uint32_t key = 1111;
+			uint32_t trackerKey;
 
 			uint32_t maxPeersPerTrackerRequest = 100;
+			std::vector<std::pair<std::string, std::string>> defaultRootHosts;
 		};
 
 		extern External external;

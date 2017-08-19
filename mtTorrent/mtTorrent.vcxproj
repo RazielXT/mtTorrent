@@ -37,7 +37,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{7A7123CF-1E7A-408F-8281-6A0ADB328253}</ProjectGuid>
     <RootNamespace>mtTorrent</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
     <ProjectName>mtTorrent</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -253,6 +253,8 @@
     <ClCompile Include="Core\UdpTrackerComm.cpp" />
     <ClCompile Include="utils\Base32.cpp" />
     <ClCompile Include="utils\BencodeParser.cpp" />
+    <ClCompile Include="utils\BencodeParserLite.cpp" />
+    <ClCompile Include="utils\ScheduledTimer.cpp" />
     <ClCompile Include="utils\HexEncoding.cpp" />
     <ClCompile Include="utils\Network.cpp" />
     <ClCompile Include="utils\RiotRestApi.cpp" />
@@ -265,6 +267,7 @@
     <ClCompile Include="utils\UrlEncoding.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Core\ActiveTorrent.h" />
     <ClInclude Include="Core\Configuration.h" />
     <ClInclude Include="Core\Dht\Communication.h" />
     <ClInclude Include="Core\Dht\Node.h" />
@@ -287,6 +290,8 @@
     <ClInclude Include="Core\UdpTrackerComm.h" />
     <ClInclude Include="utils\Base32.h" />
     <ClInclude Include="utils\BencodeParser.h" />
+    <ClInclude Include="utils\BencodeParserLite.h" />
+    <ClInclude Include="utils\ScheduledTimer.h" />
     <ClInclude Include="utils\HexEncoding.h" />
     <ClInclude Include="utils\Network.h" />
     <ClInclude Include="utils\PacketHelper.h" />

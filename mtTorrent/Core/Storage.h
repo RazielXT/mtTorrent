@@ -2,9 +2,18 @@
 
 #include "Interface.h"
 #include <mutex>
+#include <atomic>
 
 namespace mtt
 {
+	struct PiecesCheck
+	{
+		uint32_t piecesCount = 0;
+		std::atomic<uint32_t> piecesChecked = 0;
+		bool rejected = false;
+		std::vector<uint8_t> bitfield;
+	};
+
 	class Storage
 	{
 	public:
@@ -18,6 +27,7 @@ namespace mtt
 
 		void setSelection(DownloadSelection& files);
 		std::vector<uint8_t> checkStoredPieces(std::vector<PieceInfo>& piecesInfo);
+		std::shared_ptr<PiecesCheck> checkStoredPiecesAsync(std::vector<PieceInfo>& piecesInfo, boost::asio::io_service& io, std::function<void()> onFinish);
 		void flush();
 
 		void saveProgress();
@@ -29,6 +39,8 @@ namespace mtt
 		std::vector<PieceBlockInfo> makePieceBlocksInfo(uint32_t index);
 
 	private:
+
+		void checkStoredPieces(PiecesCheck& checkState, const std::vector<PieceInfo>& piecesInfo);
 
 		std::string getFullpath(File& file);
 		void createPath(std::string& path);

@@ -2,6 +2,7 @@
 #include <fstream>
 #include <boost/filesystem.hpp>
 #include <iostream>
+#include "utils/ServiceThreadpool.h"
 
 mtt::Storage::Storage(uint32_t piecesz)
 {
@@ -215,14 +216,21 @@ void mtt::Storage::flush(File& file)
 
 std::vector<uint8_t> mtt::Storage::checkStoredPieces(std::vector<PieceInfo>& piecesInfo)
 {
-	std::vector<uint8_t> out(piecesInfo.size());
+	PiecesCheck check;
+	checkStoredPieces(check, piecesInfo);
+	return check.bitfield;
+}
+
+void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<PieceInfo>& piecesInfo)
+{
+	checkState.bitfield.resize(piecesInfo.size());
 	size_t currentPieceIdx = 0;
 
 	storageMutex.lock();
 	auto files = selection.files;
 	storageMutex.unlock();
 	if (files.empty())
-		return out;
+		return;
 
 	auto currentFile = &files.front();
 	auto lastFile = &files.back();
@@ -247,17 +255,22 @@ std::vector<uint8_t> mtt::Storage::checkStoredPieces(std::vector<PieceInfo>& pie
 
 				fileIn.read((char*)readBuffer.data() + readBufferPos, readSize);
 
-				while (fileIn)
+				while (fileIn && !checkState.rejected)
 				{
 					SHA1(readBuffer.data(), pieceSize, shaBuffer);
-					out[currentPieceIdx++] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
+					checkState.bitfield[currentPieceIdx++] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
 					fileIn.read((char*)readBuffer.data(), pieceSize);
+
+					checkState.piecesChecked = (uint32_t)currentPieceIdx;
 				}
+
+				if (checkState.rejected)
+					return;
 
 				if (currentPieceIdx == currentFile->info.endPieceIndex && currentFile == lastFile)
 				{
 					SHA1(readBuffer.data(), currentFile->info.endPiecePos, shaBuffer);
-					out[currentPieceIdx++] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
+					checkState.bitfield[currentPieceIdx++] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
 				}
 			}
 
@@ -267,11 +280,27 @@ std::vector<uint8_t> mtt::Storage::checkStoredPieces(std::vector<PieceInfo>& pie
 		if (currentPieceIdx < currentFile->info.endPieceIndex)
 			currentPieceIdx = currentFile->info.endPieceIndex;
 
+		checkState.piecesChecked = (uint32_t)currentPieceIdx;
+
 		if(++currentFile > lastFile)
 			break;
 	}
+}
 
-	return out;
+std::shared_ptr<mtt::PiecesCheck> mtt::Storage::checkStoredPiecesAsync(std::vector<PieceInfo>& piecesInfo, boost::asio::io_service& io, std::function<void()> onFinish)
+{
+	auto request = std::make_shared<mtt::PiecesCheck>();
+	request->piecesCount = (uint32_t)piecesInfo.size();
+
+	io.post([piecesInfo, onFinish, request, this]()
+	{
+		checkStoredPieces(*request.get(), piecesInfo);
+
+		if(!request->rejected)
+			onFinish();
+	});
+
+	return request;
 }
 
 void mtt::Storage::preallocate(File& file)

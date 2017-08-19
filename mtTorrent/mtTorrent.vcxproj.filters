@@ -127,6 +127,12 @@
     <ClCompile Include="utils\UdpAsyncReceiver.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="utils\ScheduledTimer.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\BencodeParserLite.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Storage.h">
@@ -226,6 +232,15 @@
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="utils\UdpAsyncReceiver.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\ActiveTorrent.h">
+      <Filter>Source Files\Core\Torrent\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\ScheduledTimer.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\BencodeParserLite.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>

@@ -10,9 +10,8 @@ UdpAsyncComm::UdpAsyncComm(boost::asio::io_service& io_service, uint16_t port) :
 
 void UdpAsyncComm::listen(UdpResponseCallback receive)
 {
-	listener = std::make_shared<UdpAsyncReceiver>(io, bindPort, false);
-	listener->receiveCallback = std::bind(&UdpAsyncComm::onUdpReceive, this, std::placeholders::_1, std::placeholders::_2);
-	listener->listen();
+	if (!listener)
+		startListening();
 
 	onUnhandledReceive = receive;
 }
@@ -64,6 +63,9 @@ UdpRequest UdpAsyncComm::sendMessage(DataBuffer& data, Addr& addr, UdpResponseCa
 
 void UdpAsyncComm::addPendingResponse(DataBuffer& data, UdpRequest c, UdpResponseCallback response)
 {
+	if (!listener)
+		startListening();
+
 	auto info = std::make_shared<ResponseRetryInfo>();
 	info->client = c;
 	info->timeoutTimer = std::make_shared<boost::asio::deadline_timer>(io);
@@ -102,7 +104,7 @@ void UdpAsyncComm::onUdpReceive(UdpRequest source, DataBuffer& data)
 		auto it = pendingResponses.begin();
 		while (it != pendingResponses.end())
 		{
-			if ((*it)->client == source || (*it)->client->getEndpoint() == source->getEndpoint())
+			if ((*it)->client->getEndpoint() == source->getEndpoint())
 			{
 				foundPendingResponses.push_back(*it);
 				it = pendingResponses.erase(it);
@@ -116,7 +118,7 @@ void UdpAsyncComm::onUdpReceive(UdpRequest source, DataBuffer& data)
 
 	for (auto r : foundPendingResponses)
 	{
-		if (!handled && r->onResponse(source, &data))
+		if (!handled && r->onResponse(r->client, &data))
 		{
 			UDP_LOG(source->getName() << " successfully handled, removing");
 
@@ -166,6 +168,13 @@ void UdpAsyncComm::onUdpClose(UdpRequest source)
 
 	if (foundPendingResponses.empty() && onUnhandledReceive)
 		onUnhandledReceive(source, nullptr);
+}
+
+void UdpAsyncComm::startListening()
+{
+	listener = std::make_shared<UdpAsyncReceiver>(io, bindPort, false);
+	listener->receiveCallback = std::bind(&UdpAsyncComm::onUdpReceive, this, std::placeholders::_1, std::placeholders::_2);
+	listener->listen();
 }
 
 void UdpAsyncComm::checkTimeout(std::shared_ptr<ResponseRetryInfo> info)

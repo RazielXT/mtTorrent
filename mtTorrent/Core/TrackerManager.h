@@ -4,6 +4,7 @@
 #include "utils/ServiceThreadpool.h"
 #include "PeerCommunication.h"
 #include "UdpTrackerComm.h"
+#include "utils/ScheduledTimer.h"
 
 namespace mtt
 {
@@ -30,23 +31,6 @@ namespace mtt
 		virtual void onAnnounceResult(AnnounceResponse&, TorrentPtr) = 0;
 	};
 
-	struct TrackerTimer : public std::enable_shared_from_this<TrackerTimer>
-	{
-		static std::shared_ptr<TrackerTimer> create(boost::asio::io_service& io, std::function<void()> callback);
-
-		TrackerTimer(boost::asio::io_service& io, std::function<void()> callback);
-
-		void schedule(uint32_t secondsOffset);
-		void disable();
-		uint32_t getSecondsTillNextUpdate();
-
-	private:
-
-		void checkTimer();
-		std::function<void()> func;
-		boost::asio::deadline_timer timer;
-	};
-
 	struct TrackerManager
 	{
 	public:
@@ -61,7 +45,7 @@ namespace mtt
 		struct TrackerInfo
 		{
 			std::shared_ptr<Tracker> comm;
-			std::shared_ptr<TrackerTimer> timer;
+			std::shared_ptr<ScheduledTimer> timer;
 
 			std::string protocol;
 			std::string host;

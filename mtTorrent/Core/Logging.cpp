@@ -1,3 +1,5 @@
+#include <iostream>
+#include <sstream>
 #include <mutex>
 std::mutex logMutex;
 
@@ -20,4 +22,13 @@ std::string GetLogTime()
 	sprintf_s(buffer, 10, "%.3f ", ((float)t) / CLOCKS_PER_SEC);
 
 	return buffer;
+}
+
+extern void WriteLogImplementation(std::stringstream& ss)
+{
+	LockLog();
+
+	std::cout << GetLogTime() << ss.str() << "\n";
+
+	UnlockLog();
 }

@@ -13,7 +13,7 @@ mtt::TrackerManager::TrackerManager(TorrentPtr t, std::vector<std::string> tr, T
 
 std::string cutStringPart(std::string& source, DataBuffer endChars, int cutAdd)
 {
-	auto id = source.find(endChars[0]);
+	size_t id = std::string::npos;
 
 	for (auto c : endChars)
 	{
@@ -23,11 +23,12 @@ std::string cutStringPart(std::string& source, DataBuffer endChars, int cutAdd)
 			id = nid;
 	}
 
-	if (id == std::string::npos)
-		return "";
-
 	std::string ret = source.substr(0, id);
-	source = source.substr(id + 1 + cutAdd, std::string::npos);
+
+	if (id == std::string::npos)
+		source = "";
+	else
+		source = source.substr(id + 1 + cutAdd, std::string::npos);
 
 	return ret;
 }
@@ -135,13 +136,11 @@ void mtt::TrackerManager::start(TrackerInfo* tracker)
 	else
 		return;
 
-	tracker->comm = std::make_shared<HttpTrackerComm>();
-
 	tracker->comm->onFail = std::bind(&TrackerManager::onTrackerFail, this, tracker->comm.get());
 	tracker->comm->onAnnounceResult = std::bind(&TrackerManager::onAnnounce, this, std::placeholders::_1, tracker->comm.get());
 
 	tracker->comm->init(tracker->host, tracker->port, io, torrent);
-	tracker->timer = TrackerTimer::create(io, std::bind(&Tracker::announce, tracker->comm.get()));
+	tracker->timer = ScheduledTimer::create(io, std::bind(&Tracker::announce, tracker->comm.get()));
 	tracker->retryCount = 0;
 
 	tracker->comm->announce();
@@ -205,51 +204,4 @@ mtt::TrackerManager::TrackerInfo* mtt::TrackerManager::findTrackerInfo(std::stri
 	}
 
 	return nullptr;
-}
-
-mtt::TrackerTimer::TrackerTimer(boost::asio::io_service& io, std::function<void()> callback) : timer(io), func(callback)
-{
-}
-
-void mtt::TrackerTimer::schedule(uint32_t secondsOffset)
-{
-	timer.async_wait(std::bind(&TrackerTimer::checkTimer, shared_from_this()));
-	timer.expires_from_now(boost::posix_time::seconds(secondsOffset));
-}
-
-void mtt::TrackerTimer::disable()
-{
-	func = nullptr;
-	timer.expires_at(boost::posix_time::pos_infin);
-}
-
-uint32_t mtt::TrackerTimer::getSecondsTillNextUpdate()
-{
-	if (timer.expires_at().is_infinity())
-		return 0;
-	else if (timer.expires_at() <= boost::asio::deadline_timer::traits_type::now())
-		return 0;
-	else
-	{
-		auto time = timer.expires_at() - boost::asio::deadline_timer::traits_type::now();
-		return (uint32_t)time.total_seconds();
-	}
-}
-
-void mtt::TrackerTimer::checkTimer()
-{
-	if (timer.expires_at() <= boost::asio::deadline_timer::traits_type::now())
-	{
-		timer.expires_at(boost::posix_time::pos_infin);
-
-		if (func)
-			func();
-	}
-
-	timer.async_wait(std::bind(&TrackerTimer::checkTimer, shared_from_this()));
-}
-
-std::shared_ptr<mtt::TrackerTimer> mtt::TrackerTimer::create(boost::asio::io_service& io, std::function<void()> callback)
-{
-	return std::make_shared<mtt::TrackerTimer>(io, callback);
 }

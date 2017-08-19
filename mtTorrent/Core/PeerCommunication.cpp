@@ -388,7 +388,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 					ext.sendHandshake();
 
 				if (info.supportsDht() && mtt::config::external.enableDht)
-					sendPort(mtt::config::external.listenPortUdp);
+					sendPort(mtt::config::external.udpPort);
 
 				listener.handshakeFinished(this);
 			}

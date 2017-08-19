@@ -12,8 +12,8 @@ namespace mtt
 			NodeId();
 			NodeId(const char* buffer);
 			void copy(const char* buffer);
-			bool closerThan(NodeId& r, NodeId& target);
-			bool closerThanThis(NodeId& distance, NodeId& target);
+			bool closerThan(NodeId& other, NodeId& target);
+			bool closerToNodeThan(NodeId& distance, NodeId& target);
 			NodeId distance(NodeId& r);
 			uint8_t length();
 			void setMax();
@@ -27,7 +27,7 @@ namespace mtt
 			NodeId id;
 			Addr addr;
 
-			size_t parse(char* buffer, bool v6);
+			int parse(const char* buffer, bool v6);
 			bool operator==(const NodeInfo& r);
 		};
 	}

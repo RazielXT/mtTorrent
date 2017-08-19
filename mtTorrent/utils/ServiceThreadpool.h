@@ -14,7 +14,7 @@ public:
 
 	boost::asio::io_service io;
 
-	void start(uint32_t startWorkers);
+	void start(uint32_t startWorkers, bool finishAfterWork = false);
 	void stop();
 
 	void adjust(uint32_t estimatedWork);

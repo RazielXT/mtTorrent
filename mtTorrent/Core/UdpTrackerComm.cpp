@@ -4,7 +4,7 @@
 #include "Configuration.h"
 #include "Logging.h"
 
-#define TRACKER_LOG(x) WRITE_LOG("UDP Tracker " << info.hostname << " " << x)
+#define UDP_TRACKER_LOG(x) WRITE_LOG("UDP Tracker " << info.hostname << " " << x)
 
 using namespace mtt;
 
@@ -68,8 +68,12 @@ bool mtt::UdpTrackerComm::onConnectUdpResponse(UdpRequest comm, DataBuffer* data
 
 		return true;
 	}
-	else
+	else if (response.transaction == lastMessage.transaction)
+	{
 		fail();
+
+		return true;
+	}
 
 	return false;
 }
@@ -95,9 +99,9 @@ DataBuffer UdpTrackerComm::createAnnounceRequest()
 	packet.add32(Started);
 	packet.add32(0);
 
-	packet.add32(mtt::config::internal.key);
+	packet.add32(mtt::config::internal.trackerKey);
 	packet.add32(mtt::config::internal.maxPeersPerTrackerRequest);
-	packet.add32(mtt::config::external.listenPort);
+	packet.add32(mtt::config::external.tcpPort);
 	packet.add16(0);
 
 	return packet.getBuffer();
@@ -116,7 +120,7 @@ bool mtt::UdpTrackerComm::onAnnounceUdpResponse(UdpRequest comm, DataBuffer* dat
 
 	if (validResponse(announceMsg.udp))
 	{
-		TRACKER_LOG("received peers:" << announceMsg.peers.size() << ", p: " << announceMsg.seedCount << ", l: " << announceMsg.leechCount);
+		UDP_TRACKER_LOG("received peers:" << announceMsg.peers.size() << ", p: " << announceMsg.seedCount << ", l: " << announceMsg.leechCount);
 		state = Announced;
 		info.leechers = announceMsg.leechCount;
 		info.seeds = announceMsg.seedCount;
@@ -128,15 +132,19 @@ bool mtt::UdpTrackerComm::onAnnounceUdpResponse(UdpRequest comm, DataBuffer* dat
 
 		return true;
 	}
-	else
+	else if (announceMsg.udp.transaction == lastMessage.transaction)
+	{
 		fail();
+
+		return true;
+	}
 
 	return false;
 }
 
 void mtt::UdpTrackerComm::connect()
 {
-	TRACKER_LOG("connect");
+	UDP_TRACKER_LOG("connecting");
 	state = Connecting;
 
 	udp.sendMessage(createConnectRequest(), comm, std::bind(&UdpTrackerComm::onConnectUdpResponse, this, std::placeholders::_1, std::placeholders::_2));
@@ -153,7 +161,7 @@ void mtt::UdpTrackerComm::announce()
 		connect();
 	else
 	{
-		TRACKER_LOG("announce");
+		UDP_TRACKER_LOG("announcing");
 
 		if (state == Announced)
 			state = Reannouncing;
@@ -188,6 +196,11 @@ UdpTrackerComm::UdpAnnounceResponse UdpTrackerComm::getAnnounceResponse(DataBuff
 
 	resp.udp.action = packet.pop32();
 	resp.udp.transaction = packet.pop32();
+
+	if (resp.udp.action == Error && buffer.size() > 8)
+	{
+		UDP_TRACKER_LOG("announce msg: " << (const char*)buffer.data() + 8);
+	}
 
 	if (buffer.size() < 26)
 		return resp;

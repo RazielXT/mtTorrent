@@ -14,7 +14,6 @@ namespace mtt
 			virtual void findingPeersFinished(uint8_t* hash, uint32_t count) = 0;
 
 			virtual UdpRequest sendMessage(Addr&, DataBuffer&, UdpResponseCallback response) = 0;
-			virtual UdpRequest sendMessage(std::string& host, std::string& port, DataBuffer&, UdpResponseCallback response) = 0;
 		};
 
 		struct MessageResponse
@@ -49,7 +48,7 @@ namespace mtt
 			uint8_t target[20];
 		};
 
-		struct PingMessage
+		struct PingMessage : public MessageResponse
 		{
 			uint8_t id[20];
 		};
@@ -64,6 +63,7 @@ namespace mtt
 
 			struct DhtQuery
 			{
+				DhtQuery();
 				~DhtQuery();
 
 				void start(uint8_t* hash, Table* table, QueryListener* dhtListener);
@@ -88,7 +88,6 @@ namespace mtt
 
 				virtual DataBuffer createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId) = 0;
 				virtual void sendRequest(Addr& addr, DataBuffer& data, RequestInfo& info) = 0;
-				virtual void sendRequest(std::string& host, std::string& port, DataBuffer& data, RequestInfo& info) = 0;
 				virtual bool onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request) = 0;
 
 				Table* table;
@@ -104,14 +103,13 @@ namespace mtt
 
 				virtual DataBuffer createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId) override;
 				virtual void sendRequest(Addr& addr, DataBuffer& data, RequestInfo& info);
-				virtual void sendRequest(std::string& host, std::string& port, DataBuffer& data, RequestInfo& info);
 				virtual bool onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request) override;
 				GetPeersResponse parseGetPeersResponse(DataBuffer& message);		
 			};
 
 			struct FindNode : public DhtQuery, public std::enable_shared_from_this<FindNode>
 			{
-				void startOne(uint8_t* hash, Addr& addr, Table* table, QueryListener* dhtListener, boost::asio::io_service* serviceIo);
+				void startOne(uint8_t* hash, Addr& addr, Table* table, QueryListener* dhtListener);
 
 				uint32_t resultCount = 0;
 				
@@ -121,7 +119,6 @@ namespace mtt
 
 				virtual DataBuffer createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId) override;
 				virtual void sendRequest(Addr& addr, DataBuffer& data, RequestInfo& info);
-				virtual void sendRequest(std::string& host, std::string& port, DataBuffer& data, RequestInfo& info);
 				virtual bool onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request) override;
 				FindNodeResponse parseFindNodeResponse(DataBuffer& message);
 			};
@@ -131,30 +128,31 @@ namespace mtt
 				~PingNodes();
 
 				void start(Addr& node, uint8_t bucketId, Table* table, QueryListener* dhtListener);
-				void start(std::vector<Addr>& nodes, uint8_t bucketId, Table* table, QueryListener* dhtListener);
+				void start(std::vector<Table::BucketNode>& nodes, Table* table, QueryListener* dhtListener);
 				void stop();
 
 			protected:
 
 				Table* table;
 				QueryListener* listener;
-				uint8_t bucketId;
 
 				uint32_t MaxSimultaneousRequests = 5;
 
 				std::mutex requestsMutex;
 				std::vector<UdpRequest> requests;
-				std::vector<Addr> nodesLeft;
+				std::vector<Table::BucketNode> nodesLeft;
 
 				DataBuffer createRequest(uint16_t transactionId);
+				void sendRequest(Addr& addr, uint8_t bId);
 
 				struct PingInfo
 				{
 					uint16_t transactionId;
+					uint8_t bucketId;
 					Addr addr;
 				};
 				bool onResponse(UdpRequest comm, DataBuffer* data, PingInfo request);
-				void sendRequest(Addr& addr);
+				PingMessage parseResponse(DataBuffer& message);
 			};
 		}
 	}

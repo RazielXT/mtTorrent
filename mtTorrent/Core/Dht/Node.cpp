@@ -17,26 +17,26 @@ void NodeId::copy(const char* buffer)
 	memcpy(data, buffer, 20);
 }
 
-bool mtt::dht::NodeId::closerThanThis(NodeId& maxDistance, NodeId& target)
+bool mtt::dht::NodeId::closerToNodeThan(NodeId& maxDistance, NodeId& target)
 {
 	auto dist = distance(target);
+	auto od = maxDistance.length();
+	auto nl = dist.length();
 
 	for (int i = 0; i < 20; i++)
 	{
-		if (dist.data[i] <= maxDistance.data[i])
-			return true;
-		if (dist.data[i] > maxDistance.data[i])
-			return false;
+		if (dist.data[i] != maxDistance.data[i])
+			return dist.data[i] < maxDistance.data[i];
 	}
 
 	return false;
 }
 
-bool mtt::dht::NodeId::closerThan(NodeId& r, NodeId& target)
+bool mtt::dht::NodeId::closerThan(NodeId& other, NodeId& target)
 {
-	auto otherDist = r.distance(target);
+	auto otherDist = other.distance(target);
 
-	return closerThanThis(otherDist, target);
+	return closerToNodeThan(otherDist, target);
 }
 
 NodeId mtt::dht::NodeId::distance(NodeId& r)
@@ -85,7 +85,7 @@ uint8_t mtt::dht::NodeId::length(uint8_t* data)
 	return 0;
 }
 
-size_t NodeInfo::parse(char* buffer, bool v6)
+int NodeInfo::parse(const char* buffer, bool v6)
 {
 	id.copy(buffer);
 	buffer += 20;

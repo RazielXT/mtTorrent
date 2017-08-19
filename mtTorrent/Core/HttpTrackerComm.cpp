@@ -5,7 +5,7 @@
 #include "utils/UrlEncoding.h"
 
 
-#define TRACKER_LOG(x) WRITE_LOG("HTTP tracker " << info.hostname << " " << x)
+#define HTTP_TRACKER_LOG(x) WRITE_LOG("HTTP tracker " << info.hostname << " " << x)
 
 using namespace mtt;
 
@@ -87,7 +87,7 @@ void mtt::HttpTrackerComm::onTcpReceived()
 			info.peers = (uint32_t)announceResp.peers.size();
 			info.announceInterval = announceResp.interval;
 
-			TRACKER_LOG("received peers:" << announceResp.peers.size() << ", p: " << announceResp.seedCount << ", l: " << announceResp.leechCount);
+			HTTP_TRACKER_LOG("received peers:" << announceResp.peers.size() << ", p: " << announceResp.seedCount << ", l: " << announceResp.leechCount);
 
 			if (onAnnounceResult)
 				onAnnounceResult(announceResp);
@@ -100,10 +100,10 @@ DataBuffer mtt::HttpTrackerComm::createAnnounceRequest(std::string host, std::st
 	PacketBuilder builder(400);
 	builder << "GET /announce?info_hash=" << UrlEncode(torrent->info.hash, 20);
 	builder << "&peer_id=" << UrlEncode(mtt::config::internal.hashId, 20);
-	builder << "&port=" << std::to_string(mtt::config::external.listenPort);
+	builder << "&port=" << std::to_string(mtt::config::external.tcpPort);
 	builder << "&uploaded=0&downloaded=0&left=" << std::to_string(torrent->info.fullSize);
 	builder << "&numwant=" << std::to_string(mtt::config::internal.maxPeersPerTrackerRequest);
-	builder << "&compact=1&no_peer_id=0&key=" << std::to_string(mtt::config::internal.key);
+	builder << "&compact=1&no_peer_id=0&key=" << std::to_string(mtt::config::internal.trackerKey);
 	builder << "&event=started HTTP/1.0\r\n";
 	builder << "User-Agent: " << MT_NAME << "\r\n";
 	builder << "Connection: close\r\n";
@@ -218,7 +218,7 @@ mtt::HttpTrackerComm::HttpHeaderInfo mtt::HttpTrackerComm::readHttpHeader(DataBu
 
 void mtt::HttpTrackerComm::announce()
 {
-	TRACKER_LOG("announcing");
+	HTTP_TRACKER_LOG("announcing");
 
 	if (state == Announced)
 		state = Reannouncing;

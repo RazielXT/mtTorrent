@@ -222,10 +222,10 @@ void Addr::set(const boost::asio::ip::address& addr, uint16_t port_num)
 	}
 }
 
-size_t Addr::parse(uint8_t* buffer, bool v6)
+int Addr::parse(uint8_t* buffer, bool v6)
 {
 	ipv6 = v6;
-	size_t addrSize = v6 ? 16 : 4;
+	int addrSize = v6 ? 16 : 4;
 	memcpy(addrBytes, buffer, addrSize);
 
 	/*if (!v6)
@@ -251,6 +251,13 @@ size_t Addr::parse(uint8_t* buffer, bool v6)
 	port = _byteswap_ushort(*reinterpret_cast<const uint16_t*>(buffer + addrSize));
 
 	return 2 + addrSize;
+}
+
+boost::asio::ip::udp::endpoint Addr::toUdpEndpoint()
+{
+	return ipv6 ?
+		udp::endpoint(boost::asio::ip::address_v6(*reinterpret_cast<boost::asio::ip::address_v6::bytes_type*>(addrBytes)), port) :
+		udp::endpoint(boost::asio::ip::address_v4(*reinterpret_cast<boost::asio::ip::address_v4::bytes_type*>(addrBytes)), port);
 }
 
 bool Addr::operator==(const Addr& r)

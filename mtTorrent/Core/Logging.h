@@ -1,9 +1,6 @@
 #pragma once
-#include <iostream>
+#include <sstream>
 
-extern void LockLog();
-extern void UnlockLog();
-extern std::string GetLogTime();
+extern void WriteLogImplementation(std::stringstream&);
 
-#define WRITE_LOG(x) {LockLog(); std::cout << GetLogTime() << x << "\n"; UnlockLog();}
-#define INFO_LOG(x) {}//WRITE_LOG("INFO: " << x)
+#define WRITE_LOG(x) {std::stringstream ss; ss << x; WriteLogImplementation(ss);}

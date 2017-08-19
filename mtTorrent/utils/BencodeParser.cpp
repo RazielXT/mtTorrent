@@ -105,7 +105,7 @@ TorrentFileInfo BencodeParser::getTorrentFileInfo()
 	return file;
 }
 
-#define IS_NUM_CHAR(c) ((c >= '0') && (c <= '9'))
+inline bool IS_NUM_CHAR(char c) { return ((c >= '0') && (c <= '9')); }
 
 BencodeParser::Object BencodeParser::internalParse(const char** body)
 {
@@ -129,7 +129,7 @@ BencodeParser::Object BencodeParser::internalParse(const char** body)
 		obj = parseDictionary(body);
 	}
 	else
-		__debugbreak();
+		parseError(body);
 
 	return obj;
 }
@@ -175,7 +175,10 @@ BencodeParser::BenDictionary* BencodeParser::parseDictionary(const char** body)
 		auto key = internalParse(body);
 
 		if (key.type != Object::Text)
-			throw;
+		{
+			parseError(body);
+			return dic;
+		}
 
 		if (key.txt == "info")
 			infoStart = *body;
@@ -207,7 +210,10 @@ std::string BencodeParser::parseString(const char** body)
 	}
 
 	if (**body != ':')
-		throw;
+	{
+		parseError(body);
+		return "";
+	}
 
 	(*body)++;
 
@@ -233,14 +239,17 @@ int BencodeParser::parseInt(const char** body)
 
 	std::string num;
 	
-	while (IS_NUM_CHAR(**body) || (**body == '-' && num.empty()))
+	while ((IS_NUM_CHAR(**body) || (**body == '-' && num.empty())) && *body != bodyEnd)
 	{
 		num += (**body);
 		(*body)++;
 	}
 
 	if (**body != 'e')
-		throw;
+	{
+		parseError(body);
+		return 0;
+	}
 
 	(*body)++;
 
@@ -252,6 +261,16 @@ int BencodeParser::parseInt(const char** body)
 mtt::BencodeParser::~BencodeParser()
 {
 	parsedData.cleanup();
+}
+
+void mtt::BencodeParser::parseError(const char** body)
+{
+	PARSER_LOG("PARSE ERROR character " << **body);
+
+	infoStart = infoEnd = 0;
+	*body = bodyEnd;
+
+	//assert(false);
 }
 
 mtt::TorrentInfo mtt::BencodeParser::parseTorrentInfo(const char* data, size_t length)
