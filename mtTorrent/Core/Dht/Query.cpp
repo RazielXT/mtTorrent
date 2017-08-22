@@ -1,8 +1,7 @@
 #include "Dht/Query.h"
-#include "utils/BencodeParser.h"
 #include "utils/PacketHelper.h"
 #include "Configuration.h"
-#include "utils/BencodeParserLite.h"
+#include "utils/BencodeParser.h"
 
 #define DHT_LOG(x) WRITE_LOG("DHT: " << x)
 
@@ -10,7 +9,7 @@ using namespace mtt::dht;
 
 static uint16_t createTransactionId()
 {
-	static std::atomic<uint16_t> adder = 900;
+	static std::atomic<uint16_t> adder = 0;
 	adder += 100;
 	return adder;
 }
@@ -133,7 +132,7 @@ GetPeersResponse mtt::dht::Query::FindPeers::parseGetPeersResponse(DataBuffer& m
 
 	if (!message.empty())
 	{
-		BencodeParserLite parser;
+		BencodeParser parser;
 		parser.parse(message.data(), message.size());
 		auto root = parser.getRoot();
 
@@ -177,13 +176,13 @@ GetPeersResponse mtt::dht::Query::FindPeers::parseGetPeersResponse(DataBuffer& m
 
 				if (auto values = resp->getListItem("values"))
 				{
-					auto o = values->getFirstItem();
-					for (int i = 0; i < values->info.size; i++)
+					auto value = values->getFirstItem();
+					while(value)
 					{
-						if(o->isText())
-							response.values.emplace_back(Addr((uint8_t*)o->info.data, o->info.size >= 18));
+						if(value->isText())
+							response.values.emplace_back(Addr((uint8_t*)value->info.data, value->info.size >= 18));
 
-						o = o->getNextSibling();
+						value = value->getNextSibling();
 					}
 				}
 
@@ -446,7 +445,7 @@ mtt::dht::FindNodeResponse mtt::dht::Query::FindNode::parseFindNodeResponse(Data
 
 	if (!message.empty())
 	{
-		BencodeParserLite parser;
+		BencodeParser parser;
 		parser.parse(message.data(), message.size());
 		auto root = parser.getRoot();
 
@@ -597,12 +596,9 @@ mtt::dht::PingMessage mtt::dht::Query::PingNodes::parseResponse(DataBuffer& mess
 {
 	PingMessage response;
 
-	if (message.size() == 78)
-		WRITE_LOG("");
-
 	if (!message.empty())
 	{
-		BencodeParserLite parser;
+		BencodeParser parser;
 		parser.parse(message.data(), message.size());
 		auto root = parser.getRoot();
 

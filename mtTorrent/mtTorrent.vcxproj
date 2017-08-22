@@ -252,8 +252,8 @@
     <ClCompile Include="Core\TrackerManager.cpp" />
     <ClCompile Include="Core\UdpTrackerComm.cpp" />
     <ClCompile Include="utils\Base32.cpp" />
+    <ClCompile Include="utils\TorrentFileParser.cpp" />
     <ClCompile Include="utils\BencodeParser.cpp" />
-    <ClCompile Include="utils\BencodeParserLite.cpp" />
     <ClCompile Include="utils\ScheduledTimer.cpp" />
     <ClCompile Include="utils\HexEncoding.cpp" />
     <ClCompile Include="utils\Network.cpp" />
@@ -274,6 +274,7 @@
     <ClInclude Include="Core\Dht\Query.h" />
     <ClInclude Include="Core\Dht\Table.h" />
     <ClInclude Include="Core\ExtensionProtocol.h" />
+    <ClInclude Include="Core\Interface.h" />
     <ClInclude Include="Core\IPeerListener.h" />
     <ClInclude Include="Core\ITracker.h" />
     <ClInclude Include="Core\Logging.h" />
@@ -289,8 +290,8 @@
     <ClInclude Include="Core\TrackerManager.h" />
     <ClInclude Include="Core\UdpTrackerComm.h" />
     <ClInclude Include="utils\Base32.h" />
+    <ClInclude Include="utils\TorrentFileParser.h" />
     <ClInclude Include="utils\BencodeParser.h" />
-    <ClInclude Include="utils\BencodeParserLite.h" />
     <ClInclude Include="utils\ScheduledTimer.h" />
     <ClInclude Include="utils\HexEncoding.h" />
     <ClInclude Include="utils\Network.h" />

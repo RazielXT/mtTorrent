@@ -1,5 +1,5 @@
 #include "Test.h"
-#include "utils/BencodeParser.h"
+#include "utils/TorrentFileParser.h"
 #include "utils/ServiceThreadpool.h"
 #include "Configuration.h"
 #include "MetadataReconstruction.h"
@@ -9,7 +9,7 @@
 #include "TrackerManager.h"
 #include "Storage.h"
 #include "utils/TcpAsyncServer.h"
-#include "utils/BencodeParserLite.h"
+#include "utils/BencodeParser.h"
 
 using namespace mtt;
 
@@ -76,11 +76,11 @@ void TorrentTest::testAsyncUdpRequest()
 
 void TorrentTest::testMetadataReceive()
 {
-	BencodeParser file;	
+	TorrentFileParser file;	
 	if (!file.parseFile("D:\\test.torrent"))
 		return;
 
-	auto torrent = file.getTorrentFileInfo();
+	auto& torrent = file.fileInfo;
 
 	ServiceThreadpool service;
 
@@ -110,7 +110,7 @@ void TorrentTest::testMetadataReceive()
 
 	if (metadata.finished())
 	{
-		BencodeParser parse;
+		TorrentFileParser parse;
 		auto info = parse.parseTorrentInfo(metadata.buffer.data(), metadata.buffer.size());
 		WRITE_LOG(info.files[0].path[0]);
 	}
@@ -196,7 +196,7 @@ void TorrentTest::testAsyncDhtGetPeers()
 
 	if (metadata.finished())
 	{
-		BencodeParser parse;
+		TorrentFileParser parse;
 		auto info = parse.parseTorrentInfo(metadata.buffer.data(), metadata.buffer.size());
 		WRITE_LOG(info.files[0].path[0]);
 	}
@@ -262,11 +262,11 @@ std::string findFileByPiece(mtt::TorrentFileInfo& file, uint32_t piece)
 
 void TorrentTest::testStorageCheck()
 {
-	BencodeParser file;
+	TorrentFileParser file;
 	if (!file.parseFile("D:\\hunter.torrent"))
 		return;
 
-	auto torrent = file.getTorrentFileInfo();
+	auto& torrent = file.fileInfo;
 
 	DownloadSelection selection;
 	for (auto&f : torrent.info.files)
@@ -290,11 +290,11 @@ void TorrentTest::testStorageCheck()
 
 void TorrentTest::testStorageLoad()
 {
-	BencodeParser file;
+	TorrentFileParser file;
 	if (!file.parseFile("D:\\wifi.torrent"))
 		return;
 
-	auto torrent = file.getTorrentFileInfo();
+	auto& torrent = file.fileInfo;
 
 	DownloadSelection selection;
 	for (auto&f : torrent.info.files)
@@ -332,11 +332,11 @@ void TorrentTest::testStorageLoad()
 
 void TorrentTest::testPeerListen()
 {
-	BencodeParser file;
+	TorrentFileParser file;
 	if (!file.parseFile("D:\\wifi.torrent"))
 		return;
 
-	auto torrent = file.getTorrentFileInfo();
+	auto& torrent = file.fileInfo;
 
 	DownloadSelection selection;
 	for (auto&f : torrent.info.files)
@@ -431,14 +431,14 @@ void TorrentTest::testDhtTable()
 			saveFile = std::string((std::istreambuf_iterator<char>(inFile)), std::istreambuf_iterator<char>());
 	}
 
-	mtt::BencodeParserLite::Object obj;
+	mtt::BencodeParser::Object obj;
 	auto s = sizeof(obj);
 
-	BencodeParser file;
-	if (!file.parseFile("D:\\wifi.torrent"))
+	TorrentFileParser file;
+	if (!file.parseFile("D:\\folk.torrent"))
 		return;
-
-	auto torrent = file.getTorrentFileInfo();
+	
+	auto& info = file.fileInfo;
 
 	mtt::dht::Communication dhtComm;
 	dhtComm.load(saveFile);
@@ -446,10 +446,10 @@ void TorrentTest::testDhtTable()
 	//ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J	boku 26
 	//6QBN6XVGKV7CWOT5QXKDYWF3LIMUVK4I	owarimonogagtari batch
 	//56VYAWGYUTF7ETZZRB45C6FKJSKVBLRD	mushishi s2 22 rare
-	std::string targetIdBase32 = "56VYAWGYUTF7ETZZRB45C6FKJSKVBLRD";
+	std::string targetIdBase32 = "RSD57UXWL7EIST7DLHFSSGFST6AMYFAM";
 	auto targetId = base32decode(targetIdBase32);
 
-	dhtComm.findPeers((uint8_t*)targetId.data(), this);
+	dhtComm.findPeers(info.info.hash/*(uint8_t*)targetId.data()*/, this);
 	WAITFOR(dhtResult.finalCount != -1);
 
 	//dhtComm.findNode(mtt::config::internal.hashId);

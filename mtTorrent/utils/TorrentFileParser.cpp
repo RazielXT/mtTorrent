@@ -1,0 +1,231 @@
+#include "TorrentFileParser.h"
+#include <iostream>
+#include <openssl/sha.h>
+#include <boost/filesystem.hpp>
+
+#define TPARSER_LOG(x) {} WRITE_LOG("TORRENT PARSER: " << x)
+
+using namespace mtt;
+
+bool TorrentFileParser::parse(const uint8_t* data, size_t length)
+{
+	BencodeParser parser;
+
+	if (!parser.parse(data, length))
+		return false;
+	
+	loadTorrentFileInfo(parser);
+	generateInfoHash(parser);
+
+	return true;
+}
+
+bool TorrentFileParser::parseFile(const char* filename)
+{
+	size_t maxSize = 10 * 1024 * 1024;
+	boost::filesystem::path dir(filename);
+
+	if (!boost::filesystem::exists(dir) || boost::filesystem::file_size(dir) > maxSize)
+	{
+		TPARSER_LOG("Invalid torrent file " << filename);
+		return false;
+	}
+
+	std::ifstream file(filename, std::ios_base::binary);
+
+	if (!file.good())
+	{
+		TPARSER_LOG("Failed to open torrent file " << filename);
+		return false;
+	}
+
+	DataBuffer buffer((
+		std::istreambuf_iterator<char>(file)),
+		(std::istreambuf_iterator<char>()));
+
+	return parse(buffer.data(), buffer.size());
+}
+
+static uint32_t getPieceIndex(size_t pos, size_t pieceSize)
+{
+	size_t p = 0;
+
+	while (pieceSize + p*pieceSize < pos)
+	{
+		p++;
+	}
+
+	return static_cast<uint32_t>(p);
+}
+
+void TorrentFileParser::loadTorrentFileInfo(BencodeParser& parser)
+{
+	auto root = parser.getRoot();
+
+	if (root && root->isMap())
+	{
+		if (auto announce = root->getTxtItem("announce"))
+			fileInfo.announce = std::string(announce->data, announce->size);
+
+		if (auto list = root->getListItem("announce-list"))
+		{
+			auto announce = list->getFirstItem();
+
+			while (announce)
+			{
+				if (announce->isList())
+				{
+					auto a = announce->getFirstItem();
+
+					while (a)
+					{
+						if (a->isText())
+							fileInfo.announceList.push_back(std::string(a->info.data, a->info.size));
+
+						a = a->getNextSibling();
+					}
+				}
+
+				announce = announce->getNextSibling();
+			}
+		}
+
+		if (auto info = root->getDictItem("info"))
+		{
+			fileInfo.info = parseTorrentInfo(info);
+		}		
+	}
+}
+
+bool mtt::TorrentFileParser::generateInfoHash(BencodeParser& parser)
+{
+	const char* infoStart = nullptr;
+	const char* infoEnd = nullptr;
+	auto dict = parser.getRoot();
+
+	if (dict)
+	{
+		auto it = dict->getFirstItem();
+
+		while (it)
+		{
+			if (it->isText("info", 4))
+			{
+				infoStart = it->info.data + 4;
+
+				auto infod = it->getNextSibling();
+
+				if (infod->isMap())
+				{
+					auto pieces = infod->getTxtItem("pieces");
+
+					if (pieces)
+						infoEnd = pieces->data + pieces->size + 1; 
+				}
+
+				it = nullptr;
+			}
+			else
+				it = it->getNextSibling();
+		}
+	}
+
+	if (infoStart && infoEnd)
+	{
+		SHA1((const unsigned char*)infoStart, infoEnd - infoStart, (unsigned char*)&fileInfo.info.hash[0]);
+
+		return true;
+	}
+	else
+		return false;
+}
+
+mtt::TorrentInfo mtt::TorrentFileParser::parseTorrentInfo(const uint8_t* data, size_t length)
+{
+	BencodeParser parser;
+
+	if (parser.parse(data, length))
+	{
+		auto info = parseTorrentInfo(parser.getRoot());
+
+		auto infoStart = (const char*)data;
+		auto infoEnd = (const char*)data + length;
+
+		SHA1((const unsigned char*)infoStart, infoEnd - infoStart, (unsigned char*)&info.hash[0]);
+
+		return info;
+	}
+	else
+		return mtt::TorrentInfo();
+}
+
+mtt::TorrentInfo mtt::TorrentFileParser::parseTorrentInfo(BencodeParser::Object* infoDictionary)
+{
+	mtt::TorrentInfo info;
+
+	info.pieceSize = infoDictionary->getInt("piece length");
+
+	auto piecesHash = infoDictionary->getTxtItem("pieces");
+
+	if (piecesHash && piecesHash->size % 20 == 0)
+	{
+		PieceInfo temp;
+		auto end = piecesHash->data + piecesHash->size;
+
+		for (auto it = piecesHash->data; it != end; it += 20)
+		{
+			memcpy(temp.hash, it, 20);
+			info.pieces.push_back(temp);
+		}
+	}
+
+	if (auto files = infoDictionary->getListItem("files"))
+	{
+		info.name = infoDictionary->getTxt("name");
+
+		size_t sizeSum = 0;
+		
+		int i = 0;
+		auto file = files->getFirstItem();
+		while(file)
+		{
+			std::vector<std::string> path;
+			path.push_back(info.name);
+
+			auto pathList = file->getListItem("path");
+			auto pathItem = pathList->getFirstItem();
+			while (pathItem)
+			{
+				path.push_back(pathItem->getTxt());
+				pathItem = pathItem->getNextSibling();
+			}
+
+			size_t size = file->getInt("length");
+			auto startId = getPieceIndex(sizeSum, info.pieceSize);
+			auto startPos = sizeSum % info.pieceSize;
+			sizeSum += size;
+			auto endId = getPieceIndex(sizeSum, info.pieceSize);
+			auto endPos = sizeSum % info.pieceSize;
+
+			info.files.push_back({ i++, path,  size, startId, (uint32_t)startPos, endId, (uint32_t)endPos });
+			file = file->getNextSibling();
+		}
+
+		info.fullSize = sizeSum;
+	}
+	else
+	{
+		size_t size = infoDictionary->getInt("length");
+		auto endPos = size % info.pieceSize;
+		info.name = infoDictionary->getTxt("name");
+		info.files.push_back({ 0,{ info.name }, size, 0, 0, static_cast<uint32_t>(info.pieces.size() - 1), (uint32_t)endPos });
+
+		info.fullSize = size;
+	}
+
+	auto piecesCount = info.pieces.size();
+	auto addExpected = piecesCount % 8 > 0 ? 1 : 0; //8 pieces in byte
+	info.expectedBitfieldSize = piecesCount / 8 + addExpected;
+
+	return info;
+}

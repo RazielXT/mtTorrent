@@ -1,115 +1,33 @@
 #include "BencodeParser.h"
-#include <iostream>
-#include <openssl/sha.h>
+#include <algorithm>
+#include "..\Core\Logging.h"
 
-#define PARSER_LOG(x) {}//WRITE_LOG("PARSER: " << x)
+#define PARSER_LOG(x) //WRITE_LOG("PARSER LITE: " << x)
 
-using namespace mtt;
-
-bool BencodeParser::parse(std::string& str)
+bool mtt::BencodeParser::parse(const uint8_t* data, size_t length)
 {
-	return parse(str.data(), str.size());
-}
+	deep = 0;
+	objects.clear();
 
-bool BencodeParser::parse(DataBuffer& buffer)
-{
-	return parse((const char*)buffer.data(), buffer.size());
-}
+	uint32_t reserveSize = length < 200 ? uint32_t(length*0.2f) : std::min(uint32_t(2000), uint32_t(40 + length/500));
+	objects.reserve(reserveSize);
 
-bool BencodeParser::parse(const uint8_t* data, size_t length)
-{
-	return parse((const char*)data, length);
-}
+	auto parserEnd = (const char*)data;
+	bodyEnd = (const char*)data + length;
 
-bool BencodeParser::parse(const char* data, size_t length)
-{
-	infoHash.clear();
-	infoStart = infoEnd = nullptr;
+	internalParse(&parserEnd);
 
-	bodyEnd = data + length;
-	parsedData = internalParse(&data);
+	bodyEnd = parserEnd;
+	remainingData = length - (bodyEnd - (const char*)data);
 
-	remainingData = bodyEnd - data;
-	bodyEnd = data;
-
-	if (infoStart && infoEnd)
-	{
-		infoHash.resize(SHA_DIGEST_LENGTH);
-		SHA1((const unsigned char*)infoStart, infoEnd - infoStart, (unsigned char*)&infoHash[0]);
-	}
-
-	return true;
-}
-
-bool BencodeParser::parseFile(const char* filename)
-{
-	std::ifstream file(filename, std::ios_base::binary);
-
-	if (!file.good())
-	{
-		PARSER_LOG("Failed to parse torrent file " << filename << "\n");
-		return false;
-	}
-
-	DataBuffer buffer((
-		std::istreambuf_iterator<char>(file)),
-		(std::istreambuf_iterator<char>()));
-
-	return parse(buffer);
-}
-
-uint32_t getPieceIndex(size_t pos, size_t pieceSize)
-{
-	size_t p = 0;
-
-	while (pieceSize + p*pieceSize < pos)
-	{
-		p++;
-	}
-
-	return static_cast<uint32_t>(p);
-}
-
-TorrentFileInfo BencodeParser::getTorrentFileInfo()
-{
-	TorrentFileInfo file;
-
-	if (parsedData.type == Object::Dictionary)
-	{
-		auto& dictionary = *parsedData.dic;
-
-		if (dictionary.find("announce") != dictionary.end())
-			file.announce = dictionary["announce"].txt;
-
-		if (dictionary.find("announce-list") != dictionary.end())
-		{
-			auto list = dictionary["announce-list"].l;
-
-			for (auto& obj : *list)
-			{
-				if (obj.type == Object::List)
-					for (auto& a : *obj.l)
-					{
-						if (a.type == Object::Text)
-							file.announceList.push_back(a.txt);
-					}
-			}
-		}
-
-		if (dictionary.find("info") != dictionary.end())
-		{
-			file.info = parseTorrentInfo(*dictionary["info"].dic);
-		}		
-	}
-
-	return file;
+	return getRoot() != nullptr;
 }
 
 inline bool IS_NUM_CHAR(char c) { return ((c >= '0') && (c <= '9')); }
 
-BencodeParser::Object BencodeParser::internalParse(const char** body)
+mtt::BencodeParser::Object* mtt::BencodeParser::internalParse(const char** body)
 {
-	Object obj;
+	Object* obj = nullptr;
 	char c = **body;
 
 	if (IS_NUM_CHAR(c))
@@ -134,358 +52,279 @@ BencodeParser::Object BencodeParser::internalParse(const char** body)
 	return obj;
 }
 
-int deep = 0;
-
-BencodeParser::BenList* BencodeParser::parseList(const char** body)
+void mtt::BencodeParser::parseError(const char** body)
 {
-	(*body)++;
-
-	BenList* list = new BenList();
-
-	PARSER_LOG("List start" << std::to_string(deep) << "\n");
-
-	deep++;
-
-	while (**body != 'e' && (*body < bodyEnd))
-	{
-		list->push_back(internalParse(body));
-	}
-
-	(*body)++;
-
-	deep--;
-
-	PARSER_LOG("List end" << std::to_string(deep) << "\n");
-
-	return list;
+	PARSER_LOG("PARSE ERROR character " << **body);
+	*body = bodyEnd;
 }
 
-BencodeParser::BenDictionary* BencodeParser::parseDictionary(const char** body)
+#define NOT_END_OF_ELEMENTS (**body != 'e' && (*body < bodyEnd))
+
+mtt::BencodeParser::Object* mtt::BencodeParser::parseList(const char** body)
 {
+	PARSER_LOG("List start " << deep);
+
 	(*body)++;
-
-	BenDictionary* dic = new BenDictionary();
-
-	PARSER_LOG("Dictionary start" << std::to_string(deep) << "\n");
-
 	deep++;
 
-	while (**body != 'e' && (*body < bodyEnd))
-	{
-		auto key = internalParse(body);
+	int rootId = (int)objects.size();
+	objects.emplace_back(mtt::BencodeParser::Object());
+	objects.back().info.type = Object::Item::List;
 
-		if (key.type != Object::Text)
+	int count = 0;
+	while (NOT_END_OF_ELEMENTS)
+	{
+		auto objPos = (uint16_t)objects.size();
+		auto o = internalParse(body);
+
+		if (o)
 		{
-			parseError(body);
-			return dic;
+			o->info.nextSiblingOffset = NOT_END_OF_ELEMENTS ? (uint16_t)objects.size() - objPos : 0;
+			count++;
 		}
-
-		if (key.txt == "info")
-			infoStart = *body;
-
-		auto value = internalParse(body);
-
-		if (key.txt == "info")
-			infoEnd = *body;
-
-		(*dic)[key.txt] = value;
 	}
-
-	deep--;
 
 	(*body)++;
+	deep--;
 
-	PARSER_LOG("Dictionary end" << std::to_string(deep) << "\n");
+	objects[rootId].info.size = count;
+	objects[rootId].info.nextSiblingOffset = NOT_END_OF_ELEMENTS ? (uint16_t)objects.size() - rootId : 0;
 
-	return dic;
+	PARSER_LOG("List end " << deep);
+
+	return &objects[rootId];
 }
 
-std::string BencodeParser::parseString(const char** body)
+mtt::BencodeParser::Object* mtt::BencodeParser::parseDictionary(const char** body)
 {
-	std::string len;
-	while (IS_NUM_CHAR(**body))
+	PARSER_LOG("Dictionary start" << deep);
+
+	(*body)++;
+	deep++;
+
+	int rootId = (int)objects.size();
+	objects.emplace_back(mtt::BencodeParser::Object());
+	objects.back().info.type = Object::Item::Dictionary;
+
+	int count = 0;
+	while (NOT_END_OF_ELEMENTS)
 	{
-		len += (**body);
-		(*body)++;
+		auto s = parseString(body);
+
+		if (s)
+		{
+			auto objPos = (uint16_t)objects.size();
+
+			bool infokey = s->equals("info", 4);
+			if (infokey)
+				infoStart = *body;
+
+			auto o = internalParse(body);
+
+			if (infokey)
+				infoEnd = *body;
+
+			if (o)
+			{
+				objects[objPos - 1].info.nextSiblingOffset = 1;
+				o->info.nextSiblingOffset = NOT_END_OF_ELEMENTS ? (uint16_t)objects.size() - objPos : 0;
+				count++;
+			}
+		}
 	}
 
-	if (**body != ':')
+	(*body)++;
+	deep--;
+
+	objects[rootId].info.size = count;
+	objects[rootId].info.nextSiblingOffset = NOT_END_OF_ELEMENTS ? (uint16_t)objects.size() - rootId : 0;
+
+	PARSER_LOG("Dictionary end" << deep);
+
+	return &objects[rootId];
+}
+
+mtt::BencodeParser::Object* mtt::BencodeParser::parseString(const char** body)
+{
+	mtt::BencodeParser::Object obj;
+	char* endPtr = 0;
+	obj.info.size = strtol(*body, &endPtr, 10);
+	*body = endPtr;
+
+	if (**body != ':' || (bodyEnd - *body) < obj.info.size)
 	{
 		parseError(body);
-		return "";
+		return nullptr;
 	}
 
 	(*body)++;
 
-	int length = std::stoi(len);
+	obj.info.type = Object::Item::Text;
+	obj.info.data = *body;
+	(*body) += obj.info.size;
 
-	std::string out(*body,*body + length);
+	PARSER_LOG("String " << std::string(obj.data.text.data, obj.data.text.length));
 
-	(*body) += length;
-
-	if(out.length()<100)
-		PARSER_LOG("String: " << out << "\n");
-
-	if (out == "pieces")
-		length++;
-
-	return out;
+	objects.push_back(obj);
+	return &objects.back();
 }
 
-int BencodeParser::parseInt(const char** body)
+mtt::BencodeParser::Object* mtt::BencodeParser::parseInt(const char** body)
 {
-	//i
 	(*body)++;
 
-	std::string num;
-	
-	while ((IS_NUM_CHAR(**body) || (**body == '-' && num.empty())) && *body != bodyEnd)
+	mtt::BencodeParser::Object obj;
+	obj.info.data = *body;
+
+	while ((IS_NUM_CHAR(**body) || (**body == '-' && obj.info.size == 0)) && *body != bodyEnd)
 	{
-		num += (**body);
+		obj.info.size++;
 		(*body)++;
 	}
 
 	if (**body != 'e')
 	{
 		parseError(body);
-		return 0;
+		return nullptr;
 	}
 
 	(*body)++;
 
-	PARSER_LOG("Integer: " << num << "\n");
+	obj.info.type = Object::Item::Number;
+	PARSER_LOG("Number " << std::string(obj.info.data, obj.info.size));
 
-	return std::stoi(num);
+	objects.push_back(obj);
+	return &objects.back();
 }
 
-mtt::BencodeParser::~BencodeParser()
+mtt::BencodeParser::Object* mtt::BencodeParser::getRoot()
 {
-	parsedData.cleanup();
+	return objects.empty() ? nullptr : &objects[0];
 }
 
-void mtt::BencodeParser::parseError(const char** body)
+mtt::BencodeParser::Object* mtt::BencodeParser::Object::getNextSibling()
 {
-	PARSER_LOG("PARSE ERROR character " << **body);
-
-	infoStart = infoEnd = 0;
-	*body = bodyEnd;
-
-	//assert(false);
+	return info.nextSiblingOffset ? this + info.nextSiblingOffset : nullptr;
 }
 
-mtt::TorrentInfo mtt::BencodeParser::parseTorrentInfo(const char* data, size_t length)
+mtt::BencodeParser::Object* mtt::BencodeParser::Object::getDictItem(const char* name)
 {
-	parse(data, length);
+	auto obj = getFirstItem();
+	auto len = strlen(name);
 
-	if (parsedData.dic)
+	while (obj)
 	{
-		infoStart = data;
-		infoEnd = data + length;
-		infoHash.clear();
+		if (obj->equals(name, len) && (obj + 1)->isMap())
+			return obj + 1;
 
-		return parseTorrentInfo(*parsedData.dic);
-	}		
-	else
-		return mtt::TorrentInfo();
-}
-
-mtt::TorrentInfo mtt::BencodeParser::parseTorrentInfo(const uint8_t* data, size_t length)
-{
-	return parseTorrentInfo((const char*)data, length);
-}
-
-mtt::TorrentInfo mtt::BencodeParser::parseTorrentInfo(BenDictionary& infoDictionary)
-{
-	mtt::TorrentInfo info;
-
-	info.pieceSize = infoDictionary["piece length"].i;
-
-	auto& piecesHash = infoDictionary["pieces"].txt;
-
-	if (piecesHash.size() % 20 == 0)
-	{
-		PieceInfo temp;
-		auto end = piecesHash.data() + piecesHash.size();
-
-		for (auto it = piecesHash.data(); it != end; it += 20)
-		{
-			memcpy(temp.hash, it, 20);
-			info.pieces.push_back(temp);
-		}
-	}
-
-	if (infoDictionary.find("files") != infoDictionary.end())
-	{
-		info.name = infoDictionary["name"].txt;
-
-		size_t sizeSum = 0;
-		auto& files = *infoDictionary["files"].l;
-
-		int i = 0;
-		for (auto& f : files)
-		{
-			std::vector<std::string> path;
-			path.push_back(info.name);
-
-			auto& pathList = *(*f.dic)["path"].l;
-			for (auto& p : pathList)
-			{
-				path.push_back(p.txt);
-			}
-
-			size_t size = (*f.dic)["length"].i;
-			auto startId = getPieceIndex(sizeSum, info.pieceSize);
-			auto startPos = sizeSum % info.pieceSize;
-			sizeSum += size;
-			auto endId = getPieceIndex(sizeSum, info.pieceSize);
-			auto endPos = sizeSum % info.pieceSize;
-
-			info.files.push_back({ i++, path,  size, startId, (uint32_t)startPos, endId, (uint32_t)endPos });
-		}
-
-		info.fullSize = sizeSum;
-	}
-	else
-	{
-		size_t size = infoDictionary["length"].i;
-		auto endPos = size % info.pieceSize;
-		info.name = infoDictionary["name"].txt;
-		info.files.push_back({ 0,{ info.name }, size, 0, 0, static_cast<uint32_t>(info.pieces.size() - 1), (uint32_t)endPos });
-
-		info.fullSize = size;
-	}
-
-	auto piecesCount = info.pieces.size();
-	auto addExpected = piecesCount % 8 > 0 ? 1 : 0; //8 pieces in byte
-	info.expectedBitfieldSize = piecesCount / 8 + addExpected;
-
-	if (infoStart && infoEnd)
-	{
-		if (infoHash.empty())
-			SHA1((const unsigned char*)infoStart, infoEnd - infoStart, (unsigned char*)&info.hash[0]);
-		else
-			memcpy(&info.hash[0], infoHash.data(), SHA_DIGEST_LENGTH);
-	}
-
-	return info;
-}
-
-BencodeParser::BenList* BencodeParser::Object::getListItem(const char* name)
-{
-	if (type == BencodeParser::Object::Dictionary)
-	{
-		if (dic->find(name) != dic->end())
-		{
-			auto& item = (*dic)[name];
-
-			if(item.type == BencodeParser::Object::List)
-				return item.l;
-		}
+		obj = (obj + 1)->getNextSibling();
 	}
 
 	return nullptr;
 }
 
-mtt::BencodeParser::Object* mtt::BencodeParser::Object::getDictObject(const char* name)
+mtt::BencodeParser::Object* mtt::BencodeParser::Object::getListItem(const char* name)
 {
-	if (type == BencodeParser::Object::Dictionary)
-	{
-		if (dic->find(name) != dic->end())
-		{
-			auto& item = (*dic)[name];
+	auto obj = getFirstItem();
+	auto len = strlen(name);
 
-			if (item.type == BencodeParser::Object::Dictionary)
-				return &item;
-		}
+	while (obj)
+	{
+		if (obj->equals(name, len) && (obj + 1)->isList())
+			return obj + 1;
+
+		obj = (obj + 1)->getNextSibling();
 	}
 
 	return nullptr;
 }
 
-BencodeParser::BenDictionary* mtt::BencodeParser::Object::getDictItem(const char* name)
+mtt::BencodeParser::Object::Item* mtt::BencodeParser::Object::getTxtItem(const char* name)
 {
-	if (type == BencodeParser::Object::Dictionary)
-	{
-		if (dic->find(name) != dic->end())
-		{
-			auto& item = (*dic)[name];
+	auto obj = getFirstItem();
+	auto len = strlen(name);
 
-			if (item.type == BencodeParser::Object::Dictionary)
-				return item.dic;
-		}
+	while(obj)
+	{
+		if (obj->equals(name, len) && (obj + 1)->isText())
+			return &(obj + 1)->info;
+
+		obj = (obj + 1)->getNextSibling();
 	}
 
 	return nullptr;
 }
 
-std::string* mtt::BencodeParser::Object::getTxtItem(const char* name)
+std::string mtt::BencodeParser::Object::getTxt(const char* name)
 {
-	if (type == BencodeParser::Object::Dictionary)
-	{
-		if (dic->find(name) != dic->end())
-		{
-			auto& item = (*dic)[name];
+	auto item = getTxtItem(name);
 
-			if (item.type == BencodeParser::Object::Text)
-				return &item.txt;
-		}
+	return item ? std::string(item->data, item->size) : std::string();
+}
+
+std::string mtt::BencodeParser::Object::getTxt()
+{
+	return isText() ? std::string(info.data, info.size) : std::string();
+}
+
+mtt::BencodeParser::Object* mtt::BencodeParser::Object::getIntItem(const char* name)
+{
+	auto obj = getFirstItem();
+	auto len = strlen(name);
+
+	while (obj)
+	{
+		if (obj->equals(name, len) && (obj + 1)->isInt())
+			return obj + 1;
+
+		obj = (obj + 1)->getNextSibling();
 	}
 
 	return nullptr;
 }
 
-int* mtt::BencodeParser::Object::getIntItem(const char* name)
+int mtt::BencodeParser::Object::getInt(const char* name)
 {
-	if (type == BencodeParser::Object::Dictionary)
-	{
-		if (dic->find(name) != dic->end())
-		{
-			auto& item = (*dic)[name];
+	auto o = getIntItem(name);
+	return o ? o->getInt() : 0;
+}
 
-			if (item.type == BencodeParser::Object::Number)
-				return &item.i;
-		}
-	}
+int mtt::BencodeParser::Object::getInt()
+{
+	return strtol(info.data, 0, 10);
+}
 
-	return nullptr;
+mtt::BencodeParser::Object* mtt::BencodeParser::Object::getFirstItem()
+{
+	return info.size ? this + 1 : nullptr;
+}
+
+bool mtt::BencodeParser::Object::equals(const char* txt, size_t l)
+{
+	return l != info.size ? false : strncmp(txt, info.data, info.size) == 0;
 }
 
 bool mtt::BencodeParser::Object::isMap()
 {
-	return type == Dictionary;
+	return info.type == Item::Dictionary;
 }
 
 bool mtt::BencodeParser::Object::isList()
 {
-	return type == List;
+	return info.type == Item::List;
 }
 
 bool mtt::BencodeParser::Object::isInt()
 {
-	return type == Number;
+	return info.type == Item::Number;
 }
 
-void mtt::BencodeParser::Object::cleanup()
+bool mtt::BencodeParser::Object::isText()
 {
-	if (type == Dictionary)
-	{
-		for (auto& o : *dic)
-		{
-			o.second.cleanup();
-		}
+	return info.type == Item::Text;
+}
 
-		delete dic;
-	}
-
-	if (type == List)
-	{
-		for (auto& o : *l)
-		{
-			o.cleanup();
-		}
-
-		delete l;
-	}
-
-	type = None;
+bool mtt::BencodeParser::Object::isText(const char* str, size_t l)
+{
+	return isText() && equals(str, l);
 }

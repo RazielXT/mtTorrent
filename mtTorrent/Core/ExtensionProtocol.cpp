@@ -8,23 +8,20 @@
 using namespace mtt;
 using namespace mtt::ext;
 
-void PeerExchange::load(BencodeParser::Object& data)
+void PeerExchange::load(BencodeParser::Object* data)
 {
 	Message msg;
 
-	if (data.type == BencodeParser::Object::Dictionary)
+	if (data && data->isMap())
 	{
-		auto& add = data.dic->find("added");
-
-		if (add != data.dic->end() && add->second.type == BencodeParser::Object::Text)
+		if (auto added = data->getTxtItem("added"))
 		{
-			msg.added = add->second.txt;
-			size_t pos = 0;
+			uint32_t pos = 0;
 
-			while (msg.added.size() - pos >= 6)
+			while (added->size - pos >= 6)
 			{
-				uint32_t ip = swap32(*reinterpret_cast<uint32_t*>(&msg.added[0] + pos));
-				uint16_t port = swap16(*reinterpret_cast<uint16_t*>(&msg.added[0] + pos + 4));
+				uint32_t ip = swap32(*reinterpret_cast<const uint32_t*>(added->data + pos));
+				uint16_t port = swap16(*reinterpret_cast<const uint16_t*>(added->data + pos + 4));
 
 				Addr peer;
 				peer.set(ip, port);
@@ -34,11 +31,9 @@ void PeerExchange::load(BencodeParser::Object& data)
 			}
 		}
 
-		auto& addF = data.dic->find("added.f");
-
-		if (addF != data.dic->end() && addF->second.type == BencodeParser::Object::Text)
+		if (auto addedF = data->getTxtItem("added.f"))
 		{
-			msg.addedFlags = addF->second.txt;
+			msg.addedFlags = std::string(addedF->data, addedF->size);
 		}
 	}
 
@@ -48,32 +43,30 @@ void PeerExchange::load(BencodeParser::Object& data)
 		onPexMessage(msg);
 }
 
-void UtMetadata::load(BencodeParser::Object& data, const char* remainingData, size_t remainingSize)
+void UtMetadata::load(BencodeParser::Object* data, const char* remainingData, size_t remainingSize)
 {
-	if (data.isMap())
+	if (data && data->isMap())
 	{
-		if (auto msgType = data.getIntItem("msg_type"))
+		if (auto msgType = data->getIntItem("msg_type"))
 		{
 			Message msg;
 			msg.size = size;
-			msg.id = (MessageId)*msgType;
+			msg.id = (MessageId)msgType->getInt();
 
 			if (msg.id == Request)
 			{
 			}
 			else if (msg.id == Data)
 			{
-				auto piece = data.getIntItem("piece");
-				auto totalsize = data.getIntItem("total_size");
-				msg.piece = *piece;
-
-				if (piece && totalsize && remainingSize <= 16*1024)
+				msg.piece = data->getInt("piece");
+				msg.size = data->getInt("total_size");
+				
+				if (msg.piece && msg.size && remainingSize <= 16*1024)
 				{
-					msg.size = *totalsize;
 					msg.metadata.insert(msg.metadata.begin(), remainingData, remainingData + remainingSize);
 				}
 
-				BT_EXT_LOG("UTM data piece id " << *piece << " size/total: " << remainingSize << "/" << msg.size);
+				BT_EXT_LOG("UTM data piece id " << msg.piece << " size/total: " << remainingSize << "/" << msg.size);
 
 				if (onUtMetadataMessage)
 					onUtMetadataMessage(msg);
@@ -106,35 +99,35 @@ MessageType ExtensionProtocol::load(char id, DataBuffer& data)
 	if (id >= InvalidEx)
 		return InvalidEx;
 
-	parser.parse(data);
+	BencodeParser parser;
+	if (!parser.parse(data.data(), data.size()))
+		return InvalidEx;
+
+	auto root = parser.getRoot();
 
 	if (id == HandshakeEx)
 	{
-		if (parser.parsedData.type == BencodeParser::Object::Dictionary)
+		if (root->isMap())
 		{
-			if (auto extensionsInfo = parser.parsedData.getDictObject("m"))
+			if (auto extensionsInfo = root->getDictItem("m"))
 			{
 				if (auto pexId = extensionsInfo->getIntItem("ut_pex"))
 				{
-					messageIds[*pexId] = PexEx;
+					messageIds[pexId->getInt()] = PexEx;
 				}
 
 				if (auto utmId = extensionsInfo->getIntItem("ut_metadata"))
 				{
-					messageIds[*utmId] = UtMetadataEx;
-
-					if (auto utmSize = parser.parsedData.getIntItem("metadata_size"))
-						utm.size = *utmSize;
-					else
-						utm.size = 0;
+					messageIds[utmId->getInt()] = UtMetadataEx;
+					utm.size = root->getInt("metadata_size");
 				}
 			}
 
-			if (auto version = parser.parsedData.getTxtItem("v"))
-				state.client = *version;
+			if (auto version = root->getTxtItem("v"))
+				state.client = std::string(version->data, version->size);
 
-			if (auto ip = parser.parsedData.getTxtItem("yourip"))
-				state.yourIp = *ip;
+			if (auto ip = root->getTxtItem("yourip"))
+				state.yourIp = std::string(ip->data, ip->size);
 
 			state.enabled = true;
 
@@ -153,9 +146,9 @@ MessageType ExtensionProtocol::load(char id, DataBuffer& data)
 			auto msgType = idType->second;
 
 			if (msgType == PexEx)
-				pex.load(parser.parsedData);
+				pex.load(parser.getRoot());
 			else if (msgType == UtMetadataEx)
-				utm.load(parser.parsedData, parser.bodyEnd, parser.remainingData);
+				utm.load(parser.getRoot(), parser.bodyEnd, parser.remainingData);
 
 			return msgType;
 		}
@@ -211,9 +204,6 @@ DataBuffer ExtensionProtocol::createExtendedHandshakeMessage(bool enablePex, uin
 	extDict.add(MT_NAME, 13);
 
 	extDict.add('e');
-
-	BencodeParser parse;
-	parse.parse(&extDict.out[0] + 6, extDict.out.size() - 6);
 
 	*reinterpret_cast<uint32_t*>(&extDict.out[0]) = swap32((uint32_t)(extDict.out.size() - sizeof(uint32_t)));
 

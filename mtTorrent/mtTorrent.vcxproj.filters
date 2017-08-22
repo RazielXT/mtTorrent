@@ -82,9 +82,6 @@
     <ClCompile Include="utils\Base32.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="utils\BencodeParser.cpp">
-      <Filter>Source Files\Utils</Filter>
-    </ClCompile>
     <ClCompile Include="utils\HexEncoding.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
@@ -130,7 +127,10 @@
     <ClCompile Include="utils\ScheduledTimer.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="utils\BencodeParserLite.cpp">
+    <ClCompile Include="utils\TorrentFileParser.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\BencodeParser.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
   </ItemGroup>
@@ -186,9 +186,6 @@
     <ClInclude Include="utils\Base32.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="utils\BencodeParser.h">
-      <Filter>Source Files\Utils</Filter>
-    </ClInclude>
     <ClInclude Include="utils\HexEncoding.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
@@ -240,7 +237,13 @@
     <ClInclude Include="utils\ScheduledTimer.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="utils\BencodeParserLite.h">
+    <ClInclude Include="utils\TorrentFileParser.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Interface.h">
+      <Filter>Source Files\Core\General</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\BencodeParser.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>

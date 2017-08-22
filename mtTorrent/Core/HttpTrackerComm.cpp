@@ -127,29 +127,28 @@ uint32_t mtt::HttpTrackerComm::readAnnounceResponse(DataBuffer& buffer, Announce
 		{
 			BencodeParser parser;
 			parser.parse(buffer.data() + info.dataStart, info.dataSize);
+			auto root = parser.getRoot();
 
-			if (parser.parsedData.isMap())
+			if (root && root->isMap())
 			{
-				auto& data = parser.parsedData;
-
-				auto interval = data.getIntItem("min interval");
+				auto interval = root->getIntItem("min interval");
 				if (!interval)
-					interval = data.getIntItem("interval");
+					interval = root->getIntItem("interval");
 
-				response.interval = interval ? *interval : 5 * 60;
+				response.interval = interval ? interval->getInt() : 5 * 60;
 
-				auto seeds = data.getIntItem("complete");
-				response.seedCount = seeds ? *seeds : 0;
+				auto seeds = root->getIntItem("complete");
+				response.seedCount = seeds ? seeds->getInt() : 0;
 
-				auto leechs = data.getIntItem("incomplete");
-				response.leechCount = leechs ? *leechs : 0;
+				auto leechs = root->getIntItem("incomplete");
+				response.leechCount = leechs ? leechs->getInt() : 0;
 
-				auto peers = data.getTxtItem("peers");
-				if (peers && peers->length() % 6 == 0)
+				auto peers = root->getTxtItem("peers");
+				if (peers && peers->size % 6 == 0)
 				{
-					PacketReader reader(peers->data(), peers->length());
+					PacketReader reader(peers->data, peers->size);
 
-					auto count = peers->length() / 6;
+					auto count = peers->size / 6;
 					for (size_t i = 0; i < count; i++)
 					{
 						uint32_t addr = reader.pop32();
