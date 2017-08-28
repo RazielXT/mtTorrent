@@ -55,7 +55,7 @@ void UdpAsyncWriter::close()
 
 void UdpAsyncWriter::write(const DataBuffer& data)
 {
-	io_service.post(std::bind(&UdpAsyncWriter::do_write, this, data));
+	io_service.post(std::bind(&UdpAsyncWriter::do_write, shared_from_this(), data));
 }
 
 void UdpAsyncWriter::write()

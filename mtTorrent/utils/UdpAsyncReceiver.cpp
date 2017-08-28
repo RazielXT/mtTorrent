@@ -1,4 +1,7 @@
 #include "UdpAsyncReceiver.h"
+#include "Logging.h"
+
+#define UDP_LOG(x) WRITE_LOG("UDP LISTENER: " << x)
 
 UdpAsyncReceiver::UdpAsyncReceiver(boost::asio::io_service& io_service, uint16_t port, bool ipv6) : socket_(io_service)
 {
@@ -24,13 +27,12 @@ void UdpAsyncReceiver::stop()
 
 void UdpAsyncReceiver::handle_receive(const boost::system::error_code& error, std::size_t bytes_transferred)
 {
+	UDP_LOG(remote_endpoint_.address().to_string() << " sent bytes " << bytes_transferred);
+
 	if (receiveCallback)
 	{
-		UdpRequest connection = std::make_shared<UdpAsyncWriter>(socket_.get_io_service());
-		connection->setAddress(remote_endpoint_);
 		buffer.resize(bytes_transferred);
-
-		receiveCallback(connection, buffer);
+		receiveCallback(remote_endpoint_, buffer);
 	}
 
 	listen();

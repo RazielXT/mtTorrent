@@ -184,6 +184,11 @@ Addr::Addr(uint8_t* buffer, bool v6)
 	parse(buffer, v6);
 }
 
+Addr::Addr(const boost::asio::ip::address& addr, uint16_t port_num)
+{
+	set(addr, port_num);
+}
+
 void Addr::set(uint8_t* ip, uint16_t p, bool isIpv6)
 {
 	memcpy(addrBytes, ip, isIpv6 ? 16 : 4);

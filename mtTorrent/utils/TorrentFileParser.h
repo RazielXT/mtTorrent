@@ -8,23 +8,11 @@
 
 namespace mtt
 {
-	class TorrentFileParser
+	namespace TorrentFileParser
 	{
-	public:
-
-		bool parseFile(const char* filename);
-		bool parse(const uint8_t* data, size_t length);
-
-		TorrentFileInfo fileInfo;
+		TorrentFileInfo parseFile(const char* filename);
+		TorrentFileInfo parse(const uint8_t* data, size_t length);
 
 		TorrentInfo parseTorrentInfo(const uint8_t* data, size_t length);
-
-	private:
-
-		bool generateInfoHash(BencodeParser& parsed);
-		void loadTorrentFileInfo(BencodeParser& parsed);
-
-		TorrentInfo parseTorrentInfo(BencodeParser::Object* info);
-	};
-
+	}
 }

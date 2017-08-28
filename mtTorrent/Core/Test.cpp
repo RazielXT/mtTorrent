@@ -20,12 +20,12 @@ void testInit()
 {
 	for (size_t i = 0; i < 20; i++)
 	{
-		mtt::config::internal.hashId[i] = (uint8_t)rand();
+		mtt::config::internall.hashId[i] = (uint8_t)rand();
 	}
 
-	mtt::config::internal.trackerKey = 1111;
+	mtt::config::internall.trackerKey = 1111;
 
-	mtt::config::internal.defaultRootHosts = { { "dht.transmissionbt.com", "6881" },{ "router.bittorrent.com" , "6881" } };
+	mtt::config::internall.defaultRootHosts = { { "dht.transmissionbt.com", "6881" },{ "router.bittorrent.com" , "6881" } };
 
 	mtt::config::external.tcpPort = mtt::config::external.udpPort = 55125;
 }
@@ -54,7 +54,7 @@ void TorrentTest::testAsyncUdpRequest()
 
 	PacketBuilder packet(104);
 	packet.add("d1:ad2:id20:", 12);
-	packet.add(mtt::config::internal.hashId, 20);
+	packet.add(mtt::config::internall.hashId, 20);
 	packet.add("9:info_hash20:", 14);
 	packet.add(targetId.data(), 20);
 	packet.add("e1:q9:get_peers1:v4:", 20);
@@ -76,11 +76,7 @@ void TorrentTest::testAsyncUdpRequest()
 
 void TorrentTest::testMetadataReceive()
 {
-	TorrentFileParser file;	
-	if (!file.parseFile("D:\\test.torrent"))
-		return;
-
-	auto& torrent = file.fileInfo;
+	auto torrent = mtt::TorrentFileParser::parseFile("D:\\test.torrent");
 
 	ServiceThreadpool service;
 
@@ -110,8 +106,7 @@ void TorrentTest::testMetadataReceive()
 
 	if (metadata.finished())
 	{
-		TorrentFileParser parse;
-		auto info = parse.parseTorrentInfo(metadata.buffer.data(), metadata.buffer.size());
+		auto info = mtt::TorrentFileParser::parseTorrentInfo(metadata.buffer.data(), metadata.buffer.size());
 		WRITE_LOG(info.files[0].path[0]);
 	}
 }
@@ -196,8 +191,7 @@ void TorrentTest::testAsyncDhtGetPeers()
 
 	if (metadata.finished())
 	{
-		TorrentFileParser parse;
-		auto info = parse.parseTorrentInfo(metadata.buffer.data(), metadata.buffer.size());
+		auto info = mtt::TorrentFileParser::parseTorrentInfo(metadata.buffer.data(), metadata.buffer.size());
 		WRITE_LOG(info.files[0].path[0]);
 	}
 }
@@ -262,11 +256,7 @@ std::string findFileByPiece(mtt::TorrentFileInfo& file, uint32_t piece)
 
 void TorrentTest::testStorageCheck()
 {
-	TorrentFileParser file;
-	if (!file.parseFile("D:\\hunter.torrent"))
-		return;
-
-	auto& torrent = file.fileInfo;
+	auto torrent = mtt::TorrentFileParser::parseFile("D:\\hunter.torrent");
 
 	DownloadSelection selection;
 	for (auto&f : torrent.info.files)
@@ -290,11 +280,7 @@ void TorrentTest::testStorageCheck()
 
 void TorrentTest::testStorageLoad()
 {
-	TorrentFileParser file;
-	if (!file.parseFile("D:\\wifi.torrent"))
-		return;
-
-	auto& torrent = file.fileInfo;
+	auto torrent = mtt::TorrentFileParser::parseFile("D:\\wifi.torrent");
 
 	DownloadSelection selection;
 	for (auto&f : torrent.info.files)
@@ -332,11 +318,7 @@ void TorrentTest::testStorageLoad()
 
 void TorrentTest::testPeerListen()
 {
-	TorrentFileParser file;
-	if (!file.parseFile("D:\\wifi.torrent"))
-		return;
-
-	auto& torrent = file.fileInfo;
+	auto torrent = mtt::TorrentFileParser::parseFile("D:\\wifi.torrent");
 
 	DownloadSelection selection;
 	for (auto&f : torrent.info.files)
@@ -434,11 +416,7 @@ void TorrentTest::testDhtTable()
 	mtt::BencodeParser::Object obj;
 	auto s = sizeof(obj);
 
-	TorrentFileParser file;
-	if (!file.parseFile("D:\\folk.torrent"))
-		return;
-	
-	auto& info = file.fileInfo;
+	auto torrent = mtt::TorrentFileParser::parseFile("D:\\folk.torrent");
 
 	mtt::dht::Communication dhtComm;
 	dhtComm.load(saveFile);
@@ -446,14 +424,18 @@ void TorrentTest::testDhtTable()
 	//ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J	boku 26
 	//6QBN6XVGKV7CWOT5QXKDYWF3LIMUVK4I	owarimonogagtari batch
 	//56VYAWGYUTF7ETZZRB45C6FKJSKVBLRD	mushishi s2 22 rare
-	std::string targetIdBase32 = "RSD57UXWL7EIST7DLHFSSGFST6AMYFAM";
-	auto targetId = base32decode(targetIdBase32);
+	//80E5879D864C7FF12C3232C890BF971E254C6503 less rare
+	//47e2bac3c75e738f17eaeffae949c80c61e7e675 very rare fear
+	TorrentFileInfo info;
+	info.parseMagnetLink("80E5879D864C7FF12C3232C890BF971E254C6503");
+	auto targetId = info.info.hash;
+	//dhtComm.findNode(targetId);
 
-	dhtComm.findPeers(info.info.hash/*(uint8_t*)targetId.data()*/, this);
+	dhtComm.findPeers(targetId, this);
 	WAITFOR(dhtResult.finalCount != -1);
 
 	//dhtComm.findNode(mtt::config::internal.hashId);
-	//Sleep(10000);
+	//Sleep(25000);
 
 	saveFile = dhtComm.save();
 

@@ -7,28 +7,36 @@
 
 using namespace mtt;
 
-bool TorrentFileParser::parse(const uint8_t* data, size_t length)
+bool generateInfoHash(BencodeParser& parsed, TorrentFileInfo&);
+void loadTorrentFileInfo(BencodeParser& parsed, TorrentFileInfo&);
+TorrentInfo parseTorrentInfo(BencodeParser::Object* info);
+mtt::TorrentInfo parseTorrentInfo(BencodeParser::Object* infoDictionary);
+
+TorrentFileInfo TorrentFileParser::parse(const uint8_t* data, size_t length)
 {
+	TorrentFileInfo out;
 	BencodeParser parser;
 
 	if (!parser.parse(data, length))
-		return false;
+		return out;
 	
-	loadTorrentFileInfo(parser);
-	generateInfoHash(parser);
+	loadTorrentFileInfo(parser, out);
+	generateInfoHash(parser, out);
 
-	return true;
+	return out;
 }
 
-bool TorrentFileParser::parseFile(const char* filename)
+TorrentFileInfo TorrentFileParser::parseFile(const char* filename)
 {
+	TorrentFileInfo out;
+
 	size_t maxSize = 10 * 1024 * 1024;
 	boost::filesystem::path dir(filename);
 
 	if (!boost::filesystem::exists(dir) || boost::filesystem::file_size(dir) > maxSize)
 	{
 		TPARSER_LOG("Invalid torrent file " << filename);
-		return false;
+		return out;
 	}
 
 	std::ifstream file(filename, std::ios_base::binary);
@@ -36,7 +44,7 @@ bool TorrentFileParser::parseFile(const char* filename)
 	if (!file.good())
 	{
 		TPARSER_LOG("Failed to open torrent file " << filename);
-		return false;
+		return out;
 	}
 
 	DataBuffer buffer((
@@ -58,7 +66,7 @@ static uint32_t getPieceIndex(size_t pos, size_t pieceSize)
 	return static_cast<uint32_t>(p);
 }
 
-void TorrentFileParser::loadTorrentFileInfo(BencodeParser& parser)
+void loadTorrentFileInfo(BencodeParser& parser, TorrentFileInfo& fileInfo)
 {
 	auto root = parser.getRoot();
 
@@ -97,7 +105,7 @@ void TorrentFileParser::loadTorrentFileInfo(BencodeParser& parser)
 	}
 }
 
-bool mtt::TorrentFileParser::generateInfoHash(BencodeParser& parser)
+bool generateInfoHash(BencodeParser& parser, TorrentFileInfo& fileInfo)
 {
 	const char* infoStart = nullptr;
 	const char* infoEnd = nullptr;
@@ -146,7 +154,7 @@ mtt::TorrentInfo mtt::TorrentFileParser::parseTorrentInfo(const uint8_t* data, s
 
 	if (parser.parse(data, length))
 	{
-		auto info = parseTorrentInfo(parser.getRoot());
+		auto info = ::parseTorrentInfo(parser.getRoot());
 
 		auto infoStart = (const char*)data;
 		auto infoEnd = (const char*)data + length;
@@ -159,7 +167,7 @@ mtt::TorrentInfo mtt::TorrentFileParser::parseTorrentInfo(const uint8_t* data, s
 		return mtt::TorrentInfo();
 }
 
-mtt::TorrentInfo mtt::TorrentFileParser::parseTorrentInfo(BencodeParser::Object* infoDictionary)
+mtt::TorrentInfo parseTorrentInfo(BencodeParser::Object* infoDictionary)
 {
 	mtt::TorrentInfo info;
 

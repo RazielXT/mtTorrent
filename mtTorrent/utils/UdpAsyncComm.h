@@ -3,18 +3,21 @@
 #include "utils\Network.h"
 #include "UdpAsyncReceiver.h"
 
+using UdpResponseCallback = std::function<bool(UdpRequest, DataBuffer*)>;
+
 class UdpAsyncComm
 {
 public:
 
 	UdpAsyncComm(boost::asio::io_service& io, uint16_t port);
 
-	void listen(UdpResponseCallback received);
+	void listen(UdpPacketCallback received);
 
 	UdpRequest create(std::string& host, std::string& port);
 	UdpRequest sendMessage(DataBuffer& data, std::string& host, std::string& port, UdpResponseCallback response);
 	UdpRequest sendMessage(DataBuffer& data, Addr& addr, UdpResponseCallback response);
 	void sendMessage(DataBuffer& data, UdpRequest target, UdpResponseCallback response);
+	void sendMessage(DataBuffer& data, udp::endpoint& endpoint);
 
 private:
 
@@ -34,9 +37,9 @@ private:
 	UdpRequest findPendingConnection(UdpRequest);
 
 	void checkTimeout(std::shared_ptr<ResponseRetryInfo>);
-	void onUdpReceive(UdpRequest, DataBuffer&);
+	void onUdpReceive(udp::endpoint&, DataBuffer&);
 	void onUdpClose(UdpRequest);
-	UdpResponseCallback onUnhandledReceive;
+	UdpPacketCallback onUnhandledReceive;
 
 	void startListening();
 	std::shared_ptr<UdpAsyncReceiver> listener;

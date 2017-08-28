@@ -22,9 +22,16 @@ namespace mtt
 
 			uint32_t maxPeersPerTrackerRequest = 100;
 			std::vector<std::pair<std::string, std::string>> defaultRootHosts;
+
+			struct
+			{
+				uint32_t maxAnnouncedPeers = 64;
+				uint32_t maxPeerValuesResponse = 32;
+			}
+			dht;
 		};
 
 		extern External external;
-		extern Internal internal;
+		extern Internal internall;
 	}
 }

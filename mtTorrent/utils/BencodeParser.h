@@ -20,6 +20,8 @@ namespace mtt
 
 				uint16_t nextSiblingOffset = 0;
 				enum Type : uint16_t { None, Number, Text, List, Dictionary } type = None;
+
+				bool equals(const char*, size_t);
 			}
 			info;
 		
@@ -41,8 +43,6 @@ namespace mtt
 			bool isInt();
 			bool isText();
 			bool isText(const char*, size_t);
-
-			bool equals(const char*, size_t);
 		};
 
 		Object* getRoot();

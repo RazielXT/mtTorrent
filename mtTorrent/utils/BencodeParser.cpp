@@ -17,8 +17,8 @@ bool mtt::BencodeParser::parse(const uint8_t* data, size_t length)
 
 	internalParse(&parserEnd);
 
+	remainingData = parserEnd >= bodyEnd ? 0 : (length - (parserEnd - (const char*)data));
 	bodyEnd = parserEnd;
-	remainingData = length - (bodyEnd - (const char*)data);
 
 	return getRoot() != nullptr;
 }
@@ -114,15 +114,7 @@ mtt::BencodeParser::Object* mtt::BencodeParser::parseDictionary(const char** bod
 		if (s)
 		{
 			auto objPos = (uint16_t)objects.size();
-
-			bool infokey = s->equals("info", 4);
-			if (infokey)
-				infoStart = *body;
-
 			auto o = internalParse(body);
-
-			if (infokey)
-				infoEnd = *body;
 
 			if (o)
 			{
@@ -130,6 +122,8 @@ mtt::BencodeParser::Object* mtt::BencodeParser::parseDictionary(const char** bod
 				o->info.nextSiblingOffset = NOT_END_OF_ELEMENTS ? (uint16_t)objects.size() - objPos : 0;
 				count++;
 			}
+			else
+				count = 0;
 		}
 	}
 
@@ -214,7 +208,7 @@ mtt::BencodeParser::Object* mtt::BencodeParser::Object::getDictItem(const char* 
 
 	while (obj)
 	{
-		if (obj->equals(name, len) && (obj + 1)->isMap())
+		if (obj->info.equals(name, len) && (obj + 1)->isMap())
 			return obj + 1;
 
 		obj = (obj + 1)->getNextSibling();
@@ -230,7 +224,7 @@ mtt::BencodeParser::Object* mtt::BencodeParser::Object::getListItem(const char* 
 
 	while (obj)
 	{
-		if (obj->equals(name, len) && (obj + 1)->isList())
+		if (obj->info.equals(name, len) && (obj + 1)->isList())
 			return obj + 1;
 
 		obj = (obj + 1)->getNextSibling();
@@ -246,7 +240,7 @@ mtt::BencodeParser::Object::Item* mtt::BencodeParser::Object::getTxtItem(const c
 
 	while(obj)
 	{
-		if (obj->equals(name, len) && (obj + 1)->isText())
+		if (obj->info.equals(name, len) && (obj + 1)->isText())
 			return &(obj + 1)->info;
 
 		obj = (obj + 1)->getNextSibling();
@@ -274,7 +268,7 @@ mtt::BencodeParser::Object* mtt::BencodeParser::Object::getIntItem(const char* n
 
 	while (obj)
 	{
-		if (obj->equals(name, len) && (obj + 1)->isInt())
+		if (obj->info.equals(name, len) && (obj + 1)->isInt())
 			return obj + 1;
 
 		obj = (obj + 1)->getNextSibling();
@@ -299,9 +293,9 @@ mtt::BencodeParser::Object* mtt::BencodeParser::Object::getFirstItem()
 	return info.size ? this + 1 : nullptr;
 }
 
-bool mtt::BencodeParser::Object::equals(const char* txt, size_t l)
+bool mtt::BencodeParser::Object::Item::equals(const char* txt, size_t l)
 {
-	return l != info.size ? false : strncmp(txt, info.data, info.size) == 0;
+	return l != size ? false : strncmp(txt, data, size) == 0;
 }
 
 bool mtt::BencodeParser::Object::isMap()
@@ -326,5 +320,5 @@ bool mtt::BencodeParser::Object::isText()
 
 bool mtt::BencodeParser::Object::isText(const char* str, size_t l)
 {
-	return isText() && equals(str, l);
+	return isText() && info.equals(str, l);
 }

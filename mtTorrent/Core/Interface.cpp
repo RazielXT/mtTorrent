@@ -48,14 +48,19 @@ static bool parseTorrentHash(std::string& from, uint8_t* to)
 	return false;
 }
 
-bool mtt::TorrentFileInfo::parseMagnetLink(std::string link)
+Status mtt::TorrentFileInfo::parseMagnetLink(std::string link)
 {
-	if (link.length() < 8 || strncmp("magnet:?", link.data(), 8) != 0)
-		return false;
+	if (link.length() < 8)
+		return E_InvalidInput;
 
 	size_t dataPos = 8;
 	bool correct = false;
 
+	info.expectedBitfieldSize = 0;
+	info.pieceSize = 0;
+	info.fullSize = 0;
+
+	if(strncmp("magnet:?", link.data(), 8) == 0)
 	while (dataPos < link.length())
 	{
 		auto elementEndPos = link.find_first_of('&', dataPos);
@@ -89,12 +94,8 @@ bool mtt::TorrentFileInfo::parseMagnetLink(std::string link)
 			dataPos++;
 	}
 
-	if (!correct && link.length() == 32)
+	if (!correct)
 		correct = parseTorrentHash(link, info.hash);
 
-	info.expectedBitfieldSize = 0;
-	info.pieceSize = 0;
-	info.fullSize = 0;
-
-	return correct;
+	return correct ? Success : E_InvalidInput;
 }

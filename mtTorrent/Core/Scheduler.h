@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Storage.h"
-#include <mutex>
+#include "PiecesProgress.h"
 
 namespace mtt
 {

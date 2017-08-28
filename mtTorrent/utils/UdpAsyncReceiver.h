@@ -1,6 +1,6 @@
 #include "UdpAsyncWriter.h"
 
-using UdpResponseCallback = std::function<bool(UdpRequest, DataBuffer*)>;
+using UdpPacketCallback = std::function<void(udp::endpoint&, DataBuffer&)>;
 
 class UdpAsyncReceiver
 {
@@ -11,7 +11,7 @@ public:
 	void listen();
 	void stop();
 
-	std::function<void(UdpRequest, DataBuffer&)> receiveCallback;
+	UdpPacketCallback receiveCallback;
 
 private:
 

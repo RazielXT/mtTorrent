@@ -8,7 +8,7 @@ UdpAsyncComm::UdpAsyncComm(boost::asio::io_service& io_service, uint16_t port) :
 {
 }
 
-void UdpAsyncComm::listen(UdpResponseCallback receive)
+void UdpAsyncComm::listen(UdpPacketCallback receive)
 {
 	if (!listener)
 		startListening();
@@ -61,6 +61,14 @@ UdpRequest UdpAsyncComm::sendMessage(DataBuffer& data, Addr& addr, UdpResponseCa
 	return c;
 }
 
+void UdpAsyncComm::sendMessage(DataBuffer& data, udp::endpoint& endpoint)
+{
+	UdpRequest c = std::make_shared<UdpAsyncWriter>(io);
+	c->setAddress(endpoint);
+	c->setBindPort(bindPort);
+	c->write(data);
+}
+
 void UdpAsyncComm::addPendingResponse(DataBuffer& data, UdpRequest c, UdpResponseCallback response)
 {
 	if (!listener)
@@ -94,7 +102,7 @@ UdpRequest UdpAsyncComm::findPendingConnection(UdpRequest source)
 	return c;
 }
 
-void UdpAsyncComm::onUdpReceive(UdpRequest source, DataBuffer& data)
+void UdpAsyncComm::onUdpReceive(udp::endpoint& source, DataBuffer& data)
 {
 	std::vector<std::shared_ptr<ResponseRetryInfo>> foundPendingResponses;
 
@@ -104,7 +112,7 @@ void UdpAsyncComm::onUdpReceive(UdpRequest source, DataBuffer& data)
 		auto it = pendingResponses.begin();
 		while (it != pendingResponses.end())
 		{
-			if ((*it)->client->getEndpoint() == source->getEndpoint())
+			if ((*it)->client->getEndpoint() == source)
 			{
 				foundPendingResponses.push_back(*it);
 				it = pendingResponses.erase(it);
@@ -120,14 +128,14 @@ void UdpAsyncComm::onUdpReceive(UdpRequest source, DataBuffer& data)
 	{
 		if (!handled && r->onResponse(r->client, &data))
 		{
-			UDP_LOG(source->getName() << " successfully handled, removing");
+			UDP_LOG(r->client->getName() << " successfully handled, removing");
 
 			handled = true;
 			r->reset();
 		}
 		else
 		{
-			UDP_LOG(source->getName() << " unsuccessfully handled");
+			UDP_LOG(r->client->getName() << " unsuccessfully handled");
 
 			std::lock_guard<std::mutex> guard(responsesMutex);
 			pendingResponses.push_back(r);
@@ -135,7 +143,7 @@ void UdpAsyncComm::onUdpReceive(UdpRequest source, DataBuffer& data)
 	}
 
 	if (!handled && onUnhandledReceive)
-		onUnhandledReceive(source, &data);
+		onUnhandledReceive(source, data);
 }
 
 void UdpAsyncComm::onUdpClose(UdpRequest source)
@@ -165,9 +173,6 @@ void UdpAsyncComm::onUdpClose(UdpRequest source)
 	}
 
 	UDP_LOG(source->getName() << " closed, handled response:" << !foundPendingResponses.empty());
-
-	if (foundPendingResponses.empty() && onUnhandledReceive)
-		onUnhandledReceive(source, nullptr);
 }
 
 void UdpAsyncComm::startListening()
@@ -179,6 +184,8 @@ void UdpAsyncComm::startListening()
 
 void UdpAsyncComm::checkTimeout(std::shared_ptr<ResponseRetryInfo> info)
 {
+	UDP_LOG("checking timer for " << info->client->getName());
+
 	if (info->retries == 255)
 		return;
 

@@ -18,9 +18,13 @@ namespace mtt
 			uint8_t length();
 			void setMax();
 
-			static NodeId distance(uint8_t* l, uint8_t* r);
+			static NodeId distance(const uint8_t* l, const uint8_t* r);
 			static uint8_t length(uint8_t* data);
+			bool operator==(const NodeId& r);
+			bool operator==(const uint8_t* r);
 		};
+
+		bool operator<(const NodeId& l, const NodeId& r);
 
 		struct NodeInfo
 		{

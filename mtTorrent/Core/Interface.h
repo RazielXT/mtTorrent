@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include "utils\Network.h"
+#include "Status.h"
 #include "Logging.h"
 
 #define MT_NAME "mtTorrent 0.5"
@@ -46,7 +47,7 @@ namespace mtt
 
 		TorrentInfo info;
 
-		bool parseMagnetLink(std::string link);
+		Status parseMagnetLink(std::string link);
 	};
 
 	struct LoadedTorrent

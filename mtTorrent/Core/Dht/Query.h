@@ -1,21 +1,11 @@
 #pragma once
 #include "Dht/Table.h"
-#include "utils/UdpAsyncComm.h"
+#include "Dht/Listener.h"
 
 namespace mtt
 {
 	namespace dht
 	{
-		class QueryListener
-		{
-		public:
-
-			virtual uint32_t onFoundPeers(uint8_t* hash, std::vector<Addr>& values) = 0;
-			virtual void findingPeersFinished(uint8_t* hash, uint32_t count) = 0;
-
-			virtual UdpRequest sendMessage(Addr&, DataBuffer&, UdpResponseCallback response) = 0;
-		};
-
 		struct MessageResponse
 		{
 			int result = 0;
@@ -59,6 +49,7 @@ namespace mtt
 			{
 				NodeInfo node;
 				uint16_t transactionId;
+				uint8_t minDistance;
 			};
 
 			struct DhtQuery
@@ -66,7 +57,7 @@ namespace mtt
 				DhtQuery();
 				~DhtQuery();
 
-				void start(uint8_t* hash, Table* table, QueryListener* dhtListener);
+				void start(uint8_t* hash, Table* table, DataListener* dhtListener);
 				void stop();
 
 				bool finished();
@@ -91,10 +82,10 @@ namespace mtt
 				virtual bool onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request) = 0;
 
 				Table* table;
-				QueryListener* listener = nullptr;
+				DataListener* listener = nullptr;
 			};
 
-			struct FindPeers : public DhtQuery, public std::enable_shared_from_this<FindPeers>
+			struct GetPeers : public DhtQuery, public std::enable_shared_from_this<GetPeers>
 			{
 			protected:
 
@@ -109,7 +100,7 @@ namespace mtt
 
 			struct FindNode : public DhtQuery, public std::enable_shared_from_this<FindNode>
 			{
-				void startOne(uint8_t* hash, Addr& addr, Table* table, QueryListener* dhtListener);
+				void startOne(uint8_t* hash, Addr& addr, Table* table, DataListener* dhtListener);
 
 				uint32_t resultCount = 0;
 				
@@ -127,33 +118,35 @@ namespace mtt
 			{
 				~PingNodes();
 
-				void start(Addr& node, uint8_t bucketId, Table* table, QueryListener* dhtListener);
-				void start(std::vector<Table::BucketNode>& nodes, Table* table, QueryListener* dhtListener);
+				void start(Addr& addr, Table* table, DataListener* dhtListener);
+				void start(std::vector<NodeInfo>& nodes, Table* table, DataListener* dhtListener);
 				void stop();
 
 			protected:
 
 				Table* table;
-				QueryListener* listener;
+				DataListener* listener;
 
 				uint32_t MaxSimultaneousRequests = 5;
 
 				std::mutex requestsMutex;
 				std::vector<UdpRequest> requests;
-				std::vector<Table::BucketNode> nodesLeft;
+				std::vector<NodeInfo> nodesLeft;
 
 				DataBuffer createRequest(uint16_t transactionId);
-				void sendRequest(Addr& addr, uint8_t bId);
+				void sendRequest(NodeInfo&, bool unknown);
 
 				struct PingInfo
 				{
 					uint16_t transactionId;
-					uint8_t bucketId;
-					Addr addr;
+					NodeInfo node;
+					bool unknown;
 				};
 				bool onResponse(UdpRequest comm, DataBuffer* data, PingInfo request);
 				PingMessage parseResponse(DataBuffer& message);
 			};
+
+			void AnnouncePeer(uint8_t* infohash, std::string& token, udp::endpoint& target, DataListener* dhtListener);
 		}
 	}
 }

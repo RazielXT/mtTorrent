@@ -133,6 +133,15 @@
     <ClCompile Include="utils\BencodeParser.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Dht\Responder.cpp">
+      <Filter>Source Files\Core\Torrent\Dht</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\State.cpp">
+      <Filter>Source Files\Core\Torrent\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\ProgressScheduler.cpp">
+      <Filter>Source Files\Core\Torrent\Control</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Storage.h">
@@ -245,6 +254,21 @@
     </ClInclude>
     <ClInclude Include="utils\BencodeParser.h">
       <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Dht\Responder.h">
+      <Filter>Source Files\Core\Torrent\Dht</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Dht\Listener.h">
+      <Filter>Source Files\Core\Torrent\Dht</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Status.h">
+      <Filter>Source Files\Core\General</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\State.h">
+      <Filter>Source Files\Core\Torrent\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\ProgressScheduler.h">
+      <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

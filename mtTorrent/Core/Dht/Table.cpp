@@ -3,11 +3,11 @@
 
 using namespace mtt::dht;
 
-std::vector<Addr> mtt::dht::Table::getClosestNodes(uint8_t* id)
+std::vector<NodeInfo> mtt::dht::Table::getClosestNodes(const uint8_t* id)
 {
 	auto startId = getBucketId(id);
 
-	std::vector<Addr> out;
+	std::vector<NodeInfo> out;
 
 	std::lock_guard<std::mutex> guard(tableMutex);
 
@@ -25,10 +25,10 @@ std::vector<Addr> mtt::dht::Table::getClosestNodes(uint8_t* id)
 		{
 			if (n.active && out.size() < maxNodesCount)
 			{
-				if (n.addr.ipv6 && v6Counter++ < 8)
-					out.push_back(n.addr);
-				else if (!n.addr.ipv6 && v4Counter++ < 8)
-					out.push_back(n.addr);
+				if (n.info.addr.ipv6 && v6Counter++ < 8)
+					out.push_back(n.info);
+				else if (!n.info.addr.ipv6 && v4Counter++ < 8)
+					out.push_back(n.info);
 			}
 		}
 
@@ -44,10 +44,10 @@ std::vector<Addr> mtt::dht::Table::getClosestNodes(uint8_t* id)
 		{
 			if (n.active && out.size() < maxNodesCount)
 			{
-				if (n.addr.ipv6 && v6Counter++ < 8)
-					out.push_back(n.addr);
-				else if (!n.addr.ipv6 && v4Counter++ < 8)
-					out.push_back(n.addr);
+				if (n.info.addr.ipv6 && v6Counter++ < 8)
+					out.push_back(n.info);
+				else if (!n.info.addr.ipv6 && v4Counter++ < 8)
+					out.push_back(n.info);
 			}
 		}
 
@@ -57,43 +57,43 @@ std::vector<Addr> mtt::dht::Table::getClosestNodes(uint8_t* id)
 	return out;
 }
 
-void mtt::dht::Table::nodeResponded(uint8_t* id, Addr& addr)
+void mtt::dht::Table::nodeResponded(NodeInfo& node)
 {
-	auto i = getBucketId(id);
+	auto i = getBucketId(node.id.data);
 
-	nodeResponded(i, addr);
+	nodeResponded(i, node);
 }
 
-void mtt::dht::Table::nodeResponded(uint8_t bucketId, Addr& addr)
+void mtt::dht::Table::nodeResponded(uint8_t bucketId, NodeInfo& node)
 {
 	std::lock_guard<std::mutex> guard(tableMutex);
 
 	auto& bucket = buckets[bucketId];
 	uint32_t time = (uint32_t)::time(0);
 
-	auto n = bucket.find(addr);
+	auto n = bucket.find(node);
 	if (!n)
 	{
-		n = bucket.findCache(addr);
+		n = bucket.findCache(node);
 		if (!n)
 		{
-			Bucket::Node node;
-			node.addr = addr;
-			node.lastupdate = time;
+			Bucket::Node bnode;
+			bnode.info = node;
+			bnode.lastupdate = time;
 
 			if (bucket.nodes.size() < MaxBucketNodesCount)
 			{
-				bucket.nodes.push_back(node);
+				bucket.nodes.push_back(bnode);
 				bucket.lastupdate = time;
 			}
 			else
 			{
-				node.active = false;
+				bnode.active = false;
 
 				if(bucket.cache.size() < MaxBucketCacheSize)
-					bucket.cache.emplace_back(node);
+					bucket.cache.emplace_back(bnode);
 				else
-					bucket.cache.back() = node;
+					bucket.cache.back() = bnode;
 
 				bucket.lastcacheupdate = time;
 			}
@@ -108,14 +108,14 @@ void mtt::dht::Table::nodeResponded(uint8_t bucketId, Addr& addr)
 	}
 }
 
-void mtt::dht::Table::nodeNotResponded(uint8_t* id, Addr& addr)
+void mtt::dht::Table::nodeNotResponded(NodeInfo& node)
 {
-	auto i = getBucketId(id);
+	auto i = getBucketId(node.id.data);
 
-	nodeNotResponded(i, addr);
+	nodeNotResponded(i, node);
 }
 
-void mtt::dht::Table::nodeNotResponded(uint8_t bucketId, Addr& addr)
+void mtt::dht::Table::nodeNotResponded(uint8_t bucketId, NodeInfo& node)
 {
 	std::lock_guard<std::mutex> guard(tableMutex);
 
@@ -124,7 +124,7 @@ void mtt::dht::Table::nodeNotResponded(uint8_t bucketId, Addr& addr)
 	uint32_t i = 0;
 	for (auto it = bucket.nodes.begin(); it != bucket.nodes.end(); it++)
 	{
-		if (it->addr == addr)
+		if (it->info.id == node.id)
 		{
 			if (it->active)
 			{
@@ -153,27 +153,27 @@ void mtt::dht::Table::nodeNotResponded(uint8_t bucketId, Addr& addr)
 	}
 }
 
-mtt::dht::Table::Bucket::Node* mtt::dht::Table::Bucket::find(Addr& node)
+mtt::dht::Table::Bucket::Node* mtt::dht::Table::Bucket::find(NodeInfo& node)
 {
 	for (auto& n : nodes)
-		if (n.addr == node)
+		if (n.info.id == node.id)
 			return &n;
 
 	return nullptr;
 }
 
-mtt::dht::Table::Bucket::Node* mtt::dht::Table::Bucket::findCache(Addr& node)
+mtt::dht::Table::Bucket::Node* mtt::dht::Table::Bucket::findCache(NodeInfo& node)
 {
 	for (auto& n : cache)
-		if (n.addr == node)
+		if (n.info.id == node.id)
 			return &n;
 
 	return nullptr;
 }
 
-uint8_t mtt::dht::Table::getBucketId(uint8_t* id)
+uint8_t mtt::dht::Table::getBucketId(const uint8_t* id)
 {
-	return NodeId::distance(mtt::config::internal.hashId, id).length();
+	return NodeId::distance(mtt::config::internall.hashId, id).length();
 }
 
 bool mtt::dht::Table::empty()
@@ -205,9 +205,10 @@ std::string mtt::dht::Table::save()
 
 			for (auto& n : b.nodes)
 			{
-				state.append((char*)n.addr.addrBytes, 16);
-				state.append((char*)&n.addr.port, sizeof(uint16_t));
-				state.append((char*)&n.addr.ipv6, sizeof(bool));
+				state.append((char*)n.info.id.data, 20);
+				state.append((char*)n.info.addr.addrBytes, 16);
+				state.append((char*)&n.info.addr.port, sizeof(uint16_t));
+				state.append((char*)&n.info.addr.ipv6, sizeof(bool));
 			}
 
 			state += "[nodes\\]\n";
@@ -261,23 +262,24 @@ uint32_t mtt::dht::Table::load(std::string& settings)
 		{
 			Bucket::Node node;
 
-			auto& l = nodesLine.substr(nodesPos, 19);
-			memcpy(node.addr.addrBytes, l.data(), 16);
-			memcpy(&node.addr.port, l.data() + 16, 2);
-			memcpy(&node.addr.ipv6, l.data() + 18, 1);
+			auto& l = nodesLine.substr(nodesPos, 39);
+			memcpy(node.info.id.data, l.data(), 20);
+			memcpy(node.info.addr.addrBytes, l.data() + 20, 16);
+			memcpy(&node.info.addr.port, l.data() + 36, 2);
+			memcpy(&node.info.addr.ipv6, l.data() + 38, 1);
 			b.nodes.push_back(node);
 
 			counter++;
-			nodesPos += 19;
+			nodesPos += 39;
 		}
 	}
 
 	return counter;
 }
 
-std::vector<mtt::dht::Table::BucketNode> mtt::dht::Table::getInactiveNodes()
+std::vector<NodeInfo> mtt::dht::Table::getInactiveNodes()
 {
-	std::vector<mtt::dht::Table::BucketNode> out;
+	std::vector<NodeInfo> out;
 
 	std::lock_guard<std::mutex> guard(tableMutex);
 
@@ -289,7 +291,7 @@ std::vector<mtt::dht::Table::BucketNode> mtt::dht::Table::getInactiveNodes()
 		{
 			if (!n.active || n.lastupdate + MaxBucketNodeInactiveTime < now)
 			{
-				out.emplace_back(BucketNode{id, n.addr});
+				out.emplace_back(n.info);
 			}
 		}
 
@@ -297,4 +299,20 @@ std::vector<mtt::dht::Table::BucketNode> mtt::dht::Table::getInactiveNodes()
 	}
 
 	return out;
+}
+
+bool mtt::dht::isValidNode(const uint8_t* hash)
+{
+	bool allZero = true;
+	bool myId = true;
+
+	for (int i = 0; i < 20; i++)
+	{
+		if (hash[i] != mtt::config::internall.hashId[i])
+			myId = false;
+		if (hash[i] != 0)
+			allZero = false;
+	}
+
+	return !myId && !allZero;
 }

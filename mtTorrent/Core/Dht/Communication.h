@@ -1,9 +1,11 @@
 #pragma once
 #include <vector>
 #include "Dht/Query.h"
+#include "Dht/Responder.h"
 #include "utils/ServiceThreadpool.h"
 #include "utils/UdpAsyncComm.h"
 #include "utils/ScheduledTimer.h"
+#include <map>
 
 namespace mtt
 {
@@ -17,7 +19,7 @@ namespace mtt
 			virtual void findingPeersFinished(uint8_t* hash, uint32_t count) = 0;
 		};
 
-		class Communication : public QueryListener
+		class Communication : public DataListener
 		{
 		public:
 
@@ -28,9 +30,8 @@ namespace mtt
 			void stopFindingPeers(uint8_t* hash);
 
 			void findNode(uint8_t* hash);
-			std::shared_ptr<Query::FindNode> fnQ;
 
-			void pingNode(Addr& addr, uint8_t* hash);
+			void pingNode(Addr& addr);
 
 			void removeListener(ResultsListener* listener);
 
@@ -39,14 +40,16 @@ namespace mtt
 
 		protected:
 
-			bool onNewUdpPacket(UdpRequest, DataBuffer*);
+			UdpAsyncComm udpMgr;
+			bool onUnknownUdpPacket(udp::endpoint&, DataBuffer&);
 
 			virtual uint32_t onFoundPeers(uint8_t* hash, std::vector<Addr>& values) override;
 			virtual void findingPeersFinished(uint8_t* hash, uint32_t count) override;
 
 			virtual UdpRequest sendMessage(Addr&, DataBuffer&, UdpResponseCallback response) override;
+			virtual void sendMessage(udp::endpoint&, DataBuffer&) override;
 
-			UdpAsyncComm udpMgr;
+			virtual void announceTokenReceived(uint8_t* hash, std::string& token, udp::endpoint& source) override;	
 
 		private:
 
@@ -60,6 +63,7 @@ namespace mtt
 			std::vector<QueryInfo> peersQueries;
 
 			Table table;
+			Responder responder;
 			ServiceThreadpool service;
 
 			void loadDefaultRoots();

@@ -10,28 +10,22 @@ namespace mtt
 	{
 		struct Table
 		{
-			std::vector<Addr> getClosestNodes(uint8_t* id);
+			std::vector<NodeInfo> getClosestNodes(const uint8_t* id);
 
-			void nodeResponded(uint8_t* id, Addr& addr);
-			void nodeResponded(uint8_t bucketId, Addr& addr);
+			void nodeResponded(NodeInfo& node);
+			void nodeResponded(uint8_t bucketId, NodeInfo& node);
 
-			void nodeNotResponded(uint8_t* id, Addr& addr);
-			void nodeNotResponded(uint8_t bucketId, Addr& addr);
+			void nodeNotResponded(NodeInfo& node);
+			void nodeNotResponded(uint8_t bucketId, NodeInfo& node);
 
-			uint8_t getBucketId(uint8_t* id);
+			uint8_t getBucketId(const uint8_t* id);
 
 			bool empty();
 
 			std::string save();
 			uint32_t load(std::string&);
 
-			struct BucketNode
-			{
-				uint8_t bucketId;
-				Addr addr;
-			};
-
-			std::vector<BucketNode> getInactiveNodes();
+			std::vector<NodeInfo> getInactiveNodes();
 
 		private:
 
@@ -44,7 +38,7 @@ namespace mtt
 			{
 				struct Node
 				{
-					Addr addr;
+					NodeInfo info;
 					uint32_t lastupdate = 0;
 					bool active = true;
 				};
@@ -55,12 +49,14 @@ namespace mtt
 				uint32_t lastupdate = 0;
 				uint32_t lastcacheupdate = 0;
 
-				Node* find(Addr& node);
-				Node* findCache(Addr& node);
+				Node* find(NodeInfo& node);
+				Node* findCache(NodeInfo& node);
 			};
 
 			std::mutex tableMutex;
 			std::array<Bucket, 160> buckets;
 		};
+
+		bool isValidNode(const uint8_t* hash);
 	}
 }
