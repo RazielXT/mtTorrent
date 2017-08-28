@@ -1,4 +1,5 @@
 #include "MetadataReconstruction.h"
+#include "utils\TorrentFileParser.h"
 
 const uint32_t MetadataPieceSize = 16 * 1024;
 
@@ -55,4 +56,9 @@ uint32_t mtt::MetadataReconstruction::getMissingPieceIndex()
 	}
 
 	return -1;
+}
+
+mtt::TorrentInfo mtt::MetadataReconstruction::getRecontructedInfo()
+{
+	return mtt::TorrentFileParser::parseTorrentInfo(buffer.data(), buffer.size());
 }

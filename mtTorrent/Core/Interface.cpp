@@ -2,6 +2,7 @@
 #include "utils/Base32.h"
 #include "utils/UrlEncoding.h"
 #include "utils/HexEncoding.h"
+#include "utils/PacketHelper.h"
 
 using namespace mtt;
 
@@ -98,4 +99,63 @@ Status mtt::TorrentFileInfo::parseMagnetLink(std::string link)
 		correct = parseTorrentHash(link, info.hash);
 
 	return correct ? Success : E_InvalidInput;
+}
+
+DataBuffer mtt::TorrentFileInfo::createTorrentFileData()
+{
+	PacketBuilder out;
+	out.add('d');
+
+	if (!announce.empty())
+	{
+		out << "8:announce" << std::to_string(announce.length()) << ":" << announce;
+	}
+	
+	if (!announceList.empty())
+	{
+		out << "13:announce-listl";
+
+		for (auto& a : announceList)
+		{
+			out << "l" << std::to_string(a.length()) << ":" << a << "e";
+		}
+
+		out << "e";
+	}
+
+	out << "4:infod";
+
+	if (info.files.size() > 1)
+	{
+		out << "5:filesl";
+
+		for (auto f : info.files)
+		{
+			out << "d6:lengthi" << std::to_string(f.size) << "e4:pathl";
+			
+			for (auto p : f.path)
+			{
+				out << std::to_string(p.length()) << ":" << p;
+			}
+
+			out << "ee";
+		}
+
+		out << "e";
+	}
+	else if (info.files.size() == 1)
+		out << "6:lengthi" << std::to_string(info.files.front().size) << "e";
+
+	out << "4:name" << std::to_string(info.name.length()) << ":" << info.name;
+	out << "12:piece lengthi" << std::to_string(info.pieceSize) << "e";
+	out << "6:pieces" << std::to_string(info.pieces.size()*20) << ":";
+	
+	for (auto& p : info.pieces)
+	{
+		out.add(p.hash, 20);
+	}
+
+	out << "ee";
+
+	return out.getBuffer();
 }

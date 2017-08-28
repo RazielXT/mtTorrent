@@ -9,6 +9,7 @@ namespace mtt
 		void addPiece(DataBuffer& data, uint32_t index);
 		bool finished();
 		uint32_t getMissingPieceIndex();
+		TorrentInfo getRecontructedInfo();
 
 		DataBuffer buffer;
 		uint32_t pieces = 0;

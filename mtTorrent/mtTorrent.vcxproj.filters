@@ -139,9 +139,6 @@
     <ClCompile Include="Core\State.cpp">
       <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClCompile>
-    <ClCompile Include="Core\ProgressScheduler.cpp">
-      <Filter>Source Files\Core\Torrent\Control</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Storage.h">
@@ -199,9 +196,6 @@
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="utils\Network.h">
-      <Filter>Source Files\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="utils\PacketHelper.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="utils\RiotRestApi.h">
@@ -265,9 +259,6 @@
       <Filter>Source Files\Core\General</Filter>
     </ClInclude>
     <ClInclude Include="Core\State.h">
-      <Filter>Source Files\Core\Torrent\Control</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\ProgressScheduler.h">
       <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClInclude>
   </ItemGroup>

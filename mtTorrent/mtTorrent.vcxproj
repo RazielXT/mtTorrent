@@ -247,7 +247,6 @@
     <ClCompile Include="Core\PiecesProgress.cpp" />
     <ClCompile Include="Core\main.cpp" />
     <ClCompile Include="Core\PeerMessage.cpp" />
-    <ClCompile Include="Core\ProgressScheduler.cpp" />
     <ClCompile Include="Core\State.cpp" />
     <ClCompile Include="Core\Storage.cpp" />
     <ClCompile Include="Core\Test.cpp" />
@@ -286,7 +285,6 @@
     <ClInclude Include="Core\PeerCommunication.h" />
     <ClInclude Include="Core\PeerMgr.h" />
     <ClInclude Include="Core\PiecesProgress.h" />
-    <ClInclude Include="Core\ProgressScheduler.h" />
     <ClInclude Include="Core\Scheduler.h" />
     <ClInclude Include="Core\HttpTrackerComm.h" />
     <ClInclude Include="Core\PeerMessage.h" />
@@ -303,7 +301,6 @@
     <ClInclude Include="utils\ScheduledTimer.h" />
     <ClInclude Include="utils\HexEncoding.h" />
     <ClInclude Include="utils\Network.h" />
-    <ClInclude Include="utils\PacketHelper.h" />
     <ClInclude Include="utils\RiotRestApi.h" />
     <ClInclude Include="utils\ServiceThreadpool.h" />
     <ClInclude Include="utils\TcpAsyncServer.h" />

@@ -5,6 +5,6 @@ namespace mtt
 	namespace config
 	{
 		External external;
-		Internal internall;
+		Internal internal_;
 	}
 }

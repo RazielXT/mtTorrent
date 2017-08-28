@@ -154,7 +154,7 @@ void mtt::PeerCommunication::sendHandshake()
 	if (!state.finishedHandshake && state.action == PeerCommunicationState::Connected)
 	{
 		state.action = PeerCommunicationState::Handshake;
-		stream->write(mtt::bt::createHandshake(torrent.hash, mtt::config::internall.hashId));
+		stream->write(mtt::bt::createHandshake(torrent.hash, mtt::config::internal_.hashId));
 	}
 }
 
@@ -375,7 +375,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 			if (!state.finishedHandshake)
 			{
 				if(state.action == PeerCommunicationState::Connected)
-					stream->write(mtt::bt::createHandshake(torrent.hash, mtt::config::internall.hashId));
+					stream->write(mtt::bt::createHandshake(torrent.hash, mtt::config::internal_.hashId));
 
 				state.action = PeerCommunicationState::Established;
 				state.finishedHandshake = true;

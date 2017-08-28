@@ -173,7 +173,7 @@ mtt::dht::Table::Bucket::Node* mtt::dht::Table::Bucket::findCache(NodeInfo& node
 
 uint8_t mtt::dht::Table::getBucketId(const uint8_t* id)
 {
-	return NodeId::distance(mtt::config::internall.hashId, id).length();
+	return NodeId::distance(mtt::config::internal_.hashId, id).length();
 }
 
 bool mtt::dht::Table::empty()
@@ -308,7 +308,7 @@ bool mtt::dht::isValidNode(const uint8_t* hash)
 
 	for (int i = 0; i < 20; i++)
 	{
-		if (hash[i] != mtt::config::internall.hashId[i])
+		if (hash[i] != mtt::config::internal_.hashId[i])
 			myId = false;
 		if (hash[i] != 0)
 			allZero = false;

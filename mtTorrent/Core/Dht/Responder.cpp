@@ -46,7 +46,7 @@ bool mtt::dht::Responder::handlePacket(udp::endpoint& endpoint, DataBuffer& data
 	response.add(transactionId->data, transactionId->size);
 	response.add("1:y1:r", 6);
 	response.add("1:rd2:id20:", 11);
-	response.add(mtt::config::internall.hashId, 20);
+	response.add(mtt::config::internal_.hashId, 20);
 
 	if (requestType->equals("find_node", 9))
 	{
@@ -155,7 +155,7 @@ bool mtt::dht::Responder::writeValues(const char* infoHash, udp::endpoint& endpo
 
 	bool wantv6 = endpoint.address().is_v6();
 
-	uint32_t maxcount = mtt::config::internall.dht.maxPeerValuesResponse;
+	uint32_t maxcount = mtt::config::internal_.dht.maxPeerValuesResponse;
 	if (wantv6)
 		maxcount = uint32_t(maxcount / 3.0f);
 	uint32_t count = 0;
@@ -199,13 +199,36 @@ void mtt::dht::Responder::announcedPeer(const char* infoHash, Addr& peer)
 
 	auto it = vals.begin();
 	for (; it != vals.end(); it++)
-		if(it->addr == peer)
+		if (it->addr == peer)
 			break;
 
 	if (it != vals.end())
 		*it = v;
-	else if (vals.size() < mtt::config::internall.dht.maxAnnouncedPeers)
+	else if (vals.size() < mtt::config::internal_.dht.maxStoredAnnouncedPeers)
 		vals.push_back(v);
+}
+
+void mtt::dht::Responder::refreshStoredValues()
+{
+	std::lock_guard<std::mutex> guard(valuesMutex);
+
+	auto oldestTime = (uint32_t)::time(0) - 30*60;
+	for (auto it = values.begin(); it != values.end();)
+	{
+		auto& vals = it->second;
+		for (auto it2 = vals.begin(); it2 != vals.end();)
+		{
+			if (it2->timestamp < oldestTime)
+				it2 = vals.erase(it2);
+			else
+				it2++;
+		}
+
+		if (it->second.empty())
+			it = values.erase(it);
+		else
+			it++;
+	}
 }
 
 bool mtt::dht::Responder::isValidToken(uint32_t token, udp::endpoint& e)
@@ -243,8 +266,12 @@ uint32_t mtt::dht::Responder::getAnnounceToken(std::string& addr, uint32_t secre
 
 void mtt::dht::Responder::refresh()
 {
-	std::lock_guard<std::mutex> guard(tokenMutex);
+	refreshStoredValues();
 
-	tokenSecret[1] = tokenSecret[0];
-	tokenSecret[0] = (int)rand();
+	{
+		std::lock_guard<std::mutex> guard(tokenMutex);
+
+		tokenSecret[1] = tokenSecret[0];
+		tokenSecret[0] = (int)rand();
+	}
 }

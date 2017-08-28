@@ -37,7 +37,8 @@ namespace mtt
 			std::map<NodeId, std::vector<StoredValue>> values;
 
 			void announcedPeer(const char* infoHash, Addr& peer);
-		
+			void refreshStoredValues();
+
 			std::mutex tokenMutex;
 			uint32_t tokenSecret[2];
 

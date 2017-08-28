@@ -137,7 +137,7 @@ void mtt::dht::Communication::loadDefaultRoots()
 		}
 	};
 
-	for (auto& r : mtt::config::internall.defaultRootHosts)
+	for (auto& r : mtt::config::internal_.defaultRootHosts)
 	{
 		udp::resolver::query query(r.first, r.second);
 		auto resolver = std::make_shared<udp::resolver>(service.io);
@@ -168,7 +168,7 @@ void mtt::dht::Communication::load(std::string& settings)
 	loadDefaultRoots();
 
 	if(nodesCount < 50)
-		findNode(mtt::config::internall.hashId);
+		findNode(mtt::config::internal_.hashId);
 	
 	refreshTimer = ScheduledTimer::create(service.io, std::bind(&Communication::refreshTable, this));
 	refreshTimer->schedule(5 * 60 + 5);

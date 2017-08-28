@@ -20,12 +20,12 @@ void testInit()
 {
 	for (size_t i = 0; i < 20; i++)
 	{
-		mtt::config::internall.hashId[i] = (uint8_t)rand();
+		mtt::config::internal_.hashId[i] = (uint8_t)rand();
 	}
 
-	mtt::config::internall.trackerKey = 1111;
+	mtt::config::internal_.trackerKey = 1111;
 
-	mtt::config::internall.defaultRootHosts = { { "dht.transmissionbt.com", "6881" },{ "router.bittorrent.com" , "6881" } };
+	mtt::config::internal_.defaultRootHosts = { { "dht.transmissionbt.com", "6881" },{ "router.bittorrent.com" , "6881" } };
 
 	mtt::config::external.tcpPort = mtt::config::external.udpPort = 55125;
 }
@@ -54,7 +54,7 @@ void TorrentTest::testAsyncUdpRequest()
 
 	PacketBuilder packet(104);
 	packet.add("d1:ad2:id20:", 12);
-	packet.add(mtt::config::internall.hashId, 20);
+	packet.add(mtt::config::internal_.hashId, 20);
 	packet.add("9:info_hash20:", 14);
 	packet.add(targetId.data(), 20);
 	packet.add("e1:q9:get_peers1:v4:", 20);
@@ -416,7 +416,7 @@ void TorrentTest::testDhtTable()
 	mtt::BencodeParser::Object obj;
 	auto s = sizeof(obj);
 
-	auto torrent = mtt::TorrentFileParser::parseFile("D:\\folk.torrent");
+	auto torrent = mtt::TorrentFileParser::parseFile("D:\\hunter.torrent");
 
 	mtt::dht::Communication dhtComm;
 	dhtComm.load(saveFile);

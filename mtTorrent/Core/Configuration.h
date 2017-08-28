@@ -25,13 +25,13 @@ namespace mtt
 
 			struct
 			{
-				uint32_t maxAnnouncedPeers = 64;
+				uint32_t maxStoredAnnouncedPeers = 32;
 				uint32_t maxPeerValuesResponse = 32;
 			}
 			dht;
 		};
 
 		extern External external;
-		extern Internal internall;
+		extern Internal internal_;
 	}
 }
