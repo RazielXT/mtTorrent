@@ -133,8 +133,9 @@ DataBuffer mtt::TorrentFileInfo::createTorrentFileData()
 		{
 			out << "d6:lengthi" << std::to_string(f.size) << "e4:pathl";
 			
-			for (auto p : f.path)
+			for (size_t i = 1; i < f.path.size(); i++)
 			{
+				auto& p = f.path[i];
 				out << std::to_string(p.length()) << ":" << p;
 			}
 

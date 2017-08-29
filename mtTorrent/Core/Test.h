@@ -51,6 +51,7 @@ public:
 	void testGetCountry();
 	void testPeerListen();
 	void testDhtTable();
+	void testTorrentFileSerialization();
 
 	void start();
 
