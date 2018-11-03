@@ -3,21 +3,23 @@
 #include "utils/Network.h"
 #include "Configuration.h"
 #include "Logging.h"
+#include "Core.h"
 
 #define UDP_TRACKER_LOG(x) WRITE_LOG("UDP Tracker " << info.hostname << " " << x)
 
 using namespace mtt;
 
-mtt::UdpTrackerComm::UdpTrackerComm(UdpAsyncComm& udpMgr) : udp(udpMgr)
+mtt::UdpTrackerComm::UdpTrackerComm()
 {
 }
 
-void UdpTrackerComm::init(std::string host, std::string port, boost::asio::io_service&, TorrentPtr t)
+void UdpTrackerComm::init(std::string host, std::string port, CorePtr t)
 {
 	info.hostname = host;
-	torrent = t;
+	core = t;
 
-	comm = udp.create(host, port);
+	udp = UdpAsyncComm::Get();
+	comm = udp->create(host, port);
 }
 
 DataBuffer UdpTrackerComm::createConnectRequest()
@@ -89,7 +91,7 @@ DataBuffer UdpTrackerComm::createAnnounceRequest()
 	packet.add32(Announce);
 	packet.add32(transaction);
 
-	packet.add(torrent->info.hash, 20);
+	packet.add(core->torrent.info.hash, 20);
 	packet.add(mtt::config::internal_.hashId, 20);
 
 	packet.add64(0);
@@ -147,7 +149,7 @@ void mtt::UdpTrackerComm::connect()
 	UDP_TRACKER_LOG("connecting");
 	state = Connecting;
 
-	udp.sendMessage(createConnectRequest(), comm, std::bind(&UdpTrackerComm::onConnectUdpResponse, this, std::placeholders::_1, std::placeholders::_2));
+	udp->sendMessage(createConnectRequest(), comm, std::bind(&UdpTrackerComm::onConnectUdpResponse, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 bool mtt::UdpTrackerComm::validResponse(TrackerMessage& resp)
@@ -168,7 +170,7 @@ void mtt::UdpTrackerComm::announce()
 		else
 			state = Announcing;
 
-		udp.sendMessage(createAnnounceRequest(), comm, std::bind(&UdpTrackerComm::onAnnounceUdpResponse, this, std::placeholders::_1, std::placeholders::_2));
+		udp->sendMessage(createAnnounceRequest(), comm, std::bind(&UdpTrackerComm::onAnnounceUdpResponse, this, std::placeholders::_1, std::placeholders::_2));
 	}
 }
 

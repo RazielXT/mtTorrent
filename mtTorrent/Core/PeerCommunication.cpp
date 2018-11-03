@@ -112,7 +112,7 @@ bool mtt::PeerInfo::supportsDht()
 	return (protocol[8] & 0x80) != 0;
 }
 
-PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, std::shared_ptr<TcpAsyncStream> s) : torrent(t), listener(l)
+PeerCommunication::PeerCommunication(TorrentInfo& t, std::shared_ptr<TcpAsyncStream> s) : torrent(t)
 {
 	stream = s;
 	state.action = PeerCommunicationState::Connected;
@@ -121,7 +121,7 @@ PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, std::shar
 	dataReceived();
 }
 
-PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, boost::asio::io_service& io_service) : torrent(t), listener(l)
+PeerCommunication::PeerCommunication(TorrentInfo& t, boost::asio::io_service& io_service) : torrent(t)
 {
 	stream = std::make_shared<TcpAsyncStream>(io_service);
 	initializeCallbacks();
@@ -132,21 +132,27 @@ void mtt::PeerCommunication::initializeCallbacks()
 	stream->onConnectCallback = std::bind(&PeerCommunication::connectionOpened, this);
 	stream->onCloseCallback = std::bind(&PeerCommunication::connectionClosed, this);
 	stream->onReceiveCallback = std::bind(&PeerCommunication::dataReceived, this);
-
-	ext.pex.onPexMessage = std::bind(&mtt::IPeerListener::pexReceived, &listener, this, std::placeholders::_1);
-	ext.utm.onUtMetadataMessage = std::bind(&mtt::IPeerListener::metadataPieceReceived, &listener, this, std::placeholders::_1);
 	ext.stream = stream;
+
+	ext.pex.onPexMessage = [this](mtt::ext::PeerExchange::Message& msg)
+	{
+		std::lock_guard<std::mutex> guard(listenerMutex);
+		listener->pexReceived(this, msg);
+	};
+	ext.utm.onUtMetadataMessage = [this](mtt::ext::UtMetadata::Message& msg)
+	{
+		std::lock_guard<std::mutex> guard(listenerMutex);
+		listener->metadataPieceReceived(this, msg);
+	};
 }
 
 void PeerCommunication::sendHandshake(Addr& address)
 {
-	if (state.action == PeerCommunicationState::Disconnected)
-	{
+	if (state.action != PeerCommunicationState::Disconnected)
 		resetState();
 
-		state.action = PeerCommunicationState::Connecting;
-		stream->connect(address.addrBytes, address.port, address.ipv6);
-	}
+	state.action = PeerCommunicationState::Connecting;
+	stream->connect(address.addrBytes, address.port, address.ipv6);
 }
 
 void mtt::PeerCommunication::sendHandshake()
@@ -194,10 +200,19 @@ Addr mtt::PeerCommunication::getAddress()
 	return out;
 }
 
+void mtt::PeerCommunication::setListener(IPeerListener* l)
+{
+	std::lock_guard<std::mutex> guard(listenerMutex);
+	listener = l;
+}
+
 void mtt::PeerCommunication::connectionClosed()
 {
 	state.action = PeerCommunicationState::Disconnected;
-	listener.connectionClosed(this);
+	{
+		std::lock_guard<std::mutex> guard(listenerMutex);
+		listener->connectionClosed(this);
+	}
 }
 
 mtt::PeerMessage mtt::PeerCommunication::readNextStreamMessage()
@@ -309,7 +324,10 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 
 		BT_LOG("new percentage: " << std::to_string(info.pieces.getPercentage()) << "\n");
 
-		listener.progressUpdated(this);
+		{
+			std::lock_guard<std::mutex> guard(listenerMutex);
+			listener->progressUpdated(this);
+		}
 	}
 	else if (message.id == Have)
 	{
@@ -317,7 +335,10 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 
 		BT_LOG("new percentage: " << std::to_string(info.pieces.getPercentage()) << "\n");
 
-		listener.progressUpdated(this);
+		{
+			std::lock_guard<std::mutex> guard(listenerMutex);
+			listener->progressUpdated(this);
+		}
 	}
 	else if (message.id == Piece)
 	{
@@ -366,7 +387,10 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 		BT_LOG("ext message " << (int)type);
 
 		if (type == mtt::ext::HandshakeEx)
-			listener.extHandshakeFinished(this);
+		{
+			std::lock_guard<std::mutex> guard(listenerMutex);
+			listener->extHandshakeFinished(this);
+		}
 	}
 	else if (message.id == Handshake)
 	{
@@ -390,12 +414,18 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 				if (info.supportsDht() && mtt::config::external.enableDht)
 					sendPort(mtt::config::external.udpPort);
 
-				listener.handshakeFinished(this);
+				{
+					std::lock_guard<std::mutex> guard(listenerMutex);
+					listener->handshakeFinished(this);
+				}
 			}
 			else
 				state.action = PeerCommunicationState::Established;
 		}
 	}
 
-	listener.messageReceived(this, message);
+	{
+		std::lock_guard<std::mutex> guard(listenerMutex);
+		listener->messageReceived(this, message);
+	}
 }

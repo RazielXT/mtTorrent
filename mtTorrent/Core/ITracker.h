@@ -1,5 +1,6 @@
 #pragma once
 #include <functional>
+#include "Interface.h"
 
 namespace mtt
 {
@@ -7,7 +8,7 @@ namespace mtt
 	{
 	public:
 
-		virtual void init(std::string host, std::string port, boost::asio::io_service& io, TorrentPtr torrent) = 0;
+		virtual void init(std::string host, std::string port, CorePtr torrent) = 0;
 
 		virtual void announce() = 0;
 
@@ -27,6 +28,6 @@ namespace mtt
 		std::function<void()> onFail;
 		std::function<void(AnnounceResponse&)> onAnnounceResult;
 
-		TorrentPtr torrent;
+		CorePtr core;
 	};
 }

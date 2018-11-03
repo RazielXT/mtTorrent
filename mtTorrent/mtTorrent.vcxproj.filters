@@ -35,6 +35,12 @@
     <Filter Include="Source Files\Core\General">
       <UniqueIdentifier>{7854d554-0259-41b2-825f-836e7e52140a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Core\Torrent\Tasks">
+      <UniqueIdentifier>{90430acc-2039-4b7b-bb2a-b2c55a380b53}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Core\Torrent\State">
+      <UniqueIdentifier>{3c563459-20dd-404c-a4a2-d84628948432}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\main.cpp">
@@ -137,6 +143,21 @@
       <Filter>Source Files\Core\Torrent\Dht</Filter>
     </ClCompile>
     <ClCompile Include="Core\State.cpp">
+      <Filter>Source Files\Core\Torrent\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\MetadataDownload.cpp">
+      <Filter>Source Files\Core\Torrent\Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\ExternalRequestHandler.cpp">
+      <Filter>Source Files\Core\Torrent\Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Core.cpp">
+      <Filter>Source Files\Core\Torrent\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\PeerManager.cpp">
+      <Filter>Source Files\Core\Torrent\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Scheduler.cpp">
       <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClCompile>
   </ItemGroup>
@@ -182,9 +203,6 @@
     </ClInclude>
     <ClInclude Include="Core\PiecesProgress.h">
       <Filter>Source Files\Core\Torrent\Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\PeerMgr.h">
-      <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClInclude>
     <ClInclude Include="Core\Scheduler.h">
       <Filter>Source Files\Core\Torrent\Control</Filter>
@@ -234,9 +252,6 @@
     <ClInclude Include="utils\UdpAsyncReceiver.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Core\ActiveTorrent.h">
-      <Filter>Source Files\Core\Torrent\Control</Filter>
-    </ClInclude>
     <ClInclude Include="utils\ScheduledTimer.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
@@ -258,7 +273,25 @@
     <ClInclude Include="Core\Status.h">
       <Filter>Source Files\Core\General</Filter>
     </ClInclude>
+    <ClInclude Include="PeerManager.h">
+      <Filter>Source Files\Core\Torrent\Control</Filter>
+    </ClInclude>
     <ClInclude Include="Core\State.h">
+      <Filter>Source Files\Core\Torrent\State</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\MetadataDownload.h">
+      <Filter>Source Files\Core\Torrent\Tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\ProgressStatistics.h">
+      <Filter>Source Files\Core\Torrent\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Core.h">
+      <Filter>Source Files\Core\Torrent\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\ExternalRequestHandler.h">
+      <Filter>Source Files\Core\Torrent\Tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\PeerManagerListener.h">
       <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClInclude>
   </ItemGroup>

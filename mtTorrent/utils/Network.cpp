@@ -72,8 +72,8 @@ std::string sendHttpsRequest(ssl_socket& socket, tcp::resolver& resolver, boost:
 
 DataBuffer _sendUdpRequest(udp::socket& socket, DataBuffer& request, udp::endpoint& receiver_endpoint, int32_t timeout)
 {
-	setsockopt(socket.native(), SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
-	setsockopt(socket.native(), SOL_SOCKET, SO_SNDTIMEO, (const char*)&timeout, sizeof(timeout));
+	setsockopt(socket.native_handle(), SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
+	setsockopt(socket.native_handle(), SOL_SOCKET, SO_SNDTIMEO, (const char*)&timeout, sizeof(timeout));
 
 	socket.send_to(boost::asio::buffer(request), receiver_endpoint);
 

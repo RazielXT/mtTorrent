@@ -40,7 +40,7 @@ namespace mtt
 
 		protected:
 
-			UdpAsyncComm udpMgr;
+			UdpCommPtr udp;
 			bool onUnknownUdpPacket(udp::endpoint&, DataBuffer&);
 
 			virtual uint32_t onFoundPeers(uint8_t* hash, std::vector<Addr>& values) override;

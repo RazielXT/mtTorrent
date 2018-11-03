@@ -20,15 +20,15 @@ void mtt::PiecesProgress::init(size_t size)
 	}
 }
 
-void mtt::PiecesProgress::fromSelection(std::vector<File>& files)
+void mtt::PiecesProgress::fromSelection(DownloadSelection& selection)
 {
 	pieces.clear();
 
-	for (auto& f : files)
+	for (auto& f : selection.files)
 	{
-		for (uint32_t i = f.startPieceIndex; i <= f.endPieceIndex; i++)
+		for (uint32_t i = f.info.startPieceIndex; i <= f.info.endPieceIndex; i++)
 		{
-			pieces[i] = true;
+			pieces[i] = false;
 		}
 	}
 
@@ -54,6 +54,17 @@ bool mtt::PiecesProgress::hasPiece(uint32_t index)
 {
 	auto it = pieces.find(index);
 	return it != pieces.end() && it->second;
+}
+
+uint32_t mtt::PiecesProgress::firstEmptyPiece()
+{
+	for (auto& p : pieces)
+	{
+		if (!p.second)
+			return p.first;
+	}
+
+	return -1;
 }
 
 void mtt::PiecesProgress::fromBitfield(DataBuffer& bitfield, size_t piecesCount)

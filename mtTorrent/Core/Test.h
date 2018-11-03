@@ -43,7 +43,7 @@ public:
 	TorrentTest();
 
 	void testMetadataReceive();
-	void testAsyncUdpRequest();
+	void testAsyncDhtUdpRequest();
 	void testAsyncDhtGetPeers();
 	void testTrackers();
 	void testStorageLoad();
@@ -52,6 +52,7 @@ public:
 	void testPeerListen();
 	void testDhtTable();
 	void testTorrentFileSerialization();
+	void bigTestGetTorrentFileByLink();
 
 	void start();
 
@@ -74,4 +75,12 @@ private:
 
 	virtual uint32_t onFoundPeers(uint8_t* hash, std::vector<Addr>& values) override;
 	virtual void findingPeersFinished(uint8_t* hash, uint32_t count) override;
+
+	virtual void messageReceived(mtt::PeerCommunication*, mtt::PeerMessage& msg) override
+	{
+		if (onPeerMsg)
+			onPeerMsg(msg);
+	};
+
+	std::function<void(mtt::PeerMessage&)> onPeerMsg;
 };

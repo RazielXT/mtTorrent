@@ -45,8 +45,8 @@ namespace mtt
 	{
 	public:
 
-		PeerCommunication(TorrentInfo& torrent, IPeerListener& listener, boost::asio::io_service& io_service);
-		PeerCommunication(TorrentInfo& torrent, IPeerListener& listener, std::shared_ptr<TcpAsyncStream> stream);
+		PeerCommunication(TorrentInfo& torrent, boost::asio::io_service& io_service);
+		PeerCommunication(TorrentInfo& torrent, std::shared_ptr<TcpAsyncStream> stream);
 		~PeerCommunication();
 
 		PeerInfo info;
@@ -73,10 +73,14 @@ namespace mtt
 
 		Addr getAddress();
 
+		void setListener(IPeerListener* l);
+
 	private:
 
+		std::mutex listenerMutex;
+		IPeerListener* listener;
+
 		TorrentInfo& torrent;
-		IPeerListener& listener;
 
 		std::shared_ptr<TcpAsyncStream> stream;
 

@@ -1,51 +1,38 @@
 #include "Core.h"
 
-mtt::ClientInfo* clInfo = nullptr;
+mtt::TorrentsCollection instance;
 
-mtt::ClientInfo* mtt::getClientInfo()
+mtt::TorrentsCollection& mtt::TorrentsCollection::Get()
 {
-	return clInfo;
+	return instance;
 }
 
-mtt::Core::Core()
+mtt::CorePtr mtt::TorrentsCollection::GetTorrent(uint8_t* id)
 {
-	srand((unsigned int)time(NULL));
-
+	for (auto& t : torrents)
 	{
-		size_t hashLen = strlen(MT_HASH_NAME);
-		memcpy(client.hashId, MT_HASH_NAME, hashLen);
-
-		for (size_t i = hashLen; i < 20; i++)
-		{
-			client.hashId[i] = static_cast<uint8_t>(rand() % 255);
-		}
+		if (memcmp(id, t->torrent.info.hash, 20) == 0)
+			return t;
 	}
 
-	client.key = static_cast<uint32_t>(rand());
+	auto ptr = std::make_shared<mtt::TorrentCore>();
+	memcpy(id, ptr->torrent.info.hash, 20);
+	torrents.push_back(ptr);
 
-	client.network.io_service = &io_service;
-
-	clInfo = &client;
-
-	client.settings.outDirectory = "D:\\";
+	return ptr;
 }
 
-uint32_t mtt::Core::addTorrent(const char* filepath)
+mtt::CorePtr mtt::TorrentsCollection::GetTorrent(TorrentFileInfo& info)
 {
-	auto t = std::make_shared<Torrent>(filepath);
-
-	if(t->id)
-		loadedTorrents.push_back(t);
-
-	return t->id;
-}
-
-std::shared_ptr<mtt::Torrent> mtt::Core::getTorrent(uint32_t id)
-{
-	for (auto t : loadedTorrents)
-		if (t->id == id)
+	for (auto& t : torrents)
+	{
+		if (memcmp(info.info.hash, t->torrent.info.hash, 20) == 0)
 			return t;
+	}
 
-	return nullptr;
+	auto ptr = std::make_shared<mtt::TorrentCore>();
+	ptr->torrent = info;
+	torrents.push_back(ptr);
+
+	return ptr;
 }
-

@@ -2,19 +2,25 @@
 
 #include "utils\Network.h"
 #include "UdpAsyncReceiver.h"
+#include "ServiceThreadpool.h"
 
 using UdpResponseCallback = std::function<bool(UdpRequest, DataBuffer*)>;
+
+class UdpAsyncComm;
+using UdpCommPtr = std::shared_ptr<UdpAsyncComm>;
 
 class UdpAsyncComm
 {
 public:
 
-	UdpAsyncComm(boost::asio::io_service& io, uint16_t port);
+	static UdpCommPtr Get();
+
+	void setBindPort(uint16_t port);
 
 	void listen(UdpPacketCallback received);
 
 	UdpRequest create(std::string& host, std::string& port);
-	UdpRequest sendMessage(DataBuffer& data, std::string& host, std::string& port, UdpResponseCallback response);
+	UdpRequest sendMessage(DataBuffer& data, std::string& host, std::string& port, UdpResponseCallback response, bool ipv6 = false);
 	UdpRequest sendMessage(DataBuffer& data, Addr& addr, UdpResponseCallback response);
 	void sendMessage(DataBuffer& data, UdpRequest target, UdpResponseCallback response);
 	void sendMessage(DataBuffer& data, udp::endpoint& endpoint);
@@ -26,7 +32,6 @@ private:
 		UdpRequest client;
 		uint8_t retries = 0;
 		UdpResponseCallback onResponse;
-
 		std::shared_ptr<boost::asio::deadline_timer> timeoutTimer;
 		void reset();
 	};
@@ -43,7 +48,7 @@ private:
 
 	void startListening();
 	std::shared_ptr<UdpAsyncReceiver> listener;
-	uint16_t bindPort;
+	uint16_t bindPort = 0;
 
-	boost::asio::io_service& io;
+	ServiceThreadpool pool;
 };

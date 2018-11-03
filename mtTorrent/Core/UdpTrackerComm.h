@@ -10,9 +10,9 @@ namespace mtt
 	{
 	public:
 
-		UdpTrackerComm(UdpAsyncComm& udp);
+		UdpTrackerComm();
 
-		virtual void init(std::string host, std::string port, boost::asio::io_service& io, TorrentPtr torrent) override;
+		virtual void init(std::string host, std::string port, CorePtr core) override;
 
 		virtual void announce() override;
 
@@ -20,7 +20,7 @@ namespace mtt
 
 		void fail();
 
-		UdpAsyncComm& udp;
+		UdpCommPtr udp;
 		UdpRequest comm;
 
 		bool onConnectUdpResponse(UdpRequest comm, DataBuffer* data);

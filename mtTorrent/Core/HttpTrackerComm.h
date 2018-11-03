@@ -13,7 +13,7 @@ namespace mtt
 		HttpTrackerComm();
 		~HttpTrackerComm();
 
-		virtual void init(std::string host, std::string port, boost::asio::io_service& io, TorrentPtr torrent) override;
+		virtual void init(std::string host, std::string port, CorePtr core) override;
 
 		virtual void announce() override;
 

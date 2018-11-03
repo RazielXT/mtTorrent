@@ -3,6 +3,7 @@
 #include "utils/PacketHelper.h"
 #include "Configuration.h"
 #include "utils/UrlEncoding.h"
+#include "Core.h"
 
 
 #define HTTP_TRACKER_LOG(x) WRITE_LOG("HTTP tracker " << info.hostname << " " << x)
@@ -19,13 +20,13 @@ mtt::HttpTrackerComm::~HttpTrackerComm()
 		tcpComm->close();
 }
 
-void mtt::HttpTrackerComm::init(std::string host, std::string p, boost::asio::io_service& io, TorrentPtr t)
+void mtt::HttpTrackerComm::init(std::string host, std::string p, CorePtr t)
 {
 	info.hostname = host;
 	port = p;
-	torrent = t;
+	core = t;
 
-	tcpComm = std::make_shared<TcpAsyncStream>(io);
+	tcpComm = std::make_shared<TcpAsyncStream>(core->service.io);
 	tcpComm->onConnectCallback = std::bind(&HttpTrackerComm::onTcpConnected, this);
 	tcpComm->onCloseCallback = std::bind(&HttpTrackerComm::onTcpClosed, this);
 	tcpComm->onReceiveCallback = std::bind(&HttpTrackerComm::onTcpReceived, this);
@@ -98,10 +99,10 @@ void mtt::HttpTrackerComm::onTcpReceived()
 DataBuffer mtt::HttpTrackerComm::createAnnounceRequest(std::string host, std::string port)
 {
 	PacketBuilder builder(400);
-	builder << "GET /announce?info_hash=" << UrlEncode(torrent->info.hash, 20);
+	builder << "GET /announce?info_hash=" << UrlEncode(core->torrent.info.hash, 20);
 	builder << "&peer_id=" << UrlEncode(mtt::config::internal_.hashId, 20);
 	builder << "&port=" << std::to_string(mtt::config::external.tcpPort);
-	builder << "&uploaded=0&downloaded=0&left=" << std::to_string(torrent->info.fullSize);
+	builder << "&uploaded=0&downloaded=0&left=" << std::to_string(core->torrent.info.fullSize);
 	builder << "&numwant=" << std::to_string(mtt::config::internal_.maxPeersPerTrackerRequest);
 	builder << "&compact=1&no_peer_id=0&key=" << std::to_string(mtt::config::internal_.trackerKey);
 	builder << "&event=started HTTP/1.0\r\n";

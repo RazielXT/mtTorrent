@@ -1,10 +1,11 @@
 #include "Dht/Communication.h"
 #include "Configuration.h"
 
-mtt::dht::Communication::Communication() : udpMgr(service.io, mtt::config::external.udpPort), responder(table, *this)
+mtt::dht::Communication::Communication() : responder(table, *this)
 {
 	service.start(3);
-	udpMgr.listen(std::bind(&Communication::onUnknownUdpPacket, this, std::placeholders::_1, std::placeholders::_2));
+	udp = UdpAsyncComm::Get();
+	udp->listen(std::bind(&Communication::onUnknownUdpPacket, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 mtt::dht::Communication::~Communication()
@@ -111,12 +112,12 @@ void mtt::dht::Communication::findingPeersFinished(uint8_t* hash, uint32_t count
 
 UdpRequest mtt::dht::Communication::sendMessage(Addr& addr, DataBuffer& data, UdpResponseCallback response)
 {
-	return udpMgr.sendMessage(data, addr, response);
+	return udp->sendMessage(data, addr, response);
 }
 
 void mtt::dht::Communication::sendMessage(udp::endpoint& endpoint, DataBuffer& data)
 {
-	udpMgr.sendMessage(data, endpoint);
+	udp->sendMessage(data, endpoint);
 }
 
 void mtt::dht::Communication::loadDefaultRoots()

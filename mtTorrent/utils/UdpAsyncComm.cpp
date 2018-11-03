@@ -4,8 +4,23 @@
 
 #define UDP_LOG(x) WRITE_LOG("UDP MGR: " << x)
 
-UdpAsyncComm::UdpAsyncComm(boost::asio::io_service& io_service, uint16_t port) : io(io_service), bindPort(port)
+std::shared_ptr<UdpAsyncComm> UdpAsyncComm::Get()
 {
+	static std::shared_ptr<UdpAsyncComm> ptr;
+
+	if (!ptr)
+	{
+		ptr = std::make_shared<UdpAsyncComm>();
+		ptr->setBindPort(mtt::config::external.udpPort);
+		ptr->pool.start(4);
+	}
+
+	return ptr;
+}
+
+void UdpAsyncComm::setBindPort(uint16_t port)
+{
+	bindPort = port;
 }
 
 void UdpAsyncComm::listen(UdpPacketCallback receive)
@@ -18,21 +33,21 @@ void UdpAsyncComm::listen(UdpPacketCallback receive)
 
 UdpRequest UdpAsyncComm::create(std::string& host, std::string& port)
 {
-	UdpRequest c = std::make_shared<UdpAsyncWriter>(io);
+	UdpRequest c = std::make_shared<UdpAsyncWriter>(pool.io);
 	c->setAddress(host, port);
 	c->setBindPort(bindPort);
 
 	return c;
 }
 
-UdpRequest UdpAsyncComm::sendMessage(DataBuffer& data, std::string& host, std::string& port, UdpResponseCallback response)
+UdpRequest UdpAsyncComm::sendMessage(DataBuffer& data, std::string& host, std::string& port, UdpResponseCallback response, bool ipv6)
 {
-	UdpRequest c = std::make_shared<UdpAsyncWriter>(io);
+	UdpRequest c = std::make_shared<UdpAsyncWriter>(pool.io);
 
 	if (response)
 		addPendingResponse(data, c, response);
 
-	c->setAddress(host, port);
+	c->setAddress(host, port, ipv6);
 	c->setBindPort(bindPort);
 	c->write(data);
 
@@ -49,7 +64,7 @@ void UdpAsyncComm::sendMessage(DataBuffer& data, UdpRequest c, UdpResponseCallba
 
 UdpRequest UdpAsyncComm::sendMessage(DataBuffer& data, Addr& addr, UdpResponseCallback response)
 {
-	UdpRequest c = std::make_shared<UdpAsyncWriter>(io);
+	UdpRequest c = std::make_shared<UdpAsyncWriter>(pool.io);
 
 	if(response)
 		addPendingResponse(data, c, response);
@@ -63,7 +78,7 @@ UdpRequest UdpAsyncComm::sendMessage(DataBuffer& data, Addr& addr, UdpResponseCa
 
 void UdpAsyncComm::sendMessage(DataBuffer& data, udp::endpoint& endpoint)
 {
-	UdpRequest c = std::make_shared<UdpAsyncWriter>(io);
+	UdpRequest c = std::make_shared<UdpAsyncWriter>(pool.io);
 	c->setAddress(endpoint);
 	c->setBindPort(bindPort);
 	c->write(data);
@@ -76,9 +91,9 @@ void UdpAsyncComm::addPendingResponse(DataBuffer& data, UdpRequest c, UdpRespons
 
 	auto info = std::make_shared<ResponseRetryInfo>();
 	info->client = c;
-	info->timeoutTimer = std::make_shared<boost::asio::deadline_timer>(io);
-	info->timeoutTimer->async_wait(std::bind(&UdpAsyncComm::checkTimeout, this, info));
+	info->timeoutTimer = std::make_shared<boost::asio::deadline_timer>(pool.io);
 	info->timeoutTimer->expires_from_now(boost::posix_time::seconds(1));
+	info->timeoutTimer->async_wait(std::bind(&UdpAsyncComm::checkTimeout, this, info));
 	info->onResponse = response;
 
 	c->onCloseCallback = std::bind(&UdpAsyncComm::onUdpClose, this, std::placeholders::_1);
@@ -177,7 +192,7 @@ void UdpAsyncComm::onUdpClose(UdpRequest source)
 
 void UdpAsyncComm::startListening()
 {
-	listener = std::make_shared<UdpAsyncReceiver>(io, bindPort, false);
+	listener = std::make_shared<UdpAsyncReceiver>(pool.io, bindPort, false);
 	listener->receiveCallback = std::bind(&UdpAsyncComm::onUdpReceive, this, std::placeholders::_1, std::placeholders::_2);
 	listener->listen();
 }

@@ -11,6 +11,9 @@
 
 namespace mtt
 {
+	struct TorrentCore;
+	using CorePtr = std::shared_ptr<TorrentCore>;
+
 	struct File
 	{
 		int id;
@@ -50,13 +53,6 @@ namespace mtt
 		Status parseMagnetLink(std::string link);
 		DataBuffer createTorrentFileData();
 	};
-
-	struct LoadedTorrent
-	{
-		TorrentInfo info;
-	};
-
-	using TorrentPtr = std::shared_ptr<LoadedTorrent>;
 
 	struct FileSelectionInfo
 	{

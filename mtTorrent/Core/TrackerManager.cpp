@@ -2,13 +2,16 @@
 #include "HttpTrackerComm.h"
 #include "UdpTrackerComm.h"
 #include "Configuration.h"
+#include "Core.h"
 
-mtt::TrackerManager::TrackerManager(TorrentPtr t, std::vector<std::string> tr, TrackerListener& l, boost::asio::io_service& ioService, UdpAsyncComm& udpMgr) : udp(udpMgr), io(ioService), listener(l), torrent(t)
+mtt::TrackerManager::TrackerManager()
 {
-	for (auto& t : tr)
-	{
-		addTracker(t);
-	}
+}
+
+void mtt::TrackerManager::init(CorePtr c, TrackerListener* l)
+{
+	core = c;
+	listener = l;
 }
 
 std::string cutStringPart(std::string& source, DataBuffer endChars, int cutAdd)
@@ -78,6 +81,14 @@ void mtt::TrackerManager::addTracker(std::string addr)
 	}
 }
 
+void mtt::TrackerManager::addTrackers(const std::vector<std::string>& trackers)
+{
+	for (auto& t : trackers)
+	{
+		addTracker(t);
+	}
+}
+
 void mtt::TrackerManager::onAnnounce(AnnounceResponse& resp, Tracker* t)
 {
 	std::lock_guard<std::mutex> guard(trackersMutex);
@@ -87,10 +98,10 @@ void mtt::TrackerManager::onAnnounce(AnnounceResponse& resp, Tracker* t)
 		trackerInfo->retryCount = 0;
 		trackerInfo->timer->schedule(resp.interval);
 
-		listener.trackerStateChanged(trackerInfo->getStateInfo(), torrent);
+		listener->trackerStateChanged(trackerInfo->getStateInfo(), core);
 	}
 
-	listener.onAnnounceResult(resp, torrent);
+	listener->onAnnounceResult(resp, core);
 
 	startNext();
 }
@@ -123,14 +134,14 @@ void mtt::TrackerManager::onTrackerFail(Tracker* t)
 			startNext();
 		}
 
-		listener.trackerStateChanged(trackerInfo->getStateInfo(), torrent);
+		listener->trackerStateChanged(trackerInfo->getStateInfo(), core);
 	}
 }
 
 void mtt::TrackerManager::start(TrackerInfo* tracker)
 {
 	if (tracker->protocol == "udp")
-		tracker->comm = std::make_shared<UdpTrackerComm>(udp);
+		tracker->comm = std::make_shared<UdpTrackerComm>();
 	else if (tracker->protocol == "http")
 		tracker->comm = std::make_shared<HttpTrackerComm>();
 	else
@@ -139,8 +150,8 @@ void mtt::TrackerManager::start(TrackerInfo* tracker)
 	tracker->comm->onFail = std::bind(&TrackerManager::onTrackerFail, this, tracker->comm.get());
 	tracker->comm->onAnnounceResult = std::bind(&TrackerManager::onAnnounce, this, std::placeholders::_1, tracker->comm.get());
 
-	tracker->comm->init(tracker->host, tracker->port, io, torrent);
-	tracker->timer = ScheduledTimer::create(io, std::bind(&Tracker::announce, tracker->comm.get()));
+	tracker->comm->init(tracker->host, tracker->port, core);
+	tracker->timer = ScheduledTimer::create(core->service.io, std::bind(&Tracker::announce, tracker->comm.get()));
 	tracker->retryCount = 0;
 
 	tracker->comm->announce();

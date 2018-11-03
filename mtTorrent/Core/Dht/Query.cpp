@@ -605,9 +605,8 @@ bool mtt::dht::Query::PingNodes::onResponse(UdpRequest comm, DataBuffer* data, P
 
 	if(!nodesLeft.empty())
 	{
-		auto&n = nodesLeft.back();
-		sendRequest(n, false);
-		nodesLeft.resize(nodesLeft.size() - 1);
+		sendRequest(nodesLeft.back(), false);
+		nodesLeft.pop_back();
 	}
 
 	return true;

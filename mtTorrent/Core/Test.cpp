@@ -10,6 +10,7 @@
 #include "Storage.h"
 #include "utils/TcpAsyncServer.h"
 #include "utils/BencodeParser.h"
+#include "Core.h"
 
 using namespace mtt;
 
@@ -30,6 +31,11 @@ void testInit()
 	mtt::config::external.tcpPort = mtt::config::external.udpPort = 55125;
 }
 
+void TorrentTest::start()
+{
+	bigTestGetTorrentFileByLink();
+}
+
 TorrentTest::TorrentTest()
 {
 	testInit();
@@ -40,7 +46,7 @@ void TorrentTest::metadataPieceReceived(PeerCommunication*, mtt::ext::UtMetadata
 	utmMsg = msg;
 }
 
-void TorrentTest::testAsyncUdpRequest()
+void TorrentTest::testAsyncDhtUdpRequest()
 {
 	ServiceThreadpool service;
 
@@ -63,52 +69,26 @@ void TorrentTest::testAsyncUdpRequest()
 	packet.add(reinterpret_cast<char*>(&transactionId), 2);
 	packet.add("1:y1:qe", 7);
 
-	/*UdpAsyncComm udp(service.io, 55466);
+	bool responded = false;
+	auto udp = UdpAsyncComm::Get();
+	udp->setBindPort(55466);
 
-	auto req = udp.sendMessage(packet.getBuffer(), dhtRoot, dhtRootPort, nullptr);*/
-
-	UdpRequest c = std::make_shared<UdpAsyncWriter>(service.io);
-	c->setAddress(dhtRoot, dhtRootPort, true);
-	c->write(packet.getBuffer());
-
-	WAITFOR(false);
-}
-
-void TorrentTest::testMetadataReceive()
-{
-	auto torrent = mtt::TorrentFileParser::parseFile("D:\\test.torrent");
-
-	ServiceThreadpool service;
-
-	PeerCommunication peer(torrent.info, *this, service.io);
-	peer.sendHandshake(Addr({ 127,0,0,1 }, 55391));
-
-	WAITFOR(failed || (peer.state.finishedHandshake && peer.ext.state.enabled))
-
-	if (failed || !peer.ext.utm.size)
-		return;
-
-	mtt::MetadataReconstruction metadata;
-	metadata.init(peer.ext.utm.size);
-
-	while (!metadata.finished() && !failed)
+	auto respFunc = [&responded](UdpRequest r, DataBuffer* d)
 	{
-		uint32_t mdPiece = metadata.getMissingPieceIndex();
-		peer.ext.requestMetadataPiece(mdPiece);
+		responded = true;
 
-		WAITFOR(failed || !utmMsg.metadata.empty())
+		if (d)
+		{
+			BencodeParser parser;
+			parser.parse(d->data(), d->size());
+		}
 
-		if (failed || utmMsg.id != mtt::ext::UtMetadata::Data)
-			return;
+		return true;
+	};
 
-		metadata.addPiece(utmMsg.metadata, utmMsg.piece);
-	}
+	auto req = udp->sendMessage(packet.getBuffer(), dhtRoot, dhtRootPort, respFunc, false);
 
-	if (metadata.finished())
-	{
-		auto info = mtt::TorrentFileParser::parseTorrentInfo(metadata.buffer.data(), metadata.buffer.size());
-		WRITE_LOG(info.files[0].path[0]);
-	}
+	WAITFOR(responded);
 }
 
 void TorrentTest::connectionClosed(PeerCommunication*)
@@ -152,7 +132,8 @@ void TorrentTest::testAsyncDhtGetPeers()
 		}
 
 		WRITE_LOG("PEER " << nextPeerIdx);
-		peer = std::make_shared<PeerCommunication>(info, *this, service.io);
+		peer = std::make_shared<PeerCommunication>(info, service.io);
+		peer->setListener(this);
 		Addr nextAddr;
 
 		{
@@ -196,18 +177,30 @@ void TorrentTest::testAsyncDhtGetPeers()
 	}
 }
 
-void TorrentTest::testTrackers()
+std::string GetClipboardText()
 {
-	//std::string link = "magnet:?xt=urn:btih:4YOP2LK2CO2KYSBIVG6IOYNCY3OFMWPD&tr=http://nyaa.tracker.wf:7777/announce&tr=udp://tracker.coppersurfer.tk:6969/announce&tr=udp://tracker.internetwarriors.net:1337/announce&tr=udp://tracker.leechers-paradise.org:6969/announce&tr=http://tracker.internetwarriors.net:1337/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=http://tracker.opentrackr.org:1337/announce&tr=udp://tracker.zer0day.to:1337/announce&tr=http://explodie.org:6969/announce&tr=http://p4p.arenabg.com:1337/announce&tr=udp://p4p.arenabg.com:1337/announce&tr=http://mgtracker.org:6969/announce&tr=udp://mgtracker.org:6969/announce";
-	//std::string link = "magnet:?xt=urn:btih:4YOP2LK2CO2KYSBIVG6IOYNCY3OFMWPD&tr=http://nyaa.tracker.wf:7777/announce";
-	//std::string link = "magnet:?xt=urn:btih:4YOP2LK2CO2KYSBIVG6IOYNCY3OFMWPD&tr=udp://tracker.coppersurfer.tk:6969/announce";
-	//std::string link = "magnet:?xt=urn:btih:7bbed572352ab881e9788a933decd884f6ccc58f&dn=%28Ebook+Martial+Arts%29+Aikido+-+Pressure+Points.pdf&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Fzer0day.ch%3A1337&tr=udp%3A%2F%2Fopen.demonii.com%3A1337&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Fexodus.desync.com%3A6969";
-	std::string link = "magnet:?xt=urn:btih:EQGRANKXR4EP6WH2HEEVUWDRU37YWEJQ&dn=%5BEdo%5D+Kizumonogatari+Trilogy+%28BD+1920x1080+FLAC%29&tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.doko.moe%3A6969";
-	mtt::TorrentFileInfo parsedTorrent;
-	parsedTorrent.parseMagnetLink(link);
+	std::string text;
+	if (OpenClipboard(nullptr))
+	{
+		HANDLE hData = GetClipboardData(CF_TEXT);
+		if (hData)
+		{
+			if (char* pszText = static_cast<char*>(GlobalLock(hData)))
+				text = pszText;
 
-	TorrentPtr torrent = std::make_shared<mtt::LoadedTorrent>();
-	torrent->info = parsedTorrent.info;
+			GlobalUnlock(hData);
+		}
+
+		CloseClipboard();
+	}
+
+	return text;
+}
+
+std::vector<Addr> getPeersFromTrackers(mtt::TorrentFileInfo& parsedTorrent)
+{
+	CorePtr torrent = std::make_shared<mtt::TorrentCore>();
+	torrent->torrent.info = parsedTorrent.info;
 
 	class TListener : public TrackerListener
 	{
@@ -216,12 +209,12 @@ void TorrentTest::testTrackers()
 		std::vector<Addr> peers;
 		TrackerStateInfo info;
 
-		virtual void onAnnounceResult(AnnounceResponse& resp, TorrentPtr) override
+		virtual void onAnnounceResult(AnnounceResponse& resp, CorePtr) override
 		{
 			peers = resp.peers;
 		}
 
-		virtual void trackerStateChanged(TrackerStateInfo& i, TorrentPtr) override
+		virtual void trackerStateChanged(TrackerStateInfo& i, CorePtr) override
 		{
 			info = i;
 
@@ -231,14 +224,27 @@ void TorrentTest::testTrackers()
 	}
 	tListener;
 
-	ServiceThreadpool service(2);
-	UdpAsyncComm udp(service.io, mtt::config::external.udpPort);
-	mtt::TrackerManager trackers(torrent, parsedTorrent.announceList, tListener, service.io, udp);
+	mtt::TrackerManager trackers;
+	trackers.init(torrent, &tListener);
+	trackers.addTrackers(parsedTorrent.announceList);
 	trackers.start();
 
 	WAITFOR(!tListener.peers.empty());
 
+	trackers.stop();
+
 	WRITE_LOG("PEERS: " << tListener.peers.size());
+
+	return tListener.peers;
+}
+
+void TorrentTest::testTrackers()
+{
+	std::string link = GetClipboardText();
+	mtt::TorrentFileInfo parsedTorrent;
+	parsedTorrent.parseMagnetLink(link);
+
+	auto addr = getPeersFromTrackers(parsedTorrent);
 
 	WAITFOR(false);
 }
@@ -387,7 +393,8 @@ void TorrentTest::testPeerListen()
 	listener.torrent = &torrent;
 	listener.storage = &storage;
 
-	PeerCommunication comm(torrent.info, listener, peerStream);
+	PeerCommunication comm(torrent.info, peerStream);
+	comm.setListener(&listener);
 
 	listener.comm = &comm;
 
@@ -472,9 +479,152 @@ void TorrentTest::testTorrentFileSerialization()
 	ok = memcmp(torrent.info.hash, torrentOut.info.hash, 20) == 0;
 }
 
-void TorrentTest::start()
+void TorrentTest::bigTestGetTorrentFileByLink()
 {
-	testTorrentFileSerialization();
+	std::string link = "magnet:?xt=urn:btih:5AYWR2LK3ORHWRI2Y6BVBUX6QAUF2SDP&tr=http://nyaa.tracker.wf:7777/announce&tr=udp://tracker.coppersurfer.tk:6969/announce&tr=udp://tracker.internetwarriors.net:1337/announce&tr=udp://tracker.leechersparadise.org:6969/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://open.stealth.si:80/announce&tr=udp://p4p.arenabg.com:1337/announce&tr=udp://mgtracker.org:6969/announce&tr=udp://tracker.tiny-vps.com:6969/announce&tr=udp://peerfect.org:6969/announce&tr=http://share.camoe.cn:8080/announce&tr=http://t.nyaatracker.com:80/announce&tr=https://open.kickasstracker.com:443/announce";//GetClipboardText();
+	mtt::TorrentFileInfo parsedTorrent;
+	parsedTorrent.parseMagnetLink(link);
+
+	std::vector<Addr> addr;// = getPeersFromTrackers(parsedTorrent);
+	addr.push_back(Addr({ 185, 21, 217, 75 }, 55239));
+	addr.push_back(Addr({ 78,57,164,108 }, 8999));
+	addr.push_back(Addr({ 88,206,177,148 }, 63500));
+	ServiceThreadpool service;
+
+	std::vector<std::shared_ptr<PeerCommunication>> peers;
+
+	for(auto& a : addr)
+	{
+		auto peer = std::make_shared<PeerCommunication>(parsedTorrent.info, service.io);
+		peer->setListener(this);
+		failed = false;
+		peer->sendHandshake(a);
+
+		WAITFOR(failed || (peer->state.finishedHandshake && peer->ext.state.enabled));
+
+		if (!failed)
+			peers.push_back(peer);
+	}
+
+	failed = peers.empty();
+
+	mtt::MetadataReconstruction metadata;
+	metadata.init(peers.front()->ext.utm.size);
+
+	while (!metadata.finished() && !failed)
+	{
+		uint32_t mdPiece = metadata.getMissingPieceIndex();
+		peers.front()->ext.requestMetadataPiece(mdPiece);
+
+		WAITFOR(failed || !utmMsg.metadata.empty())
+
+			if (failed || utmMsg.id != mtt::ext::UtMetadata::Data)
+				return;
+
+		metadata.addPiece(utmMsg.metadata, utmMsg.piece);
+		utmMsg.metadata.clear();
+	}
+
+	if (metadata.finished())
+	{
+		auto info = mtt::TorrentFileParser::parseTorrentInfo(metadata.buffer.data(), metadata.buffer.size());
+		WRITE_LOG(info.files[0].path[0]);
+
+		DownloadSelection selection;
+		for (auto&f : info.files)
+			selection.files.push_back({ false, f });
+
+		mtt::Storage storage(info.pieceSize);
+		storage.setPath("E:\\Torrent");
+		storage.setSelection(selection);
+
+		PiecesProgress piecesTodo;
+		piecesTodo.fromSelection(selection);
+
+		peers.front()->setInterested(true);
+
+		DownloadedPiece pieceTodo;
+		std::mutex pieceMtx;
+		uint32_t neededBlocks = 0;
+		bool finished = false;
+		uint32_t finishedPieces = 0;
+		onPeerMsg = [&](mtt::PeerMessage& msg)
+		{
+			std::lock_guard<std::mutex> guard(pieceMtx);
+			if (msg.id == Piece)
+			{
+				pieceTodo.addBlock(msg.piece);
+
+				if (pieceTodo.receivedBlocks == neededBlocks)
+				{
+					storage.storePiece(pieceTodo);
+					piecesTodo.addPiece(pieceTodo.index);
+					finished = true;
+					finishedPieces++;
+				}
+			}
+		};
+
+		while(finishedPieces < info.pieces.size())
+		{
+			auto p = piecesTodo.firstEmptyPiece();
+
+			auto blocks = storage.makePieceBlocksInfo(p);
+			WRITE_LOG("Requesting idx " << p);
+
+			neededBlocks = (uint32_t) blocks.size();
+			finished = false;
+			pieceTodo.reset(info.pieceSize);
+			pieceTodo.index = p;
+
+			for (auto& b : blocks)
+			{
+				peers.front()->requestPieceBlock(b);
+			}
+
+			WAITFOR(finished);
+		}
+	}
+	WAITFOR(false);
+}
+
+void TorrentTest::testMetadataReceive()
+{
+	auto torrent = mtt::TorrentFileParser::parseFile("D:\\wifi.torrent");
+
+	ServiceThreadpool service;
+
+	PeerCommunication peer(torrent.info, service.io);
+	peer.setListener(this);
+	peer.sendHandshake(Addr({ 127,0,0,1 }, 31132));
+
+	WAITFOR(failed || (peer.state.finishedHandshake && peer.ext.state.enabled))
+
+		if (failed || !peer.ext.utm.size)
+			return;
+
+	mtt::MetadataReconstruction metadata;
+	metadata.init(peer.ext.utm.size);
+
+	while (!metadata.finished() && !failed)
+	{
+		uint32_t mdPiece = metadata.getMissingPieceIndex();
+		peer.ext.requestMetadataPiece(mdPiece);
+
+		WAITFOR(failed || !utmMsg.metadata.empty())
+
+			if (failed || utmMsg.id != mtt::ext::UtMetadata::Data)
+				return;
+
+		metadata.addPiece(utmMsg.metadata, utmMsg.piece);
+		utmMsg.metadata.clear();
+	}
+
+	if (metadata.finished())
+	{
+		auto info = mtt::TorrentFileParser::parseTorrentInfo(metadata.buffer.data(), metadata.buffer.size());
+		WRITE_LOG(info.files[0].path[0]);
+	}
 }
 
 uint32_t TorrentTest::onFoundPeers(uint8_t* hash, std::vector<Addr>& values)

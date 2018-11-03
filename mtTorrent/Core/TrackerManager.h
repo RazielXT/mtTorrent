@@ -25,19 +25,23 @@ namespace mtt
 	{
 	public:
 
-		virtual void trackerStateChanged(TrackerStateInfo&, TorrentPtr) = 0;
+		virtual void trackerStateChanged(TrackerStateInfo&, CorePtr) = 0;
 
-		virtual void onAnnounceResult(AnnounceResponse&, TorrentPtr) = 0;
+		virtual void onAnnounceResult(AnnounceResponse&, CorePtr) = 0;
 	};
 
 	struct TrackerManager
 	{
 	public:
 
-		TrackerManager(TorrentPtr torrent, std::vector<std::string> trackers, TrackerListener& listener, boost::asio::io_service& io, UdpAsyncComm& udp);
+		TrackerManager();
 
+		void init(CorePtr core, TrackerListener* listener);
 		void start();
 		void stop();
+
+		void addTracker(std::string addr);
+		void addTrackers(const std::vector<std::string>& trackers);
 
 	private:
 
@@ -59,7 +63,6 @@ namespace mtt
 		std::vector<TrackerInfo> trackers;
 		std::mutex trackersMutex;
 
-		void addTracker(std::string addr);
 		void start(TrackerInfo*);
 		void startNext();
 		void stopAll();
@@ -69,9 +72,8 @@ namespace mtt
 		void onAnnounce(AnnounceResponse&, Tracker*);
 		void onTrackerFail(Tracker*);
 
-		TorrentPtr torrent;
-		boost::asio::io_service& io;
-		TrackerListener& listener;
-		UdpAsyncComm& udp;
+		CorePtr core;
+		TrackerListener* listener;
+		UdpCommPtr udp;
 	};
 }

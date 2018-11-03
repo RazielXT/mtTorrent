@@ -61,7 +61,7 @@ void UtMetadata::load(BencodeParser::Object* data, const char* remainingData, si
 				msg.piece = data->getInt("piece");
 				msg.size = data->getInt("total_size");
 				
-				if (msg.piece && msg.size && remainingSize <= 16*1024)
+				if (msg.size && remainingSize <= 16*1024)
 				{
 					msg.metadata.insert(msg.metadata.begin(), remainingData, remainingData + remainingSize);
 				}

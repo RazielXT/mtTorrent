@@ -18,8 +18,10 @@ namespace mtt
 	{
 	public:
 
+		Storage() {};
 		Storage(uint32_t pieceSize);
 
+		void setPieceSize(uint32_t pieceSize);
 		void setPath(std::string path);
 
 		void storePiece(DownloadedPiece& piece);

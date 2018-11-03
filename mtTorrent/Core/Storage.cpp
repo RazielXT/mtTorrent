@@ -6,8 +6,13 @@
 
 mtt::Storage::Storage(uint32_t piecesz)
 {
-	pieceSize = piecesz;
+	setPieceSize(piecesz);
 	path = ".//";
+}
+
+void mtt::Storage::setPieceSize(uint32_t piecesz)
+{
+	pieceSize = piecesz;
 }
 
 void mtt::Storage::setPath(std::string p)
@@ -333,17 +338,16 @@ std::string mtt::Storage::getFullpath(File& file)
 
 void mtt::Storage::createPath(std::string& path)
 {
-	for (uint32_t i = 0; i < path.length(); i++)
+	auto i = path.find_last_of('\\');
+
+	if (i != std::string::npos)
 	{
-		if (path[i] == '\\')
+		std::string dirPath = path.substr(0, i);
+		boost::filesystem::path dir(dirPath);
+		if (!boost::filesystem::exists(dir))
 		{
-			std::string dirPath = path.substr(0, i);
-			boost::filesystem::path dir(dirPath);
-			if (!boost::filesystem::exists(dir))
-			{
-				if (!boost::filesystem::create_directory(dir))
-					return;
-			}
+			if (!boost::filesystem::create_directory(dir))
+				return;
 		}
 	}
 }
