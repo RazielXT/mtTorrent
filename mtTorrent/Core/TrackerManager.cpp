@@ -2,16 +2,10 @@
 #include "HttpTrackerComm.h"
 #include "UdpTrackerComm.h"
 #include "Configuration.h"
-#include "Core.h"
+#include "Torrent.h"
 
-mtt::TrackerManager::TrackerManager()
+mtt::TrackerManager::TrackerManager(TorrentPtr t) : torrent(t)
 {
-}
-
-void mtt::TrackerManager::init(CorePtr c, TrackerListener* l)
-{
-	core = c;
-	listener = l;
 }
 
 std::string cutStringPart(std::string& source, DataBuffer endChars, int cutAdd)
@@ -36,8 +30,12 @@ std::string cutStringPart(std::string& source, DataBuffer endChars, int cutAdd)
 	return ret;
 }
 
-void mtt::TrackerManager::start()
+void mtt::TrackerManager::start(AnnounceCallback callbk)
 {
+	std::lock_guard<std::mutex> guard(trackersMutex);
+
+	announceCallback = callbk;
+
 	for (size_t i = 0; i < 3 && i < trackers.size(); i++)
 	{
 		auto& t = trackers[i];
@@ -51,7 +49,11 @@ void mtt::TrackerManager::start()
 
 void mtt::TrackerManager::stop()
 {
+	std::lock_guard<std::mutex> guard(trackersMutex);
+
 	stopAll();
+
+	announceCallback = nullptr;
 }
 
 void mtt::TrackerManager::addTracker(std::string addr)
@@ -89,6 +91,50 @@ void mtt::TrackerManager::addTrackers(const std::vector<std::string>& trackers)
 	}
 }
 
+void mtt::TrackerManager::removeTracker(const std::string& addr)
+{
+	std::lock_guard<std::mutex> guard(trackersMutex);
+
+	for (auto it = trackers.begin(); it != trackers.end(); it++)
+	{
+		if (it->host == addr)
+		{
+			trackers.erase(it);
+			break;
+		}
+	}
+}
+
+void mtt::TrackerManager::removeTrackers()
+{
+	std::lock_guard<std::mutex> guard(trackersMutex);
+	trackers.clear();
+}
+
+std::shared_ptr<mtt::Tracker> mtt::TrackerManager::getTracker(const std::string& addr)
+{
+	if (auto info = findTrackerInfo(addr))
+	{
+		return info->comm;
+	}
+
+	return nullptr;
+}
+
+std::vector<std::shared_ptr<mtt::Tracker>> mtt::TrackerManager::getTrackers()
+{
+	std::vector<std::shared_ptr<mtt::Tracker>> out;
+
+	std::lock_guard<std::mutex> guard(trackersMutex);
+
+	for (auto& t : trackers)
+	{
+		out.push_back(t.comm);
+	}
+
+	return out;
+}
+
 void mtt::TrackerManager::onAnnounce(AnnounceResponse& resp, Tracker* t)
 {
 	std::lock_guard<std::mutex> guard(trackersMutex);
@@ -97,11 +143,10 @@ void mtt::TrackerManager::onAnnounce(AnnounceResponse& resp, Tracker* t)
 	{
 		trackerInfo->retryCount = 0;
 		trackerInfo->timer->schedule(resp.interval);
-
-		listener->trackerStateChanged(trackerInfo->getStateInfo(), core);
 	}
 
-	listener->onAnnounceResult(resp, core);
+	if(announceCallback)
+		announceCallback(Status::Success, &resp, t);
 
 	startNext();
 }
@@ -134,7 +179,8 @@ void mtt::TrackerManager::onTrackerFail(Tracker* t)
 			startNext();
 		}
 
-		listener->trackerStateChanged(trackerInfo->getStateInfo(), core);
+		if(announceCallback)
+			announceCallback(Status::E_Unknown, nullptr, t);
 	}
 }
 
@@ -150,8 +196,8 @@ void mtt::TrackerManager::start(TrackerInfo* tracker)
 	tracker->comm->onFail = std::bind(&TrackerManager::onTrackerFail, this, tracker->comm.get());
 	tracker->comm->onAnnounceResult = std::bind(&TrackerManager::onAnnounce, this, std::placeholders::_1, tracker->comm.get());
 
-	tracker->comm->init(tracker->host, tracker->port, core);
-	tracker->timer = ScheduledTimer::create(core->service.io, std::bind(&Tracker::announce, tracker->comm.get()));
+	tracker->comm->init(tracker->host, tracker->port, torrent);
+	tracker->timer = ScheduledTimer::create(torrent->service.io, std::bind(&Tracker::announce, tracker->comm.get()));
 	tracker->retryCount = 0;
 
 	tracker->comm->announce();
@@ -168,8 +214,6 @@ void mtt::TrackerManager::startNext()
 
 void mtt::TrackerManager::stopAll()
 {
-	std::lock_guard<std::mutex> guard(trackersMutex);
-
 	for (auto& tracker : trackers)
 	{
 		tracker.comm = nullptr;
@@ -187,23 +231,6 @@ mtt::TrackerManager::TrackerInfo* mtt::TrackerManager::findTrackerInfo(Tracker* 
 	}
 
 	return nullptr;
-}
-
-mtt::TrackerStateInfo mtt::TrackerManager::TrackerInfo::getStateInfo()
-{
-	TrackerStateInfo out;
-	out.host = host;
-	out.fullAddress = protocol + "://" + host + ":" + port;
-
-	out.nextUpdate = timer ? timer->getSecondsTillNextUpdate() : 0;
-
-	out.updateInterval = comm->info.announceInterval;
-	out.state = comm->state;
-	out.peers = comm->info.peers;
-	out.seeds = comm->info.seeds;
-	out.leechers = comm->info.leechers;
-
-	return out;
 }
 
 mtt::TrackerManager::TrackerInfo* mtt::TrackerManager::findTrackerInfo(std::string host)

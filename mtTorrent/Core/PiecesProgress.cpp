@@ -1,5 +1,9 @@
 #include "PiecesProgress.h"
 
+const uint8_t ReadyValue = 0;
+const uint8_t HasFlag = 1;
+const uint8_t UnselectedFlag = 8;
+
 bool mtt::PiecesProgress::empty()
 {
 	return pieces.empty();
@@ -7,61 +11,80 @@ bool mtt::PiecesProgress::empty()
 
 float mtt::PiecesProgress::getPercentage()
 {
-	return piecesStartCount == 0 ? 1 : (pieces.size() / (float)piecesStartCount);
+	return pieces.empty() ? 0 : (receivedPiecesCount / (float)pieces.size());
+}
+
+float mtt::PiecesProgress::getSelectedPercentage()
+{
+	return selectedPieces == 0 ? 0 : (receivedPiecesCount / (float)selectedPieces);
 }
 
 void mtt::PiecesProgress::init(size_t size)
 {
-	piecesStartCount = size;
+	receivedPiecesCount = 0;
+	selectedReceivedPiecesCount = 0;
 
-	for (uint32_t i = 0; i < piecesStartCount; i++)
-	{
-		pieces[i] = true;
-	}
+	if(pieces.size() != size)
+		pieces.resize(size, 0);
 }
 
-void mtt::PiecesProgress::fromSelection(DownloadSelection& selection)
+void mtt::PiecesProgress::select(DownloadSelection& selection)
 {
-	pieces.clear();
+	init(selection.files.back().info.endPieceIndex + 1);
+	selectedPieces = 0;
 
+	uint32_t lastFilePiece = -1;
 	for (auto& f : selection.files)
 	{
-		for (uint32_t i = f.info.startPieceIndex; i <= f.info.endPieceIndex; i++)
-		{
-			pieces[i] = false;
-		}
-	}
+		uint32_t i = f.info.startPieceIndex;
+		if (lastFilePiece == i)
+			i++;
 
-	piecesStartCount = pieces.size();
+		for (; i <= f.info.endPieceIndex; i++)
+		{
+			if (pieces[i] & HasFlag)
+			{
+				receivedPiecesCount++;
+
+				if (f.selected)
+					selectedReceivedPiecesCount++;
+			}
+				
+			if (f.selected)
+				selectedPieces++;
+		}
+		lastFilePiece = f.info.endPieceIndex;
+	}
 }
 
 void mtt::PiecesProgress::addPiece(uint32_t index)
 {
-	pieces[index] = true;
-}
-
-void mtt::PiecesProgress::removePiece(uint32_t index)
-{
-	auto it = pieces.find(index);
-
-	if (it != pieces.end())
+	if (!hasPiece(index))
 	{
-		pieces.erase(it);
+		if (pieces[index] == 0)
+			selectedReceivedPiecesCount++;
+
+		pieces[index] |= HasFlag;
+		receivedPiecesCount++;
 	}
 }
 
 bool mtt::PiecesProgress::hasPiece(uint32_t index)
 {
-	auto it = pieces.find(index);
-	return it != pieces.end() && it->second;
+	return pieces[index] & HasFlag;
+}
+
+bool mtt::PiecesProgress::selectedPiece(uint32_t index)
+{
+	return (pieces[index] & UnselectedFlag) == 0;
 }
 
 uint32_t mtt::PiecesProgress::firstEmptyPiece()
 {
-	for (auto& p : pieces)
+	for (uint32_t id = 0; id < pieces.size(); id++)
 	{
-		if (!p.second)
-			return p.first;
+		if (!pieces[id])
+			return id;
 	}
 
 	return -1;
@@ -69,8 +92,7 @@ uint32_t mtt::PiecesProgress::firstEmptyPiece()
 
 void mtt::PiecesProgress::fromBitfield(DataBuffer& bitfield, size_t piecesCount)
 {
-	pieces.clear();
-	piecesStartCount = piecesCount;
+	init(piecesCount);
 
 	for (int i = 0; i < piecesCount; i++)
 	{
@@ -79,27 +101,32 @@ void mtt::PiecesProgress::fromBitfield(DataBuffer& bitfield, size_t piecesCount)
 
 		bool value = (bitfield[idx] & bitmask) != 0;
 
-		if (value)
-			pieces[i] = true;
+		pieces[i] = value ? HasFlag : ReadyValue;
+		receivedPiecesCount += value;
 	}
 }
 
 void mtt::PiecesProgress::fromList(std::vector<uint8_t>& piecesList)
 {
-	pieces.clear();
+	init(piecesList.size());
 
 	for (uint32_t i = 0; i < piecesList.size(); i++)
-		pieces[i] = piecesList[i] != 0;
+		if (piecesList[i])
+		{
+			pieces[i] |= HasFlag;
+			receivedPiecesCount++;
 
-	piecesStartCount = piecesList.size();
+			if (selectedPiece(i))
+				selectedReceivedPiecesCount++;
+		}
 }
 
 DataBuffer mtt::PiecesProgress::toBitfield()
 {
 	DataBuffer buffer;
-	buffer.resize((size_t)ceil(piecesStartCount / 8.0f));
+	buffer.resize((size_t)ceil(pieces.size() / 8.0f));
 
-	for (int i = 0; i < piecesStartCount; i++)
+	for (int i = 0; i < pieces.size(); i++)
 	{
 		if(!hasPiece(i))
 			continue;

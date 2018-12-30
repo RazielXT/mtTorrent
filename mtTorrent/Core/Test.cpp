@@ -2,7 +2,6 @@
 #include "utils/TorrentFileParser.h"
 #include "utils/ServiceThreadpool.h"
 #include "Configuration.h"
-#include "MetadataReconstruction.h"
 #include "utils/UdpAsyncWriter.h"
 #include "utils/Base32.h"
 #include "utils/PacketHelper.h"
@@ -10,12 +9,18 @@
 #include "Storage.h"
 #include "utils/TcpAsyncServer.h"
 #include "utils/BencodeParser.h"
-#include "Core.h"
+#include "Torrent.h"
+#include "Peers.h"
+#include "MetadataDownload.h"
+#include "Downloader.h"
+#include "utils/HexEncoding.h"
 
 using namespace mtt;
 
 #define WAITFOR(x) { while (!(x)) Sleep(50); }
 #define WAITFOR2(x, y) { while (!(x)) { y; Sleep(50);} }
+
+#define TEST_LOG(x) WRITE_LOG(LogTypeTest, x)
 
 void testInit()
 {
@@ -26,14 +31,11 @@ void testInit()
 
 	mtt::config::internal_.trackerKey = 1111;
 
+	mtt::config::external.defaultDirectory = "E:\\";
+
 	mtt::config::internal_.defaultRootHosts = { { "dht.transmissionbt.com", "6881" },{ "router.bittorrent.com" , "6881" } };
 
 	mtt::config::external.tcpPort = mtt::config::external.udpPort = 55125;
-}
-
-void TorrentTest::start()
-{
-	bigTestGetTorrentFileByLink();
 }
 
 TorrentTest::TorrentTest()
@@ -91,7 +93,7 @@ void TorrentTest::testAsyncDhtUdpRequest()
 	WAITFOR(responded);
 }
 
-void TorrentTest::connectionClosed(PeerCommunication*)
+void TorrentTest::connectionClosed(PeerCommunication*, int)
 {
 	failed = true;
 }
@@ -127,13 +129,12 @@ void TorrentTest::testAsyncDhtGetPeers()
 
 		if (nextPeerIdx >= dhtResult.values.size())
 		{
-			WRITE_LOG("NO ACTIVE PEERS, RECEIVED: " << dhtResult.finalCount);
+			TEST_LOG("NO ACTIVE PEERS, RECEIVED: " << dhtResult.finalCount);
 			return;
 		}
 
-		WRITE_LOG("PEER " << nextPeerIdx);
-		peer = std::make_shared<PeerCommunication>(info, service.io);
-		peer->setListener(this);
+		TEST_LOG("PEER " << nextPeerIdx);
+		peer = std::make_shared<PeerCommunication>(info, *this, service.io);
 		Addr nextAddr;
 
 		{
@@ -173,7 +174,7 @@ void TorrentTest::testAsyncDhtGetPeers()
 	if (metadata.finished())
 	{
 		auto info = mtt::TorrentFileParser::parseTorrentInfo(metadata.buffer.data(), metadata.buffer.size());
-		WRITE_LOG(info.files[0].path[0]);
+		TEST_LOG(info.files[0].path[0]);
 	}
 }
 
@@ -199,43 +200,28 @@ std::string GetClipboardText()
 
 std::vector<Addr> getPeersFromTrackers(mtt::TorrentFileInfo& parsedTorrent)
 {
-	CorePtr torrent = std::make_shared<mtt::TorrentCore>();
-	torrent->torrent.info = parsedTorrent.info;
+	TorrentPtr torrent = std::make_shared<mtt::Torrent>();
+	torrent->infoFile.info = parsedTorrent.info;
 
-	class TListener : public TrackerListener
+	std::vector<Addr> peers;
+	auto trUpdate = [&peers](Status s, AnnounceResponse* r, Tracker* t)
 	{
-	public:
-
-		std::vector<Addr> peers;
-		TrackerStateInfo info;
-
-		virtual void onAnnounceResult(AnnounceResponse& resp, CorePtr) override
+		if (s == Status::Success && r && peers.empty() && !r->peers.empty())
 		{
-			peers = resp.peers;
+			peers = r->peers;
+			TEST_LOG(peers.size() << " peers from " << t->info.hostname << "\n");
 		}
+	};
 
-		virtual void trackerStateChanged(TrackerStateInfo& i, CorePtr) override
-		{
-			info = i;
-
-			WRITE_LOG("UPDATE " << i.host << " " << i.state << " next update: " << i.nextUpdate);
-		}
-
-	}
-	tListener;
-
-	mtt::TrackerManager trackers;
-	trackers.init(torrent, &tListener);
+	mtt::TrackerManager trackers(torrent);
 	trackers.addTrackers(parsedTorrent.announceList);
-	trackers.start();
+	trackers.start(trUpdate);
 
-	WAITFOR(!tListener.peers.empty());
+	WAITFOR(!peers.empty());
 
 	trackers.stop();
 
-	WRITE_LOG("PEERS: " << tListener.peers.size());
-
-	return tListener.peers;
+	return peers;
 }
 
 void TorrentTest::testTrackers()
@@ -264,22 +250,17 @@ void TorrentTest::testStorageCheck()
 {
 	auto torrent = mtt::TorrentFileParser::parseFile("D:\\hunter.torrent");
 
-	DownloadSelection selection;
-	for (auto&f : torrent.info.files)
-		selection.files.push_back({ false, f });
-
-	mtt::Storage storage(torrent.info.pieceSize);
+	mtt::Storage storage(torrent.info);
 	storage.setPath("D:\\Torrent");
-	storage.setSelection(selection);
 
 	ServiceThreadpool pool;
 
 	bool finished = false;
-	auto onFinish = [&]() { finished = true; WRITE_LOG("Finished"); };
+	auto onFinish = [&](std::shared_ptr<PiecesCheck>) { finished = true; TEST_LOG("Finished"); };
 
 	auto checking = storage.checkStoredPiecesAsync(torrent.info.pieces, pool.io, onFinish);
 
-	WAITFOR2(finished, WRITE_LOG(checking->piecesChecked << "/" << checking->piecesCount));
+	WAITFOR2(finished, TEST_LOG(checking->piecesChecked << "/" << checking->piecesCount));
 
 	WAITFOR(false);
 }
@@ -292,27 +273,24 @@ void TorrentTest::testStorageLoad()
 	for (auto&f : torrent.info.files)
 		selection.files.push_back({ true, f });
 
-	mtt::Storage storage(torrent.info.pieceSize);
+	mtt::Storage storage(torrent.info);
 	storage.setPath("D:\\test");
-	storage.setSelection(selection);
+	storage.preallocateSelection(selection);
 
-	mtt::Storage outStorage(torrent.info.pieceSize);
+	mtt::Storage outStorage(torrent.info);
 	outStorage.setPath("D:\\test\\out");
-	outStorage.setSelection(selection);
+	outStorage.preallocateSelection(selection);
+
+	mtt::DownloadedPiece piece;
 
 	for (uint32_t i = 0; i < torrent.info.pieces.size(); i++)
 	{
-		auto blocksInfo = storage.makePieceBlocksInfo(i);
-
-		mtt::DownloadedPiece piece;
-		piece.index = i;
-		piece.dataSize = blocksInfo.back().begin + blocksInfo.back().length;
-		piece.data.resize(piece.dataSize);
+		auto blocksInfo = torrent.info.makePieceBlocksInfo(i);
+		piece.init(i, torrent.info.pieceSize, (uint32_t)blocksInfo.size());
 
 		for (auto& blockInfo : blocksInfo)
 		{
-			auto block = storage.getPieceBlock(blockInfo);
-			
+			auto block = storage.getPieceBlock(blockInfo);		
 			memcpy(piece.data.data() + block.info.begin, block.data.data(), block.info.length);
 		}
 
@@ -330,9 +308,9 @@ void TorrentTest::testPeerListen()
 	for (auto&f : torrent.info.files)
 		selection.files.push_back({ true, f });
 
-	mtt::Storage storage(torrent.info.pieceSize);
+	mtt::Storage storage(torrent.info);
 	storage.setPath("D:\\test");
-	storage.setSelection(selection);
+	storage.preallocateSelection(selection);
 
 	mtt::PiecesProgress progress;
 	progress.fromList(storage.checkStoredPieces(torrent.info.pieces));
@@ -355,7 +333,7 @@ void TorrentTest::testPeerListen()
 			success = true;
 		}
 
-		virtual void connectionClosed(PeerCommunication*) override
+		virtual void connectionClosed(PeerCommunication*, int) override
 		{
 			fail = true;
 		}
@@ -393,8 +371,7 @@ void TorrentTest::testPeerListen()
 	listener.torrent = &torrent;
 	listener.storage = &storage;
 
-	PeerCommunication comm(torrent.info, peerStream);
-	comm.setListener(&listener);
+	PeerCommunication comm(torrent.info, listener, peerStream);
 
 	listener.comm = &comm;
 
@@ -495,8 +472,7 @@ void TorrentTest::bigTestGetTorrentFileByLink()
 
 	for(auto& a : addr)
 	{
-		auto peer = std::make_shared<PeerCommunication>(parsedTorrent.info, service.io);
-		peer->setListener(this);
+		auto peer = std::make_shared<PeerCommunication>(parsedTorrent.info, *this, service.io);
 		failed = false;
 		peer->sendHandshake(a);
 
@@ -528,24 +504,22 @@ void TorrentTest::bigTestGetTorrentFileByLink()
 	if (metadata.finished())
 	{
 		auto info = mtt::TorrentFileParser::parseTorrentInfo(metadata.buffer.data(), metadata.buffer.size());
-		WRITE_LOG(info.files[0].path[0]);
+		TEST_LOG(info.files[0].path[0]);
+
+		mtt::Storage storage(info);
+		storage.setPath("E:\\Torrent");
 
 		DownloadSelection selection;
 		for (auto&f : info.files)
 			selection.files.push_back({ false, f });
 
-		mtt::Storage storage(info.pieceSize);
-		storage.setPath("E:\\Torrent");
-		storage.setSelection(selection);
-
 		PiecesProgress piecesTodo;
-		piecesTodo.fromSelection(selection);
+		piecesTodo.select(selection);
 
 		peers.front()->setInterested(true);
 
 		DownloadedPiece pieceTodo;
 		std::mutex pieceMtx;
-		uint32_t neededBlocks = 0;
 		bool finished = false;
 		uint32_t finishedPieces = 0;
 		onPeerMsg = [&](mtt::PeerMessage& msg)
@@ -555,7 +529,7 @@ void TorrentTest::bigTestGetTorrentFileByLink()
 			{
 				pieceTodo.addBlock(msg.piece);
 
-				if (pieceTodo.receivedBlocks == neededBlocks)
+				if (pieceTodo.remainingBlocks == 0)
 				{
 					storage.storePiece(pieceTodo);
 					piecesTodo.addPiece(pieceTodo.index);
@@ -569,13 +543,11 @@ void TorrentTest::bigTestGetTorrentFileByLink()
 		{
 			auto p = piecesTodo.firstEmptyPiece();
 
-			auto blocks = storage.makePieceBlocksInfo(p);
-			WRITE_LOG("Requesting idx " << p);
+			auto blocks = info.makePieceBlocksInfo(p);
+			TEST_LOG("Requesting idx " << p);
 
-			neededBlocks = (uint32_t) blocks.size();
 			finished = false;
-			pieceTodo.reset(info.pieceSize);
-			pieceTodo.index = p;
+			pieceTodo.init(p, info.getPieceSize(p), info.getPieceBlocksCount(p));
 
 			for (auto& b : blocks)
 			{
@@ -594,8 +566,7 @@ void TorrentTest::testMetadataReceive()
 
 	ServiceThreadpool service;
 
-	PeerCommunication peer(torrent.info, service.io);
-	peer.setListener(this);
+	PeerCommunication peer(torrent.info, *this, service.io);
 	peer.sendHandshake(Addr({ 127,0,0,1 }, 31132));
 
 	WAITFOR(failed || (peer.state.finishedHandshake && peer.ext.state.enabled))
@@ -623,7 +594,7 @@ void TorrentTest::testMetadataReceive()
 	if (metadata.finished())
 	{
 		auto info = mtt::TorrentFileParser::parseTorrentInfo(metadata.buffer.data(), metadata.buffer.size());
-		WRITE_LOG(info.files[0].path[0]);
+		TEST_LOG(info.files[0].path[0]);
 	}
 }
 
@@ -652,14 +623,14 @@ uint32_t TorrentTest::onFoundPeers(uint8_t* hash, std::vector<Addr>& values)
 		}
 	}
 
-	WRITE_LOG("DHT received values count :" << count)
+	TEST_LOG("DHT received values count :" << count)
 
 		return count;
 }
 
 void TorrentTest::findingPeersFinished(uint8_t* hash, uint32_t count)
 {
-	WRITE_LOG("DHT final values count :" << count)
+	TEST_LOG("DHT final values count :" << count)
 
 		dhtResult.finalCount = count;
 }
@@ -692,4 +663,131 @@ void TorrentTest::testGetCountry()
 
 	
 	auto message = sendHttpsRequest(sock, resolver, request, server);
+}
+
+void idealGeneralTest()
+{
+	TorrentPtr torrent = Torrent::fromFile("G:\\giant.torrent");
+
+	if (!torrent)
+		return;
+
+	auto blocks = torrent->infoFile.info.makePieceBlocksInfo(0);
+
+	torrent->start();
+
+	while (!torrent->finished())
+	{
+		TEST_LOG(torrent->currentProgress() << "%\n");
+		TEST_LOG("Connected: " << torrent->peers->connectedCount() << ", all: " << torrent->peers->receivedCount() << "\n");
+		Sleep(1000);
+	}
+}
+
+const char* magnetLinkWithTrackers = "magnet:?xt=urn:btih:CWPX2WK3PNDMJQYRT4KQ4L62Q4ABDPWA&tr=http://nyaa.tracker.wf:7777/announce&tr=udp://tracker.coppersurfer.tk:6969/announce&tr=udp://tracker.internetwarriors.net:1337/announce&tr=udp://tracker.leechersparadise.org:6969/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://open.stealth.si:80/announce&tr=udp://p4p.arenabg.com:1337/announce&tr=udp://mgtracker.org:6969/announce&tr=udp://tracker.tiny-vps.com:6969/announce&tr=udp://peerfect.org:6969/announce&tr=http://share.camoe.cn:8080/announce&tr=http://t.nyaatracker.com:80/announce&tr=https://open.kickasstracker.com:443/announce";
+const char* magnetLite = "magnet:?xt=urn:btih:CWPX2WK3PNDMJQYRT4KQ4L62Q4ABDPWA&tr=udp://tracker.coppersurfer.tk:6969/announce";
+
+void TorrentTest::idealMagnetLinkTest()
+{
+	bool finished = false;
+	auto onMetadataUpdate = [&finished](Status s, mtt::MetadataDownloadState& state)
+	{
+		if (state.finished)
+			finished = true;
+
+		TEST_LOG("UTM status " << (int)s << " from " << hexToString(state.source, 20) << ", parts: " << state.receivedParts << "/" << state.partsCount);
+	};
+
+	TorrentPtr torrent = Torrent::fromMagnetLink(magnetLite, onMetadataUpdate);
+
+	if (!torrent)
+		return;
+
+	WAITFOR(finished);
+
+	TEST_LOG(torrent->name() << "\n");
+
+	torrent->stop();
+}
+
+void idealPeersRetrievalTest()
+{
+	TorrentPtr torrent = Torrent::fromFile("filepath");
+
+	if (!torrent)
+		return;
+
+	auto onPeersUpdate = [&torrent](Status s, const std::string& source)
+	{
+		TEST_LOG("Peers update from " << source << "with status " << (int)s << "\n");
+
+		if (s == Status::Success)
+		{
+			auto info = torrent->peers->getSourceInfo(source);
+
+			TEST_LOG(source << " seed/leech: " << info.seeds << "/" << info.leechers << "\n");
+		}
+	};
+
+	torrent->peers->start(onPeersUpdate, nullptr);
+
+	WAITFOR(false);
+}
+
+void idealTorrentStateTest()
+{
+	TorrentPtr torrent = Torrent::fromFile("G:\\test.torrent");
+
+	if (!torrent|| torrent->name().empty())
+		return;
+
+	bool finished = false;
+	auto onCheckFinish = [&finished](std::shared_ptr<PiecesCheck>)
+	{
+		finished = true;
+	};
+
+	torrent->checkFiles(onCheckFinish);
+
+	WAITFOR(finished);
+
+	auto progress = torrent->currentProgress();
+}
+
+void idealLocalTest()
+{
+	TorrentPtr torrent = Torrent::fromFile("G:\\[HorribleSubs] JoJo's Bizarre Adventure - Golden Wind - 13 [720p].mkv.torrent");
+
+	if (!torrent)
+		return;
+
+	bool checked = false;
+	auto onCheckFinish = [&checked](std::shared_ptr<PiecesCheck>)
+	{
+		checked = true;
+	};
+
+	torrent->checkFiles(onCheckFinish);
+
+	WAITFOR(checked);
+
+	//torrent->peers->trackers.removeTrackers();
+
+	if (!torrent->start())
+		return;
+
+	//torrent->peers->connect(Addr({ 127,0,0,1 }, 31132));
+
+	while (!torrent->finished())
+	{
+		TEST_LOG("Progress: " << torrent->currentProgress() << "(" << torrent->downloaded()/(1024.f*1024) << "MB) (" << torrent->downloadSpeed()/(1024.f * 1024) << " MBps)");
+		Sleep(1000);
+	}
+
+	TEST_LOG("Finished");
+}
+
+void TorrentTest::start()
+{
+	idealLocalTest();
 }

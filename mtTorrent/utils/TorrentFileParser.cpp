@@ -3,7 +3,7 @@
 #include <openssl/sha.h>
 #include <boost/filesystem.hpp>
 
-#define TPARSER_LOG(x) {} WRITE_LOG("TORRENT PARSER: " << x)
+#define TPARSER_LOG(x) WRITE_LOG(LogTypeFileParser, x)
 
 using namespace mtt;
 
@@ -229,6 +229,14 @@ mtt::TorrentInfo parseTorrentInfo(BencodeParser::Object* infoDictionary)
 		info.files.push_back({ 0,{ info.name }, size, 0, 0, static_cast<uint32_t>(info.pieces.size() - 1), (uint32_t)endPos });
 
 		info.fullSize = size;
+	}
+
+	if (!info.files.empty())
+	{
+		info.lastPieceIndex = info.files.back().endPieceIndex;
+		info.lastPieceSize = info.files.back().endPiecePos;
+		info.lastPieceLastBlockIndex = (info.lastPieceSize - 1) / BlockRequestMaxSize;
+		info.lastPieceLastBlockSize = info.lastPieceSize - (info.lastPieceLastBlockIndex * BlockRequestMaxSize);
 	}
 
 	auto piecesCount = info.pieces.size();

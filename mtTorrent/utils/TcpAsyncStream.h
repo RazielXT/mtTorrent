@@ -34,7 +34,7 @@ public:
 
 	std::function<void()> onConnectCallback;
 	std::function<void()> onReceiveCallback;
-	std::function<void()> onCloseCallback;
+	std::function<void(int)> onCloseCallback;
 
 	std::string getName();
 	tcp::endpoint& getEndpoint();
@@ -79,7 +79,7 @@ protected:
 		std::string port;
 		tcp::endpoint endpoint;
 		bool hostInitialized = false;
-		bool endInitialized = false;
+		bool remoteInitialized = false;
 	}
 	info;
 

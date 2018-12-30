@@ -3,10 +3,10 @@
 #include "utils/PacketHelper.h"
 #include "Configuration.h"
 #include "utils/UrlEncoding.h"
-#include "Core.h"
+#include "Torrent.h"
 
 
-#define HTTP_TRACKER_LOG(x) WRITE_LOG("HTTP tracker " << info.hostname << " " << x)
+#define HTTP_TRACKER_LOG(x) WRITE_LOG(LogTypeHttpTracker, x)
 
 using namespace mtt;
 
@@ -20,52 +20,52 @@ mtt::HttpTrackerComm::~HttpTrackerComm()
 		tcpComm->close();
 }
 
-void mtt::HttpTrackerComm::init(std::string host, std::string p, CorePtr t)
+void mtt::HttpTrackerComm::init(std::string host, std::string p, TorrentPtr t)
 {
 	info.hostname = host;
 	port = p;
-	core = t;
+	torrent = t;
 
-	tcpComm = std::make_shared<TcpAsyncStream>(core->service.io);
+	tcpComm = std::make_shared<TcpAsyncStream>(torrent->service.io);
 	tcpComm->onConnectCallback = std::bind(&HttpTrackerComm::onTcpConnected, this);
-	tcpComm->onCloseCallback = std::bind(&HttpTrackerComm::onTcpClosed, this);
+	tcpComm->onCloseCallback = [this](int code) {onTcpClosed(code); };
 	tcpComm->onReceiveCallback = std::bind(&HttpTrackerComm::onTcpReceived, this);
 
-	state = Initialized;
+	info.state = Initialized;
 
 	tcpComm->init(host, port);
 }
 
 void mtt::HttpTrackerComm::fail()
 {
-	if (state == Announcing || state == Reannouncing)
+	if (info.state == Announcing || info.state == Reannouncing)
 	{
-		if (state == Reannouncing)
-			state = Alive;
+		if (info.state == Reannouncing)
+			info.state = Alive;
 		else
-			state = Initialized;
+			info.state = Initialized;
 
 		if (onFail)
 			onFail();
 	}
 }
 
-void mtt::HttpTrackerComm::onTcpClosed()
+void mtt::HttpTrackerComm::onTcpClosed(int)
 {
-	if(state != Announced)
+	if(info.state != Announced)
 		fail();
 }
 
 void mtt::HttpTrackerComm::onTcpConnected()
 {
-	state = std::max(state, Alive);
+	info.state = std::max(info.state, Alive);
 }
 
 void mtt::HttpTrackerComm::onTcpReceived()
 {
 	auto respData = tcpComm->getReceivedData();
 
-	if (state == Announcing || state == Reannouncing)
+	if (info.state == Announcing || info.state == Reannouncing)
 	{
 		mtt::AnnounceResponse announceResp;
 		auto msgSize = readAnnounceResponse(respData, announceResp);
@@ -81,12 +81,13 @@ void mtt::HttpTrackerComm::onTcpReceived()
 		else
 		{
 			tcpComm->consumeData(msgSize);
-			state = Announced;
+			info.state = Announced;
 
 			info.leechers = announceResp.leechCount;
 			info.seeds = announceResp.seedCount;
 			info.peers = (uint32_t)announceResp.peers.size();
 			info.announceInterval = announceResp.interval;
+			info.lastAnnounce = (uint32_t)::time(0);
 
 			HTTP_TRACKER_LOG("received peers:" << announceResp.peers.size() << ", p: " << announceResp.seedCount << ", l: " << announceResp.leechCount);
 
@@ -99,10 +100,10 @@ void mtt::HttpTrackerComm::onTcpReceived()
 DataBuffer mtt::HttpTrackerComm::createAnnounceRequest(std::string host, std::string port)
 {
 	PacketBuilder builder(400);
-	builder << "GET /announce?info_hash=" << UrlEncode(core->torrent.info.hash, 20);
+	builder << "GET /announce?info_hash=" << UrlEncode(torrent->infoFile.info.hash, 20);
 	builder << "&peer_id=" << UrlEncode(mtt::config::internal_.hashId, 20);
 	builder << "&port=" << std::to_string(mtt::config::external.tcpPort);
-	builder << "&uploaded=0&downloaded=0&left=" << std::to_string(core->torrent.info.fullSize);
+	builder << "&uploaded=0&downloaded=0&left=" << std::to_string(torrent->infoFile.info.fullSize);
 	builder << "&numwant=" << std::to_string(mtt::config::internal_.maxPeersPerTrackerRequest);
 	builder << "&compact=1&no_peer_id=0&key=" << std::to_string(mtt::config::internal_.trackerKey);
 	builder << "&event=started HTTP/1.0\r\n";
@@ -220,10 +221,10 @@ void mtt::HttpTrackerComm::announce()
 {
 	HTTP_TRACKER_LOG("announcing");
 
-	if (state == Announced)
-		state = Reannouncing;
+	if (info.state == Announced)
+		info.state = Reannouncing;
 	else
-		state = Announcing;
+		info.state = Announcing;
 
 	auto request = createAnnounceRequest(info.hostname, port);
 

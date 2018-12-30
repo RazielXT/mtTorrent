@@ -1,7 +1,7 @@
 #include "UdpAsyncWriter.h"
 #include "Logging.h"
 
-#define UDP_LOG(x) WRITE_LOG("UDP: " << getName() << " " << x)
+#define UDP_LOG(x) WRITE_LOG(LogTypeUdp, x)
 
 UdpAsyncWriter::UdpAsyncWriter(boost::asio::io_service& io) : io_service(io), socket(io)
 {

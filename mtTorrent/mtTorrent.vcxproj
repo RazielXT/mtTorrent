@@ -221,19 +221,20 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost_1_64_0;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\include64;$(ProjectDir);$(ProjectDir)\Core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost_1_68_0;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\include64;$(ProjectDir);$(ProjectDir)\Core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PreprocessorDefinitions>STANDALONE;_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\..\boost_1_64_0\lib64-msvc-14.0;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\..\boost_1_68_0\lib64-msvc-14.1;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>ssleay32MT.lib;libeay32MT.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Core\Core.cpp" />
+    <ClCompile Include="Core\Files.cpp" />
+    <ClCompile Include="Core\Torrent.cpp" />
     <ClCompile Include="Core\ExternalRequestHandler.cpp" />
     <ClCompile Include="Core\MetadataDownload.cpp" />
     <ClCompile Include="Core\Configuration.cpp" />
@@ -247,11 +248,11 @@
     <ClCompile Include="Core\Interface.cpp" />
     <ClCompile Include="Core\Logging.cpp" />
     <ClCompile Include="Core\PeerCommunication.cpp" />
-    <ClCompile Include="Core\PeerManager.cpp" />
+    <ClCompile Include="Core\Peers.cpp" />
     <ClCompile Include="Core\PiecesProgress.cpp" />
     <ClCompile Include="Core\main.cpp" />
     <ClCompile Include="Core\PeerMessage.cpp" />
-    <ClCompile Include="Core\Scheduler.cpp" />
+    <ClCompile Include="Core\Downloader.cpp" />
     <ClCompile Include="Core\State.cpp" />
     <ClCompile Include="Core\Storage.cpp" />
     <ClCompile Include="Core\Test.cpp" />
@@ -274,7 +275,8 @@
     <ClCompile Include="utils\UrlEncoding.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Core\Core.h" />
+    <ClInclude Include="Core\Files.h" />
+    <ClInclude Include="Core\Torrent.h" />
     <ClInclude Include="Core\ExternalRequestHandler.h" />
     <ClInclude Include="Core\MetadataDownload.h" />
     <ClInclude Include="Core\Configuration.h" />
@@ -290,10 +292,8 @@
     <ClInclude Include="Core\ITracker.h" />
     <ClInclude Include="Core\Logging.h" />
     <ClInclude Include="Core\PeerCommunication.h" />
-    <ClInclude Include="Core\PeerManagerListener.h" />
     <ClInclude Include="Core\PiecesProgress.h" />
-    <ClInclude Include="Core\ProgressStatistics.h" />
-    <ClInclude Include="Core\Scheduler.h" />
+    <ClInclude Include="Core\Downloader.h" />
     <ClInclude Include="Core\HttpTrackerComm.h" />
     <ClInclude Include="Core\PeerMessage.h" />
     <ClInclude Include="Core\State.h" />
@@ -303,7 +303,7 @@
     <ClInclude Include="Core\MetadataReconstruction.h" />
     <ClInclude Include="Core\TrackerManager.h" />
     <ClInclude Include="Core\UdpTrackerComm.h" />
-    <ClInclude Include="PeerManager.h" />
+    <ClInclude Include="Peers.h" />
     <ClInclude Include="utils\Base32.h" />
     <ClInclude Include="utils\TorrentFileParser.h" />
     <ClInclude Include="utils\BencodeParser.h" />

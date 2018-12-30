@@ -6,27 +6,32 @@
 
 using namespace mtt;
 
-bool DownloadedPiece::isValid(char* expectedHash)
+bool DownloadedPiece::isValid(const uint8_t* expectedHash)
 {
-	unsigned char hash[SHA_DIGEST_LENGTH];
-	SHA1((const unsigned char*)data.data(), dataSize, hash);
+	uint8_t hash[SHA_DIGEST_LENGTH];
+	SHA1((const uint8_t*)data.data(), data.size(), hash);
 
 	return memcmp(hash, expectedHash, SHA_DIGEST_LENGTH) == 0;
 }
 
-void DownloadedPiece::reset(size_t maxPieceSize)
+void mtt::DownloadedPiece::init(uint32_t idx, uint32_t pieceSize, uint32_t blocksCount)
 {
-	data.resize(maxPieceSize);
-	dataSize = 0;
-	receivedBlocks = 0;
-	index = -1;
+	data.resize(pieceSize);
+	remainingBlocks = blocksCount;
+	blocksTodo.resize(remainingBlocks, 0);
+	index = idx;
 }
 
 void DownloadedPiece::addBlock(PieceBlock& block)
 {
-	receivedBlocks++;
-	dataSize += block.info.length;
-	memcpy(&data[0] + block.info.begin, block.data.data(), block.info.length);
+	auto blockIdx = (block.info.begin + 1)/ BlockRequestMaxSize;
+
+	if (blockIdx < blocksTodo.size() && blocksTodo[blockIdx] == 0)
+	{
+		memcpy(&data[0] + block.info.begin, block.data.data(), block.info.length);
+		blocksTodo[blockIdx] = 1;
+		remainingBlocks--;
+	}
 }
 
 static bool parseTorrentHash(std::string& from, uint8_t* to)
@@ -52,7 +57,7 @@ static bool parseTorrentHash(std::string& from, uint8_t* to)
 Status mtt::TorrentFileInfo::parseMagnetLink(std::string link)
 {
 	if (link.length() < 8)
-		return E_InvalidInput;
+		return Status::E_InvalidInput;
 
 	size_t dataPos = 8;
 	bool correct = false;
@@ -98,7 +103,7 @@ Status mtt::TorrentFileInfo::parseMagnetLink(std::string link)
 	if (!correct)
 		correct = parseTorrentHash(link, info.hash);
 
-	return correct ? Success : E_InvalidInput;
+	return correct ? Status::Success : Status::E_InvalidInput;
 }
 
 DataBuffer mtt::TorrentFileInfo::createTorrentFileData()
@@ -159,4 +164,50 @@ DataBuffer mtt::TorrentFileInfo::createTorrentFileData()
 	out << "ee";
 
 	return out.getBuffer();
+}
+
+std::vector<mtt::PieceBlockInfo> mtt::TorrentInfo::makePieceBlocksInfo(uint32_t index)
+{
+	std::vector<PieceBlockInfo> out;
+	uint32_t size = pieceSize;
+
+	if (index == lastPieceIndex)
+		size = lastPieceSize;
+
+	out.reserve(size / BlockRequestMaxSize);
+
+	for (int i = 0; i*BlockRequestMaxSize < size; i++)
+	{
+		PieceBlockInfo block;
+		block.begin = i * BlockRequestMaxSize;
+		block.index = index;
+		block.length = std::min(size - block.begin, BlockRequestMaxSize);
+
+		out.push_back(block);
+	}
+
+	return out;
+}
+
+mtt::PieceBlockInfo mtt::TorrentInfo::getPieceBlockInfo(uint32_t idx, uint32_t blockIdx)
+{
+	PieceBlockInfo block;
+	block.begin = blockIdx * BlockRequestMaxSize;
+	block.index = idx;
+	block.length = BlockRequestMaxSize;
+
+	if (idx == lastPieceIndex && blockIdx == lastPieceLastBlockIndex)
+		block.length = lastPieceLastBlockSize;
+
+	return block;
+}
+
+uint32_t mtt::TorrentInfo::getPieceSize(uint32_t idx)
+{
+	return (idx == lastPieceIndex) ? lastPieceSize : pieceSize;
+}
+
+uint32_t mtt::TorrentInfo::getPieceBlocksCount(uint32_t idx)
+{
+	return (idx == lastPieceIndex) ? (lastPieceLastBlockIndex + 1) : (pieceSize / BlockRequestMaxSize);
 }

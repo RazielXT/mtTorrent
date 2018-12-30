@@ -2,7 +2,7 @@
 #include <algorithm>
 #include "..\Core\Logging.h"
 
-#define PARSER_LOG(x) //WRITE_LOG("PARSER LITE: " << x)
+#define PARSER_LOG(x) WRITE_LOG(LogTypeBencodeParser, x)
 
 bool mtt::BencodeParser::parse(const uint8_t* data, size_t length)
 {
@@ -157,7 +157,7 @@ mtt::BencodeParser::Object* mtt::BencodeParser::parseString(const char** body)
 	obj.info.data = *body;
 	(*body) += obj.info.size;
 
-	PARSER_LOG("String " << std::string(obj.data.text.data, obj.data.text.length));
+	PARSER_LOG("String " << std::string(obj.info.data, obj.info.size));
 
 	objects.push_back(obj);
 	return &objects.back();

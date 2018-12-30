@@ -1,163 +1,105 @@
 #include "MetadataDownload.h"
 #include "MetadataReconstruction.h"
-#include "Core.h"
+#include "Torrent.h"
 
-mtt::MetadataDownload::MetadataDownload()
+#define BT_UTM_LOG(x) WRITE_LOG(LogTypeBtUtm, x)
+
+mtt::MetadataDownload::MetadataDownload(Peers& p) : peers(p)
 {
+
 }
 
-void mtt::MetadataDownload::start(CorePtr c, std::function<void(bool)> f)
+void mtt::MetadataDownload::start(std::function<void(Status, MetadataDownloadState&)> f)
 {
-	core = c;
-	onFinish = f;
+	onUpdate = f;
 	active = true;
 
-	core->peerMgr.listener = this;
-	core->peerMgr.start(core);
-
-	/*for (auto& a : addr)
+	peers.start([this](Status s, const std::string& source)
 	{
-		auto peer = std::make_shared<PeerCommunication>(torrent->info, *this, service.io);
+		std::lock_guard<std::mutex> guard(commsMutex);
+		if (s == Status::Success && active && !primaryComm)
 		{
-			std::lock_guard<std::mutex> guard(mtx);
-			peers.push_back(peer);
-		}
-
-		peer->sendHandshake(a);
-	}
-
-	addTask(std::make_shared<UtMetadataReconstructionTask>());
-	tasks.push_back();
-
-	mtt::MetadataReconstruction metadata;
-	metadata.init(peers.front()->ext.utm.size);
-
-	while (!metadata.finished() && !failed)
-	{
-		uint32_t mdPiece = metadata.getMissingPieceIndex();
-		peers.front()->ext.requestMetadataPiece(mdPiece);
-
-		WAITFOR(failed || !utmMsg.metadata.empty())
-
-			if (failed || utmMsg.id != mtt::ext::UtMetadata::Data)
-				return;
-
-		metadata.addPiece(utmMsg.metadata, utmMsg.piece);
-		utmMsg.metadata.clear();
-	}
-
-	if (metadata.finished())
-	{
-		auto info = mtt::TorrentFileParser::parseTorrentInfo(metadata.buffer.data(), metadata.buffer.size());
-		WRITE_LOG(info.files[0].path[0]);
-
-		DownloadSelection selection;
-		for (auto&f : info.files)
-			selection.files.push_back({ false, f });
-
-		mtt::Storage storage(info.pieceSize);
-		storage.setPath("E:\\Torrent");
-		storage.setSelection(selection);
-
-		PiecesProgress piecesTodo;
-		piecesTodo.fromSelection(selection);
-
-		for (auto& p : peers)
-			p->setInterested(true);
-
-		std::vector<DownloadedPiece> piecesTodo;
-		std::mutex pieceMtx;
-		uint32_t neededBlocks = 0;
-		bool finished = false;
-		uint32_t finishedPieces = 0;
-		onPeerMsg = [&](mtt::PeerMessage& msg)
-		{
-			std::lock_guard<std::mutex> guard(pieceMtx);
-			if (msg.id == Piece)
-			{
-				pieceTodo.addBlock(msg.piece);
-
-				if (pieceTodo.receivedBlocks == neededBlocks)
-				{
-					storage.storePiece(pieceTodo);
-					piecesTodo.addPiece(pieceTodo.index);
-					finished = true;
-					finishedPieces++;
-				}
-			}
-		};
-
-		auto requestPiece = [&]()
-		{
-			auto p = piecesTodo.firstEmptyPiece();
-
-			auto blocks = storage.makePieceBlocksInfo(p);
-			WRITE_LOG("Requesting idx " << p);
-
-			neededBlocks = blocks.size();
-			finished = false;
-			pieceTodo.reset(info.pieceSize);
-			pieceTodo.index = p;
-
-			for (auto& b : blocks)
-			{
-				peer.requestPieceBlock(b);
-			}
-
-			WAITFOR(finished);
+			switchPrimaryComm();
 		}
 	}
-	WAITFOR(false);*/
+	, this);
 }
 
 void mtt::MetadataDownload::stop()
 {
-	core->peerMgr.stop();
-	activeComm = nullptr;
+	if(!state.finished && active)
+		onUpdate(Status::I_Stopped, state);
+
 	active = false;
-	onFinish = nullptr;
+	primaryComm = nullptr;
+	peers.stop();
 }
 
-void mtt::MetadataDownload::onConnected(std::shared_ptr<PeerCommunication> peer, Addr&)
+void mtt::MetadataDownload::switchPrimaryComm()
 {
-	if (peer->ext.utm.size)
+	if (backupComm.empty())
 	{
-		activeComm = peer;
-
-		if(metadata.buffer.empty())
-			metadata.init(peer->ext.utm.size);
-
-		requestPiece();
+		peers.connectNext(10);
+		BT_UTM_LOG("searching for peers");
 	}
 	else
 	{
-		connectNext();
+		primaryComm = backupComm.back();
+		BT_UTM_LOG("set primary source as " << primaryComm->getAddressName());
+		memcpy(state.source, primaryComm->info.id, 20);
+		backupComm.pop_back();
+
+		if (metadata.buffer.empty())
+		{
+			metadata.init(primaryComm->ext.utm.size);
+			BT_UTM_LOG("needed pieces: " << metadata.pieces);
+		}
+
+		requestPiece();
 	}
 }
 
-void mtt::MetadataDownload::onConnectFail(Addr&)
+void mtt::MetadataDownload::removeBackup(PeerCommunication* p)
 {
-	connectNext();
-}
-
-void mtt::MetadataDownload::onAddrReceived(std::vector<Addr>& addrs)
-{
-	possibleAddrs = addrs;
-
-	if(!activeComm)
-		connectNext();
-}
-
-void mtt::MetadataDownload::handshakeFinished(PeerCommunication*)
-{
-}
-
-void mtt::MetadataDownload::connectionClosed(PeerCommunication* p)
-{
-	if (activeComm.get() == p)
+	std::lock_guard<std::mutex> guard(commsMutex);
+	for (auto it = backupComm.begin(); it != backupComm.end(); it++)
 	{
-		connectNext();
+		if (*it == p)
+		{
+			backupComm.erase(it);
+			break;
+		}
 	}
+
+	if (backupComm.empty())
+		peers.connectNext(10);
+}
+
+void mtt::MetadataDownload::addToBackup(PeerCommunication* peer)
+{
+	std::lock_guard<std::mutex> guard(commsMutex);
+
+	if(peer->ext.utm.size)
+		backupComm.push_back(peer);
+
+	if (!primaryComm)
+		switchPrimaryComm();
+}
+
+void mtt::MetadataDownload::handshakeFinished(PeerCommunication* p)
+{
+}
+
+void mtt::MetadataDownload::connectionClosed(PeerCommunication* p, int)
+{
+	if (primaryComm == p)
+	{
+		BT_UTM_LOG("primary source disconnected");
+		onUpdate(Status::E_ConnectionClosed, state);
+		switchPrimaryComm();
+	}
+	else
+		removeBackup(p);
 }
 
 void mtt::MetadataDownload::messageReceived(PeerCommunication*, PeerMessage&)
@@ -166,20 +108,30 @@ void mtt::MetadataDownload::messageReceived(PeerCommunication*, PeerMessage&)
 
 void mtt::MetadataDownload::metadataPieceReceived(PeerCommunication*, ext::UtMetadata::Message& msg)
 {
+	BT_UTM_LOG("received piece idx " << msg.piece);
 	metadata.addPiece(msg.metadata, msg.piece);
+	state.partsCount = metadata.pieces;
+	state.receivedParts++;
 
 	if (metadata.finished() && active)
 	{
-		onFinish(true);
+		state.finished = true;
 	}
 	else
 	{
+		std::lock_guard<std::mutex> guard(commsMutex);
 		requestPiece();
 	}
+
+	onUpdate(Status::Success, state);
+
+	if(state.finished)
+		stop();
 }
 
-void mtt::MetadataDownload::extHandshakeFinished(PeerCommunication*)
+void mtt::MetadataDownload::extHandshakeFinished(PeerCommunication* peer)
 {
+	addToBackup(peer);
 }
 
 void mtt::MetadataDownload::pexReceived(PeerCommunication*, ext::PeerExchange::Message&)
@@ -192,20 +144,11 @@ void mtt::MetadataDownload::progressUpdated(PeerCommunication*)
 
 void mtt::MetadataDownload::requestPiece()
 {
-	if (active && activeComm)
+	if (active && primaryComm)
 	{
 		uint32_t mdPiece = metadata.getMissingPieceIndex();
-		activeComm->ext.requestMetadataPiece(mdPiece);
-	}
-}
-
-void mtt::MetadataDownload::connectNext()
-{
-	activeComm = nullptr;
-
-	if (active)
-	{
-		core->peerMgr.connect(possibleAddrs.back());
-		possibleAddrs.pop_back();
+		primaryComm->ext.requestMetadataPiece(mdPiece);
+		BT_UTM_LOG("requesting piece idx " << mdPiece);
+		onUpdate(Status::I_Requesting, state);
 	}
 }

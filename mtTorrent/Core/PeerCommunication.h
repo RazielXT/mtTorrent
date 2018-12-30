@@ -45,8 +45,8 @@ namespace mtt
 	{
 	public:
 
-		PeerCommunication(TorrentInfo& torrent, boost::asio::io_service& io_service);
-		PeerCommunication(TorrentInfo& torrent, std::shared_ptr<TcpAsyncStream> stream);
+		PeerCommunication(TorrentInfo& torrent, IPeerListener& listener, boost::asio::io_service& io_service);
+		PeerCommunication(TorrentInfo& torrent, IPeerListener& listener, std::shared_ptr<TcpAsyncStream> stream);
 		~PeerCommunication();
 
 		PeerInfo info;
@@ -72,20 +72,15 @@ namespace mtt
 		ext::ExtensionProtocol ext;
 
 		Addr getAddress();
+		std::string getAddressName();
 
-		void setListener(IPeerListener* l);
+	protected:
 
-	private:
-
-		std::mutex listenerMutex;
-		IPeerListener* listener;
+		IPeerListener& listener;
 
 		TorrentInfo& torrent;
 
 		std::shared_ptr<TcpAsyncStream> stream;
-
-		std::mutex requestsMutex;
-		std::vector<PieceBlockInfo> requestedBlocks;
 
 		std::mutex read_mutex;
 		mtt::PeerMessage readNextStreamMessage();
@@ -93,7 +88,7 @@ namespace mtt
 
 		void connectionOpened();
 		void dataReceived();
-		void connectionClosed();
+		void connectionClosed(int);
 
 		void initializeCallbacks();
 		void resetState();

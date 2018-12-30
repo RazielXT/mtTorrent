@@ -4,22 +4,36 @@
 #include <iostream>
 #include "utils/ServiceThreadpool.h"
 
-mtt::Storage::Storage(uint32_t piecesz)
+mtt::Storage::Storage(TorrentInfo& info)
 {
-	setPieceSize(piecesz);
+	init(info);
 	path = ".//";
 }
 
-void mtt::Storage::setPieceSize(uint32_t piecesz)
+mtt::Storage::~Storage()
 {
-	pieceSize = piecesz;
+	flush();
+}
+
+void mtt::Storage::init(TorrentInfo& info)
+{
+	pieceSize = info.pieceSize;
+	files = info.files;
+
+	DownloadSelection selection;
+	for (auto&f : info.files)
+	{
+		selection.files.push_back({ false, f });
+	}
+
+	preallocateSelection(selection);
 }
 
 void mtt::Storage::setPath(std::string p)
 {
 	path = p;
 
-	if (path.back() != '\\')
+	if (!path.empty() && path.back() != '\\')
 		path += '\\';
 }
 
@@ -51,8 +65,6 @@ mtt::PieceBlock mtt::Storage::getPieceBlock(PieceBlockInfo& block)
 	return out;
 }
 
-const uint32_t blockRequestMaxSize = 16 * 1024;
-
 mtt::Storage::CachedPiece& mtt::Storage::loadPiece(uint32_t pieceId)
 {
 	{
@@ -81,18 +93,16 @@ mtt::Storage::CachedPiece& mtt::Storage::loadPiece(uint32_t pieceId)
 	piece.index = pieceId;
 	piece.data.resize(pieceSize);
 
-	for (auto& s : selection.files)
+	for (auto& f : files)
 	{
-		auto& f = s.info;
-
 		if (f.startPieceIndex <= piece.index && f.endPieceIndex >= piece.index)
 		{
 			loadPiece(f, piece);
 		}
 	}
 
-	if(selection.files.back().info.endPieceIndex == pieceId)
-		piece.data.resize(selection.files.back().info.endPiecePos);
+	if(files.back().endPieceIndex == pieceId)
+		piece.data.resize(files.back().endPiecePos);
 
 	return piece;
 }
@@ -121,33 +131,10 @@ void mtt::Storage::loadPiece(File& file, CachedPiece& piece)
 	}
 }
 
-std::vector<mtt::PieceBlockInfo> mtt::Storage::makePieceBlocksInfo(uint32_t index)
-{
-	std::vector<PieceBlockInfo> out;
-	uint32_t size = pieceSize;
-
-	if (index == selection.files.back().info.endPieceIndex)
-		size = selection.files.back().info.endPiecePos;
-
-	for (int i = 0; i*blockRequestMaxSize < size; i++)
-	{
-		PieceBlockInfo block;
-		block.begin = i*blockRequestMaxSize;
-		block.index = index;
-		block.length = std::min(size - block.begin, blockRequestMaxSize);
-
-		out.push_back(block);
-	}
-
-	return out;
-}
-
-void mtt::Storage::setSelection(DownloadSelection& newSelection)
+void mtt::Storage::preallocateSelection(DownloadSelection& selection)
 {
 	{
 		std::lock_guard<std::mutex> guard(storageMutex);
-
-		selection = newSelection;
 
 		for (auto& f : selection.files)
 		{
@@ -172,22 +159,12 @@ void mtt::Storage::flush()
 
 void mtt::Storage::flushAllFiles()
 {
-	for (auto& s : selection.files)
+	for (auto& f : files)
 	{
-		flush(s.info);
+		flush(f);
 	}
 
 	unsavedPieces.reset();
-}
-
-void mtt::Storage::saveProgress()
-{
-
-}
-
-void mtt::Storage::loadProgress()
-{
-
 }
 
 void mtt::Storage::flush(File& file)
@@ -212,28 +189,25 @@ void mtt::Storage::flush(File& file)
 	{
 		auto pieceDataPos = file.startPieceIndex == p->index ? file.startPiecePos : 0;
 		auto fileDataPos = file.startPieceIndex == p->index ? 0 : (pieceSize - file.startPiecePos + (p->index - file.startPieceIndex - 1)*pieceSize);
-		auto pieceDataSize = std::min(file.size, p->dataSize - pieceDataPos);
+		auto pieceDataSize = std::min(file.size, p->data.size() - pieceDataPos);
 
 		fileOut.seekp(fileDataPos);
 		fileOut.write((const char*)p->data.data() + pieceDataPos, pieceDataSize);
 	}
 }
 
-std::vector<uint8_t> mtt::Storage::checkStoredPieces(std::vector<PieceInfo>& piecesInfo)
+DataBuffer mtt::Storage::checkStoredPieces(std::vector<PieceInfo>& piecesInfo)
 {
 	PiecesCheck check;
 	checkStoredPieces(check, piecesInfo);
-	return check.bitfield;
+	return check.pieces;
 }
 
 void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<PieceInfo>& piecesInfo)
 {
-	checkState.bitfield.resize(piecesInfo.size());
+	checkState.pieces.resize(piecesInfo.size());
 	size_t currentPieceIdx = 0;
 
-	storageMutex.lock();
-	auto files = selection.files;
-	storageMutex.unlock();
 	if (files.empty())
 		return;
 
@@ -246,7 +220,7 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 
 	while (currentPieceIdx < piecesInfo.size())
 	{
-		auto fullpath = getFullpath(currentFile->info);
+		auto fullpath = getFullpath(*currentFile);
 		boost::filesystem::path dir(fullpath);
 
 		if (boost::filesystem::exists(dir))
@@ -255,15 +229,15 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 
 			if (fileIn)
 			{
-				auto readSize = pieceSize - currentFile->info.startPiecePos;
-				auto readBufferPos = currentFile->info.startPiecePos;
+				auto readSize = pieceSize - currentFile->startPiecePos;
+				auto readBufferPos = currentFile->startPiecePos;
 
 				fileIn.read((char*)readBuffer.data() + readBufferPos, readSize);
 
 				while (fileIn && !checkState.rejected)
 				{
 					SHA1(readBuffer.data(), pieceSize, shaBuffer);
-					checkState.bitfield[currentPieceIdx++] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
+					checkState.pieces[currentPieceIdx++] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
 					fileIn.read((char*)readBuffer.data(), pieceSize);
 
 					checkState.piecesChecked = (uint32_t)currentPieceIdx;
@@ -272,18 +246,21 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 				if (checkState.rejected)
 					return;
 
-				if (currentPieceIdx == currentFile->info.endPieceIndex && currentFile == lastFile)
+				if (currentPieceIdx == currentFile->endPieceIndex && currentFile == lastFile)
 				{
-					SHA1(readBuffer.data(), currentFile->info.endPiecePos, shaBuffer);
-					checkState.bitfield[currentPieceIdx++] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
+					SHA1(readBuffer.data(), currentFile->endPiecePos, shaBuffer);
+					checkState.pieces[currentPieceIdx++] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
 				}
 			}
 
 			fileIn.close();
 		}
 
-		if (currentPieceIdx < currentFile->info.endPieceIndex)
-			currentPieceIdx = currentFile->info.endPieceIndex;
+		if (currentPieceIdx < currentFile->endPieceIndex)
+			currentPieceIdx = currentFile->endPieceIndex;
+
+		if (currentFile == lastFile)
+			currentPieceIdx = currentFile->endPieceIndex + 1;
 
 		checkState.piecesChecked = (uint32_t)currentPieceIdx;
 
@@ -292,7 +269,7 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 	}
 }
 
-std::shared_ptr<mtt::PiecesCheck> mtt::Storage::checkStoredPiecesAsync(std::vector<PieceInfo>& piecesInfo, boost::asio::io_service& io, std::function<void()> onFinish)
+std::shared_ptr<mtt::PiecesCheck> mtt::Storage::checkStoredPiecesAsync(std::vector<PieceInfo>& piecesInfo, boost::asio::io_service& io, std::function<void(std::shared_ptr<PiecesCheck>)> onFinish)
 {
 	auto request = std::make_shared<mtt::PiecesCheck>();
 	request->piecesCount = (uint32_t)piecesInfo.size();
@@ -302,7 +279,7 @@ std::shared_ptr<mtt::PiecesCheck> mtt::Storage::checkStoredPiecesAsync(std::vect
 		checkStoredPieces(*request.get(), piecesInfo);
 
 		if(!request->rejected)
-			onFinish();
+			onFinish(request);
 	});
 
 	return request;

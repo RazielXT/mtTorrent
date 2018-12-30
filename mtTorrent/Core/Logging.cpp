@@ -1,6 +1,8 @@
 #include <iostream>
 #include <sstream>
 #include <mutex>
+#include "Logging.h"
+
 std::mutex logMutex;
 
 void LockLog()
@@ -24,11 +26,24 @@ std::string GetLogTime()
 	return buffer;
 }
 
-extern void WriteLogImplementation(std::stringstream& ss)
+bool isUdpType(const char* t)
 {
+	return strncmp(t, "Udp", 3) == 0;
+}
+
+bool isBtType(const char* t)
+{
+	return strncmp(t, "Bt", 2) == 0;
+}
+
+void WriteLogImplementation(const char * const type, std::stringstream& ss)
+{
+	if (type != LogTypeDownload && type != LogTypeTest)
+		return;
+
 	LockLog();
 
-	std::cout << GetLogTime() << ss.str() << "\n";
+	std::cout << GetLogTime() << type << ": " << ss.str() << "\n";
 
 	UnlockLog();
 }

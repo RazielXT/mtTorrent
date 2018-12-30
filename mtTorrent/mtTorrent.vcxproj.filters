@@ -151,13 +151,16 @@
     <ClCompile Include="Core\ExternalRequestHandler.cpp">
       <Filter>Source Files\Core\Torrent\Tasks</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Core.cpp">
+    <ClCompile Include="Core\Torrent.cpp">
       <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClCompile>
-    <ClCompile Include="Core\PeerManager.cpp">
+    <ClCompile Include="Core\Downloader.cpp">
       <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Scheduler.cpp">
+    <ClCompile Include="Core\Files.cpp">
+      <Filter>Source Files\Core\Torrent\Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Peers.cpp">
       <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClCompile>
   </ItemGroup>
@@ -203,9 +206,6 @@
     </ClInclude>
     <ClInclude Include="Core\PiecesProgress.h">
       <Filter>Source Files\Core\Torrent\Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Scheduler.h">
-      <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClInclude>
     <ClInclude Include="utils\Base32.h">
       <Filter>Source Files\Utils</Filter>
@@ -273,25 +273,25 @@
     <ClInclude Include="Core\Status.h">
       <Filter>Source Files\Core\General</Filter>
     </ClInclude>
-    <ClInclude Include="PeerManager.h">
-      <Filter>Source Files\Core\Torrent\Control</Filter>
-    </ClInclude>
     <ClInclude Include="Core\State.h">
       <Filter>Source Files\Core\Torrent\State</Filter>
     </ClInclude>
     <ClInclude Include="Core\MetadataDownload.h">
       <Filter>Source Files\Core\Torrent\Tasks</Filter>
     </ClInclude>
-    <ClInclude Include="Core\ProgressStatistics.h">
-      <Filter>Source Files\Core\Torrent\Control</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Core.h">
-      <Filter>Source Files\Core\Torrent\Control</Filter>
-    </ClInclude>
     <ClInclude Include="Core\ExternalRequestHandler.h">
       <Filter>Source Files\Core\Torrent\Tasks</Filter>
     </ClInclude>
-    <ClInclude Include="Core\PeerManagerListener.h">
+    <ClInclude Include="Core\Torrent.h">
+      <Filter>Source Files\Core\Torrent\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Downloader.h">
+      <Filter>Source Files\Core\Torrent\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Files.h">
+      <Filter>Source Files\Core\Torrent\Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Peers.h">
       <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClInclude>
   </ItemGroup>

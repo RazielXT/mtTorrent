@@ -11,7 +11,7 @@ namespace mtt
 	public:
 
 		virtual void handshakeFinished(PeerCommunication*) = 0;
-		virtual void connectionClosed(PeerCommunication*) = 0;
+		virtual void connectionClosed(PeerCommunication*, int code) = 0;
 
 		virtual void messageReceived(PeerCommunication*, PeerMessage&) = 0;
 

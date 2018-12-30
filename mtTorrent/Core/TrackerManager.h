@@ -7,41 +7,23 @@
 
 namespace mtt
 {
-	struct TrackerStateInfo
-	{
-		std::string host;
-		std::string fullAddress;
-
-		Tracker::State state;
-		uint32_t updateInterval;
-		uint32_t nextUpdate;
-
-		uint32_t peers;
-		uint32_t seeds;
-		uint32_t leechers;
-	};
-
-	class TrackerListener
-	{
-	public:
-
-		virtual void trackerStateChanged(TrackerStateInfo&, CorePtr) = 0;
-
-		virtual void onAnnounceResult(AnnounceResponse&, CorePtr) = 0;
-	};
-
 	struct TrackerManager
 	{
 	public:
 
-		TrackerManager();
+		TrackerManager(TorrentPtr t);
 
-		void init(CorePtr core, TrackerListener* listener);
-		void start();
+		using AnnounceCallback = std::function<void(Status, AnnounceResponse*, Tracker*)>;
+		void start(AnnounceCallback announceCallback);
 		void stop();
 
 		void addTracker(std::string addr);
 		void addTrackers(const std::vector<std::string>& trackers);
+		void removeTracker(const std::string& addr);
+		void removeTrackers();
+
+		std::shared_ptr<Tracker> getTracker(const std::string& addr);
+		std::vector<std::shared_ptr<Tracker>> getTrackers();
 
 	private:
 
@@ -57,8 +39,6 @@ namespace mtt
 
 			bool httpFallbackUsed = false;
 			uint32_t retryCount = 0;
-
-			TrackerStateInfo getStateInfo();
 		};
 		std::vector<TrackerInfo> trackers;
 		std::mutex trackersMutex;
@@ -72,8 +52,7 @@ namespace mtt
 		void onAnnounce(AnnounceResponse&, Tracker*);
 		void onTrackerFail(Tracker*);
 
-		CorePtr core;
-		TrackerListener* listener;
-		UdpCommPtr udp;
+		TorrentPtr torrent;
+		AnnounceCallback announceCallback;
 	};
 }

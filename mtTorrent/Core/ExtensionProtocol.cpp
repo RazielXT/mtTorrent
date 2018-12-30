@@ -3,7 +3,7 @@
 #include "PeerMessage.h"
 #include "Configuration.h"
 
-#define BT_EXT_LOG(x) {} WRITE_LOG("BT_EXT: " << x)
+#define BT_EXT_LOG(x) WRITE_LOG(LogTypeBtExt, x)
 
 using namespace mtt;
 using namespace mtt::ext;
@@ -39,8 +39,7 @@ void PeerExchange::load(BencodeParser::Object* data)
 
 	BT_EXT_LOG("PEX peers count " << msg.addedPeers.size());
 
-	if (onPexMessage)
-		onPexMessage(msg);
+	onPexMessage(msg);
 }
 
 void UtMetadata::load(BencodeParser::Object* data, const char* remainingData, size_t remainingSize)
@@ -68,8 +67,7 @@ void UtMetadata::load(BencodeParser::Object* data, const char* remainingData, si
 
 				BT_EXT_LOG("UTM data piece id " << msg.piece << " size/total: " << remainingSize << "/" << msg.size);
 
-				if (onUtMetadataMessage)
-					onUtMetadataMessage(msg);
+				onUtMetadataMessage(msg);
 			}
 			else if (msg.id == Reject)
 			{

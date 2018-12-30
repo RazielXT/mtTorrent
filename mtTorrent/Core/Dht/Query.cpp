@@ -3,7 +3,7 @@
 #include "Configuration.h"
 #include "utils/BencodeParser.h"
 
-#define DHT_LOG(x) WRITE_LOG("DHT: " << x)
+#define DHT_LOG(x) WRITE_LOG(LogTypeDht, x)
 
 using namespace mtt::dht;
 
@@ -573,7 +573,7 @@ DataBuffer mtt::dht::Query::PingNodes::createRequest(uint16_t transactionId)
 
 bool mtt::dht::Query::PingNodes::onResponse(UdpRequest comm, DataBuffer* data, PingInfo request)
 {
-	WRITE_LOG(comm->getEndpoint().address().to_string() << " Ping handling, data: " << (data ? data->size() : 0) << ", tr: " << request.transactionId);
+	DHT_LOG(comm->getEndpoint().address().to_string() << " Ping handling, data: " << (data ? data->size() : 0) << ", tr: " << request.transactionId);
 
 	if (data)
 	{

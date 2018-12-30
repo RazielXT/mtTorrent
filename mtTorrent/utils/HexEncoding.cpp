@@ -35,3 +35,20 @@ bool decodeHexa(std::string& from, uint8_t* to)
 	return true;
 }
 
+char const hex_chars[] = "0123456789abcdef";
+
+std::string hexToString(uint8_t* in, size_t size)
+{
+	std::string out;
+	out.resize(size*2);
+
+	int idx = 0;
+	for (size_t i = 0; i < size; ++i)
+	{
+		out[idx++] = hex_chars[std::uint8_t(in[i]) >> 4];
+		out[idx++] = hex_chars[std::uint8_t(in[i]) & 0xf];
+	}
+
+	return out;
+}
+

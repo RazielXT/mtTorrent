@@ -13,7 +13,7 @@ namespace mtt
 		HttpTrackerComm();
 		~HttpTrackerComm();
 
-		virtual void init(std::string host, std::string port, CorePtr core) override;
+		virtual void init(std::string host, std::string port, TorrentPtr core) override;
 
 		virtual void announce() override;
 
@@ -21,7 +21,7 @@ namespace mtt
 
 		void fail();
 
-		void onTcpClosed();
+		void onTcpClosed(int code);
 		void onTcpConnected();
 		void onTcpReceived();
 

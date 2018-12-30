@@ -3,9 +3,9 @@
 #include "utils/Network.h"
 #include "Configuration.h"
 #include "Logging.h"
-#include "Core.h"
+#include "Torrent.h"
 
-#define UDP_TRACKER_LOG(x) WRITE_LOG("UDP Tracker " << info.hostname << " " << x)
+#define UDP_TRACKER_LOG(x) WRITE_LOG(LogTypeUdpTracker, info.hostname << " " << x)
 
 using namespace mtt;
 
@@ -13,10 +13,10 @@ mtt::UdpTrackerComm::UdpTrackerComm()
 {
 }
 
-void UdpTrackerComm::init(std::string host, std::string port, CorePtr t)
+void UdpTrackerComm::init(std::string host, std::string port, TorrentPtr t)
 {
 	info.hostname = host;
-	core = t;
+	torrent = t;
 
 	udp = UdpAsyncComm::Get();
 	comm = udp->create(host, port);
@@ -39,12 +39,14 @@ DataBuffer UdpTrackerComm::createConnectRequest()
 
 void mtt::UdpTrackerComm::fail()
 {
-	if (state < Connected)
-		state = Initialized;
-	else if (state < Announced)
-		state = Connected;
+	UDP_TRACKER_LOG("fail");
+
+	if (info.state < Connected)
+		info.state = Initialized;
+	else if (info.state < Announced)
+		info.state = Connected;
 	else
-		state = Announced;
+		info.state = Announced;
 
 	if (onFail)
 		onFail();
@@ -63,7 +65,7 @@ bool mtt::UdpTrackerComm::onConnectUdpResponse(UdpRequest comm, DataBuffer* data
 
 	if (validResponse(response))
 	{
-		state = Connected;
+		info.state = Connected;
 		connectionId = response.connectionId;
 
 		announce();
@@ -91,7 +93,7 @@ DataBuffer UdpTrackerComm::createAnnounceRequest()
 	packet.add32(Announce);
 	packet.add32(transaction);
 
-	packet.add(core->torrent.info.hash, 20);
+	packet.add(torrent->infoFile.info.hash, 20);
 	packet.add(mtt::config::internal_.hashId, 20);
 
 	packet.add64(0);
@@ -123,11 +125,12 @@ bool mtt::UdpTrackerComm::onAnnounceUdpResponse(UdpRequest comm, DataBuffer* dat
 	if (validResponse(announceMsg.udp))
 	{
 		UDP_TRACKER_LOG("received peers:" << announceMsg.peers.size() << ", p: " << announceMsg.seedCount << ", l: " << announceMsg.leechCount);
-		state = Announced;
+		info.state = Announced;
 		info.leechers = announceMsg.leechCount;
 		info.seeds = announceMsg.seedCount;
 		info.peers = (uint32_t)announceMsg.peers.size();
 		info.announceInterval = announceMsg.interval;
+		info.lastAnnounce = (uint32_t)::time(0);
 
 		if (onAnnounceResult)
 			onAnnounceResult(announceMsg);
@@ -147,7 +150,7 @@ bool mtt::UdpTrackerComm::onAnnounceUdpResponse(UdpRequest comm, DataBuffer* dat
 void mtt::UdpTrackerComm::connect()
 {
 	UDP_TRACKER_LOG("connecting");
-	state = Connecting;
+	info.state = Connecting;
 
 	udp->sendMessage(createConnectRequest(), comm, std::bind(&UdpTrackerComm::onConnectUdpResponse, this, std::placeholders::_1, std::placeholders::_2));
 }
@@ -159,16 +162,16 @@ bool mtt::UdpTrackerComm::validResponse(TrackerMessage& resp)
 
 void mtt::UdpTrackerComm::announce()
 {
-	if (state < Connected)
+	if (info.state < Connected)
 		connect();
 	else
 	{
 		UDP_TRACKER_LOG("announcing");
 
-		if (state == Announced)
-			state = Reannouncing;
+		if (info.state == Announced)
+			info.state = Reannouncing;
 		else
-			state = Announcing;
+			info.state = Announcing;
 
 		udp->sendMessage(createAnnounceRequest(), comm, std::bind(&UdpTrackerComm::onAnnounceUdpResponse, this, std::placeholders::_1, std::placeholders::_2));
 	}
@@ -215,7 +218,7 @@ UdpTrackerComm::UdpAnnounceResponse UdpTrackerComm::getAnnounceResponse(DataBuff
 
 	for (size_t i = 0; i < count; i++)
 	{
-		uint32_t ip = packet.pop32();
+		uint32_t ip = *reinterpret_cast<const uint32_t*>(packet.popRaw(sizeof(uint32_t)));
 		resp.peers.push_back(Addr(ip, packet.pop16()));
 	}
 

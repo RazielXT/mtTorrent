@@ -2,11 +2,21 @@
 
 namespace mtt
 {
-	enum Status
+	enum class Status
 	{
 		Success,
 
+		I_Starting,
+		I_Connecting,
+		I_Requesting,
+		I_Stopped,
+
 		E_Unknown = 1000,
-		E_InvalidInput
+		E_InvalidInput,
+		E_Unsupported,
+		E_NotEnoughSpace,
+
+		E_NetworkError = 2000,
+		E_ConnectionClosed
 	};
 }

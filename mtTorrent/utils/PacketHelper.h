@@ -57,6 +57,13 @@ struct PacketReader
 		return size - pos;
 	}
 
+	const uint8_t* popRaw(size_t size)
+	{
+		auto ptr = buffer + pos;
+		pos += size;
+		return ptr;
+	}
+
 private:
 
 	const uint8_t* buffer = nullptr;

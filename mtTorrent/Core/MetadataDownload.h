@@ -1,41 +1,41 @@
 #pragma once
 
 #include "Storage.h"
-#include "PiecesProgress.h"
 #include "PeerCommunication.h"
 #include "utils/ServiceThreadpool.h"
-#include "PeerManager.h"
+#include "Peers.h"
 #include "MetadataReconstruction.h"
 #include "Interface.h"
 
 namespace mtt
 {
-	class MetadataDownload : public PeerManagerListener
+	class MetadataDownload : public IPeerListener
 	{
 	public:
 
-		MetadataDownload();
+		MetadataDownload(Peers&);
 
-		void start(CorePtr core, std::function<void(bool)> onFinish);
+		void start(std::function<void(Status, MetadataDownloadState&)> onUpdate);
 		void stop();
 
 		MetadataReconstruction metadata;
 
 	private:
 
-		std::shared_ptr<PeerCommunication> activeComm;
-		std::vector<Addr> possibleAddrs;
+		std::mutex commsMutex;
+		PeerCommunication* primaryComm;
+		std::vector<PeerCommunication*> backupComm;
+		void switchPrimaryComm();
+		void removeBackup(PeerCommunication*);
+		void addToBackup(PeerCommunication*);
 
-		std::function<void(bool)> onFinish;
+		std::function<void(Status, MetadataDownloadState&)> onUpdate;
+		MetadataDownloadState state;
 
-		CorePtr core;
-
-		virtual void onConnected(std::shared_ptr<PeerCommunication>, Addr&) override;
-		virtual void onConnectFail(Addr&) override;
-		virtual void onAddrReceived(std::vector<Addr>&) override;
+		Peers& peers;
 
 		virtual void handshakeFinished(PeerCommunication*) override;
-		virtual void connectionClosed(PeerCommunication*) override;
+		virtual void connectionClosed(PeerCommunication*, int) override;
 		virtual void messageReceived(PeerCommunication*, PeerMessage&) override;
 		virtual void extHandshakeFinished(PeerCommunication*) override;
 		virtual void metadataPieceReceived(PeerCommunication*, ext::UtMetadata::Message&) override;
@@ -43,7 +43,6 @@ namespace mtt
 		virtual void progressUpdated(PeerCommunication*) override;
 
 		void requestPiece();
-		void connectNext();
 		bool active = false;
 	};
 }

@@ -11,7 +11,7 @@ public:
 	{
 	}
 
-	virtual void connectionClosed(mtt::PeerCommunication*) override
+	virtual void connectionClosed(mtt::PeerCommunication*, int) override
 	{
 	}
 
@@ -53,13 +53,14 @@ public:
 	void testDhtTable();
 	void testTorrentFileSerialization();
 	void bigTestGetTorrentFileByLink();
+	void idealMagnetLinkTest();
 
 	void start();
 
 private:
 
 	bool failed = false;
-	virtual void connectionClosed(mtt::PeerCommunication*) override;
+	virtual void connectionClosed(mtt::PeerCommunication*, int) override;
 
 	mtt::ext::UtMetadata::Message utmMsg;
 	virtual void metadataPieceReceived(mtt::PeerCommunication*, mtt::ext::UtMetadata::Message&) override;

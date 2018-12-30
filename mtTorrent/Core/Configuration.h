@@ -13,6 +13,8 @@ namespace mtt
 
 			std::string defaultDirectory;
 			bool enableDht = false;
+
+			uint32_t maxTorrentConnections = 20;
 		};
 
 		struct Internal

@@ -2,7 +2,7 @@
 #include "utils/PacketHelper.h"
 #include "Configuration.h"
 
-#define BT_LOG(x) {} WRITE_LOG("PEER " << stream->getName() << ": " << x)
+#define BT_LOG(x) WRITE_LOG(LogTypeBt, "(" << getAddressName() << ") " << x)
 
 using namespace mtt;
 
@@ -112,37 +112,36 @@ bool mtt::PeerInfo::supportsDht()
 	return (protocol[8] & 0x80) != 0;
 }
 
-PeerCommunication::PeerCommunication(TorrentInfo& t, std::shared_ptr<TcpAsyncStream> s) : torrent(t)
+PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, std::shared_ptr<TcpAsyncStream> s) : torrent(t), listener(l)
 {
 	stream = s;
 	state.action = PeerCommunicationState::Connected;
-	
+
 	initializeCallbacks();
 	dataReceived();
 }
 
-PeerCommunication::PeerCommunication(TorrentInfo& t, boost::asio::io_service& io_service) : torrent(t)
+PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, boost::asio::io_service& io_service) : torrent(t), listener(l)
 {
 	stream = std::make_shared<TcpAsyncStream>(io_service);
+
 	initializeCallbacks();
 }
 
 void mtt::PeerCommunication::initializeCallbacks()
 {
 	stream->onConnectCallback = std::bind(&PeerCommunication::connectionOpened, this);
-	stream->onCloseCallback = std::bind(&PeerCommunication::connectionClosed, this);
+	stream->onCloseCallback = [this](int code) {connectionClosed(code); };
 	stream->onReceiveCallback = std::bind(&PeerCommunication::dataReceived, this);
 	ext.stream = stream;
 
 	ext.pex.onPexMessage = [this](mtt::ext::PeerExchange::Message& msg)
 	{
-		std::lock_guard<std::mutex> guard(listenerMutex);
-		listener->pexReceived(this, msg);
+		listener.pexReceived(this, msg);
 	};
 	ext.utm.onUtMetadataMessage = [this](mtt::ext::UtMetadata::Message& msg)
 	{
-		std::lock_guard<std::mutex> guard(listenerMutex);
-		listener->metadataPieceReceived(this, msg);
+		listener.metadataPieceReceived(this, msg);
 	};
 }
 
@@ -200,19 +199,15 @@ Addr mtt::PeerCommunication::getAddress()
 	return out;
 }
 
-void mtt::PeerCommunication::setListener(IPeerListener* l)
+std::string mtt::PeerCommunication::getAddressName()
 {
-	std::lock_guard<std::mutex> guard(listenerMutex);
-	listener = l;
+	return stream->getName();
 }
 
-void mtt::PeerCommunication::connectionClosed()
+void mtt::PeerCommunication::connectionClosed(int code)
 {
 	state.action = PeerCommunicationState::Disconnected;
-	{
-		std::lock_guard<std::mutex> guard(listenerMutex);
-		listener->connectionClosed(this);
-	}
+	listener.connectionClosed(this, code);
 }
 
 mtt::PeerMessage mtt::PeerCommunication::readNextStreamMessage()
@@ -261,11 +256,6 @@ void mtt::PeerCommunication::requestPieceBlock(PieceBlockInfo& pieceInfo)
 {
 	if (!isEstablished())
 		return;
-
-	{
-		std::lock_guard<std::mutex> guard(requestsMutex);
-		requestedBlocks.push_back(pieceInfo);
-	}
 
 	stream->write(mtt::bt::createBlockRequest(pieceInfo));
 }
@@ -316,53 +306,23 @@ void mtt::PeerCommunication::sendPort(uint16_t port)
 void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 {
 	if (message.id != Piece)
-		BT_LOG("MSG_ID:" << (int)message.id << ", size: " << message.messageSize);
+		BT_LOG("MSG ID:" << (int)message.id << ", size: " << message.messageSize);
 
 	if (message.id == Bitfield)
 	{
 		info.pieces.fromBitfield(message.bitfield, torrent.pieces.size());
 
-		BT_LOG("new percentage: " << std::to_string(info.pieces.getPercentage()) << "\n");
+		BT_LOG("new percentage: " << std::to_string(info.pieces.getPercentage()));
 
-		{
-			std::lock_guard<std::mutex> guard(listenerMutex);
-			listener->progressUpdated(this);
-		}
+		listener.progressUpdated(this);
 	}
 	else if (message.id == Have)
 	{
 		info.pieces.addPiece(message.havePieceIndex);
 
-		BT_LOG("new percentage: " << std::to_string(info.pieces.getPercentage()) << "\n");
+		BT_LOG("new percentage: " << std::to_string(info.pieces.getPercentage()));
 
-		{
-			std::lock_guard<std::mutex> guard(listenerMutex);
-			listener->progressUpdated(this);
-		}
-	}
-	else if (message.id == Piece)
-	{
-		bool success = false;
-
-		{
-			std::lock_guard<std::mutex> guard(requestsMutex);
-
-			for (auto it = requestedBlocks.begin(); it != requestedBlocks.end(); it++)
-			{
-				if (it->index == message.piece.info.index && it->begin == message.piece.info.begin)
-				{
-					success = true;
-					requestedBlocks.erase(it);
-					break;
-				}
-			}
-		}
-
-		if (!success)
-		{
-			BT_LOG("Unrequested block!");
-			message.piece.info.index = -1;
-		}
+		listener.progressUpdated(this);
 	}
 	else if (message.id == Unchoke)
 	{
@@ -383,13 +343,11 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 	else if (message.id == Extended)
 	{
 		auto type = ext.load(message.extended.id, message.extended.data);
-
-		BT_LOG("ext message " << (int)type);
+		BT_LOG("ext message handled " << (int)type);
 
 		if (type == mtt::ext::HandshakeEx)
 		{
-			std::lock_guard<std::mutex> guard(listenerMutex);
-			listener->extHandshakeFinished(this);
+			listener.extHandshakeFinished(this);
 		}
 	}
 	else if (message.id == Handshake)
@@ -414,18 +372,12 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 				if (info.supportsDht() && mtt::config::external.enableDht)
 					sendPort(mtt::config::external.udpPort);
 
-				{
-					std::lock_guard<std::mutex> guard(listenerMutex);
-					listener->handshakeFinished(this);
-				}
+				listener.handshakeFinished(this);
 			}
 			else
 				state.action = PeerCommunicationState::Established;
 		}
 	}
 
-	{
-		std::lock_guard<std::mutex> guard(listenerMutex);
-		listener->messageReceived(this, message);
-	}
+	listener.messageReceived(this, message);
 }

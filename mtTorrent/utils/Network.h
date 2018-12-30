@@ -24,7 +24,7 @@ struct Addr
 	Addr(const boost::asio::ip::address& addr, uint16_t port_num);
 
 	uint8_t addrBytes[16];
-	uint16_t port;
+	uint16_t port = 0;
 	bool ipv6;
 
 	void set(uint8_t* ip, uint16_t port, bool isIpv6);
@@ -34,6 +34,7 @@ struct Addr
 
 	int parse(uint8_t* buffer, bool v6);
 	boost::asio::ip::udp::endpoint toUdpEndpoint();
+	std::string toString();
 
 	bool operator==(const Addr& r);
 };

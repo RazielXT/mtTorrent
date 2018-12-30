@@ -265,6 +265,11 @@ boost::asio::ip::udp::endpoint Addr::toUdpEndpoint()
 		udp::endpoint(boost::asio::ip::address_v4(*reinterpret_cast<boost::asio::ip::address_v4::bytes_type*>(addrBytes)), port);
 }
 
+std::string Addr::toString()
+{
+	return toUdpEndpoint().address().to_string();
+}
+
 bool Addr::operator==(const Addr& r)
 {
 	if (r.ipv6 && !ipv6)

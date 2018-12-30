@@ -2,7 +2,7 @@
 #include "Logging.h"
 #include "Configuration.h"
 
-#define UDP_LOG(x) WRITE_LOG("UDP MGR: " << x)
+#define UDP_LOG(x) WRITE_LOG(LogTypeUdpMgr, x)
 
 std::shared_ptr<UdpAsyncComm> UdpAsyncComm::Get()
 {
@@ -187,7 +187,7 @@ void UdpAsyncComm::onUdpClose(UdpRequest source)
 		r->onResponse(source, nullptr);
 	}
 
-	UDP_LOG(source->getName() << " closed, handled response:" << !foundPendingResponses.empty());
+	UDP_LOG(source->getName() << " closed, is handled response:" << !foundPendingResponses.empty());
 }
 
 void UdpAsyncComm::startListening()
@@ -216,7 +216,7 @@ void UdpAsyncComm::checkTimeout(std::shared_ptr<ResponseRetryInfo> info)
 		{
 			UDP_LOG(info->client->getName() << " request retry");
 			info->retries++;
-			info->timeoutTimer->expires_from_now(boost::posix_time::seconds(1));
+			info->timeoutTimer->expires_from_now(boost::posix_time::seconds(info->retries + 1));
 			info->client->write();
 		}
 	}

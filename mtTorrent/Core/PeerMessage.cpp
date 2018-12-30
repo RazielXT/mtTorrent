@@ -5,8 +5,11 @@ using namespace mtt;
 
 PeerMessage::PeerMessage(DataBuffer& data)
 {
-	if (data.empty())
+	if (data.size() < 4)
+	{
+		messageSize = 1;
 		return;
+	}
 
 	if (data.size() >= 68 && data[0] == 19)
 	{

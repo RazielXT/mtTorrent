@@ -1,14 +1,15 @@
 #include "UdpAsyncReceiver.h"
 #include "Logging.h"
 
-#define UDP_LOG(x) WRITE_LOG("UDP LISTENER: " << x)
+#define UDP_LOG(x) WRITE_LOG(LogTypeUdpListener, x)
 
 UdpAsyncReceiver::UdpAsyncReceiver(boost::asio::io_service& io_service, uint16_t port, bool ipv6) : socket_(io_service)
 {
 	auto myEndpoint = udp::endpoint(ipv6 ? udp::v6() : udp::v4(), port);
-	socket_.open(myEndpoint.protocol());
-	socket_.set_option(boost::asio::socket_base::reuse_address(true));
-	socket_.bind(myEndpoint);
+	boost::system::error_code ec;
+	socket_.open(myEndpoint.protocol(), ec);
+	socket_.set_option(boost::asio::socket_base::reuse_address(true), ec);
+	socket_.bind(myEndpoint, ec);
 }
 
 void UdpAsyncReceiver::listen()

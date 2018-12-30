@@ -2,43 +2,27 @@
 
 #include "Interface.h"
 #include <mutex>
-#include <atomic>
 
 namespace mtt
 {
-	struct PiecesCheck
-	{
-		uint32_t piecesCount = 0;
-		std::atomic<uint32_t> piecesChecked = 0;
-		bool rejected = false;
-		std::vector<uint8_t> bitfield;
-	};
-
 	class Storage
 	{
 	public:
 
 		Storage() {};
-		Storage(uint32_t pieceSize);
+		Storage(TorrentInfo& info);
+		~Storage();
 
-		void setPieceSize(uint32_t pieceSize);
+		void init(TorrentInfo& info);
 		void setPath(std::string path);
 
 		void storePiece(DownloadedPiece& piece);
 		PieceBlock getPieceBlock(PieceBlockInfo& piece);
 
-		void setSelection(DownloadSelection& files);
-		std::vector<uint8_t> checkStoredPieces(std::vector<PieceInfo>& piecesInfo);
-		std::shared_ptr<PiecesCheck> checkStoredPiecesAsync(std::vector<PieceInfo>& piecesInfo, boost::asio::io_service& io, std::function<void()> onFinish);
+		void preallocateSelection(DownloadSelection& files);
+		DataBuffer checkStoredPieces(std::vector<PieceInfo>& piecesInfo);
+		std::shared_ptr<PiecesCheck> checkStoredPiecesAsync(std::vector<PieceInfo>& piecesInfo, boost::asio::io_service& io, std::function<void(std::shared_ptr<PiecesCheck>)> onFinish);
 		void flush();
-
-		void saveProgress();
-		void loadProgress();	
-
-		DownloadSelection selection;
-		uint32_t pieceSize;
-
-		std::vector<PieceBlockInfo> makePieceBlocksInfo(uint32_t index);
 
 	private:
 
@@ -88,5 +72,7 @@ namespace mtt
 		CachedPiece& loadPiece(uint32_t pieceId);
 		void loadPiece(File& file, CachedPiece& piece);
 
+		std::vector<File> files;
+		uint32_t pieceSize;
 	};
 }

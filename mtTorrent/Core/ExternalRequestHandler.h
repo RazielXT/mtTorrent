@@ -5,7 +5,7 @@ class ExternalRequestHandler
 {
 public:
 
-	void openMagnetLink(uint32_t requestId, std::string& link, std::function<void(bool, mtt::CorePtr)> onResult);
+	void openMagnetLink(uint32_t requestId, std::string& link, std::function<void(bool, mtt::TorrentPtr)> onResult);
 
 	void stopRequest(uint32_t requestId);
 

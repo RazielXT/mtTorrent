@@ -1,7 +1,7 @@
 #include "TcpAsyncStream.h"
 #include "Logging.h"
 
-#define TCP_LOG(x) WRITE_LOG("TCP: " << info.host << " " << x)
+#define TCP_LOG(x) WRITE_LOG(LogTypeTcp, x)
 
 TcpAsyncStream::TcpAsyncStream(boost::asio::io_service& io) : io_service(io), socket(io), timeoutTimer(io)
 {
@@ -27,6 +27,7 @@ void TcpAsyncStream::connect(const std::string& hostname, const std::string& por
 		return;
 
 	info.host = hostname;
+	info.port = port;
 	state = Connecting;
 	
 	tcp::resolver::query query(hostname, port);
@@ -40,9 +41,10 @@ void TcpAsyncStream::connect(const uint8_t* ip, uint16_t port, bool ipv6)
 	if (state != Disconnected)
 		return;
 
-	auto endpoint = ipv6 ? tcp::endpoint(boost::asio::ip::address_v6(*reinterpret_cast<const boost::asio::ip::address_v6::bytes_type*>(ip)), port) :
+	info.endpoint = ipv6 ? tcp::endpoint(boost::asio::ip::address_v6(*reinterpret_cast<const boost::asio::ip::address_v6::bytes_type*>(ip)), port) :
 		tcp::endpoint(boost::asio::ip::address_v4(*reinterpret_cast<const boost::asio::ip::address_v4::bytes_type*>(ip)), port);
-	info.host = endpoint.address().to_string();
+	info.host = info.endpoint.address().to_string();
+	info.port = std::to_string(port);
 	state = Connecting;
 
 	TCP_LOG("connecting");
@@ -50,7 +52,7 @@ void TcpAsyncStream::connect(const uint8_t* ip, uint16_t port, bool ipv6)
 	timeoutTimer.async_wait(std::bind(&TcpAsyncStream::checkTimeout, shared_from_this()));
 	timeoutTimer.expires_from_now(boost::posix_time::seconds(5));
 
-	socket.async_connect(endpoint, std::bind(&TcpAsyncStream::handle_connect, shared_from_this(), std::placeholders::_1));
+	socket.async_connect(info.endpoint, std::bind(&TcpAsyncStream::handle_connect, shared_from_this(), std::placeholders::_1));
 }
 
 void TcpAsyncStream::connect(const std::string& ip, uint16_t port)
@@ -59,10 +61,11 @@ void TcpAsyncStream::connect(const std::string& ip, uint16_t port)
 		return;
 
 	info.host = ip;
+	info.port = std::to_string(port);
 	state = Connecting;
 
-	tcp::endpoint endpoint(boost::asio::ip::address::from_string(ip), port);
-	socket.async_connect(endpoint, std::bind(&TcpAsyncStream::handle_connect, shared_from_this(), std::placeholders::_1));
+	info.endpoint = tcp::endpoint(boost::asio::ip::address::from_string(ip), port);
+	socket.async_connect(info.endpoint, std::bind(&TcpAsyncStream::handle_connect, shared_from_this(), std::placeholders::_1));
 }
 
 void TcpAsyncStream::close()
@@ -144,7 +147,7 @@ void TcpAsyncStream::postFail(std::string place, const boost::system::error_code
 		std::lock_guard<std::mutex> guard(callbackMutex);
 
 		if (onCloseCallback)
-			onCloseCallback();
+			onCloseCallback(error.value());
 	}
 }
 
@@ -173,7 +176,7 @@ void TcpAsyncStream::handle_resolver_connect(const boost::system::error_code& er
 	{
 		if (!error)
 		{
-			info.endInitialized = true;
+			info.remoteInitialized = true;
 			info.endpoint = socket.remote_endpoint();
 		}
 
@@ -227,7 +230,7 @@ void TcpAsyncStream::do_write(DataBuffer data)
 				std::bind(&TcpAsyncStream::handle_write, shared_from_this(), std::placeholders::_1));
 		}
 	}
-	else if (info.endInitialized)
+	else if (info.remoteInitialized)
 	{
 		write_msgs.push_back(data);
 		state = Connecting;
