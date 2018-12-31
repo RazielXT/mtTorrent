@@ -111,7 +111,10 @@ void mtt::Peers::disconnect(PeerCommunication* p)
 			if (!p->isEstablished())
 				peer.lastQuality = Peers::PeerQuality::Offline;
 			else
+			{
 				p->stop();
+				peer.lastQuality = Peers::PeerQuality::Unwanted;
+			}
 
 			activeConnections.erase(it);
 
@@ -138,6 +141,27 @@ uint32_t mtt::Peers::receivedCount()
 	return (uint32_t)knownPeers.size();
 }
 
+std::vector<mtt::Peers::PeerInfo> mtt::Peers::getConnectedInfo()
+{
+	std::vector<mtt::Peers::PeerInfo> out;
+	std::lock_guard<std::mutex> guard(peersMutex);
+	out.resize(activeConnections.size());
+
+	int i = 0;
+	for (auto& p : activeConnections)
+	{
+		auto& info = out[i];
+		auto& knownInfo = knownPeers[p.idx];
+		info.addr = knownInfo.address;
+		info.lastSpeed = knownInfo.lastSpeed;
+		info.percentage = p.comm->info.pieces.getPercentage();
+		info.source = knownInfo.source;
+		i++;
+	}
+
+	return out;
+}
+
 uint32_t mtt::Peers::nextAddr()
 {
 	std::lock_guard<std::mutex> guard(peersMutex);
@@ -146,7 +170,7 @@ uint32_t mtt::Peers::nextAddr()
 	for(size_t i = 0; i < knownPeers.size(); i++)
 	{
 		auto&p = knownPeers[i];
-		if (p.lastQuality == PeerQuality::Unknown || p.connections < lastConnections)
+		if (p.lastQuality == PeerQuality::Unknown || p.lastQuality == PeerQuality::Unwanted || p.connections < lastConnections)
 			return (uint32_t)i;
 
 		lastConnections = p.connections;
@@ -166,12 +190,15 @@ void mtt::Peers::updateKnownPeers(std::vector<Addr>& peers, PeerSource source)
 			accepted.push_back(i);
 	}
 
-	KnownPeer* addedPeer;
+	if (accepted.empty())
+		return;
+
+	KnownPeer* addedPeersPtr;
 
 	if (source == PeerSource::Pex || source == PeerSource::Dht)
 	{
 		knownPeers.insert(knownPeers.begin(), accepted.size(), KnownPeer());
-		addedPeer = &knownPeers[0];
+		addedPeersPtr = &knownPeers[0];
 
 		for (auto& conn : activeConnections)
 		{
@@ -181,14 +208,14 @@ void mtt::Peers::updateKnownPeers(std::vector<Addr>& peers, PeerSource source)
 	else
 	{
 		knownPeers.resize(knownPeers.size() + accepted.size());
-		addedPeer = &knownPeers[knownPeers.size() - accepted.size()];
+		addedPeersPtr = &knownPeers[knownPeers.size() - accepted.size()];
 	}
 
 	for (uint32_t i = 0; i < accepted.size(); i++)
 	{
-		addedPeer->address = peers[accepted[i]];
-		addedPeer->source = source;
-		addedPeer++;
+		addedPeersPtr->address = peers[accepted[i]];
+		addedPeersPtr->source = source;
+		addedPeersPtr++;
 	}
 }
 
@@ -222,6 +249,7 @@ std::shared_ptr<mtt::PeerCommunication> mtt::Peers::connect(uint32_t idx)
 	peer.comm = std::make_shared<PeerCommunication>(torrent->infoFile.info, statistics, torrent->service.io);
 	peer.comm->sendHandshake(knownPeer.address);
 	peer.idx = idx;
+	peer.timeConnected = (uint32_t)std::time(0);
 	activeConnections.push_back(peer);
 
 	return peer.comm;
@@ -352,6 +380,8 @@ void mtt::PeerStatistics::start()
 	speedMeasureTimer = ScheduledTimer::create(peers.torrent->service.io, [this]
 	{
 		updateMeasures();
+		evalCurrentPeers();
+
 		speedMeasureTimer->schedule(1);
 	}
 	);
@@ -394,4 +424,45 @@ void mtt::PeerStatistics::updateMeasures()
 
 	freshPieces.clear();
 	lastSpeedMeasure = currentMeasure;
+}
+
+void mtt::PeerStatistics::evalCurrentPeers()
+{
+	const uint32_t peersEvalInterval = 5;
+
+	secondsFromLastPeerEval++;
+	if (secondsFromLastPeerEval < peersEvalInterval)
+		return;
+
+	secondsFromLastPeerEval = 0;
+
+	PeerCommunication* slowestPeer = nullptr;
+	{
+		std::lock_guard<std::mutex> guard(peers.peersMutex);
+
+		if ((uint32_t)peers.activeConnections.size() < mtt::config::external.maxTorrentConnections)
+			return;
+
+		const uint32_t minPeersTimeChance = 10;
+		uint32_t currentTime = (uint32_t)std::time(0);
+		auto minTimeToEval = currentTime - minPeersTimeChance;
+
+		uint32_t slowestSpeed = -1;
+
+		for (auto peer : peers.activeConnections)
+		{
+			if(peer.timeConnected > minTimeToEval)
+				continue;
+
+			auto speed = peers.knownPeers[peer.idx].lastSpeed;
+			if (speed < slowestSpeed)
+			{
+				slowestSpeed = speed;
+				slowestPeer = peer.comm.get();
+			}
+		}
+	}
+
+	if (slowestPeer != nullptr)
+		peers.disconnect(slowestPeer);
 }
