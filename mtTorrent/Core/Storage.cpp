@@ -278,8 +278,7 @@ std::shared_ptr<mtt::PiecesCheck> mtt::Storage::checkStoredPiecesAsync(std::vect
 	{
 		checkStoredPieces(*request.get(), piecesInfo);
 
-		if(!request->rejected)
-			onFinish(request);
+		onFinish(request);
 	});
 
 	return request;

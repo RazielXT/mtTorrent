@@ -288,6 +288,17 @@ int mtt::BencodeParser::Object::getInt()
 	return strtol(info.data, 0, 10);
 }
 
+size_t mtt::BencodeParser::Object::getBigInt(const char* name)
+{
+	auto o = getIntItem(name);
+	return o ? o->getBigInt() : 0;
+}
+
+size_t mtt::BencodeParser::Object::getBigInt()
+{
+	return strtoull(info.data, 0, 10);
+}
+
 mtt::BencodeParser::Object* mtt::BencodeParser::Object::getFirstItem()
 {
 	return info.size ? this + 1 : nullptr;

@@ -35,6 +35,8 @@ namespace mtt
 			Object* getIntItem(const char* name);
 			int getInt(const char* name);
 			int getInt();
+			size_t getBigInt(const char* name);
+			size_t getBigInt();
 
 			Object* getFirstItem();
 

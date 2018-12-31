@@ -80,7 +80,7 @@
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -145,12 +145,12 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost64-1.60.0-vs2015\include\boost-1_60;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\include64;$(ProjectDir)\Core;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost_1_68_0;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\include64;$(ProjectDir);$(ProjectDir)\Core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\..\boost64-1.60.0-vs2015\lib;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\..\boost_1_68_0\lib64-msvc-14.1;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>ssleay32MTd.lib;libeay32MTd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -203,14 +203,14 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost64-1.60.0-vs2015\include\boost-1_60;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\include64;$(ProjectDir);$(ProjectDir)\Core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost_1_68_0;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\include64;$(ProjectDir);$(ProjectDir)\Core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\..\boost64-1.60.0-vs2015\lib;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\..\boost_1_68_0\lib64-msvc-14.1;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>ssleay32MT.lib;libeay32MT.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -233,6 +233,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Core\Core.cpp" />
     <ClCompile Include="Core\Files.cpp" />
     <ClCompile Include="Core\Torrent.cpp" />
     <ClCompile Include="Core\ExternalRequestHandler.cpp" />
@@ -259,6 +260,7 @@
     <ClCompile Include="Core\MetadataReconstruction.cpp" />
     <ClCompile Include="Core\TrackerManager.cpp" />
     <ClCompile Include="Core\UdpTrackerComm.cpp" />
+    <ClCompile Include="Global\BinaryInterface.cpp" />
     <ClCompile Include="utils\Base32.cpp" />
     <ClCompile Include="utils\TorrentFileParser.cpp" />
     <ClCompile Include="utils\BencodeParser.cpp" />
@@ -275,6 +277,7 @@
     <ClCompile Include="utils\UrlEncoding.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Core\Core.h" />
     <ClInclude Include="Core\Files.h" />
     <ClInclude Include="Core\Torrent.h" />
     <ClInclude Include="Core\ExternalRequestHandler.h" />
@@ -303,6 +306,7 @@
     <ClInclude Include="Core\MetadataReconstruction.h" />
     <ClInclude Include="Core\TrackerManager.h" />
     <ClInclude Include="Core\UdpTrackerComm.h" />
+    <ClInclude Include="Global\BinaryInterface.h" />
     <ClInclude Include="Peers.h" />
     <ClInclude Include="utils\Base32.h" />
     <ClInclude Include="utils\TorrentFileParser.h" />

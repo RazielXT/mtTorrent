@@ -756,7 +756,7 @@ void idealTorrentStateTest()
 
 void idealLocalTest()
 {
-	TorrentPtr torrent = Torrent::fromFile("G:\\[HorribleSubs] JoJo's Bizarre Adventure - Golden Wind - 13 [720p].mkv.torrent");
+	TorrentPtr torrent = Torrent::fromFile("G:\\test.torrent");
 
 	if (!torrent)
 		return;
@@ -771,12 +771,12 @@ void idealLocalTest()
 
 	WAITFOR(checked);
 
-	//torrent->peers->trackers.removeTrackers();
+	torrent->peers->trackers.removeTrackers();
 
 	if (!torrent->start())
 		return;
 
-	//torrent->peers->connect(Addr({ 127,0,0,1 }, 31132));
+	torrent->peers->connect(Addr({ 127,0,0,1 }, 31132));
 
 	while (!torrent->finished())
 	{

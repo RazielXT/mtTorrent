@@ -41,6 +41,9 @@ namespace mtt
 		std::shared_ptr<ScheduledTimer> speedMeasureTimer;
 		std::vector<std::pair<PeerCommunication*, size_t>> lastSpeedMeasure;
 		void updateMeasures();
+
+		void evalCurrentPeers();
+		uint32_t secondsFromLastPeerEval = 0;
 	};
 
 	class Peers
@@ -69,11 +72,19 @@ namespace mtt
 
 		PeerStatistics statistics;
 
+		struct PeerInfo
+		{
+			Addr addr;
+			PeerSource source;
+			uint32_t lastSpeed = 0;
+			float percentage = 0;
+		};
+		std::vector<PeerInfo> getConnectedInfo();
 	private:
 
 		PeersUpdateCallback updateCallback;
 
-		enum class PeerQuality {Unknown, Potential, Offline, Bad, Normal, Good};
+		enum class PeerQuality {Unknown, Potential, Offline, Unwanted, Bad, Normal, Good};
 		struct KnownPeer
 		{
 			bool operator==(const Addr& r);
@@ -98,6 +109,7 @@ namespace mtt
 		{
 			std::shared_ptr<PeerCommunication> comm;
 			uint32_t idx;
+			uint32_t timeConnected;
 		};
 		std::vector<ActivePeer> activeConnections;
 		mtt::Peers::KnownPeer* mtt::Peers::getKnownPeer(PeerCommunication* p);

@@ -208,7 +208,7 @@ mtt::TorrentInfo parseTorrentInfo(BencodeParser::Object* infoDictionary)
 				pathItem = pathItem->getNextSibling();
 			}
 
-			size_t size = file->getInt("length");
+			size_t size = file->getBigInt("length");
 			auto startId = getPieceIndex(sizeSum, info.pieceSize);
 			auto startPos = sizeSum % info.pieceSize;
 			sizeSum += size;
@@ -223,7 +223,7 @@ mtt::TorrentInfo parseTorrentInfo(BencodeParser::Object* infoDictionary)
 	}
 	else
 	{
-		size_t size = infoDictionary->getInt("length");
+		size_t size = infoDictionary->getBigInt("length");
 		auto endPos = size % info.pieceSize;
 		info.name = infoDictionary->getTxt("name");
 		info.files.push_back({ 0,{ info.name }, size, 0, 0, static_cast<uint32_t>(info.pieces.size() - 1), (uint32_t)endPos });
