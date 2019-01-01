@@ -120,7 +120,7 @@ namespace mtt
 		std::vector<Addr> peers;
 	};
 
-	enum TrackerState { Clear, Initialized, Alive, Connecting, Connected, Announcing, Announced, Reannouncing };
+	enum class TrackerState { Clear, Initialized, Alive, Connecting, Connected, Announcing, Announced, Reannouncing };
 
 	struct TrackerInfo
 	{
@@ -131,8 +131,9 @@ namespace mtt
 		uint32_t leechers = 0;
 		uint32_t announceInterval = 0;
 		uint32_t lastAnnounce = 0;
+		uint32_t nextAnnounce = 0;
 
-		TrackerState state = Clear;
+		TrackerState state = TrackerState::Clear;
 	};
 
 	struct MetadataDownloadState

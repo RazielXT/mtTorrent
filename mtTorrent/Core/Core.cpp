@@ -24,17 +24,17 @@ void mtt::Core::start()
 {
 	init();
 
-	torrent = Torrent::fromFile("G:\\hunter.torrent");
+	torrent = Torrent::fromFile("G:\\[HorribleSubs] JoJo's Bizarre Adventure - Golden Wind - 13 [720p].mkv.torrent");
 
 	if (!torrent)
 		return;
 
 	auto onCheckFinish = [this](std::shared_ptr<PiecesCheck>)
 	{
-		torrent->peers->trackers.removeTrackers();
+		//torrent->peers->trackers.removeTrackers();
 
-		//if (!torrent->start())
-		//	return;
+		if (!torrent->start())
+			return;
 
 		//torrent->peers->connect(Addr({ 127,0,0,1 }, 31132));
 	};

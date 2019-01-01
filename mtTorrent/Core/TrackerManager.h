@@ -25,6 +25,8 @@ namespace mtt
 		std::shared_ptr<Tracker> getTracker(const std::string& addr);
 		std::vector<std::shared_ptr<Tracker>> getTrackers();
 
+		uint32_t getTrackersCount();
+
 	private:
 
 		struct TrackerInfo

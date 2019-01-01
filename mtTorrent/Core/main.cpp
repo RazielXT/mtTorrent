@@ -68,6 +68,43 @@ __declspec(dllexport) mtt::Status __cdecl Ioctl(mtBI::MessageId id, void* data)
 			}
 		}
 	}
+	else if (id == mtBI::MessageId::GetSourcesInfo)
+	{
+		auto resp = (mtBI::SourcesInfo*) data;
+		resp->count = core.torrent->peers->getSourcesCount();
+
+		if (resp->count == resp->sources.size())
+		{
+			auto sources = core.torrent->peers->getSourcesInfo();
+			if (sources.size() < resp->count)
+				resp->count = (uint32_t)sources.size();
+
+			uint32_t currentTime = (uint32_t)time(0);
+
+			for (uint32_t i = 0; i < resp->count; i++)
+			{
+				auto& to = resp->sources[i];
+				auto& from = sources[i];
+
+				to.name.set(from.hostname);
+				to.peers = from.peers;
+				to.seeds = from.seeds;
+				to.interval = from.announceInterval;
+				to.nextCheck = from.nextAnnounce < currentTime ? 0 : from.nextAnnounce - currentTime;
+
+				if (from.state == mtt::TrackerState::Connected)
+					memcpy(to.status, "Ready", 6);
+				else if (from.state == mtt::TrackerState::Connecting)
+					memcpy(to.status, "Connecting", 11);
+				else if (from.state == mtt::TrackerState::Announcing || from.state == mtt::TrackerState::Reannouncing)
+					memcpy(to.status, "Announcing", 11);
+				else if (from.state == mtt::TrackerState::Announced)
+					memcpy(to.status, "Announced", 10);
+				else
+					to.status[0] = 0;
+			}
+		}
+	}
 	else
 		return mtt::Status::E_InvalidInput;
 

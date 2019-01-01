@@ -64,6 +64,8 @@ namespace mtt
 		bool active = false;
 
 		TrackerInfo getSourceInfo(const std::string& source);
+		std::vector<TrackerInfo> getSourcesInfo();
+		uint32_t getSourcesCount();
 
 		TrackerManager trackers;
 
@@ -98,7 +100,7 @@ namespace mtt
 		};
 
 		uint32_t nextAddr();
-		void updateKnownPeers(std::vector<Addr>& peers, PeerSource source);
+		uint32_t updateKnownPeers(std::vector<Addr>& peers, PeerSource source);
 		uint32_t updateKnownPeers(Addr& peers, PeerSource source);
 		std::vector<KnownPeer> knownPeers;
 		std::mutex peersMutex;
@@ -118,5 +120,6 @@ namespace mtt
 		TorrentPtr torrent;
 
 		TrackerInfo dhtInfo;
+		TrackerInfo pexInfo;
 	};
 }

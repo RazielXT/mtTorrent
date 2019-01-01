@@ -43,7 +43,7 @@ void refreshTorrentInfo()
 	{
 		auto files = gcnew array<String^>(info.filesCount);
 
-		for (int i = 0; i < info.filesCount; i++)
+		for (uint32_t i = 0; i < info.filesCount; i++)
 		{
 			files[i] = gcnew String(info.filenames[i].data) + " (" + int(info.filesizes[i] / (1024ll * 1024ll)).ToString() + " MB)";
 		}
@@ -135,6 +135,47 @@ void refreshUi()
 
 		if (peersGrid->SortedColumn)
 			peersGrid->Sort(peersGrid->SortedColumn, peersGrid->SortOrder == SortOrder::Ascending ? System::ComponentModel::ListSortDirection::Ascending : System::ComponentModel::ListSortDirection::Descending);
+	}
+
+	mtBI::SourcesInfo sources;
+	sources.count = 0;
+	IoctlFunc(mtBI::MessageId::GetSourcesInfo, &sources);
+
+	if (sources.count > 0)
+	{
+		sources.sources.resize(sources.count);
+		IoctlFunc(mtBI::MessageId::GetSourcesInfo, &sources);
+	}
+
+	{
+		auto sourcesGrid = GuiLite::MainForm::instance->sourcesGrid;
+		adjustGridRowsCount(sourcesGrid, (int)sources.count);
+
+		for (uint32_t i = 0; i < sources.count; i++)
+		{
+			auto& source = sources.sources[i];
+			auto timeTo = TimeSpan::FromSeconds(source.nextCheck);
+			auto nextStr = timeTo.ToString("T");
+
+			auto sourceRow = gcnew cli::array< System::String^  >(5) {
+				gcnew String(source.name.data), gcnew String(source.status),
+					int(source.peers).ToString(), nextStr, int(source.interval).ToString()
+			};
+
+			if (source.status[0] == 0)
+			{
+				sourceRow[2] = "";
+				sourceRow[4] = "";
+			}
+
+			if (source.nextCheck == 0)
+				sourceRow[3] = "";
+
+			sourcesGrid->Rows[i]->SetValues(sourceRow);
+		}
+
+		if (sourcesGrid->SortedColumn)
+			sourcesGrid->Sort(sourcesGrid->SortedColumn, sourcesGrid->SortOrder == SortOrder::Ascending ? System::ComponentModel::ListSortDirection::Ascending : System::ComponentModel::ListSortDirection::Descending);
 	}
 }
 

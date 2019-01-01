@@ -31,19 +31,19 @@ void mtt::HttpTrackerComm::init(std::string host, std::string p, TorrentPtr t)
 	tcpComm->onCloseCallback = [this](int code) {onTcpClosed(code); };
 	tcpComm->onReceiveCallback = std::bind(&HttpTrackerComm::onTcpReceived, this);
 
-	info.state = Initialized;
+	info.state = TrackerState::Initialized;
 
 	tcpComm->init(host, port);
 }
 
 void mtt::HttpTrackerComm::fail()
 {
-	if (info.state == Announcing || info.state == Reannouncing)
+	if (info.state == TrackerState::Announcing || info.state == TrackerState::Reannouncing)
 	{
-		if (info.state == Reannouncing)
-			info.state = Alive;
+		if (info.state == TrackerState::Reannouncing)
+			info.state = TrackerState::Alive;
 		else
-			info.state = Initialized;
+			info.state = TrackerState::Initialized;
 
 		if (onFail)
 			onFail();
@@ -52,20 +52,20 @@ void mtt::HttpTrackerComm::fail()
 
 void mtt::HttpTrackerComm::onTcpClosed(int)
 {
-	if(info.state != Announced)
+	if(info.state != TrackerState::Announced)
 		fail();
 }
 
 void mtt::HttpTrackerComm::onTcpConnected()
 {
-	info.state = std::max(info.state, Alive);
+	info.state = std::max(info.state, TrackerState::Alive);
 }
 
 void mtt::HttpTrackerComm::onTcpReceived()
 {
 	auto respData = tcpComm->getReceivedData();
 
-	if (info.state == Announcing || info.state == Reannouncing)
+	if (info.state == TrackerState::Announcing || info.state == TrackerState::Reannouncing)
 	{
 		mtt::AnnounceResponse announceResp;
 		auto msgSize = readAnnounceResponse(respData, announceResp);
@@ -81,7 +81,7 @@ void mtt::HttpTrackerComm::onTcpReceived()
 		else
 		{
 			tcpComm->consumeData(msgSize);
-			info.state = Announced;
+			info.state = TrackerState::Announced;
 
 			info.leechers = announceResp.leechCount;
 			info.seeds = announceResp.seedCount;
@@ -221,10 +221,10 @@ void mtt::HttpTrackerComm::announce()
 {
 	HTTP_TRACKER_LOG("announcing");
 
-	if (info.state == Announced)
-		info.state = Reannouncing;
+	if (info.state == TrackerState::Announced)
+		info.state = TrackerState::Reannouncing;
 	else
-		info.state = Announcing;
+		info.state = TrackerState::Announcing;
 
 	auto request = createAnnounceRequest(info.hostname, port);
 

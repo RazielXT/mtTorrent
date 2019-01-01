@@ -20,6 +20,8 @@ DummyPeerListener dummyListener;
 mtt::Peers::Peers(TorrentPtr t) : torrent(t), trackers(t), statistics(*this)
 {
 	dhtInfo.hostname = "DHT";
+	pexInfo.hostname = "PEX";
+	pexInfo.state = TrackerState::Connected;
 	trackers.addTrackers(t->infoFile.announceList);
 }
 
@@ -131,6 +133,27 @@ mtt::TrackerInfo mtt::Peers::getSourceInfo(const std::string& source)
 	return dhtInfo;
 }
 
+std::vector<mtt::TrackerInfo> mtt::Peers::getSourcesInfo()
+{
+	auto tr = trackers.getTrackers();
+	std::vector<mtt::TrackerInfo> out;
+
+	for (auto& t : tr)
+	{
+		if(t)
+			out.push_back(t->info);
+	}
+
+	out.push_back(pexInfo);
+
+	return out;
+}
+
+uint32_t mtt::Peers::getSourcesCount()
+{
+	return trackers.getTrackersCount() + 1;
+}
+
 uint32_t mtt::Peers::connectedCount()
 {
 	return (uint32_t)activeConnections.size();
@@ -179,7 +202,7 @@ uint32_t mtt::Peers::nextAddr()
 	return -1;
 }
 
-void mtt::Peers::updateKnownPeers(std::vector<Addr>& peers, PeerSource source)
+uint32_t mtt::Peers::updateKnownPeers(std::vector<Addr>& peers, PeerSource source)
 {
 	std::vector<uint32_t> accepted;
 	std::lock_guard<std::mutex> guard(peersMutex);
@@ -191,7 +214,7 @@ void mtt::Peers::updateKnownPeers(std::vector<Addr>& peers, PeerSource source)
 	}
 
 	if (accepted.empty())
-		return;
+		return 0;
 
 	KnownPeer* addedPeersPtr;
 
@@ -217,6 +240,8 @@ void mtt::Peers::updateKnownPeers(std::vector<Addr>& peers, PeerSource source)
 		addedPeersPtr->source = source;
 		addedPeersPtr++;
 	}
+
+	return (uint32_t)accepted.size();
 }
 
 uint32_t mtt::Peers::updateKnownPeers(Addr& addr, PeerSource source)
@@ -339,7 +364,7 @@ void mtt::PeerStatistics::metadataPieceReceived(PeerCommunication* p, ext::UtMet
 
 void mtt::PeerStatistics::pexReceived(PeerCommunication* p, ext::PeerExchange::Message& msg)
 {
-	peers.updateKnownPeers(msg.addedPeers, PeerSource::Pex);
+	peers.pexInfo.peers += peers.updateKnownPeers(msg.addedPeers, PeerSource::Pex);
 	peerListener->pexReceived(p, msg);
 }
 

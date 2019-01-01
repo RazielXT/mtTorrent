@@ -25,8 +25,9 @@ namespace mtBI
 	{
 		Start,
 		GetTorrentInfo,
-		GetTorrentStateInfo,	//int, TorrentStateInfo
-		GetPeersInfo	//TorrentPeersInfo
+		GetTorrentStateInfo,	//TorrentStateInfo
+		GetPeersInfo,	//TorrentPeersInfo
+		GetSourcesInfo	//SourcesInfo
 	};
 
 	struct TorrentInfo
@@ -61,5 +62,21 @@ namespace mtBI
 	{
 		uint32_t count;
 		std::vector<PeerInfo> peers;
+	};
+
+	struct SourceInfo
+	{
+		string name;
+		char status[11];
+		uint32_t peers;
+		uint32_t seeds;
+		uint32_t nextCheck;
+		uint32_t interval;
+	};
+
+	struct SourcesInfo
+	{
+		uint32_t count;
+		std::vector<SourceInfo> sources;
 	};
 };

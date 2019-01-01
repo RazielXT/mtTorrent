@@ -135,6 +135,11 @@ std::vector<std::shared_ptr<mtt::Tracker>> mtt::TrackerManager::getTrackers()
 	return out;
 }
 
+uint32_t mtt::TrackerManager::getTrackersCount()
+{
+	return (uint32_t)trackers.size();
+}
+
 void mtt::TrackerManager::onAnnounce(AnnounceResponse& resp, Tracker* t)
 {
 	std::lock_guard<std::mutex> guard(trackersMutex);
@@ -143,6 +148,7 @@ void mtt::TrackerManager::onAnnounce(AnnounceResponse& resp, Tracker* t)
 	{
 		trackerInfo->retryCount = 0;
 		trackerInfo->timer->schedule(resp.interval);
+		trackerInfo->comm->info.nextAnnounce = (uint32_t)time(0) + resp.interval;
 	}
 
 	if(announceCallback)
@@ -173,7 +179,9 @@ void mtt::TrackerManager::onTrackerFail(Tracker* t)
 			else
 			{
 				trackerInfo->retryCount++;
-				trackerInfo->timer->schedule(5 * 60 * trackerInfo->retryCount);
+				uint32_t nextRetry = 30 * trackerInfo->retryCount;
+				trackerInfo->timer->schedule(nextRetry);
+				trackerInfo->comm->info.nextAnnounce = (uint32_t)time(0) + nextRetry;
 			}
 
 			startNext();

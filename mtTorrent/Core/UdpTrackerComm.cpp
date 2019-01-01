@@ -41,12 +41,12 @@ void mtt::UdpTrackerComm::fail()
 {
 	UDP_TRACKER_LOG("fail");
 
-	if (info.state < Connected)
-		info.state = Initialized;
-	else if (info.state < Announced)
-		info.state = Connected;
+	if (info.state < TrackerState::Connected)
+		info.state = TrackerState::Initialized;
+	else if (info.state < TrackerState::Announced)
+		info.state = TrackerState::Connected;
 	else
-		info.state = Announced;
+		info.state = TrackerState::Announced;
 
 	if (onFail)
 		onFail();
@@ -65,7 +65,7 @@ bool mtt::UdpTrackerComm::onConnectUdpResponse(UdpRequest comm, DataBuffer* data
 
 	if (validResponse(response))
 	{
-		info.state = Connected;
+		info.state = TrackerState::Connected;
 		connectionId = response.connectionId;
 
 		announce();
@@ -125,7 +125,7 @@ bool mtt::UdpTrackerComm::onAnnounceUdpResponse(UdpRequest comm, DataBuffer* dat
 	if (validResponse(announceMsg.udp))
 	{
 		UDP_TRACKER_LOG("received peers:" << announceMsg.peers.size() << ", p: " << announceMsg.seedCount << ", l: " << announceMsg.leechCount);
-		info.state = Announced;
+		info.state = TrackerState::Announced;
 		info.leechers = announceMsg.leechCount;
 		info.seeds = announceMsg.seedCount;
 		info.peers = (uint32_t)announceMsg.peers.size();
@@ -150,7 +150,7 @@ bool mtt::UdpTrackerComm::onAnnounceUdpResponse(UdpRequest comm, DataBuffer* dat
 void mtt::UdpTrackerComm::connect()
 {
 	UDP_TRACKER_LOG("connecting");
-	info.state = Connecting;
+	info.state = TrackerState::Connecting;
 
 	udp->sendMessage(createConnectRequest(), comm, std::bind(&UdpTrackerComm::onConnectUdpResponse, this, std::placeholders::_1, std::placeholders::_2));
 }
@@ -162,16 +162,16 @@ bool mtt::UdpTrackerComm::validResponse(TrackerMessage& resp)
 
 void mtt::UdpTrackerComm::announce()
 {
-	if (info.state < Connected)
+	if (info.state < TrackerState::Connected)
 		connect();
 	else
 	{
 		UDP_TRACKER_LOG("announcing");
 
-		if (info.state == Announced)
-			info.state = Reannouncing;
+		if (info.state == TrackerState::Announced)
+			info.state = TrackerState::Reannouncing;
 		else
-			info.state = Announcing;
+			info.state = TrackerState::Announcing;
 
 		udp->sendMessage(createAnnounceRequest(), comm, std::bind(&UdpTrackerComm::onAnnounceUdpResponse, this, std::placeholders::_1, std::placeholders::_2));
 	}
