@@ -6,25 +6,20 @@
 #include "utils/UdpAsyncComm.h"
 #include "utils/ScheduledTimer.h"
 #include <map>
+#include "Listener.h"
 
 namespace mtt
 {
 	namespace dht
 	{
-		class ResultsListener
-		{
-		public:
-
-			virtual uint32_t onFoundPeers(uint8_t* hash, std::vector<Addr>& values) = 0;
-			virtual void findingPeersFinished(uint8_t* hash, uint32_t count) = 0;
-		};
-
 		class Communication : public DataListener
 		{
 		public:
 
 			Communication();
 			~Communication();
+
+			static Communication& get();
 
 			void findPeers(uint8_t* hash, ResultsListener* listener);
 			void stopFindingPeers(uint8_t* hash);
@@ -36,7 +31,7 @@ namespace mtt
 			void removeListener(ResultsListener* listener);
 
 			std::string save();
-			void load(std::string&);
+			void load(const std::string&);
 
 		protected:
 

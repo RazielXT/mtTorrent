@@ -2,6 +2,7 @@
 #include "Torrent.h"
 #include "PeerCommunication.h"
 #include "Configuration.h"
+#include "Dht/Communication.h"
 
 class DummyPeerListener : public mtt::IPeerListener
 {
@@ -20,6 +21,7 @@ DummyPeerListener dummyListener;
 mtt::Peers::Peers(TorrentPtr t) : torrent(t), trackers(t), statistics(*this)
 {
 	dhtInfo.hostname = "DHT";
+	dhtInfo.state = TrackerState::Connected;
 	pexInfo.hostname = "PEX";
 	pexInfo.state = TrackerState::Connected;
 	trackers.addTrackers(t->infoFile.announceList);
@@ -145,6 +147,7 @@ std::vector<mtt::TrackerInfo> mtt::Peers::getSourcesInfo()
 	}
 
 	out.push_back(pexInfo);
+	out.push_back(dhtInfo);
 
 	return out;
 }
@@ -183,23 +186,6 @@ std::vector<mtt::Peers::PeerInfo> mtt::Peers::getConnectedInfo()
 	}
 
 	return out;
-}
-
-uint32_t mtt::Peers::nextAddr()
-{
-	std::lock_guard<std::mutex> guard(peersMutex);
-	int lastConnections = 0;
-
-	for(size_t i = 0; i < knownPeers.size(); i++)
-	{
-		auto&p = knownPeers[i];
-		if (p.lastQuality == PeerQuality::Unknown || p.lastQuality == PeerQuality::Unwanted || p.connections < lastConnections)
-			return (uint32_t)i;
-
-		lastConnections = p.connections;
-	}
-
-	return -1;
 }
 
 uint32_t mtt::Peers::updateKnownPeers(std::vector<Addr>& peers, PeerSource source)
@@ -406,6 +392,7 @@ void mtt::PeerStatistics::start()
 	{
 		updateMeasures();
 		evalCurrentPeers();
+		checkForDhtPeers();
 
 		speedMeasureTimer->schedule(1);
 	}
@@ -490,4 +477,36 @@ void mtt::PeerStatistics::evalCurrentPeers()
 
 	if (slowestPeer != nullptr)
 		peers.disconnect(slowestPeer);
+}
+
+void mtt::PeerStatistics::checkForDhtPeers()
+{
+	const uint32_t dhtCheckInterval = 60;
+
+	secondsFromLastDhtCheck++;
+	if (secondsFromLastDhtCheck < dhtCheckInterval)
+		return;
+
+	if (peers.torrent->infoFile.info.name.empty())
+		return;
+
+	secondsFromLastDhtCheck = 0;
+	peers.dhtInfo.state = TrackerState::Announcing;
+	uint32_t currentTime = (uint32_t)std::time(0);
+	peers.dhtInfo.lastAnnounce = currentTime;
+	peers.dhtInfo.nextAnnounce = currentTime + dhtCheckInterval;
+	peers.dhtInfo.announceInterval = dhtCheckInterval;
+
+	dht::Communication::get().findPeers(peers.torrent->infoFile.info.hash, this);
+}
+
+uint32_t mtt::PeerStatistics::onFoundPeers(uint8_t* hash, std::vector<Addr>& values)
+{
+	peers.dhtInfo.peers += peers.updateKnownPeers(values, PeerSource::Dht);
+	return peers.dhtInfo.peers;
+}
+
+void mtt::PeerStatistics::findingPeersFinished(uint8_t* hash, uint32_t count)
+{
+	peers.dhtInfo.state = TrackerState::Connected;
 }

@@ -278,13 +278,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Core.h" />
+    <ClInclude Include="Core\Dht\Listener.h" />
     <ClInclude Include="Core\Files.h" />
     <ClInclude Include="Core\Torrent.h" />
     <ClInclude Include="Core\ExternalRequestHandler.h" />
     <ClInclude Include="Core\MetadataDownload.h" />
     <ClInclude Include="Core\Configuration.h" />
     <ClInclude Include="Core\Dht\Communication.h" />
-    <ClInclude Include="Core\Dht\Listener.h" />
+    <ClInclude Include="Core\Dht\DataListener.h" />
     <ClInclude Include="Core\Dht\Node.h" />
     <ClInclude Include="Core\Dht\Query.h" />
     <ClInclude Include="Core\Dht\Responder.h" />

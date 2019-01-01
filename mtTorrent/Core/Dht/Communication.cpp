@@ -1,17 +1,25 @@
 #include "Dht/Communication.h"
 #include "Configuration.h"
 
+mtt::dht::Communication* comm;
+
 mtt::dht::Communication::Communication() : responder(table, *this)
 {
 	service.start(3);
 	udp = UdpAsyncComm::Get();
 	udp->listen(std::bind(&Communication::onUnknownUdpPacket, this, std::placeholders::_1, std::placeholders::_2));
+	comm = this;
 }
 
 mtt::dht::Communication::~Communication()
 {
 	peersQueries.clear();
 	service.stop();
+}
+
+mtt::dht::Communication& mtt::dht::Communication::get()
+{
+	return *comm;
 }
 
 void mtt::dht::Communication::removeListener(ResultsListener* listener)
@@ -152,8 +160,11 @@ void mtt::dht::Communication::refreshTable()
 
 	auto inactive = table.getInactiveNodes();
 
-	auto q = std::make_shared<Query::PingNodes>();
-	q->start(inactive, &table, this);
+	if (!inactive.empty())
+	{
+		auto q = std::make_shared<Query::PingNodes>();
+		q->start(inactive, &table, this);
+	}
 }
 
 std::string mtt::dht::Communication::save()
@@ -161,7 +172,7 @@ std::string mtt::dht::Communication::save()
 	return table.save();
 }
 
-void mtt::dht::Communication::load(std::string& settings)
+void mtt::dht::Communication::load(const std::string& settings)
 {
 	uint32_t nodesCount = table.load(settings);
 	refreshTable();

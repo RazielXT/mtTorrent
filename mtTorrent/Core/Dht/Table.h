@@ -23,7 +23,7 @@ namespace mtt
 			bool empty();
 
 			std::string save();
-			uint32_t load(std::string&);
+			uint32_t load(const std::string&);
 
 			std::vector<NodeInfo> getInactiveNodes();
 

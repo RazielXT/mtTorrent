@@ -3,6 +3,7 @@
 #include "MetadataDownload.h"
 #include "Downloader.h"
 #include "Configuration.h"
+#include "Dht/Communication.h"
 
 void mtt::Core::init()
 {
@@ -18,6 +19,9 @@ void mtt::Core::init()
 	mtt::config::internal_.defaultRootHosts = { { "dht.transmissionbt.com", "6881" },{ "router.bittorrent.com" , "6881" } };
 
 	mtt::config::external.tcpPort = mtt::config::external.udpPort = 55125;
+
+	dht = std::make_shared<dht::Communication>();
+	dht->load("");
 }
 
 void mtt::Core::start()

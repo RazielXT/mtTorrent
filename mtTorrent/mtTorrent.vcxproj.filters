@@ -276,9 +276,6 @@
     <ClInclude Include="Core\Dht\Responder.h">
       <Filter>Source Files\Core\Torrent\Dht</Filter>
     </ClInclude>
-    <ClInclude Include="Core\Dht\Listener.h">
-      <Filter>Source Files\Core\Torrent\Dht</Filter>
-    </ClInclude>
     <ClInclude Include="Core\State.h">
       <Filter>Source Files\Core\Torrent\State</Filter>
     </ClInclude>
@@ -308,6 +305,12 @@
     </ClInclude>
     <ClInclude Include="Core\Core.h">
       <Filter>Source Files\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Dht\DataListener.h">
+      <Filter>Source Files\Core\Torrent\Dht</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Dht\Listener.h">
+      <Filter>Source Files\Core\Torrent\Dht</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

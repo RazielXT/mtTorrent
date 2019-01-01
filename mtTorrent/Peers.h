@@ -2,6 +2,7 @@
 
 #include "IPeerListener.h"
 #include "TrackerManager.h"
+#include "Dht/Listener.h"
 
 namespace mtt
 {
@@ -14,8 +15,12 @@ namespace mtt
 	};
 
 	class Peers;
+	namespace dht
+	{
+		class ResultsListener;
+	}
 
-	class PeerStatistics : public IPeerListener
+	class PeerStatistics : public IPeerListener, public dht::ResultsListener
 	{
 	public:
 
@@ -44,6 +49,12 @@ namespace mtt
 
 		void evalCurrentPeers();
 		uint32_t secondsFromLastPeerEval = 0;
+
+		void checkForDhtPeers();
+		uint32_t secondsFromLastDhtCheck = 5*60;
+
+		virtual uint32_t onFoundPeers(uint8_t* hash, std::vector<Addr>& values);
+		virtual void findingPeersFinished(uint8_t* hash, uint32_t count);
 	};
 
 	class Peers
@@ -99,7 +110,6 @@ namespace mtt
 			int connections = 0;
 		};
 
-		uint32_t nextAddr();
 		uint32_t updateKnownPeers(std::vector<Addr>& peers, PeerSource source);
 		uint32_t updateKnownPeers(Addr& peers, PeerSource source);
 		std::vector<KnownPeer> knownPeers;

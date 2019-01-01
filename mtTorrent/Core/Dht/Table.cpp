@@ -222,7 +222,7 @@ std::string mtt::dht::Table::save()
 	return state;
 }
 
-uint32_t mtt::dht::Table::load(std::string& settings)
+uint32_t mtt::dht::Table::load(const std::string& settings)
 {
 	std::lock_guard<std::mutex> guard(tableMutex);
 
