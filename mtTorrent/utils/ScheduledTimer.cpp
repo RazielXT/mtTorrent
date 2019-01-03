@@ -4,6 +4,11 @@ ScheduledTimer::ScheduledTimer(boost::asio::io_service& io, std::function<void()
 {
 }
 
+ScheduledTimer::~ScheduledTimer()
+{
+	disable();
+}
+
 void ScheduledTimer::schedule(uint32_t secondsOffset)
 {
 	timer.async_wait(std::bind(&ScheduledTimer::checkTimer, shared_from_this()));

@@ -1,28 +1,31 @@
 #include "MainForm.h"
-#include "../mtTorrent/Global/BinaryInterface.h"
+#include "../mtTorrent/Public/BinaryInterface.h"
+#include "../mtTorrent/Public/Status.h"
+#include "../mtTorrent/utils/HexEncoding.h"
+#include <msclr/marshal_cppstd.h>
 #include <windows.h>
 #include <vcclr.h>
 
 using namespace System;
 using namespace System::Windows::Forms;
 
-typedef void(*IOCTL_FUNC)(mtBI::MessageId, void*);
+typedef mtt::Status(*IOCTL_FUNC)(mtBI::MessageId, const void*,void*);
 IOCTL_FUNC IoctlFunc = nullptr;
 HMODULE lib = nullptr;
 
-void refreshTorrentInfo()
+void refreshTorrentInfo(uint8_t* hash)
 {
 	if (!IoctlFunc)
 		return;
 
 	mtBI::TorrentInfo info;
-	IoctlFunc(mtBI::MessageId::GetTorrentInfo, &info);
+	IoctlFunc(mtBI::MessageId::GetTorrentInfo, hash, &info);
 
 	if (info.filesCount > 0)
 	{
 		info.filenames.resize(info.filesCount);
 		info.filesizes.resize(info.filesCount);
-		IoctlFunc(mtBI::MessageId::GetTorrentInfo, &info);
+		IoctlFunc(mtBI::MessageId::GetTorrentInfo, hash, &info);
 	}
 
 	GuiLite::MainForm::instance->torrentInfoLabel->Clear();
@@ -65,9 +68,87 @@ void start()
 	if (lib)
 	{
 		IoctlFunc = (IOCTL_FUNC)GetProcAddress(lib, "Ioctl");
-		IoctlFunc(mtBI::MessageId::Start, nullptr);
+		IoctlFunc(mtBI::MessageId::Init, nullptr, nullptr);
+	}
+}
 
-		refreshTorrentInfo();
+bool selected = false;
+uint8_t hash[20];
+bool selectionChanged = false;
+
+void addTorrent()
+{
+	OpenFileDialog^ openFileDialog = gcnew OpenFileDialog;
+
+	if (openFileDialog->ShowDialog() == System::Windows::Forms::DialogResult::OK)
+	{
+		auto filenamePtr = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(openFileDialog->FileName).ToPointer();
+		
+		if (IoctlFunc(mtBI::MessageId::AddFromFile, filenamePtr, hash) == mtt::Status::Success)
+		{
+			selected = true;
+			selectionChanged = true;
+		}
+	}
+}
+
+void setSelected(bool v)
+{
+	selected = v;
+	GuiLite::MainForm::instance->buttonStart->Enabled = selected;
+	GuiLite::MainForm::instance->buttonStart->Enabled = selected;
+
+	if (!selected)
+	{
+		GuiLite::MainForm::instance->getGrid()->ClearSelection();
+	}
+}
+
+void onButtonClick(System::Object^ button)
+{
+	if (button == GuiLite::MainForm::instance->buttonAddTorrent)
+	{
+		System::Threading::Thread^ newThread = gcnew System::Threading::Thread(gcnew System::Threading::ThreadStart(&addTorrent));
+		newThread->SetApartmentState(System::Threading::ApartmentState::STA);
+		newThread->Start();
+	}
+	else if (button == GuiLite::MainForm::instance->getGrid())
+	{
+		if (GuiLite::MainForm::instance->getGrid()->SelectedRows->Count == 0)
+		{
+			setSelected(false);
+		}
+		else
+		{
+			setSelected(true);
+
+			auto idStr = (String^)GuiLite::MainForm::instance->getGrid()->SelectedRows[0]->Cells[0]->Value;
+			auto stdStr = msclr::interop::marshal_as<std::string>(idStr);
+			uint8_t selectedHash[20];
+			decodeHexa(stdStr, selectedHash);
+
+			if (memcmp(hash, selectedHash, 20) != 0)
+			{
+				memcpy(hash, selectedHash, 20);
+				selectionChanged = true;
+			}
+		}
+	}
+	else if (button == GuiLite::MainForm::instance->buttonStart)
+	{
+		if (selected)
+		{
+			if (IoctlFunc(mtBI::MessageId::Start, hash, nullptr) == mtt::Status::Success)
+				selectionChanged = true;
+		}
+	}
+	else if (button == GuiLite::MainForm::instance->buttonStop)
+	{
+		if (selected)
+		{
+			if (IoctlFunc(mtBI::MessageId::Stop, hash, nullptr) == mtt::Status::Success)
+				selectionChanged = true;
+		}
 	}
 }
 
@@ -93,29 +174,64 @@ void adjustGridRowsCount(System::Windows::Forms::DataGridView^ grid, int count)
 	}
 }
 
+int RefreshTimeCounter = 0;
 void refreshUi()
 {
 	if (!IoctlFunc)
 		return;
 
-	mtBI::TorrentStateInfo info;
-	IoctlFunc(mtBI::MessageId::GetTorrentStateInfo, &info);
+	RefreshTimeCounter++;
+	if (RefreshTimeCounter < 10 && !selectionChanged)
+		return;
 
+	RefreshTimeCounter = 0;
+
+	if (selectionChanged)
 	{
-		auto row = gcnew cli::array< System::String^  >(6) {
-			gcnew String(info.name.data), float(info.progress).ToString("P"),
-				float(info.downloadSpeed / (1024.f * 1024)).ToString("F"), float(info.downloaded / (1024.f * 1024)).ToString("F"),
-				int(info.connectedPeers).ToString(), int(info.foundPeers).ToString()
-		};
+		refreshTorrentInfo(hash);
+		selectionChanged = false;
+	}
 
+	mtBI::TorrentsList torrents;
+	torrents.count = 0;
+	if (IoctlFunc(mtBI::MessageId::GetTorrents, nullptr, &torrents) != mtt::Status::Success)
+		return;
+
+	if (torrents.count > 0)
+	{
+		torrents.list.resize(torrents.count);
+		IoctlFunc(mtBI::MessageId::GetTorrents, nullptr, &torrents);
+	}
+
+	mtBI::TorrentStateInfo info;
+	{
 		auto torrentGrid = GuiLite::MainForm::instance->getGrid();
-		adjustGridRowsCount(torrentGrid, 1);
-		torrentGrid->Rows[0]->SetValues(row);
+		adjustGridRowsCount(torrentGrid, torrents.count);
+
+		for (uint32_t i = 0; i < torrents.count; i++)
+		{
+			auto& t = torrents.list[i];
+
+			if (IoctlFunc(mtBI::MessageId::GetTorrentStateInfo, t.hash, &info) == mtt::Status::Success)
+			{
+				auto row = gcnew cli::array< System::String^  >(10) {
+					gcnew String(hexToString(t.hash, 20).data()),
+						gcnew String(info.name.data), info.checking ? "Checking " + float(info.checkingProgress).ToString("P") : float(info.progress).ToString("P"),
+						t.active ? "Active" : "Stopped",
+						float(info.downloadSpeed / (1024.f * 1024)).ToString("F"), float(info.uploadSpeed / (1024.f * 1024)).ToString("F"),
+						int(info.connectedPeers).ToString(), int(info.foundPeers).ToString(),
+						float(info.downloaded / (1024.f * 1024)).ToString("F"), float(info.uploaded / (1024.f * 1024)).ToString("F")
+				};
+
+				torrentGrid->Rows[i]->SetValues(row);
+			}
+		}
 	}
 
 	mtBI::TorrentPeersInfo peers;
+	peers.count = 0;
 	peers.peers.resize(info.connectedPeers);
-	IoctlFunc(mtBI::MessageId::GetPeersInfo, &peers);
+	IoctlFunc(mtBI::MessageId::GetPeersInfo, hash, &peers);
 
 	{
 		auto peersGrid = GuiLite::MainForm::instance->getPeersGrid();
@@ -124,10 +240,10 @@ void refreshUi()
 		for (uint32_t i = 0; i < peers.count; i++)
 		{
 			auto& peerInfo = peers.peers[i];
-			auto peerRow = gcnew cli::array< System::String^  >(4) {
+			auto peerRow = gcnew cli::array< System::String^  >(5) {
 				gcnew String(peerInfo.addr.data),
-					float(peerInfo.speed / (1024.f * 1024)).ToString(), float(peerInfo.progress).ToString("P"),
-					gcnew String(peerInfo.source)
+					float(peerInfo.dlSpeed / (1024.f * 1024)).ToString(), float(peerInfo.upSpeed / (1024.f * 1024)).ToString(), 
+					float(peerInfo.progress).ToString("P"),	gcnew String(peerInfo.source)
 			};
 
 			peersGrid->Rows[i]->SetValues(peerRow);
@@ -139,12 +255,12 @@ void refreshUi()
 
 	mtBI::SourcesInfo sources;
 	sources.count = 0;
-	IoctlFunc(mtBI::MessageId::GetSourcesInfo, &sources);
+	IoctlFunc(mtBI::MessageId::GetSourcesInfo, hash, &sources);
 
 	if (sources.count > 0)
 	{
 		sources.sources.resize(sources.count);
-		IoctlFunc(mtBI::MessageId::GetSourcesInfo, &sources);
+		IoctlFunc(mtBI::MessageId::GetSourcesInfo, hash, &sources);
 	}
 
 	{

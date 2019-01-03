@@ -4,6 +4,7 @@
 #include "Downloader.h"
 #include "Peers.h"
 #include "Configuration.h"
+#include "Uploader.h"
 
 mtt::TorrentPtr mtt::Torrent::fromFile(std::string filepath)
 {
@@ -14,6 +15,7 @@ mtt::TorrentPtr mtt::Torrent::fromFile(std::string filepath)
 	{
 		torrent->peers = std::make_unique<Peers>(torrent);
 		torrent->downloader = std::make_unique<Downloader>(torrent);
+		torrent->uploader = std::make_unique<Uploader>(torrent);
 		torrent->init();
 		return torrent;
 	}
@@ -29,6 +31,7 @@ mtt::TorrentPtr mtt::Torrent::fromMagnetLink(std::string link, std::function<voi
 
 	torrent->peers = std::make_unique<Peers>(torrent);
 	torrent->downloader = std::make_unique<Downloader>(torrent);
+	torrent->uploader = std::make_unique<Uploader>(torrent);
 	torrent->utmDl = std::make_unique<MetadataDownload>(*torrent->peers);
 	torrent->utmDl->start([torrent, callback](Status s, MetadataDownloadState& state)
 	{
@@ -58,6 +61,13 @@ bool mtt::Torrent::start()
 	if (files.prepareSelection() != mtt::Status::Success)
 		return false;
 
+	service.start(2);
+
+	state = State::Started;
+
+	if (checking)
+		return true;
+
 	downloader->start();
 
 	return true;
@@ -80,22 +90,58 @@ void mtt::Torrent::stop()
 		peers->stop();
 	}
 
+	if (downloader)
+	{
+		downloader->stop();
+	}
+
 	service.stop();
+	state = State::Stopped;
 }
 
 std::shared_ptr<mtt::PiecesCheck> mtt::Torrent::checkFiles(std::function<void(std::shared_ptr<PiecesCheck>)> onFinish)
 {
 	auto checkFunc = [this, onFinish](std::shared_ptr<PiecesCheck> check)
 	{
+		{
+			std::lock_guard<std::mutex> guard(checkStateMutex);
+			checkState.reset();
+		}
+
+		checking = false;
+
 		if (!check->rejected)
 		{
 			files.progress.fromList(check->pieces);
 		}
 
+		if (state == State::Started)
+			start();
+
 		onFinish(check);
 	};
 
-	return files.storage.checkStoredPiecesAsync(infoFile.info.pieces, service.io, checkFunc);
+	checking = true;
+	std::lock_guard<std::mutex> guard(checkStateMutex);
+	checkState = files.storage.checkStoredPiecesAsync(infoFile.info.pieces, service.io, checkFunc);
+	return checkState;
+}
+
+float mtt::Torrent::checkingProgress()
+{
+	std::lock_guard<std::mutex> guard(checkStateMutex);
+
+	if (checkState)
+		return checkState->piecesChecked / (float)checkState->piecesCount;
+	else
+		return 1;
+}
+
+std::shared_ptr<mtt::PiecesCheck> mtt::Torrent::getCheckState()
+{
+	std::lock_guard<std::mutex> guard(checkStateMutex);
+
+	return checkState;
 }
 
 bool mtt::Torrent::finished()
@@ -120,5 +166,20 @@ size_t mtt::Torrent::downloaded()
 
 size_t mtt::Torrent::downloadSpeed()
 {
-	return peers->statistics.getDownloadSpeed();
+	return peers->analyzer.getDownloadSpeed();
+}
+
+size_t mtt::Torrent::uploaded()
+{
+	return peers->analyzer.getUploadSum();
+}
+
+size_t mtt::Torrent::uploadSpeed()
+{
+	return peers->analyzer.getUploadSpeed();
+}
+
+size_t mtt::Torrent::dataLeft()
+{
+	return infoFile.info.fullSize - downloaded();
 }

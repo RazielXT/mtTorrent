@@ -136,7 +136,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\mtTorrent\Global\BinaryInterface.cpp" />
+    <ClCompile Include="..\mtTorrent\Public\BinaryInterface.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\HexEncoding.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainForm.cpp" />
   </ItemGroup>

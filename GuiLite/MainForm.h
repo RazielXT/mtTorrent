@@ -1,6 +1,7 @@
 #pragma once
 
 extern void refreshUi();
+extern void onButtonClick(System::Object^ button);
 
 namespace GuiLite {
 
@@ -25,26 +26,26 @@ namespace GuiLite {
 
 			updateTimer = gcnew System::Windows::Forms::Timer();
 			updateTimer->Tick += gcnew EventHandler(TimerUpdateFunc);
-			updateTimer->Interval = 1000;
+			updateTimer->Interval = 100;
 			updateTimer->Start();
 		}
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentName;
+
 	public:
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentProgress;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentDownload;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentDownloaded;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentConnected;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentFoundPeers;
+
+
+
+
+
 	private: System::Windows::Forms::DataGridView^  peersGridView;
 
 
 
 	public: System::Windows::Forms::TextBox^  torrentInfoLabel;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  gridPeerAddress;
+
 	public:
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  gridPeerSpeedDownload;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  gridPeerPercentage;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  peerSource;
+
+
+
 	private: System::Windows::Forms::TabPage^  sourcesTab;
 	public: System::Windows::Forms::DataGridView^  sourcesGrid;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  dataGridViewTextBoxColumn1;
@@ -53,6 +54,66 @@ namespace GuiLite {
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  dataGridViewTextBoxColumn3;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  Column1;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  dataGridViewTextBoxColumn4;
+
+
+
+
+
+
+
+
+
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^  gridPeerAddress;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^  gridPeerSpeedDownload;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^  Column2;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^  gridPeerPercentage;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^  peerSource;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^  torrentId;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentName;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentProgress;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^  Column4;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentDownload;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^  torrentUpload;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentConnected;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentFoundPeers;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentDownloaded;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^  Column3;
+	public: System::Windows::Forms::Button^  buttonStop;
+	private:
+	public: System::Windows::Forms::Button^  buttonStart;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	private:
 
 	public:
@@ -85,8 +146,12 @@ namespace GuiLite {
 		}
 
 	private: System::Windows::Forms::SplitContainer^  splitContainer2;
+public: System::Windows::Forms::Button^  buttonAddTorrent;
+private:
+
+private:
 	public:
-	private: System::Windows::Forms::Button^  button1;
+
 	private: System::Windows::Forms::DataGridView^  torrentsGrid;
 
 
@@ -155,33 +220,42 @@ namespace GuiLite {
 		void InitializeComponent(void)
 		{
 			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle1 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle7 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle8 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle9 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle10 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle2 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle3 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle4 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle5 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle6 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle9 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle12 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle13 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle10 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle7 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle8 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle11 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle14 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle17 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle18 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle15 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle16 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle12 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle13 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle14 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle17 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle20 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle21 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle18 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle19 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			this->splitContainer1 = (gcnew System::Windows::Forms::SplitContainer());
 			this->splitContainer2 = (gcnew System::Windows::Forms::SplitContainer());
-			this->button1 = (gcnew System::Windows::Forms::Button());
+			this->buttonStop = (gcnew System::Windows::Forms::Button());
+			this->buttonStart = (gcnew System::Windows::Forms::Button());
+			this->buttonAddTorrent = (gcnew System::Windows::Forms::Button());
 			this->torrentsGrid = (gcnew System::Windows::Forms::DataGridView());
+			this->torrentId = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->TorrentName = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->TorrentProgress = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->Column4 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->TorrentDownload = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->TorrentDownloaded = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->torrentUpload = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->TorrentConnected = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->TorrentFoundPeers = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->TorrentDownloaded = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->Column3 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->TorrentTabs = (gcnew System::Windows::Forms::TabControl());
 			this->tabPage1 = (gcnew System::Windows::Forms::TabPage());
 			this->torrentInfoLabel = (gcnew System::Windows::Forms::TextBox());
@@ -189,6 +263,7 @@ namespace GuiLite {
 			this->peersGridView = (gcnew System::Windows::Forms::DataGridView());
 			this->gridPeerAddress = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->gridPeerSpeedDownload = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->Column2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->gridPeerPercentage = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->peerSource = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->sourcesTab = (gcnew System::Windows::Forms::TabPage());
@@ -229,7 +304,7 @@ namespace GuiLite {
 			// splitContainer1.Panel2
 			// 
 			this->splitContainer1->Panel2->Controls->Add(this->TorrentTabs);
-			this->splitContainer1->Size = System::Drawing::Size(907, 497);
+			this->splitContainer1->Size = System::Drawing::Size(1339, 497);
 			this->splitContainer1->SplitterDistance = 264;
 			this->splitContainer1->TabIndex = 3;
 			// 
@@ -243,23 +318,50 @@ namespace GuiLite {
 			// 
 			// splitContainer2.Panel1
 			// 
-			this->splitContainer2->Panel1->Controls->Add(this->button1);
+			this->splitContainer2->Panel1->Controls->Add(this->buttonStop);
+			this->splitContainer2->Panel1->Controls->Add(this->buttonStart);
+			this->splitContainer2->Panel1->Controls->Add(this->buttonAddTorrent);
 			// 
 			// splitContainer2.Panel2
 			// 
 			this->splitContainer2->Panel2->Controls->Add(this->torrentsGrid);
-			this->splitContainer2->Size = System::Drawing::Size(907, 264);
+			this->splitContainer2->Size = System::Drawing::Size(1339, 264);
 			this->splitContainer2->SplitterDistance = 43;
 			this->splitContainer2->TabIndex = 2;
 			// 
-			// button1
+			// buttonStop
 			// 
-			this->button1->Location = System::Drawing::Point(12, 12);
-			this->button1->Name = L"button1";
-			this->button1->Size = System::Drawing::Size(75, 23);
-			this->button1->TabIndex = 2;
-			this->button1->Text = L"button1";
-			this->button1->UseVisualStyleBackColor = true;
+			this->buttonStop->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(255)), static_cast<System::Int32>(static_cast<System::Byte>(128)),
+				static_cast<System::Int32>(static_cast<System::Byte>(128)));
+			this->buttonStop->Location = System::Drawing::Point(236, 12);
+			this->buttonStop->Name = L"buttonStop";
+			this->buttonStop->Size = System::Drawing::Size(75, 23);
+			this->buttonStop->TabIndex = 4;
+			this->buttonStop->Text = L"Stop";
+			this->buttonStop->UseVisualStyleBackColor = false;
+			this->buttonStop->Click += gcnew System::EventHandler(this, &MainForm::buttonStop_Click);
+			// 
+			// buttonStart
+			// 
+			this->buttonStart->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(0)), static_cast<System::Int32>(static_cast<System::Byte>(192)),
+				static_cast<System::Int32>(static_cast<System::Byte>(0)));
+			this->buttonStart->Location = System::Drawing::Point(155, 12);
+			this->buttonStart->Name = L"buttonStart";
+			this->buttonStart->Size = System::Drawing::Size(75, 23);
+			this->buttonStart->TabIndex = 3;
+			this->buttonStart->Text = L"Start";
+			this->buttonStart->UseVisualStyleBackColor = false;
+			this->buttonStart->Click += gcnew System::EventHandler(this, &MainForm::buttonStart_Click);
+			// 
+			// buttonAddTorrent
+			// 
+			this->buttonAddTorrent->Location = System::Drawing::Point(12, 12);
+			this->buttonAddTorrent->Name = L"buttonAddTorrent";
+			this->buttonAddTorrent->Size = System::Drawing::Size(75, 23);
+			this->buttonAddTorrent->TabIndex = 2;
+			this->buttonAddTorrent->Text = L"Add";
+			this->buttonAddTorrent->UseVisualStyleBackColor = true;
+			this->buttonAddTorrent->Click += gcnew System::EventHandler(this, &MainForm::button1_Click);
 			// 
 			// torrentsGrid
 			// 
@@ -279,37 +381,46 @@ namespace GuiLite {
 			dataGridViewCellStyle1->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
 			this->torrentsGrid->ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
 			this->torrentsGrid->ColumnHeadersHeightSizeMode = System::Windows::Forms::DataGridViewColumnHeadersHeightSizeMode::AutoSize;
-			this->torrentsGrid->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(6) {
-				this->TorrentName,
-					this->TorrentProgress, this->TorrentDownload, this->TorrentDownloaded, this->TorrentConnected, this->TorrentFoundPeers
+			this->torrentsGrid->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(10) {
+				this->torrentId,
+					this->TorrentName, this->TorrentProgress, this->Column4, this->TorrentDownload, this->torrentUpload, this->TorrentConnected,
+					this->TorrentFoundPeers, this->TorrentDownloaded, this->Column3
 			});
-			dataGridViewCellStyle7->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleLeft;
-			dataGridViewCellStyle7->BackColor = System::Drawing::SystemColors::Window;
-			dataGridViewCellStyle7->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+			dataGridViewCellStyle9->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleLeft;
+			dataGridViewCellStyle9->BackColor = System::Drawing::SystemColors::Window;
+			dataGridViewCellStyle9->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(134)));
-			dataGridViewCellStyle7->ForeColor = System::Drawing::SystemColors::ControlText;
-			dataGridViewCellStyle7->SelectionBackColor = System::Drawing::SystemColors::Desktop;
-			dataGridViewCellStyle7->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
-			dataGridViewCellStyle7->WrapMode = System::Windows::Forms::DataGridViewTriState::False;
-			this->torrentsGrid->DefaultCellStyle = dataGridViewCellStyle7;
+			dataGridViewCellStyle9->ForeColor = System::Drawing::SystemColors::ControlText;
+			dataGridViewCellStyle9->SelectionBackColor = System::Drawing::SystemColors::Desktop;
+			dataGridViewCellStyle9->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
+			dataGridViewCellStyle9->WrapMode = System::Windows::Forms::DataGridViewTriState::False;
+			this->torrentsGrid->DefaultCellStyle = dataGridViewCellStyle9;
 			this->torrentsGrid->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->torrentsGrid->Location = System::Drawing::Point(0, 0);
 			this->torrentsGrid->Name = L"torrentsGrid";
 			this->torrentsGrid->ReadOnly = true;
-			dataGridViewCellStyle8->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			dataGridViewCellStyle8->BackColor = System::Drawing::SystemColors::Control;
-			dataGridViewCellStyle8->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
-				static_cast<System::Byte>(134)));
-			dataGridViewCellStyle8->ForeColor = System::Drawing::SystemColors::WindowText;
-			dataGridViewCellStyle8->SelectionBackColor = System::Drawing::SystemColors::Highlight;
-			dataGridViewCellStyle8->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
-			dataGridViewCellStyle8->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
-			this->torrentsGrid->RowHeadersDefaultCellStyle = dataGridViewCellStyle8;
+			dataGridViewCellStyle10->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			dataGridViewCellStyle10->BackColor = System::Drawing::SystemColors::Control;
+			dataGridViewCellStyle10->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
+				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(134)));
+			dataGridViewCellStyle10->ForeColor = System::Drawing::SystemColors::WindowText;
+			dataGridViewCellStyle10->SelectionBackColor = System::Drawing::SystemColors::Highlight;
+			dataGridViewCellStyle10->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
+			dataGridViewCellStyle10->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
+			this->torrentsGrid->RowHeadersDefaultCellStyle = dataGridViewCellStyle10;
 			this->torrentsGrid->RowHeadersVisible = false;
 			this->torrentsGrid->RowTemplate->Height = 24;
 			this->torrentsGrid->SelectionMode = System::Windows::Forms::DataGridViewSelectionMode::FullRowSelect;
-			this->torrentsGrid->Size = System::Drawing::Size(907, 217);
+			this->torrentsGrid->Size = System::Drawing::Size(1339, 217);
 			this->torrentsGrid->TabIndex = 1;
+			this->torrentsGrid->CellClick += gcnew System::Windows::Forms::DataGridViewCellEventHandler(this, &MainForm::torrentsGrid_CellContentClick);
+			// 
+			// torrentId
+			// 
+			this->torrentId->HeaderText = L"Id";
+			this->torrentId->Name = L"torrentId";
+			this->torrentId->ReadOnly = true;
+			this->torrentId->Visible = false;
 			// 
 			// TorrentName
 			// 
@@ -327,6 +438,12 @@ namespace GuiLite {
 			this->TorrentProgress->Name = L"TorrentProgress";
 			this->TorrentProgress->ReadOnly = true;
 			// 
+			// Column4
+			// 
+			this->Column4->HeaderText = L"ETA";
+			this->Column4->Name = L"Column4";
+			this->Column4->ReadOnly = true;
+			// 
 			// TorrentDownload
 			// 
 			dataGridViewCellStyle3->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
@@ -335,13 +452,13 @@ namespace GuiLite {
 			this->TorrentDownload->Name = L"TorrentDownload";
 			this->TorrentDownload->ReadOnly = true;
 			// 
-			// TorrentDownloaded
+			// torrentUpload
 			// 
 			dataGridViewCellStyle4->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->TorrentDownloaded->DefaultCellStyle = dataGridViewCellStyle4;
-			this->TorrentDownloaded->HeaderText = L"Downloaded";
-			this->TorrentDownloaded->Name = L"TorrentDownloaded";
-			this->TorrentDownloaded->ReadOnly = true;
+			this->torrentUpload->DefaultCellStyle = dataGridViewCellStyle4;
+			this->torrentUpload->HeaderText = L"Upload";
+			this->torrentUpload->Name = L"torrentUpload";
+			this->torrentUpload->ReadOnly = true;
 			// 
 			// TorrentConnected
 			// 
@@ -353,12 +470,27 @@ namespace GuiLite {
 			// 
 			// TorrentFoundPeers
 			// 
-			this->TorrentFoundPeers->AutoSizeMode = System::Windows::Forms::DataGridViewAutoSizeColumnMode::Fill;
 			dataGridViewCellStyle6->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
 			this->TorrentFoundPeers->DefaultCellStyle = dataGridViewCellStyle6;
 			this->TorrentFoundPeers->HeaderText = L"Found Peers";
 			this->TorrentFoundPeers->Name = L"TorrentFoundPeers";
 			this->TorrentFoundPeers->ReadOnly = true;
+			// 
+			// TorrentDownloaded
+			// 
+			dataGridViewCellStyle7->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->TorrentDownloaded->DefaultCellStyle = dataGridViewCellStyle7;
+			this->TorrentDownloaded->HeaderText = L"Downloaded";
+			this->TorrentDownloaded->Name = L"TorrentDownloaded";
+			this->TorrentDownloaded->ReadOnly = true;
+			// 
+			// Column3
+			// 
+			dataGridViewCellStyle8->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->Column3->DefaultCellStyle = dataGridViewCellStyle8;
+			this->Column3->HeaderText = L"Uploaded";
+			this->Column3->Name = L"Column3";
+			this->Column3->ReadOnly = true;
 			// 
 			// TorrentTabs
 			// 
@@ -369,7 +501,7 @@ namespace GuiLite {
 			this->TorrentTabs->Location = System::Drawing::Point(0, 0);
 			this->TorrentTabs->Name = L"TorrentTabs";
 			this->TorrentTabs->SelectedIndex = 0;
-			this->TorrentTabs->Size = System::Drawing::Size(907, 229);
+			this->TorrentTabs->Size = System::Drawing::Size(1339, 229);
 			this->TorrentTabs->TabIndex = 0;
 			// 
 			// tabPage1
@@ -378,7 +510,7 @@ namespace GuiLite {
 			this->tabPage1->Location = System::Drawing::Point(4, 25);
 			this->tabPage1->Name = L"tabPage1";
 			this->tabPage1->Padding = System::Windows::Forms::Padding(3);
-			this->tabPage1->Size = System::Drawing::Size(899, 200);
+			this->tabPage1->Size = System::Drawing::Size(1331, 200);
 			this->tabPage1->TabIndex = 0;
 			this->tabPage1->Text = L"General";
 			this->tabPage1->UseVisualStyleBackColor = true;
@@ -393,7 +525,7 @@ namespace GuiLite {
 			this->torrentInfoLabel->Name = L"torrentInfoLabel";
 			this->torrentInfoLabel->ReadOnly = true;
 			this->torrentInfoLabel->ScrollBars = System::Windows::Forms::ScrollBars::Both;
-			this->torrentInfoLabel->Size = System::Drawing::Size(893, 194);
+			this->torrentInfoLabel->Size = System::Drawing::Size(1325, 194);
 			this->torrentInfoLabel->TabIndex = 0;
 			// 
 			// tabPage2
@@ -402,7 +534,7 @@ namespace GuiLite {
 			this->tabPage2->Location = System::Drawing::Point(4, 25);
 			this->tabPage2->Name = L"tabPage2";
 			this->tabPage2->Padding = System::Windows::Forms::Padding(3);
-			this->tabPage2->Size = System::Drawing::Size(899, 200);
+			this->tabPage2->Size = System::Drawing::Size(1331, 200);
 			this->tabPage2->TabIndex = 1;
 			this->tabPage2->Text = L"Peers";
 			this->tabPage2->UseVisualStyleBackColor = true;
@@ -415,46 +547,46 @@ namespace GuiLite {
 			this->peersGridView->AllowUserToResizeRows = false;
 			this->peersGridView->BackgroundColor = System::Drawing::SystemColors::Window;
 			this->peersGridView->CellBorderStyle = System::Windows::Forms::DataGridViewCellBorderStyle::SingleHorizontal;
-			dataGridViewCellStyle9->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			dataGridViewCellStyle9->BackColor = System::Drawing::SystemColors::Control;
-			dataGridViewCellStyle9->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.2F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
-				static_cast<System::Byte>(0)));
-			dataGridViewCellStyle9->ForeColor = System::Drawing::SystemColors::WindowText;
-			dataGridViewCellStyle9->SelectionBackColor = System::Drawing::SystemColors::Desktop;
-			dataGridViewCellStyle9->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
-			dataGridViewCellStyle9->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
-			this->peersGridView->ColumnHeadersDefaultCellStyle = dataGridViewCellStyle9;
+			dataGridViewCellStyle11->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			dataGridViewCellStyle11->BackColor = System::Drawing::SystemColors::Control;
+			dataGridViewCellStyle11->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.2F, System::Drawing::FontStyle::Regular,
+				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
+			dataGridViewCellStyle11->ForeColor = System::Drawing::SystemColors::WindowText;
+			dataGridViewCellStyle11->SelectionBackColor = System::Drawing::SystemColors::Desktop;
+			dataGridViewCellStyle11->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
+			dataGridViewCellStyle11->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
+			this->peersGridView->ColumnHeadersDefaultCellStyle = dataGridViewCellStyle11;
 			this->peersGridView->ColumnHeadersHeightSizeMode = System::Windows::Forms::DataGridViewColumnHeadersHeightSizeMode::AutoSize;
-			this->peersGridView->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(4) {
+			this->peersGridView->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(5) {
 				this->gridPeerAddress,
-					this->gridPeerSpeedDownload, this->gridPeerPercentage, this->peerSource
+					this->gridPeerSpeedDownload, this->Column2, this->gridPeerPercentage, this->peerSource
 			});
-			dataGridViewCellStyle12->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleLeft;
-			dataGridViewCellStyle12->BackColor = System::Drawing::SystemColors::Window;
-			dataGridViewCellStyle12->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
+			dataGridViewCellStyle15->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleLeft;
+			dataGridViewCellStyle15->BackColor = System::Drawing::SystemColors::Window;
+			dataGridViewCellStyle15->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
 				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(134)));
-			dataGridViewCellStyle12->ForeColor = System::Drawing::SystemColors::ControlText;
-			dataGridViewCellStyle12->SelectionBackColor = System::Drawing::SystemColors::Desktop;
-			dataGridViewCellStyle12->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
-			dataGridViewCellStyle12->WrapMode = System::Windows::Forms::DataGridViewTriState::False;
-			this->peersGridView->DefaultCellStyle = dataGridViewCellStyle12;
+			dataGridViewCellStyle15->ForeColor = System::Drawing::SystemColors::ControlText;
+			dataGridViewCellStyle15->SelectionBackColor = System::Drawing::SystemColors::Desktop;
+			dataGridViewCellStyle15->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
+			dataGridViewCellStyle15->WrapMode = System::Windows::Forms::DataGridViewTriState::False;
+			this->peersGridView->DefaultCellStyle = dataGridViewCellStyle15;
 			this->peersGridView->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->peersGridView->Location = System::Drawing::Point(3, 3);
 			this->peersGridView->Name = L"peersGridView";
 			this->peersGridView->ReadOnly = true;
-			dataGridViewCellStyle13->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			dataGridViewCellStyle13->BackColor = System::Drawing::SystemColors::Control;
-			dataGridViewCellStyle13->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
+			dataGridViewCellStyle16->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			dataGridViewCellStyle16->BackColor = System::Drawing::SystemColors::Control;
+			dataGridViewCellStyle16->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
 				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(134)));
-			dataGridViewCellStyle13->ForeColor = System::Drawing::SystemColors::WindowText;
-			dataGridViewCellStyle13->SelectionBackColor = System::Drawing::SystemColors::Highlight;
-			dataGridViewCellStyle13->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
-			dataGridViewCellStyle13->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
-			this->peersGridView->RowHeadersDefaultCellStyle = dataGridViewCellStyle13;
+			dataGridViewCellStyle16->ForeColor = System::Drawing::SystemColors::WindowText;
+			dataGridViewCellStyle16->SelectionBackColor = System::Drawing::SystemColors::Highlight;
+			dataGridViewCellStyle16->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
+			dataGridViewCellStyle16->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
+			this->peersGridView->RowHeadersDefaultCellStyle = dataGridViewCellStyle16;
 			this->peersGridView->RowHeadersVisible = false;
 			this->peersGridView->RowTemplate->Height = 24;
 			this->peersGridView->SelectionMode = System::Windows::Forms::DataGridViewSelectionMode::FullRowSelect;
-			this->peersGridView->Size = System::Drawing::Size(893, 194);
+			this->peersGridView->Size = System::Drawing::Size(1325, 194);
 			this->peersGridView->TabIndex = 2;
 			// 
 			// gridPeerAddress
@@ -467,21 +599,29 @@ namespace GuiLite {
 			// 
 			// gridPeerSpeedDownload
 			// 
-			dataGridViewCellStyle10->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->gridPeerSpeedDownload->DefaultCellStyle = dataGridViewCellStyle10;
+			dataGridViewCellStyle12->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->gridPeerSpeedDownload->DefaultCellStyle = dataGridViewCellStyle12;
 			this->gridPeerSpeedDownload->HeaderText = L"Download speed";
 			this->gridPeerSpeedDownload->Name = L"gridPeerSpeedDownload";
 			this->gridPeerSpeedDownload->ReadOnly = true;
 			this->gridPeerSpeedDownload->Width = 150;
 			// 
+			// Column2
+			// 
+			dataGridViewCellStyle13->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->Column2->DefaultCellStyle = dataGridViewCellStyle13;
+			this->Column2->HeaderText = L"Upload speed";
+			this->Column2->Name = L"Column2";
+			this->Column2->ReadOnly = true;
+			this->Column2->Width = 150;
+			// 
 			// gridPeerPercentage
 			// 
-			dataGridViewCellStyle11->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->gridPeerPercentage->DefaultCellStyle = dataGridViewCellStyle11;
+			dataGridViewCellStyle14->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->gridPeerPercentage->DefaultCellStyle = dataGridViewCellStyle14;
 			this->gridPeerPercentage->HeaderText = L"%";
 			this->gridPeerPercentage->Name = L"gridPeerPercentage";
 			this->gridPeerPercentage->ReadOnly = true;
-			this->gridPeerPercentage->Width = 150;
 			// 
 			// peerSource
 			// 
@@ -496,7 +636,7 @@ namespace GuiLite {
 			this->sourcesTab->Location = System::Drawing::Point(4, 25);
 			this->sourcesTab->Name = L"sourcesTab";
 			this->sourcesTab->Padding = System::Windows::Forms::Padding(3);
-			this->sourcesTab->Size = System::Drawing::Size(899, 200);
+			this->sourcesTab->Size = System::Drawing::Size(1331, 200);
 			this->sourcesTab->TabIndex = 2;
 			this->sourcesTab->Text = L"Sources";
 			this->sourcesTab->UseVisualStyleBackColor = true;
@@ -509,46 +649,46 @@ namespace GuiLite {
 			this->sourcesGrid->AllowUserToResizeRows = false;
 			this->sourcesGrid->BackgroundColor = System::Drawing::SystemColors::Window;
 			this->sourcesGrid->CellBorderStyle = System::Windows::Forms::DataGridViewCellBorderStyle::SingleHorizontal;
-			dataGridViewCellStyle14->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			dataGridViewCellStyle14->BackColor = System::Drawing::SystemColors::Control;
-			dataGridViewCellStyle14->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.2F, System::Drawing::FontStyle::Regular,
+			dataGridViewCellStyle17->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			dataGridViewCellStyle17->BackColor = System::Drawing::SystemColors::Control;
+			dataGridViewCellStyle17->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.2F, System::Drawing::FontStyle::Regular,
 				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
-			dataGridViewCellStyle14->ForeColor = System::Drawing::SystemColors::WindowText;
-			dataGridViewCellStyle14->SelectionBackColor = System::Drawing::SystemColors::Desktop;
-			dataGridViewCellStyle14->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
-			dataGridViewCellStyle14->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
-			this->sourcesGrid->ColumnHeadersDefaultCellStyle = dataGridViewCellStyle14;
+			dataGridViewCellStyle17->ForeColor = System::Drawing::SystemColors::WindowText;
+			dataGridViewCellStyle17->SelectionBackColor = System::Drawing::SystemColors::Desktop;
+			dataGridViewCellStyle17->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
+			dataGridViewCellStyle17->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
+			this->sourcesGrid->ColumnHeadersDefaultCellStyle = dataGridViewCellStyle17;
 			this->sourcesGrid->ColumnHeadersHeightSizeMode = System::Windows::Forms::DataGridViewColumnHeadersHeightSizeMode::AutoSize;
 			this->sourcesGrid->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(5) {
 				this->dataGridViewTextBoxColumn1,
 					this->dataGridViewTextBoxColumn2, this->dataGridViewTextBoxColumn3, this->Column1, this->dataGridViewTextBoxColumn4
 			});
-			dataGridViewCellStyle17->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleLeft;
-			dataGridViewCellStyle17->BackColor = System::Drawing::SystemColors::Window;
-			dataGridViewCellStyle17->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
+			dataGridViewCellStyle20->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleLeft;
+			dataGridViewCellStyle20->BackColor = System::Drawing::SystemColors::Window;
+			dataGridViewCellStyle20->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
 				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(134)));
-			dataGridViewCellStyle17->ForeColor = System::Drawing::SystemColors::ControlText;
-			dataGridViewCellStyle17->SelectionBackColor = System::Drawing::SystemColors::Desktop;
-			dataGridViewCellStyle17->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
-			dataGridViewCellStyle17->WrapMode = System::Windows::Forms::DataGridViewTriState::False;
-			this->sourcesGrid->DefaultCellStyle = dataGridViewCellStyle17;
+			dataGridViewCellStyle20->ForeColor = System::Drawing::SystemColors::ControlText;
+			dataGridViewCellStyle20->SelectionBackColor = System::Drawing::SystemColors::Desktop;
+			dataGridViewCellStyle20->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
+			dataGridViewCellStyle20->WrapMode = System::Windows::Forms::DataGridViewTriState::False;
+			this->sourcesGrid->DefaultCellStyle = dataGridViewCellStyle20;
 			this->sourcesGrid->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->sourcesGrid->Location = System::Drawing::Point(3, 3);
 			this->sourcesGrid->Name = L"sourcesGrid";
 			this->sourcesGrid->ReadOnly = true;
-			dataGridViewCellStyle18->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			dataGridViewCellStyle18->BackColor = System::Drawing::SystemColors::Control;
-			dataGridViewCellStyle18->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
+			dataGridViewCellStyle21->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			dataGridViewCellStyle21->BackColor = System::Drawing::SystemColors::Control;
+			dataGridViewCellStyle21->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
 				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(134)));
-			dataGridViewCellStyle18->ForeColor = System::Drawing::SystemColors::WindowText;
-			dataGridViewCellStyle18->SelectionBackColor = System::Drawing::SystemColors::Highlight;
-			dataGridViewCellStyle18->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
-			dataGridViewCellStyle18->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
-			this->sourcesGrid->RowHeadersDefaultCellStyle = dataGridViewCellStyle18;
+			dataGridViewCellStyle21->ForeColor = System::Drawing::SystemColors::WindowText;
+			dataGridViewCellStyle21->SelectionBackColor = System::Drawing::SystemColors::Highlight;
+			dataGridViewCellStyle21->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
+			dataGridViewCellStyle21->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
+			this->sourcesGrid->RowHeadersDefaultCellStyle = dataGridViewCellStyle21;
 			this->sourcesGrid->RowHeadersVisible = false;
 			this->sourcesGrid->RowTemplate->Height = 24;
 			this->sourcesGrid->SelectionMode = System::Windows::Forms::DataGridViewSelectionMode::FullRowSelect;
-			this->sourcesGrid->Size = System::Drawing::Size(893, 194);
+			this->sourcesGrid->Size = System::Drawing::Size(1325, 194);
 			this->sourcesGrid->TabIndex = 3;
 			// 
 			// dataGridViewTextBoxColumn1
@@ -561,8 +701,8 @@ namespace GuiLite {
 			// 
 			// dataGridViewTextBoxColumn2
 			// 
-			dataGridViewCellStyle15->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->dataGridViewTextBoxColumn2->DefaultCellStyle = dataGridViewCellStyle15;
+			dataGridViewCellStyle18->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->dataGridViewTextBoxColumn2->DefaultCellStyle = dataGridViewCellStyle18;
 			this->dataGridViewTextBoxColumn2->HeaderText = L"State";
 			this->dataGridViewTextBoxColumn2->Name = L"dataGridViewTextBoxColumn2";
 			this->dataGridViewTextBoxColumn2->ReadOnly = true;
@@ -570,8 +710,8 @@ namespace GuiLite {
 			// 
 			// dataGridViewTextBoxColumn3
 			// 
-			dataGridViewCellStyle16->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->dataGridViewTextBoxColumn3->DefaultCellStyle = dataGridViewCellStyle16;
+			dataGridViewCellStyle19->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->dataGridViewTextBoxColumn3->DefaultCellStyle = dataGridViewCellStyle19;
 			this->dataGridViewTextBoxColumn3->HeaderText = L"Peers";
 			this->dataGridViewTextBoxColumn3->Name = L"dataGridViewTextBoxColumn3";
 			this->dataGridViewTextBoxColumn3->ReadOnly = true;
@@ -592,7 +732,7 @@ namespace GuiLite {
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(8, 16);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(907, 497);
+			this->ClientSize = System::Drawing::Size(1339, 497);
 			this->Controls->Add(this->splitContainer1);
 			this->Name = L"MainForm";
 			this->Text = L"MainForm";
@@ -617,8 +757,17 @@ namespace GuiLite {
 		}
 #pragma endregion
 	private: System::Void button1_Click(System::Object^  sender, System::EventArgs^  e) {
-		auto cols = gcnew cli::array< System::String^  >(3) { "Torrent added", "95%", gcnew String("5") };
-		getGrid()->Rows->Add(cols);
+		onButtonClick(sender);
+	}
+
+private: System::Void torrentsGrid_CellContentClick(System::Object^  sender, System::Windows::Forms::DataGridViewCellEventArgs^  e) {
+		onButtonClick(sender);
+}
+	private: System::Void buttonStart_Click(System::Object^  sender, System::EventArgs^  e) {
+		onButtonClick(sender);
+	}
+	private: System::Void buttonStop_Click(System::Object^  sender, System::EventArgs^  e) {
+		onButtonClick(sender);
 	}
 };
 }

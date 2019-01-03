@@ -61,6 +61,7 @@ namespace mtt
 		void requestPieceBlock(PieceBlockInfo& pieceInfo);
 		bool isEstablished();
 
+		void sendKeepAlive();
 		void sendBitfield(DataBuffer& bitfield);
 		void sendHave(uint32_t pieceIdx);
 		void sendPieceBlock(PieceBlock& block);

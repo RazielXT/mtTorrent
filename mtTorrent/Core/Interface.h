@@ -3,7 +3,7 @@
 #include <vector>
 #include <atomic>
 #include "utils\Network.h"
-#include "Status.h"
+#include "Public\Status.h"
 #include "Logging.h"
 
 #define MT_NAME "mtTorrent 0.5"

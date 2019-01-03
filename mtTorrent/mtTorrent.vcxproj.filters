@@ -41,7 +41,7 @@
     <Filter Include="Source Files\Core\Torrent\State">
       <UniqueIdentifier>{3c563459-20dd-404c-a4a2-d84628948432}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Global">
+    <Filter Include="Source Files\Public">
       <UniqueIdentifier>{a3db1c69-72bb-43d8-b3c3-58deba75dabf}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -169,8 +169,11 @@
     <ClCompile Include="Core\Core.cpp">
       <Filter>Source Files\Core</Filter>
     </ClCompile>
-    <ClCompile Include="Global\BinaryInterface.cpp">
-      <Filter>Source Files\Global</Filter>
+    <ClCompile Include="Core\Uploader.cpp">
+      <Filter>Source Files\Core\Torrent\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="Public\BinaryInterface.cpp">
+      <Filter>Source Files\Public</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -297,12 +300,6 @@
     <ClInclude Include="Peers.h">
       <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClInclude>
-    <ClInclude Include="Core\Status.h">
-      <Filter>Source Files\Global</Filter>
-    </ClInclude>
-    <ClInclude Include="Global\BinaryInterface.h">
-      <Filter>Source Files\Global</Filter>
-    </ClInclude>
     <ClInclude Include="Core\Core.h">
       <Filter>Source Files\Core</Filter>
     </ClInclude>
@@ -311,6 +308,15 @@
     </ClInclude>
     <ClInclude Include="Core\Dht\Listener.h">
       <Filter>Source Files\Core\Torrent\Dht</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Uploader.h">
+      <Filter>Source Files\Core\Torrent\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\BinaryInterface.h">
+      <Filter>Source Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\Status.h">
+      <Filter>Source Files\Public</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

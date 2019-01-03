@@ -14,7 +14,7 @@ static uint8_t fromHexa(char h)
 	return h;
 }
 
-bool decodeHexa(std::string& from, uint8_t* to)
+bool decodeHexa(const std::string& from, uint8_t* to)
 {
 	for (auto c : from)
 	{

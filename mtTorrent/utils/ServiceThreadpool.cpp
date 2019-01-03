@@ -46,6 +46,8 @@ void ServiceThreadpool::stop()
 		myThreads[i].join();
 	}
 
+	io.reset();
+
 	workers = 0;
 }
 

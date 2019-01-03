@@ -260,7 +260,8 @@
     <ClCompile Include="Core\MetadataReconstruction.cpp" />
     <ClCompile Include="Core\TrackerManager.cpp" />
     <ClCompile Include="Core\UdpTrackerComm.cpp" />
-    <ClCompile Include="Global\BinaryInterface.cpp" />
+    <ClCompile Include="Core\Uploader.cpp" />
+    <ClCompile Include="Public\BinaryInterface.cpp" />
     <ClCompile Include="utils\Base32.cpp" />
     <ClCompile Include="utils\TorrentFileParser.cpp" />
     <ClCompile Include="utils\BencodeParser.cpp" />
@@ -301,14 +302,15 @@
     <ClInclude Include="Core\HttpTrackerComm.h" />
     <ClInclude Include="Core\PeerMessage.h" />
     <ClInclude Include="Core\State.h" />
-    <ClInclude Include="Core\Status.h" />
     <ClInclude Include="Core\Storage.h" />
     <ClInclude Include="Core\Test.h" />
     <ClInclude Include="Core\MetadataReconstruction.h" />
     <ClInclude Include="Core\TrackerManager.h" />
     <ClInclude Include="Core\UdpTrackerComm.h" />
-    <ClInclude Include="Global\BinaryInterface.h" />
+    <ClInclude Include="Core\Uploader.h" />
     <ClInclude Include="Peers.h" />
+    <ClInclude Include="Public\BinaryInterface.h" />
+    <ClInclude Include="Public\Status.h" />
     <ClInclude Include="utils\Base32.h" />
     <ClInclude Include="utils\TorrentFileParser.h" />
     <ClInclude Include="utils\BencodeParser.h" />

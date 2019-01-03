@@ -98,7 +98,19 @@ mtt::Downloader::ActivePeer* mtt::Downloader::getActivePeer(PeerCommunication* p
 void mtt::Downloader::addPeer(PeerCommunication* p)
 {
 	std::lock_guard<std::mutex> guard(peersMutex);
-	activePeers.push_back({ p,{} });
+	bool found = false;
+	for (auto& peer : activePeers)
+	{
+		if (peer.comm == p)
+		{
+			found = true;
+			break;
+		}
+	}
+
+	if(!found)
+		activePeers.push_back({ p,{} });
+	
 	evaluateNextRequests(&activePeers.back());
 }
 
@@ -221,7 +233,7 @@ void mtt::Downloader::sendPieceRequests(ActivePeer* p)
 		auto maxRequests = MaxPendingPeerRequests;
 		if (p->finishedBlocks > 30)
 		{
-			maxRequests = MaxPendingPeerRequests * std::max(1U, torrent->peers->statistics.getDownloadSpeed(p->comm) / MaxPendingPeerRequestsToSpeedRatio);
+			maxRequests = MaxPendingPeerRequests * std::max(1U, torrent->peers->analyzer.getDownloadSpeed(p->comm) / MaxPendingPeerRequestsToSpeedRatio);
 		}
 
 		std::lock_guard<std::mutex> guard(requestsMutex);

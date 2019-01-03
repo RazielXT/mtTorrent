@@ -265,6 +265,14 @@ bool mtt::PeerCommunication::isEstablished()
 	return state.action == PeerCommunicationState::Established;
 }
 
+void mtt::PeerCommunication::sendKeepAlive()
+{
+	if (!isEstablished())
+		return;
+
+	stream->write(DataBuffer(4, 0));
+}
+
 void mtt::PeerCommunication::sendHave(uint32_t pieceIdx)
 {
 	if (!isEstablished())

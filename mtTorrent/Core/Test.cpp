@@ -13,6 +13,7 @@
 #include "Peers.h"
 #include "MetadataDownload.h"
 #include "Downloader.h"
+#include "Uploader.h"
 #include "utils/HexEncoding.h"
 
 using namespace mtt;
@@ -789,5 +790,5 @@ void idealLocalTest()
 
 void TorrentTest::start()
 {
-	idealLocalTest();
+	testPeerListen();
 }

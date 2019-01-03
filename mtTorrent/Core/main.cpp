@@ -4,7 +4,7 @@
 #include <string>
 //#include <RiotRestApi.h>
 #include <Test.h>
-#include "Global/BinaryInterface.h"
+#include "Public/BinaryInterface.h"
 #include "Core.h"
 #include "Peers.h"
 
@@ -15,32 +15,86 @@ mtt::Core core;
 
 extern "C"
 {
-__declspec(dllexport) mtt::Status __cdecl Ioctl(mtBI::MessageId id, void* data)
+__declspec(dllexport) mtt::Status __cdecl Ioctl(mtBI::MessageId id, const void* request, void* output)
 {
-	if (id == mtBI::MessageId::Start)
-		core.start();
+	if (id == mtBI::MessageId::Init)
+		core.init();
+	else if (id == mtBI::MessageId::AddFromFile)
+	{
+		auto t = core.addFile((const char*)request);
+
+		if (!t)
+			return mtt::Status::E_InvalidInput;
+
+		memcpy(output, t->infoFile.info.hash, 20);
+	}
+	else if (id == mtBI::MessageId::Start)
+	{
+		auto t = core.getTorrent((const uint8_t*)request);
+
+		if (!t)
+			return mtt::Status::E_InvalidInput;
+
+		t->start();
+		t->peers->connect(Addr({ 127,0,0,1 }, 31132));
+	}
+	else if (id == mtBI::MessageId::Stop)
+	{
+		auto t = core.getTorrent((const uint8_t*)request);
+
+		if (!t)
+			return mtt::Status::E_InvalidInput;
+
+		t->stop();
+	}
+	else if (id == mtBI::MessageId::GetTorrents)
+	{
+		auto resp = (mtBI::TorrentsList*) output;
+		resp->count = (uint32_t)core.torrents.size();
+		if (resp->count == resp->list.size())
+		{
+			for (size_t i = 0; i < resp->count; i++)
+			{
+				auto t = core.torrents[i];
+				memcpy(resp->list[i].hash, t->infoFile.info.hash, 20);
+				resp->list[i].active = (t->state != mtt::Torrent::State::Stopped);
+			}
+		}
+	}
 	else if (id == mtBI::MessageId::GetTorrentStateInfo)
 	{
-		auto resp = (mtBI::TorrentStateInfo*) data;
-		resp->name.set(core.torrent->name());
-		resp->connectedPeers = core.torrent->peers->connectedCount();
-		resp->foundPeers = core.torrent->peers->receivedCount();
-		resp->downloaded = core.torrent->downloaded();
-		resp->downloadSpeed = core.torrent->downloadSpeed();
-		resp->progress = core.torrent->currentProgress();
+		auto torrent = core.getTorrent((const uint8_t*)request);
+		if(!torrent)
+			return mtt::Status::E_InvalidInput;
+		auto resp = (mtBI::TorrentStateInfo*) output;
+		resp->name.set(torrent->name());
+		resp->connectedPeers = torrent->peers->connectedCount();
+		resp->checking = torrent->checking;
+		if (resp->checking)
+			resp->checkingProgress = torrent->checkingProgress();
+		resp->foundPeers = torrent->peers->receivedCount();
+		resp->downloaded = torrent->downloaded();
+		resp->downloadSpeed = torrent->downloadSpeed();
+		resp->uploaded = torrent->uploaded();
+		resp->uploadSpeed = torrent->uploadSpeed();
+		resp->progress = torrent->currentProgress();
 	}
 	else if (id == mtBI::MessageId::GetPeersInfo)
 	{
-		auto resp = (mtBI::TorrentPeersInfo*) data;
-		auto peers = core.torrent->peers->getConnectedInfo();
+		auto torrent = core.getTorrent((const uint8_t*)request);
+		if (!torrent)
+			return mtt::Status::E_InvalidInput;
+		auto resp = (mtBI::TorrentPeersInfo*) output;
+		auto peers = torrent->peers->getConnectedInfo();
 		resp->count = (uint32_t)std::min(resp->peers.size(), peers.size());
 		for (size_t i = 0; i < resp->count; i++)
 		{
 			auto& peer = peers[i];
 			auto& out = resp->peers[i];
-			out.addr.set(peer.addr.toString());
+			out.addr.set(peer.address.toString());
 			out.progress = peer.percentage;
-			out.speed = peer.lastSpeed;
+			out.dlSpeed = peer.downloadSpeed;
+			out.upSpeed = peer.uploadSpeed;
 
 			if(peers[i].source == mtt::PeerSource::Tracker)
 				memcpy(out.source, "Tracker", 8);
@@ -48,34 +102,42 @@ __declspec(dllexport) mtt::Status __cdecl Ioctl(mtBI::MessageId id, void* data)
 				memcpy(out.source, "Pex", 4);
 			else if (peers[i].source == mtt::PeerSource::Dht)
 				memcpy(out.source, "Dht", 4);
+			else if (peers[i].source == mtt::PeerSource::Remote)
+				memcpy(out.source, "Remote", 7);
 			else
 				memcpy(out.source, "Manual", 7);
 		}
 	}
 	else if (id == mtBI::MessageId::GetTorrentInfo)
 	{
-		auto resp = (mtBI::TorrentInfo*) data;
-		resp->name.set(core.torrent->infoFile.info.name);
-		resp->fullsize = core.torrent->infoFile.info.fullSize;
-		resp->filesCount = (uint32_t)core.torrent->infoFile.info.files.size();
+		auto torrent = core.getTorrent((const uint8_t*)request);
+		if (!torrent)
+			return mtt::Status::E_InvalidInput;
+		auto resp = (mtBI::TorrentInfo*) output;
+		resp->name.set(torrent->infoFile.info.name);
+		resp->fullsize = torrent->infoFile.info.fullSize;
+		resp->filesCount = (uint32_t)torrent->infoFile.info.files.size();
 
 		if (resp->filenames.size() == resp->filesCount)
 		{
 			for (size_t i = 0; i < resp->filenames.size(); i++)
 			{
-				resp->filenames[i].set(core.torrent->infoFile.info.files[i].path.back());
-				resp->filesizes[i] = core.torrent->infoFile.info.files[i].size;
+				resp->filenames[i].set(torrent->infoFile.info.files[i].path.back());
+				resp->filesizes[i] = torrent->infoFile.info.files[i].size;
 			}
 		}
 	}
 	else if (id == mtBI::MessageId::GetSourcesInfo)
 	{
-		auto resp = (mtBI::SourcesInfo*) data;
-		resp->count = core.torrent->peers->getSourcesCount();
+		auto torrent = core.getTorrent((const uint8_t*)request);
+		if (!torrent)
+			return mtt::Status::E_InvalidInput;
+		auto resp = (mtBI::SourcesInfo*) output;
+		resp->count = torrent->peers->getSourcesCount();
 
 		if (resp->count == resp->sources.size())
 		{
-			auto sources = core.torrent->peers->getSourcesInfo();
+			auto sources = torrent->peers->getSourcesInfo();
 			if (sources.size() < resp->count)
 				resp->count = (uint32_t)sources.size();
 

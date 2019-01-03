@@ -21,7 +21,10 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\mtTorrent\Global\BinaryInterface.cpp">
+    <ClCompile Include="..\mtTorrent\Public\BinaryInterface.cpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\HexEncoding.cpp">
       <Filter>Header Files</Filter>
     </ClCompile>
   </ItemGroup>

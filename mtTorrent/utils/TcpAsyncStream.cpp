@@ -114,6 +114,7 @@ tcp::endpoint& TcpAsyncStream::getEndpoint()
 void TcpAsyncStream::setAsConnected()
 {
 	state = Connected;
+	info.endpoint = socket.remote_endpoint();
 
 	socket.async_receive(boost::asio::buffer(recv_buffer), std::bind(&TcpAsyncStream::handle_receive, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 

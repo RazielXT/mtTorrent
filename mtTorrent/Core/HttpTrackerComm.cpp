@@ -99,14 +99,17 @@ void mtt::HttpTrackerComm::onTcpReceived()
 
 DataBuffer mtt::HttpTrackerComm::createAnnounceRequest(std::string host, std::string port)
 {
-	PacketBuilder builder(400);
+	PacketBuilder builder(500);
 	builder << "GET /announce?info_hash=" << UrlEncode(torrent->infoFile.info.hash, 20);
 	builder << "&peer_id=" << UrlEncode(mtt::config::internal_.hashId, 20);
 	builder << "&port=" << std::to_string(mtt::config::external.tcpPort);
-	builder << "&uploaded=0&downloaded=0&left=" << std::to_string(torrent->infoFile.info.fullSize);
+	builder << "&uploaded=" << std::to_string(torrent->uploaded());
+	builder << "&downloaded=" << std::to_string(torrent->downloaded());
+	builder << "&left=" << std::to_string(torrent->dataLeft());
 	builder << "&numwant=" << std::to_string(mtt::config::internal_.maxPeersPerTrackerRequest);
 	builder << "&compact=1&no_peer_id=0&key=" << std::to_string(mtt::config::internal_.trackerKey);
-	builder << "&event=started HTTP/1.0\r\n";
+	builder << "&event=" << (torrent->finished() ? "completed" : "started");
+	builder << " HTTP/1.0\r\n";
 	builder << "User-Agent: " << MT_NAME << "\r\n";
 	builder << "Connection: close\r\n";
 	builder << "Accept-Encoding: gzip, deflate\r\n";

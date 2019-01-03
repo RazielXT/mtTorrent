@@ -1,6 +1,9 @@
 #pragma once
 #include "Torrent.h"
 
+class TcpAsyncServer;
+class ServiceThreadpool;
+
 namespace mtt
 {
 	namespace dht
@@ -12,12 +15,16 @@ namespace mtt
 	{
 	public:
 
+		std::shared_ptr<ServiceThreadpool> pool;
+		std::shared_ptr<TcpAsyncServer> listener;
 		std::shared_ptr<dht::Communication> dht;
 
-		TorrentPtr torrent;
+		std::vector<TorrentPtr> torrents;
 
 		void init();
 
-		void start();
+		TorrentPtr addFile(const char* filename);
+
+		TorrentPtr getTorrent(const uint8_t* hash);
 	};
 }

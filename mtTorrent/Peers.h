@@ -11,7 +11,8 @@ namespace mtt
 		Tracker,
 		Pex,
 		Dht,
-		Manual
+		Manual,
+		Remote
 	};
 
 	class Peers;
@@ -20,11 +21,11 @@ namespace mtt
 		class ResultsListener;
 	}
 
-	class PeerStatistics : public IPeerListener, public dht::ResultsListener
+	class PeersAnalyzer : public IPeerListener, public dht::ResultsListener
 	{
 	public:
 
-		PeerStatistics(Peers&);
+		PeersAnalyzer(Peers&);
 
 		void start();
 		void stop();
@@ -39,12 +40,16 @@ namespace mtt
 
 		uint32_t getDownloadSpeed(PeerCommunication*);
 		uint32_t getDownloadSpeed();
+		uint32_t getUploadSpeed();
+		size_t getUploadSum();
+		size_t uploaded = 0;
 
 		Peers& peers;
 		IPeerListener* peerListener = nullptr;
 
+		std::mutex measureMutex;
 		std::shared_ptr<ScheduledTimer> speedMeasureTimer;
-		std::vector<std::pair<PeerCommunication*, size_t>> lastSpeedMeasure;
+		std::vector<std::pair<PeerCommunication*, std::pair<size_t, size_t>>> lastSpeedMeasure;
 		void updateMeasures();
 
 		void evalCurrentPeers();
@@ -59,7 +64,7 @@ namespace mtt
 
 	class Peers
 	{
-		friend PeerStatistics;
+		friend PeersAnalyzer;
 	public:
 
 		Peers(TorrentPtr torrent);
@@ -70,6 +75,7 @@ namespace mtt
 
 		void connectNext(uint32_t count);
 		std::shared_ptr<PeerCommunication> connect(Addr& addr);
+		void add(std::shared_ptr<TcpAsyncStream> stream);
 		void disconnect(PeerCommunication*);
 
 		bool active = false;
@@ -83,13 +89,14 @@ namespace mtt
 		uint32_t connectedCount();
 		uint32_t receivedCount();
 
-		PeerStatistics statistics;
+		PeersAnalyzer analyzer;
 
 		struct PeerInfo
 		{
-			Addr addr;
+			Addr address;
 			PeerSource source;
-			uint32_t lastSpeed = 0;
+			uint32_t downloadSpeed = 0;
+			uint32_t uploadSpeed = 0;
 			float percentage = 0;
 		};
 		std::vector<PeerInfo> getConnectedInfo();
@@ -102,11 +109,11 @@ namespace mtt
 		{
 			bool operator==(const Addr& r);
 
-			Addr address;
-			PeerSource source;
+			PeerInfo info;
+
 			PeerQuality lastQuality = PeerQuality::Unknown;
 			size_t downloaded = 0;
-			uint32_t lastSpeed = 0;
+			size_t uploaded = 0;
 			int connections = 0;
 		};
 
