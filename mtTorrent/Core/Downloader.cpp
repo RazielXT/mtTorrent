@@ -17,7 +17,7 @@ mtt::Downloader::Downloader(TorrentPtr t)
 
 void mtt::Downloader::start()
 {
-	torrent->peers->start([this](Status s, const std::string& source)
+	torrent->peers->start([this](Status s, mtt::PeerSource)
 	{
 		if (s == Status::Success)
 		{

@@ -718,16 +718,9 @@ void idealPeersRetrievalTest()
 	if (!torrent)
 		return;
 
-	auto onPeersUpdate = [&torrent](Status s, const std::string& source)
+	auto onPeersUpdate = [&torrent](Status s, mtt::PeerSource source)
 	{
-		TEST_LOG("Peers update from " << source << "with status " << (int)s << "\n");
-
-		if (s == Status::Success)
-		{
-			auto info = torrent->peers->getSourceInfo(source);
-
-			TEST_LOG(source << " seed/leech: " << info.seeds << "/" << info.leechers << "\n");
-		}
+		TEST_LOG("Peers update from " << (int)source << "with status " << (int)s << "\n");
 	};
 
 	torrent->peers->start(onPeersUpdate, nullptr);

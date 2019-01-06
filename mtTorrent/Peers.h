@@ -69,7 +69,7 @@ namespace mtt
 
 		Peers(TorrentPtr torrent);
 
-		using PeersUpdateCallback = std::function<void(Status, const std::string& source)>;
+		using PeersUpdateCallback = std::function<void(Status, PeerSource)>;
 		void start(PeersUpdateCallback onPeersUpdated, IPeerListener* peerListener);
 		void stop();
 

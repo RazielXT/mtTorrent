@@ -38,8 +38,6 @@ void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listen
 		{
 			updateKnownPeers(r->peers, PeerSource::Tracker);
 		}
-
-		updateCallback(s, t->info.hostname);
 	}
 	);
 
@@ -63,8 +61,8 @@ void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listen
 void mtt::Peers::stop()
 {
 	trackers.stop();
-	updateCallback = nullptr;
 	analyzer.stop();
+	updateCallback = nullptr;
 }
 
 void mtt::Peers::connectNext(uint32_t count)
@@ -227,41 +225,46 @@ std::vector<mtt::Peers::PeerInfo> mtt::Peers::getConnectedInfo()
 uint32_t mtt::Peers::updateKnownPeers(std::vector<Addr>& peers, PeerSource source)
 {
 	std::vector<uint32_t> accepted;
-	std::lock_guard<std::mutex> guard(peersMutex);
-
-	for (uint32_t i = 0; i < peers.size(); i++)
 	{
-		if (std::find(knownPeers.begin(), knownPeers.end(), peers[i]) == knownPeers.end())
-			accepted.push_back(i);
-	}
+		std::lock_guard<std::mutex> guard(peersMutex);
 
-	if (accepted.empty())
-		return 0;
-
-	KnownPeer* addedPeersPtr;
-
-	if (source == PeerSource::Pex || source == PeerSource::Dht)
-	{
-		knownPeers.insert(knownPeers.begin(), accepted.size(), KnownPeer());
-		addedPeersPtr = &knownPeers[0];
-
-		for (auto& conn : activeConnections)
+		for (uint32_t i = 0; i < peers.size(); i++)
 		{
-			conn.idx += (uint32_t)accepted.size();
+			if (std::find(knownPeers.begin(), knownPeers.end(), peers[i]) == knownPeers.end())
+				accepted.push_back(i);
+		}
+
+		if (accepted.empty())
+			return 0;
+
+		KnownPeer* addedPeersPtr;
+
+		if (source == PeerSource::Pex || source == PeerSource::Dht)
+		{
+			knownPeers.insert(knownPeers.begin(), accepted.size(), KnownPeer());
+			addedPeersPtr = &knownPeers[0];
+
+			for (auto& conn : activeConnections)
+			{
+				conn.idx += (uint32_t)accepted.size();
+			}
+		}
+		else
+		{
+			knownPeers.resize(knownPeers.size() + accepted.size());
+			addedPeersPtr = &knownPeers[knownPeers.size() - accepted.size()];
+		}
+
+		for (uint32_t i = 0; i < accepted.size(); i++)
+		{
+			addedPeersPtr->info.address = peers[accepted[i]];
+			addedPeersPtr->info.source = source;
+			addedPeersPtr++;
 		}
 	}
-	else
-	{
-		knownPeers.resize(knownPeers.size() + accepted.size());
-		addedPeersPtr = &knownPeers[knownPeers.size() - accepted.size()];
-	}
 
-	for (uint32_t i = 0; i < accepted.size(); i++)
-	{
-		addedPeersPtr->info.address = peers[accepted[i]];
-		addedPeersPtr->info.source = source;
-		addedPeersPtr++;
-	}
+	if(updateCallback)
+		updateCallback(mtt::Status::Success, source);
 
 	return (uint32_t)accepted.size();
 }
@@ -575,9 +578,6 @@ void mtt::PeersAnalyzer::checkForDhtPeers()
 	if (secondsFromLastDhtCheck < dhtCheckInterval)
 		return;
 
-	if (peers.torrent->infoFile.info.name.empty())
-		return;
-
 	secondsFromLastDhtCheck = 0;
 	peers.dhtInfo.state = TrackerState::Announcing;
 	uint32_t currentTime = (uint32_t)std::time(0);
@@ -591,6 +591,7 @@ void mtt::PeersAnalyzer::checkForDhtPeers()
 uint32_t mtt::PeersAnalyzer::dhtFoundPeers(uint8_t* hash, std::vector<Addr>& values)
 {
 	peers.dhtInfo.peers += peers.updateKnownPeers(values, PeerSource::Dht);
+
 	return peers.dhtInfo.peers;
 }
 

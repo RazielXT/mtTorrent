@@ -174,7 +174,6 @@ void onButtonClick(System::Object^ button)
 		form.ShowDialog();
 		GuiLite::MagnetInputForm::instance = nullptr;
 		magnetLinkSequence = 0;
-		GuiLite::MainForm::instance->buttonAddMagnet->Text = "done";
 	}
 	else if (button == GuiLite::MainForm::instance->buttonSettings)
 	{

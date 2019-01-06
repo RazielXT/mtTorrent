@@ -16,7 +16,7 @@ void mtt::MetadataDownload::start(std::function<void(Status, MetadataDownloadSta
 
 	//peers.trackers.removeTrackers();
 
-	peers.start([this](Status s, const std::string& source)
+	peers.start([this](Status s, mtt::PeerSource source)
 	{
 		std::lock_guard<std::mutex> guard(commsMutex);
 		if (s == Status::Success && active && activeComms.empty())
