@@ -304,9 +304,9 @@ void refreshUi()
 					gcnew String(hexToString(t.hash, 20).data()),
 						gcnew String(info.name.data), info.checking ? "Checking " + float(info.checkingProgress).ToString("P") : float(info.progress).ToString("P"),
 						t.active ? "Active" : "Stopped",
-						float(info.downloadSpeed / (1024.f * 1024)).ToString("F"), float(info.uploadSpeed / (1024.f * 1024)).ToString("F"),
+						float((info.downloadSpeed / 1024.f) / 1024.f).ToString("F"), float((info.uploadSpeed / 1024.f) / 1024.f).ToString("F"),
 						int(info.connectedPeers).ToString(), int(info.foundPeers).ToString(),
-						float(info.downloaded / (1024.f * 1024)).ToString("F"), float(info.uploaded / (1024.f * 1024)).ToString("F")
+						float((info.downloaded / 1024.f) / 1024.f).ToString("F"), float((info.uploaded / 1024.f) / 1024.f).ToString("F")
 				};
 
 				torrentGrid->Rows[i]->SetValues(row);

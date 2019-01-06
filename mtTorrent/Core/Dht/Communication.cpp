@@ -80,7 +80,10 @@ void mtt::dht::Communication::findPeers(uint8_t* hash, ResultsListener* listener
 	QueryInfo info;
 	info.q = std::make_shared<Query::GetPeers>();
 	info.listener = listener;
-	peersQueries.push_back(info);
+	{
+		std::lock_guard<std::mutex> guard(peersQueriesMutex);
+		peersQueries.push_back(info);
+	}
 
 	info.q->start(hash, &table, this);
 }
@@ -111,14 +114,14 @@ void mtt::dht::Communication::pingNode(Addr& addr)
 
 uint32_t mtt::dht::Communication::onFoundPeers(uint8_t* hash, std::vector<Addr>& values)
 {
+	std::lock_guard<std::mutex> guard(peersQueriesMutex);
+
 	for (auto info : peersQueries)
 	{
 		if (info.listener && info.q == hash)
 		{
 			uint32_t c = info.listener->dhtFoundPeers(hash, values);
-
-			if (c)
-				return c;
+			return c;
 		}
 	}
 

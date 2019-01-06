@@ -509,8 +509,10 @@ void mtt::PeersAnalyzer::updateMeasures()
 			{
 				if (last.first == peer.comm.get())
 				{
-					peerInfo.info.downloadSpeed = (uint32_t)(peerInfo.downloaded - last.second.first);
-					peerInfo.info.uploadSpeed = (uint32_t)(peerInfo.uploaded - last.second.second);
+					if(peerInfo.downloaded > last.second.first)
+						peerInfo.info.downloadSpeed = (uint32_t)(peerInfo.downloaded - last.second.first);
+					if(peerInfo.uploaded > last.second.second)
+						peerInfo.info.uploadSpeed = (uint32_t)(peerInfo.uploaded - last.second.second);
 					break;
 				}
 			}
@@ -520,7 +522,6 @@ void mtt::PeersAnalyzer::updateMeasures()
 					peer.comm->sendHave(piece);
 		}
 	}
-
 	freshPieces.clear();
 	lastSpeedMeasure = currentMeasure;
 }

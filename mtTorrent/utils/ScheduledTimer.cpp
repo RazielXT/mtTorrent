@@ -43,8 +43,8 @@ void ScheduledTimer::checkTimer()
 		if (func)
 			func();
 	}
-
-	timer.async_wait(std::bind(&ScheduledTimer::checkTimer, shared_from_this()));
+	else
+		timer.async_wait(std::bind(&ScheduledTimer::checkTimer, shared_from_this()));
 }
 
 std::shared_ptr<ScheduledTimer> ScheduledTimer::create(boost::asio::io_service& io, std::function<void()> callback)
