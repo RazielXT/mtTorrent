@@ -29,9 +29,11 @@ mtt::TorrentPtr mtt::Torrent::fromMagnetLink(std::string link, std::function<voi
 	if (torrent->infoFile.parseMagnetLink(link) != Status::Success)
 		return nullptr;
 
+	torrent->state = State::DownloadUtm;
 	torrent->peers = std::make_unique<Peers>(torrent);
 	torrent->downloader = std::make_unique<Downloader>(torrent);
 	torrent->uploader = std::make_unique<Uploader>(torrent);
+
 	torrent->utmDl = std::make_unique<MetadataDownload>(*torrent->peers);
 	torrent->utmDl->start([torrent, callback](Status s, MetadataDownloadState& state)
 	{
@@ -39,6 +41,11 @@ mtt::TorrentPtr mtt::Torrent::fromMagnetLink(std::string link, std::function<voi
 		{
 			torrent->infoFile.info = torrent->utmDl->metadata.getRecontructedInfo();
 			torrent->init();
+		}
+
+		if (state.finished)
+		{
+			torrent->state = State::Stopped;
 		}
 
 		callback(s, state);

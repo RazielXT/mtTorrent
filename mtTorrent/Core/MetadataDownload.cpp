@@ -14,15 +14,19 @@ void mtt::MetadataDownload::start(std::function<void(Status, MetadataDownloadSta
 	onUpdate = f;
 	active = true;
 
+	//peers.trackers.removeTrackers();
+
 	peers.start([this](Status s, const std::string& source)
 	{
 		std::lock_guard<std::mutex> guard(commsMutex);
-		if (s == Status::Success && active && !primaryComm)
+		if (s == Status::Success && active && activeComms.empty())
 		{
-			switchPrimaryComm();
+			evalComms();
 		}
 	}
 	, this);
+
+	//peers.connect(Addr({ 127,0,0,1 }, 31132));
 }
 
 void mtt::MetadataDownload::stop()
@@ -31,83 +35,73 @@ void mtt::MetadataDownload::stop()
 		onUpdate(Status::I_Stopped, state);
 
 	active = false;
-	primaryComm = nullptr;
+	activeComms.clear();
 	peers.stop();
 }
 
-void mtt::MetadataDownload::switchPrimaryComm()
+void mtt::MetadataDownload::evalComms()
 {
-	if (backupComm.empty())
+	if (activeComms.empty() && !state.finished)
 	{
 		peers.connectNext(10);
-		BT_UTM_LOG("searching for peers");
-	}
-	else
-	{
-		primaryComm = backupComm.back();
-		BT_UTM_LOG("set primary source as " << primaryComm->getAddressName());
-		memcpy(state.source, primaryComm->info.id, 20);
-		backupComm.pop_back();
-
-		if (metadata.buffer.empty())
-		{
-			metadata.init(primaryComm->ext.utm.size);
-			BT_UTM_LOG("needed pieces: " << metadata.pieces);
-		}
-
-		requestPiece();
+		BT_UTM_LOG("searching for more peers");
 	}
 }
 
 void mtt::MetadataDownload::removeBackup(PeerCommunication* p)
 {
-	std::lock_guard<std::mutex> guard(commsMutex);
-	for (auto it = backupComm.begin(); it != backupComm.end(); it++)
+	for (auto it = activeComms.begin(); it != activeComms.end(); it++)
 	{
-		if (*it == p)
+		if (it->get() == p)
 		{
-			backupComm.erase(it);
+			activeComms.erase(it);
 			break;
 		}
 	}
 
-	if (backupComm.empty())
-		peers.connectNext(10);
+	evalComms();
 }
 
-void mtt::MetadataDownload::addToBackup(PeerCommunication* peer)
+void mtt::MetadataDownload::addToBackup(std::shared_ptr<PeerCommunication> peer)
 {
 	std::lock_guard<std::mutex> guard(commsMutex);
 
-	if(peer->ext.utm.size)
-		backupComm.push_back(peer);
-
-	if (!primaryComm)
-		switchPrimaryComm();
+	if (peer->ext.utm.size)
+	{
+		if (metadata.pieces == 0)
+			metadata.init(peer->ext.utm.size);
+		
+		activeComms.push_back(peer);
+		requestPiece(peer);
+	}
 }
 
 void mtt::MetadataDownload::handshakeFinished(PeerCommunication* p)
 {
+	if (!p->info.supportsExtensions())
+	{
+		peers.disconnect(p);
+		BT_UTM_LOG("unwanted");
+	}
 }
 
 void mtt::MetadataDownload::connectionClosed(PeerCommunication* p, int)
 {
-	if (primaryComm == p)
-	{
-		BT_UTM_LOG("primary source disconnected");
-		onUpdate(Status::E_ConnectionClosed, state);
-		switchPrimaryComm();
-	}
-	else
-		removeBackup(p);
+	std::lock_guard<std::mutex> guard(commsMutex);
+
+	BT_UTM_LOG("source disconnected");
+	//memcpy(state.source, primaryComm->info.id, 20);
+	onUpdate(Status::E_ConnectionClosed, state);
+	removeBackup(p);
 }
 
 void mtt::MetadataDownload::messageReceived(PeerCommunication*, PeerMessage&)
 {
 }
 
-void mtt::MetadataDownload::metadataPieceReceived(PeerCommunication*, ext::UtMetadata::Message& msg)
+void mtt::MetadataDownload::metadataPieceReceived(PeerCommunication* p, ext::UtMetadata::Message& msg)
 {
+	std::lock_guard<std::mutex> guard(commsMutex);
 	BT_UTM_LOG("received piece idx " << msg.piece);
 	metadata.addPiece(msg.metadata, msg.piece);
 	state.partsCount = metadata.pieces;
@@ -119,8 +113,12 @@ void mtt::MetadataDownload::metadataPieceReceived(PeerCommunication*, ext::UtMet
 	}
 	else
 	{
-		std::lock_guard<std::mutex> guard(commsMutex);
-		requestPiece();
+		auto peer = peers.getPeer(p);
+
+		if (peer)
+		{
+			requestPiece(peer);
+		}
 	}
 
 	onUpdate(Status::Success, state);
@@ -131,7 +129,13 @@ void mtt::MetadataDownload::metadataPieceReceived(PeerCommunication*, ext::UtMet
 
 void mtt::MetadataDownload::extHandshakeFinished(PeerCommunication* peer)
 {
-	addToBackup(peer);
+	if (peer->ext.isSupported(ext::MessageType::UtMetadataEx))
+		addToBackup(peers.getPeer(peer));
+	else
+	{
+		BT_UTM_LOG("unwanted");
+		peers.disconnect(peer);
+	}
 }
 
 void mtt::MetadataDownload::pexReceived(PeerCommunication*, ext::PeerExchange::Message&)
@@ -142,12 +146,13 @@ void mtt::MetadataDownload::progressUpdated(PeerCommunication*)
 {
 }
 
-void mtt::MetadataDownload::requestPiece()
+void mtt::MetadataDownload::requestPiece(std::shared_ptr<PeerCommunication> peer)
 {
-	if (active && primaryComm)
+	if (active && !state.finished)
 	{
 		uint32_t mdPiece = metadata.getMissingPieceIndex();
-		primaryComm->ext.requestMetadataPiece(mdPiece);
+		peer->ext.requestMetadataPiece(mdPiece);
+		memcpy(state.source, peer->info.id, 20);
 		BT_UTM_LOG("requesting piece idx " << mdPiece);
 		onUpdate(Status::I_Requesting, state);
 	}

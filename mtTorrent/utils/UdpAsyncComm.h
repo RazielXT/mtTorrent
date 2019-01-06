@@ -25,6 +25,8 @@ public:
 	void sendMessage(DataBuffer& data, UdpRequest target, UdpResponseCallback response);
 	void sendMessage(DataBuffer& data, udp::endpoint& endpoint);
 
+	void removeCallback(UdpRequest target);
+
 private:
 
 	struct ResponseRetryInfo

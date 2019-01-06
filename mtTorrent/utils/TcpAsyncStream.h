@@ -32,6 +32,7 @@ public:
 	DataBuffer getReceivedData();
 	void consumeData(size_t size);
 
+	std::mutex callbackMutex;
 	std::function<void()> onConnectCallback;
 	std::function<void()> onReceiveCallback;
 	std::function<void(int)> onCloseCallback;
@@ -40,8 +41,6 @@ public:
 	tcp::endpoint& getEndpoint();
 
 protected:
-
-	std::mutex callbackMutex;
 
 	void setAsConnected();
 

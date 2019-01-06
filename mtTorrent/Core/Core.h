@@ -11,12 +11,13 @@ namespace mtt
 		class Communication;
 	}
 
+	class IncomingPeersListener;
+
 	class Core
 	{
 	public:
 
-		std::shared_ptr<ServiceThreadpool> pool;
-		std::shared_ptr<TcpAsyncServer> listener;
+		std::shared_ptr<IncomingPeersListener> listener;
 		std::shared_ptr<dht::Communication> dht;
 
 		std::vector<TorrentPtr> torrents;
@@ -24,6 +25,7 @@ namespace mtt
 		void init();
 
 		TorrentPtr addFile(const char* filename);
+		TorrentPtr addMagnet(const char* magnet);
 
 		TorrentPtr getTorrent(const uint8_t* hash);
 	};

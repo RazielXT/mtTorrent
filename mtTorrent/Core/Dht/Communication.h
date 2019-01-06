@@ -21,6 +21,9 @@ namespace mtt
 
 			static Communication& get();
 
+			void start();
+			void stop();
+
 			void findPeers(uint8_t* hash, ResultsListener* listener);
 			void stopFindingPeers(uint8_t* hash);
 

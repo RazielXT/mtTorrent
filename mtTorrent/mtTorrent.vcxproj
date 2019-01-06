@@ -235,8 +235,8 @@
   <ItemGroup>
     <ClCompile Include="Core\Core.cpp" />
     <ClCompile Include="Core\Files.cpp" />
+    <ClCompile Include="Core\IncomingPeersListener.cpp" />
     <ClCompile Include="Core\Torrent.cpp" />
-    <ClCompile Include="Core\ExternalRequestHandler.cpp" />
     <ClCompile Include="Core\MetadataDownload.cpp" />
     <ClCompile Include="Core\Configuration.cpp" />
     <ClCompile Include="Core\Dht\Communication.cpp" />
@@ -281,8 +281,8 @@
     <ClInclude Include="Core\Core.h" />
     <ClInclude Include="Core\Dht\Listener.h" />
     <ClInclude Include="Core\Files.h" />
+    <ClInclude Include="Core\IncomingPeersListener.h" />
     <ClInclude Include="Core\Torrent.h" />
-    <ClInclude Include="Core\ExternalRequestHandler.h" />
     <ClInclude Include="Core\MetadataDownload.h" />
     <ClInclude Include="Core\Configuration.h" />
     <ClInclude Include="Core\Dht\Communication.h" />

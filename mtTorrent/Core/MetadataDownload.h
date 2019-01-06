@@ -18,19 +18,18 @@ namespace mtt
 		void start(std::function<void(Status, MetadataDownloadState&)> onUpdate);
 		void stop();
 
+		MetadataDownloadState state;
 		MetadataReconstruction metadata;
 
 	private:
 
 		std::mutex commsMutex;
-		PeerCommunication* primaryComm;
-		std::vector<PeerCommunication*> backupComm;
-		void switchPrimaryComm();
+		std::vector<std::shared_ptr<PeerCommunication>> activeComms;
+		void evalComms();
 		void removeBackup(PeerCommunication*);
-		void addToBackup(PeerCommunication*);
+		void addToBackup(std::shared_ptr<PeerCommunication>);
 
 		std::function<void(Status, MetadataDownloadState&)> onUpdate;
-		MetadataDownloadState state;
 
 		Peers& peers;
 
@@ -42,7 +41,7 @@ namespace mtt
 		virtual void pexReceived(PeerCommunication*, ext::PeerExchange::Message&) override;
 		virtual void progressUpdated(PeerCommunication*) override;
 
-		void requestPiece();
+		void requestPiece(std::shared_ptr<PeerCommunication> peer);
 		bool active = false;
 	};
 }

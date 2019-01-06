@@ -11,6 +11,7 @@ namespace mtt
 	public:
 
 		UdpTrackerComm();
+		~UdpTrackerComm();
 
 		virtual void init(std::string host, std::string port, TorrentPtr core) override;
 

@@ -10,6 +10,8 @@ void mtt::Files::init(TorrentInfo& info)
 	{
 		selection.files.push_back({ true, f });
 	}
+
+	progress.init(info.pieces.size());
 }
 
 void mtt::Files::addPiece(DownloadedPiece& piece)

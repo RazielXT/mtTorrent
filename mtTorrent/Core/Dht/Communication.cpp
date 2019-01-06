@@ -5,7 +5,6 @@ mtt::dht::Communication* comm;
 
 mtt::dht::Communication::Communication() : responder(table, *this)
 {
-	service.start(3);
 	udp = UdpAsyncComm::Get();
 	udp->listen(std::bind(&Communication::onUnknownUdpPacket, this, std::placeholders::_1, std::placeholders::_2));
 	comm = this;
@@ -13,13 +12,41 @@ mtt::dht::Communication::Communication() : responder(table, *this)
 
 mtt::dht::Communication::~Communication()
 {
-	peersQueries.clear();
-	service.stop();
+	stop();
 }
 
 mtt::dht::Communication& mtt::dht::Communication::get()
 {
 	return *comm;
+}
+
+void mtt::dht::Communication::start()
+{
+	service.start(2);
+
+	refreshTable();
+
+	loadDefaultRoots();
+
+	findNode(mtt::config::internal_.hashId);
+
+	refreshTimer = ScheduledTimer::create(service.io, std::bind(&Communication::refreshTable, this));
+	refreshTimer->schedule(5 * 60 + 5);
+
+	//std::make_shared<Query::PingNodes>()->start(Addr({ 83,26,144,62 }, 44035) , &table, this);
+}
+
+void mtt::dht::Communication::stop()
+{
+	{
+		std::lock_guard<std::mutex> guard(peersQueriesMutex);
+		peersQueries.clear();
+	}
+
+	if(refreshTimer)
+		refreshTimer->disable();
+	refreshTimer = nullptr;
+	service.stop();
 }
 
 void mtt::dht::Communication::removeListener(ResultsListener* listener)
@@ -88,7 +115,7 @@ uint32_t mtt::dht::Communication::onFoundPeers(uint8_t* hash, std::vector<Addr>&
 	{
 		if (info.listener && info.q == hash)
 		{
-			uint32_t c = info.listener->onFoundPeers(hash, values);
+			uint32_t c = info.listener->dhtFoundPeers(hash, values);
 
 			if (c)
 				return c;
@@ -115,7 +142,7 @@ void mtt::dht::Communication::findingPeersFinished(uint8_t* hash, uint32_t count
 	}
 
 	if(listener)
-		listener->findingPeersFinished(hash, count);
+		listener->dhtFindingPeersFinished(hash, count);
 }
 
 UdpRequest mtt::dht::Communication::sendMessage(Addr& addr, DataBuffer& data, UdpResponseCallback response)
@@ -175,17 +202,6 @@ std::string mtt::dht::Communication::save()
 void mtt::dht::Communication::load(const std::string& settings)
 {
 	uint32_t nodesCount = table.load(settings);
-	refreshTable();
-
-	loadDefaultRoots();
-
-	if(nodesCount < 50)
-		findNode(mtt::config::internal_.hashId);
-	
-	refreshTimer = ScheduledTimer::create(service.io, std::bind(&Communication::refreshTable, this));
-	refreshTimer->schedule(5 * 60 + 5);
-
-	//std::make_shared<Query::PingNodes>()->start(Addr({ 83,26,144,62 }, 44035) , &table, this);
 }
 
 void mtt::dht::Communication::announceTokenReceived(uint8_t* hash, std::string& token, udp::endpoint& source)

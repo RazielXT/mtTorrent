@@ -38,7 +38,7 @@ bool isBtType(const char* t)
 
 void WriteLogImplementation(const char * const type, std::stringstream& ss)
 {
-	if (type != LogTypeDownload && type != LogTypeTest)
+	if (type != LogTypeBtUtm && type != LogTypeTest)
 		return;
 
 	LockLog();

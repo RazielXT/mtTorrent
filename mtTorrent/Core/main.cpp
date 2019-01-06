@@ -7,9 +7,11 @@
 #include "Public/BinaryInterface.h"
 #include "Core.h"
 #include "Peers.h"
+#include "MetadataDownload.h"
 
 #ifndef STANDALONE
 #include "Windows.h"
+#include "Configuration.h"
 
 mtt::Core core;
 
@@ -28,6 +30,15 @@ __declspec(dllexport) mtt::Status __cdecl Ioctl(mtBI::MessageId id, const void* 
 
 		memcpy(output, t->infoFile.info.hash, 20);
 	}
+	else if (id == mtBI::MessageId::AddFromMetadata)
+	{
+		auto t = core.addMagnet((const char*)request);
+
+		if (!t)
+			return mtt::Status::E_InvalidInput;
+
+		memcpy(output, t->infoFile.info.hash, 20);
+	}
 	else if (id == mtBI::MessageId::Start)
 	{
 		auto t = core.getTorrent((const uint8_t*)request);
@@ -36,7 +47,7 @@ __declspec(dllexport) mtt::Status __cdecl Ioctl(mtBI::MessageId id, const void* 
 			return mtt::Status::E_InvalidInput;
 
 		t->start();
-		t->peers->connect(Addr({ 127,0,0,1 }, 31132));
+		//t->peers->connect(Addr({ 127,0,0,1 }, 31132));
 	}
 	else if (id == mtBI::MessageId::Stop)
 	{
@@ -166,6 +177,46 @@ __declspec(dllexport) mtt::Status __cdecl Ioctl(mtBI::MessageId id, const void* 
 					to.status[0] = 0;
 			}
 		}
+	}
+	else if (id == mtBI::MessageId::GetMagnetLinkProgress)
+	{
+		auto torrent = core.getTorrent((const uint8_t*)request);
+		if (!torrent || !torrent->utmDl)
+			return mtt::Status::E_InvalidInput;
+
+		auto resp = (mtBI::MagnetLinkProgress*) output;
+		resp->finished = torrent->utmDl->state.finished;
+		resp->progress = torrent->utmDl->state.partsCount == 0 ? 0 : torrent->utmDl->state.receivedParts / (float)torrent->utmDl->state.partsCount;
+	}
+	else if (id == mtBI::MessageId::GetSettings)
+	{
+		auto resp = (mtBI::SettingsInfo*) output;
+		auto& settings = mtt::config::external;
+		resp->dhtEnabled = settings.enableDht;
+		resp->directory.set(settings.defaultDirectory);
+		resp->maxConnections = settings.maxTorrentConnections;
+		resp->tcpPort = settings.tcpPort;
+		resp->udpPort = settings.udpPort;
+	}
+	else if (id == mtBI::MessageId::SetSettings)
+	{
+		auto info = (mtBI::SettingsInfo*) request;
+		auto& settings = mtt::config::external;
+
+		if (settings.enableDht != info->dhtEnabled)
+		{
+			settings.enableDht = info->dhtEnabled;
+
+			if (settings.enableDht)
+				core.dht->start();
+			else
+				core.dht->stop();
+		}
+		
+		settings.defaultDirectory = info->directory.data;
+		settings.maxTorrentConnections = info->maxConnections;
+		settings.tcpPort = info->tcpPort;
+		settings.udpPort = info->udpPort;
 	}
 	else
 		return mtt::Status::E_InvalidInput;

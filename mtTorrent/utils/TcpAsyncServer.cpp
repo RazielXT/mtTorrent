@@ -12,6 +12,11 @@ void TcpAsyncServer::listen()
 	startListening();
 }
 
+void TcpAsyncServer::stop()
+{
+	acceptor_.close();
+}
+
 void TcpAsyncServer::startListening()
 {
 	auto connection = std::make_shared<TcpAsyncStream>(acceptor_.get_io_service());

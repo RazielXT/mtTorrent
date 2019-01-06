@@ -81,6 +81,10 @@ namespace GuiLite {
 	public: System::Windows::Forms::Button^  buttonStop;
 	private:
 	public: System::Windows::Forms::Button^  buttonStart;
+	public: System::Windows::Forms::Button^  buttonAddMagnet;
+	public: System::Windows::Forms::Button^  buttonSettings;
+
+	public:
 
 
 
@@ -242,6 +246,8 @@ private:
 			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle19 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			this->splitContainer1 = (gcnew System::Windows::Forms::SplitContainer());
 			this->splitContainer2 = (gcnew System::Windows::Forms::SplitContainer());
+			this->buttonSettings = (gcnew System::Windows::Forms::Button());
+			this->buttonAddMagnet = (gcnew System::Windows::Forms::Button());
 			this->buttonStop = (gcnew System::Windows::Forms::Button());
 			this->buttonStart = (gcnew System::Windows::Forms::Button());
 			this->buttonAddTorrent = (gcnew System::Windows::Forms::Button());
@@ -318,6 +324,8 @@ private:
 			// 
 			// splitContainer2.Panel1
 			// 
+			this->splitContainer2->Panel1->Controls->Add(this->buttonSettings);
+			this->splitContainer2->Panel1->Controls->Add(this->buttonAddMagnet);
 			this->splitContainer2->Panel1->Controls->Add(this->buttonStop);
 			this->splitContainer2->Panel1->Controls->Add(this->buttonStart);
 			this->splitContainer2->Panel1->Controls->Add(this->buttonAddTorrent);
@@ -329,11 +337,31 @@ private:
 			this->splitContainer2->SplitterDistance = 43;
 			this->splitContainer2->TabIndex = 2;
 			// 
+			// buttonSettings
+			// 
+			this->buttonSettings->Location = System::Drawing::Point(1252, 11);
+			this->buttonSettings->Name = L"buttonSettings";
+			this->buttonSettings->Size = System::Drawing::Size(75, 23);
+			this->buttonSettings->TabIndex = 6;
+			this->buttonSettings->Text = L"Settings";
+			this->buttonSettings->UseVisualStyleBackColor = true;
+			this->buttonSettings->Click += gcnew System::EventHandler(this, &MainForm::buttonSettings_Click);
+			// 
+			// buttonAddMagnet
+			// 
+			this->buttonAddMagnet->Location = System::Drawing::Point(93, 12);
+			this->buttonAddMagnet->Name = L"buttonAddMagnet";
+			this->buttonAddMagnet->Size = System::Drawing::Size(75, 23);
+			this->buttonAddMagnet->TabIndex = 5;
+			this->buttonAddMagnet->Text = L"Magnet";
+			this->buttonAddMagnet->UseVisualStyleBackColor = true;
+			this->buttonAddMagnet->Click += gcnew System::EventHandler(this, &MainForm::buttonAddMagnet_Click);
+			// 
 			// buttonStop
 			// 
 			this->buttonStop->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(255)), static_cast<System::Int32>(static_cast<System::Byte>(128)),
 				static_cast<System::Int32>(static_cast<System::Byte>(128)));
-			this->buttonStop->Location = System::Drawing::Point(236, 12);
+			this->buttonStop->Location = System::Drawing::Point(285, 12);
 			this->buttonStop->Name = L"buttonStop";
 			this->buttonStop->Size = System::Drawing::Size(75, 23);
 			this->buttonStop->TabIndex = 4;
@@ -345,7 +373,7 @@ private:
 			// 
 			this->buttonStart->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(0)), static_cast<System::Int32>(static_cast<System::Byte>(192)),
 				static_cast<System::Int32>(static_cast<System::Byte>(0)));
-			this->buttonStart->Location = System::Drawing::Point(155, 12);
+			this->buttonStart->Location = System::Drawing::Point(204, 12);
 			this->buttonStart->Name = L"buttonStart";
 			this->buttonStart->Size = System::Drawing::Size(75, 23);
 			this->buttonStart->TabIndex = 3;
@@ -359,7 +387,7 @@ private:
 			this->buttonAddTorrent->Name = L"buttonAddTorrent";
 			this->buttonAddTorrent->Size = System::Drawing::Size(75, 23);
 			this->buttonAddTorrent->TabIndex = 2;
-			this->buttonAddTorrent->Text = L"Add";
+			this->buttonAddTorrent->Text = L"File";
 			this->buttonAddTorrent->UseVisualStyleBackColor = true;
 			this->buttonAddTorrent->Click += gcnew System::EventHandler(this, &MainForm::button1_Click);
 			// 
@@ -735,7 +763,8 @@ private:
 			this->ClientSize = System::Drawing::Size(1339, 497);
 			this->Controls->Add(this->splitContainer1);
 			this->Name = L"MainForm";
-			this->Text = L"MainForm";
+			this->StartPosition = System::Windows::Forms::FormStartPosition::CenterScreen;
+			this->Text = L"mtTorrent";
 			this->splitContainer1->Panel1->ResumeLayout(false);
 			this->splitContainer1->Panel2->ResumeLayout(false);
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->splitContainer1))->EndInit();
@@ -769,5 +798,11 @@ private: System::Void torrentsGrid_CellContentClick(System::Object^  sender, Sys
 	private: System::Void buttonStop_Click(System::Object^  sender, System::EventArgs^  e) {
 		onButtonClick(sender);
 	}
+private: System::Void buttonAddMagnet_Click(System::Object^  sender, System::EventArgs^  e) {
+	onButtonClick(sender);
+}
+private: System::Void buttonSettings_Click(System::Object^  sender, System::EventArgs^  e) {
+	onButtonClick(sender);
+}
 };
 }

@@ -58,8 +58,8 @@ namespace mtt
 		void checkForDhtPeers();
 		uint32_t secondsFromLastDhtCheck = 5*60;
 
-		virtual uint32_t onFoundPeers(uint8_t* hash, std::vector<Addr>& values);
-		virtual void findingPeersFinished(uint8_t* hash, uint32_t count);
+		virtual uint32_t dhtFoundPeers(uint8_t* hash, std::vector<Addr>& values);
+		virtual void dhtFindingPeersFinished(uint8_t* hash, uint32_t count);
 	};
 
 	class Peers
@@ -75,6 +75,7 @@ namespace mtt
 
 		void connectNext(uint32_t count);
 		std::shared_ptr<PeerCommunication> connect(Addr& addr);
+		std::shared_ptr<PeerCommunication> getPeer(PeerCommunication*);
 		void add(std::shared_ptr<TcpAsyncStream> stream);
 		void disconnect(PeerCommunication*);
 

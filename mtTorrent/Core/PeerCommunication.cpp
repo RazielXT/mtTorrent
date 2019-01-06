@@ -112,13 +112,8 @@ bool mtt::PeerInfo::supportsDht()
 	return (protocol[8] & 0x80) != 0;
 }
 
-PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, std::shared_ptr<TcpAsyncStream> s) : torrent(t), listener(l)
+PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l) : torrent(t), listener(l)
 {
-	stream = s;
-	state.action = PeerCommunicationState::Connected;
-
-	initializeCallbacks();
-	dataReceived();
 }
 
 PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, boost::asio::io_service& io_service) : torrent(t), listener(l)
@@ -128,11 +123,24 @@ PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, boost::as
 	initializeCallbacks();
 }
 
+void mtt::PeerCommunication::setStream(std::shared_ptr<TcpAsyncStream> s)
+{
+	stream = s;
+	state.action = PeerCommunicationState::Connected;
+
+	initializeCallbacks();
+	dataReceived();
+}
+
 void mtt::PeerCommunication::initializeCallbacks()
 {
-	stream->onConnectCallback = std::bind(&PeerCommunication::connectionOpened, this);
-	stream->onCloseCallback = [this](int code) {connectionClosed(code); };
-	stream->onReceiveCallback = std::bind(&PeerCommunication::dataReceived, this);
+	{
+		std::lock_guard<std::mutex> guard(stream->callbackMutex);
+		stream->onConnectCallback = std::bind(&PeerCommunication::connectionOpened, this);
+		stream->onCloseCallback = [this](int code) {connectionClosed(code); };
+		stream->onReceiveCallback = std::bind(&PeerCommunication::dataReceived, this);
+	}
+
 	ext.stream = stream;
 
 	ext.pex.onPexMessage = [this](mtt::ext::PeerExchange::Message& msg)

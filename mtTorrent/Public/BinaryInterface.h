@@ -33,7 +33,25 @@ namespace mtBI
 		GetTorrentInfo,			//uint8_t[20], TorrentInfo
 		GetTorrentStateInfo,	//uint8_t[20], TorrentStateInfo
 		GetPeersInfo,	//uint8_t[20], TorrentPeersInfo
-		GetSourcesInfo	//uint8_t[20], SourcesInfo
+		GetSourcesInfo,	//uint8_t[20], SourcesInfo
+		GetMagnetLinkProgress,	//uint8_t[20],MagnetLinkProgress
+		GetSettings, //null, SettingsInfo
+		SetSettings //SettingsInfo, null
+	};
+
+	struct SettingsInfo
+	{
+		uint32_t udpPort;
+		uint32_t tcpPort;
+		bool dhtEnabled;
+		string directory;
+		uint32_t maxConnections;
+	};
+
+	struct MagnetLinkProgress
+	{
+		float progress;
+		bool finished;
 	};
 
 	struct TorrentsList

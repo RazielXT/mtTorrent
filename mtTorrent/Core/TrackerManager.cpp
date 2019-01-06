@@ -225,6 +225,8 @@ void mtt::TrackerManager::stopAll()
 	for (auto& tracker : trackers)
 	{
 		tracker.comm = nullptr;
+		if(tracker.timer)
+			tracker.timer->disable();
 		tracker.timer = nullptr;
 		tracker.retryCount = 0;
 	}

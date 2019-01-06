@@ -84,6 +84,20 @@ void UdpAsyncComm::sendMessage(DataBuffer& data, udp::endpoint& endpoint)
 	c->write(data);
 }
 
+void UdpAsyncComm::removeCallback(UdpRequest target)
+{
+	std::lock_guard<std::mutex> guard(responsesMutex);
+
+	for(auto it = pendingResponses.begin(); it != pendingResponses.end(); it++)
+	{
+		if ((*it)->client == target)
+		{
+			pendingResponses.erase(it);
+			break;
+		}
+	}
+}
+
 void UdpAsyncComm::addPendingResponse(DataBuffer& data, UdpRequest c, UdpResponseCallback response)
 {
 	if (!listener)

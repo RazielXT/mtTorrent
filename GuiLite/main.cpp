@@ -1,10 +1,12 @@
 #include "MainForm.h"
+#include "MagnetInputForm.h"
 #include "../mtTorrent/Public/BinaryInterface.h"
 #include "../mtTorrent/Public/Status.h"
 #include "../mtTorrent/utils/HexEncoding.h"
 #include <msclr/marshal_cppstd.h>
 #include <windows.h>
 #include <vcclr.h>
+#include "SettingsForm.h"
 
 using namespace System;
 using namespace System::Windows::Forms;
@@ -12,6 +14,20 @@ using namespace System::Windows::Forms;
 typedef mtt::Status(*IOCTL_FUNC)(mtBI::MessageId, const void*,void*);
 IOCTL_FUNC IoctlFunc = nullptr;
 HMODULE lib = nullptr;
+
+void applySettings(System::Object^ form)
+{
+	auto window = (GuiLite::SettingsForm^)form;
+	mtBI::SettingsInfo info;
+	info.dhtEnabled = window->checkBoxDht->Checked;
+	auto dirPtr = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(window->directoryTextBox->Text).ToPointer();
+	info.directory.set(dirPtr);
+	info.maxConnections = (unsigned int)window->maxConnectionsNumeric->Value;
+	info.udpPort = (unsigned int)window->udpPortNumeric->Value;
+	info.tcpPort = (unsigned int)window->tcpPortNumeric->Value;
+
+	IoctlFunc(mtBI::MessageId::SetSettings, &info, nullptr);
+}
 
 void refreshTorrentInfo(uint8_t* hash)
 {
@@ -104,6 +120,7 @@ void setSelected(bool v)
 	}
 }
 
+int magnetLinkSequence = 0;
 void onButtonClick(System::Object^ button)
 {
 	if (button == GuiLite::MainForm::instance->buttonAddTorrent)
@@ -150,6 +167,54 @@ void onButtonClick(System::Object^ button)
 				selectionChanged = true;
 		}
 	}
+	else if (button == GuiLite::MainForm::instance->buttonAddMagnet)
+	{
+		magnetLinkSequence = 1;
+		GuiLite::MagnetInputForm form;
+		form.ShowDialog();
+		GuiLite::MagnetInputForm::instance = nullptr;
+		magnetLinkSequence = 0;
+		GuiLite::MainForm::instance->buttonAddMagnet->Text = "done";
+	}
+	else if (button == GuiLite::MainForm::instance->buttonSettings)
+	{
+		GuiLite::SettingsForm form;
+		mtBI::SettingsInfo info;
+		if (IoctlFunc(mtBI::MessageId::GetSettings, nullptr, &info) == mtt::Status::Success)
+		{
+			form.checkBoxDht->Checked = info.dhtEnabled;
+			form.directoryTextBox->Text = gcnew String(info.directory.data);
+			form.maxConnectionsNumeric->Value = info.maxConnections;
+			form.udpPortNumeric->Value = info.udpPort;
+			form.tcpPortNumeric->Value = info.tcpPort;
+		}
+
+		form.ShowDialog();
+	}
+	else if (GuiLite::MagnetInputForm::instance)
+	{
+		if (button == GuiLite::MagnetInputForm::instance->magnetFormButton)
+		{
+			if (GuiLite::MagnetInputForm::instance->magnetFormButton->Text->StartsWith("Add"))
+			{
+				if (GuiLite::MagnetInputForm::instance->textBoxMagnet->Text->Length == 0)
+					return;
+
+				if (magnetLinkSequence > 1)
+					return;
+
+				auto magnetPtr = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(GuiLite::MagnetInputForm::instance->textBoxMagnet->Text).ToPointer();
+				if (IoctlFunc(mtBI::MessageId::AddFromMetadata, magnetPtr, hash) == mtt::Status::Success)
+				{
+					GuiLite::MagnetInputForm::instance->magnetFormButton->Enabled = false;
+					GuiLite::MagnetInputForm::instance->labelText->Text = "Getting info...";
+					magnetLinkSequence = 2;
+				}
+				else
+					GuiLite::MagnetInputForm::instance->labelText->Text = "Invalid magnet link";
+			}
+		}
+	}
 }
 
 void adjustGridRowsCount(System::Windows::Forms::DataGridView^ grid, int count)
@@ -180,6 +245,26 @@ void refreshUi()
 	if (!IoctlFunc)
 		return;
 
+	if (magnetLinkSequence > 0)
+	{
+		if (magnetLinkSequence == 2)
+		{
+			mtBI::MagnetLinkProgress progress;
+			if (IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, hash, &progress) == mtt::Status::Success)
+			{
+				GuiLite::MagnetInputForm::instance->progressBarMagnet->Value = (int)(progress.progress * 100);
+
+				if (progress.finished)
+				{
+					magnetLinkSequence = 3;
+					GuiLite::MagnetInputForm::instance->labelText->Text = "Finished";
+				}
+			}
+			else
+				GuiLite::MagnetInputForm::instance->labelText->Text = "Error";
+		}
+	}
+
 	RefreshTimeCounter++;
 	if (RefreshTimeCounter < 10 && !selectionChanged)
 		return;
@@ -204,6 +289,7 @@ void refreshUi()
 	}
 
 	mtBI::TorrentStateInfo info;
+	info.connectedPeers = 0;
 	{
 		auto torrentGrid = GuiLite::MainForm::instance->getGrid();
 		adjustGridRowsCount(torrentGrid, torrents.count);

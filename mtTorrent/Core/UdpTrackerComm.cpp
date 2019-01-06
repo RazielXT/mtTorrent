@@ -13,6 +13,11 @@ mtt::UdpTrackerComm::UdpTrackerComm()
 {
 }
 
+mtt::UdpTrackerComm::~UdpTrackerComm()
+{
+	udp->removeCallback(comm);
+}
+
 void UdpTrackerComm::init(std::string host, std::string port, TorrentPtr t)
 {
 	info.hostname = host;

@@ -59,6 +59,9 @@ void mtt::PiecesProgress::select(DownloadSelection& selection)
 
 void mtt::PiecesProgress::addPiece(uint32_t index)
 {
+	if (index >= pieces.size())
+		init(index + 1);
+
 	if (!hasPiece(index))
 	{
 		if (pieces[index] == 0)

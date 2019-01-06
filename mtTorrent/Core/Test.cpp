@@ -372,8 +372,8 @@ void TorrentTest::testPeerListen()
 	listener.torrent = &torrent;
 	listener.storage = &storage;
 
-	PeerCommunication comm(torrent.info, listener, peerStream);
-
+	PeerCommunication comm(torrent.info, listener);
+	comm.setStream(peerStream);
 	listener.comm = &comm;
 
 	WAITFOR(listener.success || listener.fail);
@@ -599,7 +599,7 @@ void TorrentTest::testMetadataReceive()
 	}
 }
 
-uint32_t TorrentTest::onFoundPeers(uint8_t* hash, std::vector<Addr>& values)
+uint32_t TorrentTest::dhtFoundPeers(uint8_t* hash, std::vector<Addr>& values)
 {
 	std::lock_guard<std::mutex> guard(dhtResult.resultMutex);
 
@@ -629,7 +629,7 @@ uint32_t TorrentTest::onFoundPeers(uint8_t* hash, std::vector<Addr>& values)
 		return count;
 }
 
-void TorrentTest::findingPeersFinished(uint8_t* hash, uint32_t count)
+void TorrentTest::dhtFindingPeersFinished(uint8_t* hash, uint32_t count)
 {
 	TEST_LOG("DHT final values count :" << count)
 
@@ -687,7 +687,7 @@ void idealGeneralTest()
 
 const char* magnetLinkWithTrackers = "magnet:?xt=urn:btih:CWPX2WK3PNDMJQYRT4KQ4L62Q4ABDPWA&tr=http://nyaa.tracker.wf:7777/announce&tr=udp://tracker.coppersurfer.tk:6969/announce&tr=udp://tracker.internetwarriors.net:1337/announce&tr=udp://tracker.leechersparadise.org:6969/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://open.stealth.si:80/announce&tr=udp://p4p.arenabg.com:1337/announce&tr=udp://mgtracker.org:6969/announce&tr=udp://tracker.tiny-vps.com:6969/announce&tr=udp://peerfect.org:6969/announce&tr=http://share.camoe.cn:8080/announce&tr=http://t.nyaatracker.com:80/announce&tr=https://open.kickasstracker.com:443/announce";
 const char* magnetLite = "magnet:?xt=urn:btih:CWPX2WK3PNDMJQYRT4KQ4L62Q4ABDPWA&tr=udp://tracker.coppersurfer.tk:6969/announce";
-
+const char* tempLink = "magnet:?xt=urn:btih:HMSXZ6DMI56OOTADFNV5R77O34WK4S65&tr=http://nyaa.tracker.wf:7777/announce&tr=udp://tracker.coppersurfer.tk:6969/announce&tr=udp://tracker.internetwarriors.net:1337/announce&tr=udp://tracker.leechersparadise.org:6969/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://open.stealth.si:80/announce&tr=udp://p4p.arenabg.com:1337/announce&tr=udp://mgtracker.org:6969/announce&tr=udp://tracker.tiny-vps.com:6969/announce&tr=udp://peerfect.org:6969/announce&tr=http://share.camoe.cn:8080/announce&tr=http://t.nyaatracker.com:80/announce&tr=https://open.kickasstracker.com:443/announce";
 void TorrentTest::idealMagnetLinkTest()
 {
 	bool finished = false;
@@ -699,7 +699,7 @@ void TorrentTest::idealMagnetLinkTest()
 		TEST_LOG("UTM status " << (int)s << " from " << hexToString(state.source, 20) << ", parts: " << state.receivedParts << "/" << state.partsCount);
 	};
 
-	TorrentPtr torrent = Torrent::fromMagnetLink(magnetLite, onMetadataUpdate);
+	TorrentPtr torrent = Torrent::fromMagnetLink(tempLink, onMetadataUpdate);
 
 	if (!torrent)
 		return;
@@ -790,5 +790,5 @@ void idealLocalTest()
 
 void TorrentTest::start()
 {
-	testPeerListen();
+	idealMagnetLinkTest();
 }

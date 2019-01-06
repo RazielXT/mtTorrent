@@ -35,9 +35,6 @@
     <Filter Include="Source Files\Core\General">
       <UniqueIdentifier>{7854d554-0259-41b2-825f-836e7e52140a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Core\Torrent\Tasks">
-      <UniqueIdentifier>{90430acc-2039-4b7b-bb2a-b2c55a380b53}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Core\Torrent\State">
       <UniqueIdentifier>{3c563459-20dd-404c-a4a2-d84628948432}</UniqueIdentifier>
     </Filter>
@@ -148,12 +145,6 @@
     <ClCompile Include="Core\State.cpp">
       <Filter>Source Files\Core\Torrent\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\MetadataDownload.cpp">
-      <Filter>Source Files\Core\Torrent\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\ExternalRequestHandler.cpp">
-      <Filter>Source Files\Core\Torrent\Tasks</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Torrent.cpp">
       <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClCompile>
@@ -174,6 +165,12 @@
     </ClCompile>
     <ClCompile Include="Public\BinaryInterface.cpp">
       <Filter>Source Files\Public</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\MetadataDownload.cpp">
+      <Filter>Source Files\Core\Torrent\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\IncomingPeersListener.cpp">
+      <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -282,12 +279,6 @@
     <ClInclude Include="Core\State.h">
       <Filter>Source Files\Core\Torrent\State</Filter>
     </ClInclude>
-    <ClInclude Include="Core\MetadataDownload.h">
-      <Filter>Source Files\Core\Torrent\Tasks</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\ExternalRequestHandler.h">
-      <Filter>Source Files\Core\Torrent\Tasks</Filter>
-    </ClInclude>
     <ClInclude Include="Core\Torrent.h">
       <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClInclude>
@@ -317,6 +308,12 @@
     </ClInclude>
     <ClInclude Include="Public\Status.h">
       <Filter>Source Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\MetadataDownload.h">
+      <Filter>Source Files\Core\Torrent\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\IncomingPeersListener.h">
+      <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

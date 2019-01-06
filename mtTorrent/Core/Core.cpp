@@ -5,6 +5,7 @@
 #include "Configuration.h"
 #include "Dht/Communication.h"
 #include "utils/TcpAsyncServer.h"
+#include "IncomingPeersListener.h"
 
 void mtt::Core::init()
 {
@@ -23,15 +24,17 @@ void mtt::Core::init()
 
 	dht = std::make_shared<dht::Communication>();
 	//dht->load("");
+	//dht->start();
 
-	pool = std::make_shared<ServiceThreadpool>();
-	listener = std::make_shared<TcpAsyncServer>(pool->io, mtt::config::external.tcpPort, false);
-	listener->acceptCallback = [this](std::shared_ptr<TcpAsyncStream> c)
+	listener = std::make_shared<IncomingPeersListener>([this](std::shared_ptr<TcpAsyncStream> s, const uint8_t* hash)
 	{
-		torrents.back()->peers->add(c);
-	};
-
-	listener->listen();
+		auto t = getTorrent(hash);
+		if (t)
+		{
+			t->peers->add(s);
+		}
+	}
+	);
 }
 
 mtt::TorrentPtr mtt::Core::addFile(const char* filename)
@@ -45,7 +48,7 @@ mtt::TorrentPtr mtt::Core::addFile(const char* filename)
 
 	auto onCheckFinish = [torrent](std::shared_ptr<PiecesCheck>)
 	{
-		torrent->peers->trackers.removeTrackers();
+		//torrent->peers->trackers.removeTrackers();
 
 		//if (!torrent->start())
 		//	return;
@@ -54,6 +57,22 @@ mtt::TorrentPtr mtt::Core::addFile(const char* filename)
 	};
 
 	torrent->checkFiles(onCheckFinish);
+
+	return torrent;
+}
+
+mtt::TorrentPtr mtt::Core::addMagnet(const char* magnet)
+{
+	auto onMetadataUpdate = [](Status s, mtt::MetadataDownloadState& state)
+	{
+	};
+
+	auto torrent = Torrent::fromMagnetLink(magnet, onMetadataUpdate);// "G:\\[HorribleSubs] JoJo's Bizarre Adventure - Golden Wind - 13 [720p].mkv.torrent");
+
+	if (!torrent)
+		return nullptr;
+
+	torrents.push_back(torrent);
 
 	return torrent;
 }

@@ -133,8 +133,14 @@ void TcpAsyncStream::postFail(std::string place, const boost::system::error_code
 	if (state == Disconnected)
 		return;
 
-	if (socket.is_open())
-		socket.close();
+	try
+	{
+		if (socket.is_open())
+			socket.close();
+	}
+	catch (...)
+	{
+	}
 
 	if(error)
 		TCP_LOG("error on " << place << ": " << error.message())

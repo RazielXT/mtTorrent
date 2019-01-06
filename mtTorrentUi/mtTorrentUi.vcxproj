@@ -22,7 +22,7 @@
     <ProjectGuid>{DE893C28-7BDC-4A95-BB94-EFBAB098668C}</ProjectGuid>
     <RootNamespace>mtTorrentUi</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
-    <ProjectName>mtTorrentUi</ProjectName>
+    <ProjectName>testChromium</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
