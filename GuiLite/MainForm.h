@@ -68,7 +68,23 @@ namespace GuiLite {
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  Column2;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  gridPeerPercentage;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  peerSource;
+
+
+
+
+
+
+
+
+
+
+	public: System::Windows::Forms::Button^  buttonStop;
+	private:
+	public: System::Windows::Forms::Button^  buttonStart;
+	public: System::Windows::Forms::Button^  buttonAddMagnet;
+	public: System::Windows::Forms::Button^  buttonSettings;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  torrentId;
+	public:
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentName;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentProgress;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  Column4;
@@ -78,11 +94,6 @@ namespace GuiLite {
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentFoundPeers;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentDownloaded;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  Column3;
-	public: System::Windows::Forms::Button^  buttonStop;
-	private:
-	public: System::Windows::Forms::Button^  buttonStart;
-	public: System::Windows::Forms::Button^  buttonAddMagnet;
-	public: System::Windows::Forms::Button^  buttonSettings;
 
 	public:
 
@@ -226,13 +237,6 @@ private:
 			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle1 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle9 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle10 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle2 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle3 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle4 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle5 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle6 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle7 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle8 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle11 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle15 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle16 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
@@ -244,6 +248,13 @@ private:
 			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle21 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle18 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle19 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle2 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle3 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle4 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle5 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle6 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle7 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^  dataGridViewCellStyle8 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			this->splitContainer1 = (gcnew System::Windows::Forms::SplitContainer());
 			this->splitContainer2 = (gcnew System::Windows::Forms::SplitContainer());
 			this->buttonSettings = (gcnew System::Windows::Forms::Button());
@@ -252,16 +263,6 @@ private:
 			this->buttonStart = (gcnew System::Windows::Forms::Button());
 			this->buttonAddTorrent = (gcnew System::Windows::Forms::Button());
 			this->torrentsGrid = (gcnew System::Windows::Forms::DataGridView());
-			this->torrentId = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->TorrentName = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->TorrentProgress = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->Column4 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->TorrentDownload = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->torrentUpload = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->TorrentConnected = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->TorrentFoundPeers = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->TorrentDownloaded = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->Column3 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->TorrentTabs = (gcnew System::Windows::Forms::TabControl());
 			this->tabPage1 = (gcnew System::Windows::Forms::TabPage());
 			this->torrentInfoLabel = (gcnew System::Windows::Forms::TextBox());
@@ -279,6 +280,16 @@ private:
 			this->dataGridViewTextBoxColumn3 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->Column1 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->dataGridViewTextBoxColumn4 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->torrentId = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->TorrentName = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->TorrentProgress = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->Column4 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->TorrentDownload = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->torrentUpload = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->TorrentConnected = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->TorrentFoundPeers = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->TorrentDownloaded = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->Column3 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->splitContainer1))->BeginInit();
 			this->splitContainer1->Panel1->SuspendLayout();
 			this->splitContainer1->Panel2->SuspendLayout();
@@ -442,83 +453,6 @@ private:
 			this->torrentsGrid->Size = System::Drawing::Size(1339, 217);
 			this->torrentsGrid->TabIndex = 1;
 			this->torrentsGrid->CellClick += gcnew System::Windows::Forms::DataGridViewCellEventHandler(this, &MainForm::torrentsGrid_CellContentClick);
-			// 
-			// torrentId
-			// 
-			this->torrentId->HeaderText = L"Id";
-			this->torrentId->Name = L"torrentId";
-			this->torrentId->ReadOnly = true;
-			this->torrentId->Visible = false;
-			// 
-			// TorrentName
-			// 
-			this->TorrentName->HeaderText = L"Name";
-			this->TorrentName->MinimumWidth = 20;
-			this->TorrentName->Name = L"TorrentName";
-			this->TorrentName->ReadOnly = true;
-			this->TorrentName->Width = 200;
-			// 
-			// TorrentProgress
-			// 
-			dataGridViewCellStyle2->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->TorrentProgress->DefaultCellStyle = dataGridViewCellStyle2;
-			this->TorrentProgress->HeaderText = L"Progress";
-			this->TorrentProgress->Name = L"TorrentProgress";
-			this->TorrentProgress->ReadOnly = true;
-			// 
-			// Column4
-			// 
-			this->Column4->HeaderText = L"ETA";
-			this->Column4->Name = L"Column4";
-			this->Column4->ReadOnly = true;
-			// 
-			// TorrentDownload
-			// 
-			dataGridViewCellStyle3->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->TorrentDownload->DefaultCellStyle = dataGridViewCellStyle3;
-			this->TorrentDownload->HeaderText = L"Download";
-			this->TorrentDownload->Name = L"TorrentDownload";
-			this->TorrentDownload->ReadOnly = true;
-			// 
-			// torrentUpload
-			// 
-			dataGridViewCellStyle4->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->torrentUpload->DefaultCellStyle = dataGridViewCellStyle4;
-			this->torrentUpload->HeaderText = L"Upload";
-			this->torrentUpload->Name = L"torrentUpload";
-			this->torrentUpload->ReadOnly = true;
-			// 
-			// TorrentConnected
-			// 
-			dataGridViewCellStyle5->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->TorrentConnected->DefaultCellStyle = dataGridViewCellStyle5;
-			this->TorrentConnected->HeaderText = L"Connected";
-			this->TorrentConnected->Name = L"TorrentConnected";
-			this->TorrentConnected->ReadOnly = true;
-			// 
-			// TorrentFoundPeers
-			// 
-			dataGridViewCellStyle6->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->TorrentFoundPeers->DefaultCellStyle = dataGridViewCellStyle6;
-			this->TorrentFoundPeers->HeaderText = L"Found Peers";
-			this->TorrentFoundPeers->Name = L"TorrentFoundPeers";
-			this->TorrentFoundPeers->ReadOnly = true;
-			// 
-			// TorrentDownloaded
-			// 
-			dataGridViewCellStyle7->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->TorrentDownloaded->DefaultCellStyle = dataGridViewCellStyle7;
-			this->TorrentDownloaded->HeaderText = L"Downloaded";
-			this->TorrentDownloaded->Name = L"TorrentDownloaded";
-			this->TorrentDownloaded->ReadOnly = true;
-			// 
-			// Column3
-			// 
-			dataGridViewCellStyle8->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->Column3->DefaultCellStyle = dataGridViewCellStyle8;
-			this->Column3->HeaderText = L"Uploaded";
-			this->Column3->Name = L"Column3";
-			this->Column3->ReadOnly = true;
 			// 
 			// TorrentTabs
 			// 
@@ -755,6 +689,83 @@ private:
 			this->dataGridViewTextBoxColumn4->HeaderText = L"Interval";
 			this->dataGridViewTextBoxColumn4->Name = L"dataGridViewTextBoxColumn4";
 			this->dataGridViewTextBoxColumn4->ReadOnly = true;
+			// 
+			// torrentId
+			// 
+			this->torrentId->HeaderText = L"Id";
+			this->torrentId->Name = L"torrentId";
+			this->torrentId->ReadOnly = true;
+			this->torrentId->Visible = false;
+			// 
+			// TorrentName
+			// 
+			this->TorrentName->HeaderText = L"Name";
+			this->TorrentName->MinimumWidth = 20;
+			this->TorrentName->Name = L"TorrentName";
+			this->TorrentName->ReadOnly = true;
+			this->TorrentName->Width = 200;
+			// 
+			// TorrentProgress
+			// 
+			dataGridViewCellStyle2->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->TorrentProgress->DefaultCellStyle = dataGridViewCellStyle2;
+			this->TorrentProgress->HeaderText = L"Progress";
+			this->TorrentProgress->Name = L"TorrentProgress";
+			this->TorrentProgress->ReadOnly = true;
+			// 
+			// Column4
+			// 
+			this->Column4->HeaderText = L"State";
+			this->Column4->Name = L"Column4";
+			this->Column4->ReadOnly = true;
+			// 
+			// TorrentDownload
+			// 
+			dataGridViewCellStyle3->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->TorrentDownload->DefaultCellStyle = dataGridViewCellStyle3;
+			this->TorrentDownload->HeaderText = L"Download";
+			this->TorrentDownload->Name = L"TorrentDownload";
+			this->TorrentDownload->ReadOnly = true;
+			// 
+			// torrentUpload
+			// 
+			dataGridViewCellStyle4->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->torrentUpload->DefaultCellStyle = dataGridViewCellStyle4;
+			this->torrentUpload->HeaderText = L"Upload";
+			this->torrentUpload->Name = L"torrentUpload";
+			this->torrentUpload->ReadOnly = true;
+			// 
+			// TorrentConnected
+			// 
+			dataGridViewCellStyle5->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->TorrentConnected->DefaultCellStyle = dataGridViewCellStyle5;
+			this->TorrentConnected->HeaderText = L"Connected";
+			this->TorrentConnected->Name = L"TorrentConnected";
+			this->TorrentConnected->ReadOnly = true;
+			// 
+			// TorrentFoundPeers
+			// 
+			dataGridViewCellStyle6->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->TorrentFoundPeers->DefaultCellStyle = dataGridViewCellStyle6;
+			this->TorrentFoundPeers->HeaderText = L"Found Peers";
+			this->TorrentFoundPeers->Name = L"TorrentFoundPeers";
+			this->TorrentFoundPeers->ReadOnly = true;
+			// 
+			// TorrentDownloaded
+			// 
+			dataGridViewCellStyle7->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->TorrentDownloaded->DefaultCellStyle = dataGridViewCellStyle7;
+			this->TorrentDownloaded->HeaderText = L"Downloaded";
+			this->TorrentDownloaded->Name = L"TorrentDownloaded";
+			this->TorrentDownloaded->ReadOnly = true;
+			// 
+			// Column3
+			// 
+			dataGridViewCellStyle8->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->Column3->DefaultCellStyle = dataGridViewCellStyle8;
+			this->Column3->HeaderText = L"Uploaded";
+			this->Column3->Name = L"Column3";
+			this->Column3->ReadOnly = true;
 			// 
 			// MainForm
 			// 
