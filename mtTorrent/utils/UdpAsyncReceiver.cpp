@@ -30,10 +30,10 @@ void UdpAsyncReceiver::handle_receive(const boost::system::error_code& error, st
 {
 	UDP_LOG(remote_endpoint_.address().to_string() << " sent bytes " << bytes_transferred);
 
-	if (!bytes_transferred)
-		return;
+	//if (!bytes_transferred && error.value() != 10054)
+	//	return;
 
-	if (receiveCallback)
+	if (bytes_transferred && receiveCallback)
 	{
 		buffer.resize(bytes_transferred);
 		receiveCallback(remote_endpoint_, buffer);

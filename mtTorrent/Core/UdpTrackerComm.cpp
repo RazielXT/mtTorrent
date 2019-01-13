@@ -172,7 +172,7 @@ void mtt::UdpTrackerComm::connect()
 	UDP_TRACKER_LOG("connecting");
 	info.state = TrackerState::Connecting;
 
-	udp->sendMessage(createConnectRequest(), comm, std::bind(&UdpTrackerComm::onConnectUdpResponse, this, std::placeholders::_1, std::placeholders::_2));
+	udp->sendMessage(createConnectRequest(), comm, std::bind(&UdpTrackerComm::onConnectUdpResponse, this, std::placeholders::_1, std::placeholders::_2), 5);
 }
 
 bool mtt::UdpTrackerComm::validResponse(TrackerMessage& resp)
@@ -193,7 +193,7 @@ void mtt::UdpTrackerComm::announce()
 		else
 			info.state = TrackerState::Announcing;
 
-		udp->sendMessage(createAnnounceRequest(), comm, std::bind(&UdpTrackerComm::onAnnounceUdpResponse, this, std::placeholders::_1, std::placeholders::_2));
+		udp->sendMessage(createAnnounceRequest(), comm, std::bind(&UdpTrackerComm::onAnnounceUdpResponse, this, std::placeholders::_1, std::placeholders::_2), 5);
 	}
 }
 

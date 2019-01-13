@@ -36,7 +36,14 @@ namespace mtBI
 		GetSourcesInfo,	//uint8_t[20], SourcesInfo
 		GetMagnetLinkProgress,	//uint8_t[20],MagnetLinkProgress
 		GetSettings, //null, SettingsInfo
-		SetSettings //SettingsInfo, null
+		SetSettings, //SettingsInfo, null
+		RefreshSource, //SourceId, null
+	};
+
+	struct SourceId
+	{
+		uint8_t hash[20];
+		string name;
 	};
 
 	struct SettingsInfo

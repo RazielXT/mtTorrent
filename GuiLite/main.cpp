@@ -121,7 +121,8 @@ void setSelected(bool v)
 }
 
 int magnetLinkSequence = 0;
-void onButtonClick(System::Object^ button)
+
+void onButtonClick(System::Object^ button, System::String^ id)
 {
 	if (button == GuiLite::MainForm::instance->buttonAddTorrent)
 	{
@@ -190,6 +191,18 @@ void onButtonClick(System::Object^ button)
 
 		form.ShowDialog();
 	}
+	else if (id && button->GetType()->Name == "MenuItem")
+	{
+		auto item = (MenuItem^)button;
+
+		if (item->Text == "Refresh")
+		{
+			mtBI::SourceId info;
+			info.name.set((char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(id).ToPointer());
+			memcpy(info.hash, hash, 20);
+			IoctlFunc(mtBI::MessageId::RefreshSource, &info, nullptr);
+		}
+	}
 	else if (GuiLite::MagnetInputForm::instance)
 	{
 		if (button == GuiLite::MagnetInputForm::instance->magnetFormButton)
@@ -214,6 +227,11 @@ void onButtonClick(System::Object^ button)
 			}
 		}
 	}
+}
+
+void onButtonClick(System::Object^ button)
+{
+	onButtonClick(button, nullptr);
 }
 
 void adjustGridRowsCount(System::Windows::Forms::DataGridView^ grid, int count)
@@ -251,6 +269,9 @@ void refreshUi()
 			mtBI::MagnetLinkProgress progress;
 			if (IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, hash, &progress) == mtt::Status::Success)
 			{
+				if (progress.progress > 1.0f)
+					progress.progress = 1.0f;
+
 				GuiLite::MagnetInputForm::instance->progressBarMagnet->Value = (int)(progress.progress * 100);
 
 				if (progress.finished)
@@ -327,7 +348,7 @@ void refreshUi()
 			auto& peerInfo = peers.peers[i];
 			auto peerRow = gcnew cli::array< System::String^  >(5) {
 				gcnew String(peerInfo.addr.data),
-					float(peerInfo.dlSpeed / (1024.f * 1024)).ToString(), float(peerInfo.upSpeed / (1024.f * 1024)).ToString(), 
+					float(peerInfo.dlSpeed / (1024.f * 1024)).ToString("F"), float(peerInfo.upSpeed / (1024.f * 1024)).ToString("F"),
 					float(peerInfo.progress).ToString("P"),	gcnew String(peerInfo.source)
 			};
 

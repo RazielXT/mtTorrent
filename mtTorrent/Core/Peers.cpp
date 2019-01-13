@@ -194,6 +194,14 @@ uint32_t mtt::Peers::getSourcesCount()
 	return trackers.getTrackersCount() + (mtt::config::external.enableDht ? 2 : 1);
 }
 
+void mtt::Peers::refreshSource(const std::string& name)
+{
+	if (auto t = trackers.getTracker(name))
+		t->announce();
+	else if (name == "DHT")
+		analyzer.secondsFromLastDhtCheck = 9999;
+}
+
 uint32_t mtt::Peers::connectedCount()
 {
 	return (uint32_t)activeConnections.size();

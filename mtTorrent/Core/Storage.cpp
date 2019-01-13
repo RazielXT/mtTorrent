@@ -234,13 +234,13 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 
 				fileIn.read((char*)readBuffer.data() + readBufferPos, readSize);
 
-				while (fileIn && !checkState.rejected)
+				while (fileIn && !checkState.rejected && currentPieceIdx <= currentFile->endPieceIndex)
 				{
 					SHA1(readBuffer.data(), pieceSize, shaBuffer);
-					checkState.pieces[currentPieceIdx++] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
+					checkState.pieces[currentPieceIdx] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
 					fileIn.read((char*)readBuffer.data(), pieceSize);
 
-					checkState.piecesChecked = (uint32_t)currentPieceIdx;
+					checkState.piecesChecked = (uint32_t)++currentPieceIdx;
 				}
 
 				if (checkState.rejected)
@@ -249,7 +249,8 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 				if (currentPieceIdx == currentFile->endPieceIndex && currentFile == lastFile)
 				{
 					SHA1(readBuffer.data(), currentFile->endPiecePos, shaBuffer);
-					checkState.pieces[currentPieceIdx++] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
+					checkState.pieces[currentPieceIdx] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
+					++currentPieceIdx;
 				}
 			}
 

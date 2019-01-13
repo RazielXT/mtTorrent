@@ -22,7 +22,7 @@ public:
 	UdpRequest create(std::string& host, std::string& port);
 	UdpRequest sendMessage(DataBuffer& data, std::string& host, std::string& port, UdpResponseCallback response, bool ipv6 = false);
 	UdpRequest sendMessage(DataBuffer& data, Addr& addr, UdpResponseCallback response);
-	void sendMessage(DataBuffer& data, UdpRequest target, UdpResponseCallback response);
+	void sendMessage(DataBuffer& data, UdpRequest target, UdpResponseCallback response, uint32_t timeout = 1);
 	void sendMessage(DataBuffer& data, udp::endpoint& endpoint);
 
 	void removeCallback(UdpRequest target);
@@ -35,12 +35,13 @@ private:
 		uint8_t retries = 0;
 		UdpResponseCallback onResponse;
 		std::shared_ptr<boost::asio::deadline_timer> timeoutTimer;
+		uint32_t defaultTimeout = 1;
 		void reset();
 	};
 
 	std::mutex responsesMutex;
 	std::vector<std::shared_ptr<ResponseRetryInfo>> pendingResponses;
-	void addPendingResponse(DataBuffer& data, UdpRequest target, UdpResponseCallback response);
+	void addPendingResponse(DataBuffer& data, UdpRequest target, UdpResponseCallback response, uint32_t timeout = 1);
 	UdpRequest findPendingConnection(UdpRequest);
 
 	void checkTimeout(std::shared_ptr<ResponseRetryInfo>);

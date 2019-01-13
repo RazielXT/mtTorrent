@@ -218,6 +218,16 @@ __declspec(dllexport) mtt::Status __cdecl Ioctl(mtBI::MessageId id, const void* 
 		settings.tcpPort = info->tcpPort;
 		settings.udpPort = info->udpPort;
 	}
+	else if (id == mtBI::MessageId::RefreshSource)
+	{
+		auto info = (mtBI::SourceId*) request;
+
+		auto torrent = core.getTorrent(info->hash);
+		if (!torrent)
+			return mtt::Status::E_InvalidInput;
+		
+		torrent->peers->refreshSource(info->name.data);
+	}
 	else
 		return mtt::Status::E_InvalidInput;
 
