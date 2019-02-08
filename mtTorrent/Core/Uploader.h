@@ -12,7 +12,6 @@ namespace mtt
 		Uploader(TorrentPtr);
 
 		void isInterested(PeerCommunication* p);
-		void wantsUnchoke(PeerCommunication* p);
 		bool pieceRequest(PeerCommunication* p, PieceBlockInfo& info);
 
 	private:

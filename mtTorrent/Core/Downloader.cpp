@@ -2,6 +2,7 @@
 #include "Peers.h"
 #include "Torrent.h"
 #include "utils/HexEncoding.h"
+#include "Configuration.h"
 
 #define DL_LOG(x) WRITE_LOG(LogTypeDownload, x)
 
@@ -161,7 +162,7 @@ void mtt::Downloader::evaluateNextRequests(ActivePeer* peer)
 
 void mtt::Downloader::evaluateCurrentPeers()
 {
-	if(activePeers.size() < 20)
+	if(activePeers.size() < mtt::config::external.maxTorrentConnections)
 		torrent->peers->connectNext(10);
 }
 

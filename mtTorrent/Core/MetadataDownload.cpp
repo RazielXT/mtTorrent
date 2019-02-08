@@ -1,6 +1,7 @@
 #include "MetadataDownload.h"
 #include "MetadataReconstruction.h"
 #include "Torrent.h"
+#include "Configuration.h"
 
 #define BT_UTM_LOG(x) WRITE_LOG(LogTypeBtUtm, x)
 
@@ -19,7 +20,7 @@ void mtt::MetadataDownload::start(std::function<void(Status, MetadataDownloadSta
 	peers.start([this](Status s, mtt::PeerSource source)
 	{
 		std::lock_guard<std::mutex> guard(commsMutex);
-		if (s == Status::Success && active && activeComms.empty())
+		if (s == Status::Success && active)
 		{
 			evalComms();
 		}
@@ -41,7 +42,7 @@ void mtt::MetadataDownload::stop()
 
 void mtt::MetadataDownload::evalComms()
 {
-	if (activeComms.empty() && !state.finished)
+	if (activeComms.size() < mtt::config::external.maxTorrentConnections && !state.finished)
 	{
 		peers.connectNext(10);
 		BT_UTM_LOG("searching for more peers");

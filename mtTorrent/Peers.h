@@ -131,9 +131,11 @@ namespace mtt
 			std::shared_ptr<PeerCommunication> comm;
 			uint32_t idx;
 			uint32_t timeConnected;
+			uint32_t timeLastPiece = 0;
 		};
 		std::vector<ActivePeer> activeConnections;
 		mtt::Peers::KnownPeer* mtt::Peers::getKnownPeer(PeerCommunication* p);
+		mtt::Peers::KnownPeer* mtt::Peers::getKnownPeer(mtt::Peers::ActivePeer* p);
 		mtt::Peers::ActivePeer* mtt::Peers::getActivePeer(PeerCommunication* p);
 
 		TorrentPtr torrent;

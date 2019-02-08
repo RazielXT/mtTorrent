@@ -95,6 +95,11 @@ namespace mtt
 
 		void initializeCallbacks();
 		void resetState();
+
+		std::mutex logMtx;
+		std::vector<std::string> logs;
+		void LogMsg(std::stringstream& s);
+		void SerializeLogs();
 	};
 
 }

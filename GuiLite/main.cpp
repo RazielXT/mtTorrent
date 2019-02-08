@@ -341,6 +341,9 @@ void refreshUi()
 
 	{
 		auto peersGrid = GuiLite::MainForm::instance->getPeersGrid();
+		String^ selectedPeer;
+		if (peersGrid->SelectedRows->Count > 0)
+			selectedPeer = (String^)peersGrid->SelectedRows[0]->Cells[0]->Value;
 		adjustGridRowsCount(peersGrid, (int)peers.count);
 
 		for (uint32_t i = 0; i < peers.count; i++)
@@ -357,6 +360,16 @@ void refreshUi()
 
 		if (peersGrid->SortedColumn)
 			peersGrid->Sort(peersGrid->SortedColumn, peersGrid->SortOrder == SortOrder::Ascending ? System::ComponentModel::ListSortDirection::Ascending : System::ComponentModel::ListSortDirection::Descending);
+	
+		if (peersGrid->RowCount > 0 && selectedPeer)
+		{
+			peersGrid->ClearSelection();
+			for (uint32_t i = 0; i < peers.count; i++)
+			{
+				if (selectedPeer == (String^)peersGrid->Rows[i]->Cells[0]->Value)
+					peersGrid->Rows[i]->Selected = true;
+			}
+		}
 	}
 
 	mtBI::SourcesInfo sources;

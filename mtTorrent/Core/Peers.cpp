@@ -343,6 +343,11 @@ mtt::Peers::KnownPeer* mtt::Peers::getKnownPeer(PeerCommunication* p)
 	return &knownPeers[getActivePeer(p)->idx];
 }
 
+mtt::Peers::KnownPeer* mtt::Peers::getKnownPeer(ActivePeer* p)
+{
+	return &knownPeers[p->idx];
+}
+
 bool mtt::Peers::KnownPeer::operator==(const Addr& r)
 {
 	return info.address == r;
@@ -381,12 +386,13 @@ void mtt::PeersAnalyzer::messageReceived(PeerCommunication* p, PeerMessage& msg)
 	{
 		std::lock_guard<std::mutex> guard(peers.peersMutex);
 
-		auto peer = peers.getKnownPeer(p);
-		peer->downloaded += msg.piece.info.length;
+		auto peer = peers.getActivePeer(p);
+		peer->timeLastPiece = (uint32_t)std::time(0);
+		peers.getKnownPeer(peer)->downloaded += msg.piece.info.length;
 	}
-	else if (msg.id == Unchoke)
+	else if (msg.id == Interested)
 	{
-		peers.torrent->uploader->wantsUnchoke(p);
+		peers.torrent->uploader->isInterested(p);
 	}
 	else if (msg.id == Request)
 	{
@@ -547,7 +553,7 @@ void mtt::PeersAnalyzer::evalCurrentPeers()
 
 	secondsFromLastPeerEval = 0;
 
-	PeerCommunication* slowestPeer = nullptr;
+	std::vector<PeerCommunication*> removePeers;
 	{
 		std::lock_guard<std::mutex> guard(peers.peersMutex);
 
@@ -558,12 +564,22 @@ void mtt::PeersAnalyzer::evalCurrentPeers()
 		uint32_t currentTime = (uint32_t)std::time(0);
 		auto minTimeToEval = currentTime - minPeersTimeChance;
 
+		const uint32_t minPeersPiecesTimeChance = 20;
+		auto minTimeToReceive = currentTime - minPeersPiecesTimeChance;
+
 		uint32_t slowestSpeed = -1;
+		PeerCommunication* slowestPeer;
 
 		for (auto peer : peers.activeConnections)
 		{
 			if(peer.timeConnected > minTimeToEval)
 				continue;
+
+			if (peer.timeLastPiece < minTimeToReceive)
+			{
+				removePeers.push_back(peer.comm.get());
+				continue;
+			}
 
 			auto speed = peers.knownPeers[peer.idx].info.downloadSpeed;
 			if (speed < slowestSpeed)
@@ -572,10 +588,15 @@ void mtt::PeersAnalyzer::evalCurrentPeers()
 				slowestPeer = peer.comm.get();
 			}
 		}
+
+		if (removePeers.empty())
+			removePeers.push_back(slowestPeer);
 	}
 
-	if (slowestPeer != nullptr)
-		peers.disconnect(slowestPeer);
+	for (auto p : removePeers)
+	{
+		peers.disconnect(p);
+	}
 }
 
 void mtt::PeersAnalyzer::checkForDhtPeers()

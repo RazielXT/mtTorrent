@@ -1,9 +1,10 @@
 #include "PeerCommunication.h"
 #include "utils/PacketHelper.h"
 #include "Configuration.h"
+#include <fstream>
 
 #define BT_LOG(x) WRITE_LOG(LogTypeBt, "(" << getAddressName() << ") " << x)
-
+#define LOG_MGS(x) {}//{std::stringstream ss; ss << x; LogMsg(ss);}
 using namespace mtt;
 
 namespace mtt
@@ -166,6 +167,7 @@ void mtt::PeerCommunication::sendHandshake()
 {
 	if (!state.finishedHandshake && state.action == PeerCommunicationState::Connected)
 	{
+		LOG_MGS("Handshake");
 		state.action = PeerCommunicationState::Handshake;
 		stream->write(mtt::bt::createHandshake(torrent.hash, mtt::config::internal_.hashId));
 	}
@@ -214,6 +216,11 @@ std::string mtt::PeerCommunication::getAddressName()
 
 void mtt::PeerCommunication::connectionClosed(int code)
 {
+	if (!logs.empty())
+	{
+		LOG_MGS("Closed code " << code);
+		SerializeLogs();
+	}
 	state.action = PeerCommunicationState::Disconnected;
 	listener.connectionClosed(this, code);
 }
@@ -244,6 +251,7 @@ void mtt::PeerCommunication::setInterested(bool enabled)
 	if (state.amInterested == enabled)
 		return;
 
+	LOG_MGS("Interested");
 	state.amInterested = enabled;
 	stream->write(mtt::bt::createStateMessage(enabled ? Interested : NotInterested));
 }
@@ -256,6 +264,7 @@ void mtt::PeerCommunication::setChoke(bool enabled)
 	if (state.amChoking == enabled)
 		return;
 
+	LOG_MGS("Choke");
 	state.amChoking = enabled;
 	stream->write(mtt::bt::createStateMessage(enabled ? Choke : Unchoke));
 }
@@ -265,6 +274,7 @@ void mtt::PeerCommunication::requestPieceBlock(PieceBlockInfo& pieceInfo)
 	if (!isEstablished())
 		return;
 
+	LOG_MGS("Request");
 	stream->write(mtt::bt::createBlockRequest(pieceInfo));
 }
 
@@ -278,6 +288,7 @@ void mtt::PeerCommunication::sendKeepAlive()
 	if (!isEstablished())
 		return;
 
+	LOG_MGS("KeepAlive");
 	stream->write(DataBuffer(4, 0));
 }
 
@@ -286,6 +297,7 @@ void mtt::PeerCommunication::sendHave(uint32_t pieceIdx)
 	if (!isEstablished())
 		return;
 
+	LOG_MGS("Have");
 	stream->write(mtt::bt::createHave(pieceIdx));
 }
 
@@ -294,6 +306,7 @@ void mtt::PeerCommunication::sendPieceBlock(PieceBlock& block)
 	if (!isEstablished())
 		return;
 
+	LOG_MGS("Piece");
 	stream->write(mtt::bt::createPiece(block));
 }
 
@@ -302,6 +315,7 @@ void mtt::PeerCommunication::sendBitfield(DataBuffer& bitfield)
 	if (!isEstablished())
 		return;
 
+	LOG_MGS("Bitfield");
 	stream->write(mtt::bt::createBitfield(bitfield));
 }
 
@@ -311,16 +325,44 @@ void mtt::PeerCommunication::resetState()
 	info = PeerInfo();
 }
 
+void mtt::PeerCommunication::LogMsg(std::stringstream& s)
+{
+	std::lock_guard<std::mutex> guard(logMtx);
+
+	time_t rawtime;
+	struct tm timeinfo;
+	char buffer[80];
+
+	time(&rawtime);
+	localtime_s(&timeinfo, &rawtime);
+	strftime(buffer, 80, "%T: ", &timeinfo);
+
+	logs.push_back(buffer + s.str());
+}
+
+void mtt::PeerCommunication::SerializeLogs()
+{
+	std::lock_guard<std::mutex> guard(logMtx);
+	std::ofstream file(stream->getName());
+	for (auto& l : logs)
+	{
+		file << l << "\n";
+	}
+}
+
 void mtt::PeerCommunication::sendPort(uint16_t port)
 {
 	if (!isEstablished())
 		return;
 
+	LOG_MGS("Port");
 	stream->write(mtt::bt::createPort(port));
 }
 
 void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 {
+	LOG_MGS("Received: " << message.id);
+
 	if (message.id != Piece)
 		BT_LOG("MSG ID:" << (int)message.id << ", size: " << message.messageSize);
 
@@ -329,7 +371,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 		info.pieces.fromBitfield(message.bitfield, torrent.pieces.size());
 
 		BT_LOG("new percentage: " << std::to_string(info.pieces.getPercentage()));
-
+		LOG_MGS("Received progress: " << info.pieces.getPercentage());
 		listener.progressUpdated(this);
 	}
 	else if (message.id == Have)
@@ -337,7 +379,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 		info.pieces.addPiece(message.havePieceIndex);
 
 		BT_LOG("new percentage: " << std::to_string(info.pieces.getPercentage()));
-
+		LOG_MGS("Received progress: " << info.pieces.getPercentage());
 		listener.progressUpdated(this);
 	}
 	else if (message.id == Unchoke)

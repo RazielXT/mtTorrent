@@ -9,11 +9,6 @@ mtt::Uploader::Uploader(TorrentPtr t)
 
 void mtt::Uploader::isInterested(PeerCommunication* p)
 {
-
-}
-
-void mtt::Uploader::wantsUnchoke(PeerCommunication* p)
-{
 	p->setChoke(false);
 }
 
