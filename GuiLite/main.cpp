@@ -7,6 +7,7 @@
 #include <windows.h>
 #include <vcclr.h>
 #include "SettingsForm.h"
+#include <WinUser.h>
 
 using namespace System;
 using namespace System::Windows::Forms;
@@ -414,15 +415,58 @@ void refreshUi()
 	}
 }
 
+void ProcessProgramArgument(System::String^ arg)
+{
+	auto magnetPtr = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(arg).ToPointer();
+	IoctlFunc(mtBI::MessageId::AddFromMetadata, magnetPtr, hash);
+}
+
+const int WM_MTT_ARGUMENT = WM_USER + 100;
+const int MTT_ARGUMENT_START = 1;
+const int MTT_ARGUMENT_END = 2;
+std::string argumentBuffer;
+
+public ref class MyMessageFilter : System::Windows::Forms::IMessageFilter
+{
+	public: 
+	
+		MyMessageFilter() { }
+
+		virtual bool PreFilterMessage(Message% objMessage) 
+		{
+			if (objMessage.Msg == WM_MTT_ARGUMENT)
+			{
+				if (objMessage.LParam == (IntPtr)MTT_ARGUMENT_END)
+					ProcessProgramArgument(gcnew System::String(argumentBuffer.data()));
+				else
+				{
+					if (objMessage.LParam == (IntPtr)MTT_ARGUMENT_START)
+						argumentBuffer.clear();
+
+					argumentBuffer.push_back((char)objMessage.WParam.ToInt32());
+				}
+
+				return true;
+			}
+
+			return false;
+		}
+};
+
 [STAThread]
-void FormsMain(HWND* hwnd, HWND* parent)
+void FormsMain(cli::array<System::String ^>^ args)
 {
 	Application::EnableVisualStyles();
 	Application::SetCompatibleTextRenderingDefault(false);
 
 	GuiLite::MainForm form;
-
 	start();
+
+	if (args->Length > 0)
+		ProcessProgramArgument(args[0]);
+
+	MyMessageFilter^ filter = gcnew MyMessageFilter();
+	Application::AddMessageFilter(filter);
 
 	Application::Run(%form);
 
@@ -430,9 +474,33 @@ void FormsMain(HWND* hwnd, HWND* parent)
 		FreeLibrary(lib);
 }
 
-int Main()
+#pragma comment(lib, "user32.lib")
+HWND GetExistingMainWindow()
 {
-	FormsMain(0, 0);
+	return FindWindowExA(0, 0, nullptr, "mtTorrent");
+}
+
+void OnDuplicate(HWND hMainWindow, cli::array<System::String ^>^ args)
+{
+	if (args->Length > 0)
+	{
+		auto arg = args[0];
+
+		for (int i = 0; i < arg->Length; i++)
+		{
+			PostMessage(hMainWindow, WM_MTT_ARGUMENT, arg[i], i == 0 ? MTT_ARGUMENT_START : 0);
+		}
+
+		PostMessage(hMainWindow, WM_MTT_ARGUMENT, 0, MTT_ARGUMENT_END);
+	}
+}
+
+int Main(cli::array<System::String ^>^ args)
+{
+	if (HWND h = GetExistingMainWindow())
+		OnDuplicate(h, args);
+	else
+		FormsMain(args);
 
 	return 0;
 }
