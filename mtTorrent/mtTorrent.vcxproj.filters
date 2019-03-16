@@ -172,6 +172,9 @@
     <ClCompile Include="Core\IncomingPeersListener.cpp">
       <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClCompile>
+    <ClCompile Include="Core\BinaryInterfaceInternal.cpp">
+      <Filter>Source Files\Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Storage.h">
@@ -288,9 +291,6 @@
     <ClInclude Include="Core\Files.h">
       <Filter>Source Files\Core\Torrent\Files</Filter>
     </ClInclude>
-    <ClInclude Include="Peers.h">
-      <Filter>Source Files\Core\Torrent\Control</Filter>
-    </ClInclude>
     <ClInclude Include="Core\Core.h">
       <Filter>Source Files\Core</Filter>
     </ClInclude>
@@ -313,6 +313,9 @@
       <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClInclude>
     <ClInclude Include="Core\IncomingPeersListener.h">
+      <Filter>Source Files\Core\Torrent\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Peers.h">
       <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClInclude>
   </ItemGroup>

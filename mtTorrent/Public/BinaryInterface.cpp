@@ -1,6 +1,5 @@
 #include "BinaryInterface.h"
 
-
 void* mtBI::string::basic_allocator::alloc(size_t size)
 {
 	return malloc(size);

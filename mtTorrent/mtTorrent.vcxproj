@@ -233,6 +233,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Core\BinaryInterfaceInternal.cpp" />
     <ClCompile Include="Core\Core.cpp" />
     <ClCompile Include="Core\Files.cpp" />
     <ClCompile Include="Core\IncomingPeersListener.cpp" />
@@ -282,6 +283,7 @@
     <ClInclude Include="Core\Dht\Listener.h" />
     <ClInclude Include="Core\Files.h" />
     <ClInclude Include="Core\IncomingPeersListener.h" />
+    <ClInclude Include="Core\Peers.h" />
     <ClInclude Include="Core\Torrent.h" />
     <ClInclude Include="Core\MetadataDownload.h" />
     <ClInclude Include="Core\Configuration.h" />
@@ -308,7 +310,6 @@
     <ClInclude Include="Core\TrackerManager.h" />
     <ClInclude Include="Core\UdpTrackerComm.h" />
     <ClInclude Include="Core\Uploader.h" />
-    <ClInclude Include="Peers.h" />
     <ClInclude Include="Public\BinaryInterface.h" />
     <ClInclude Include="Public\Status.h" />
     <ClInclude Include="utils\Base32.h" />
