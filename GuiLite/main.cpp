@@ -109,10 +109,20 @@ void addTorrent()
 	}
 }
 
+bool addTorrentFromMetadata(const char* magnetPtr)
+{
+	if (IoctlFunc(mtBI::MessageId::AddFromMetadata, magnetPtr, hash) != mtt::Status::Success)
+		return false;
+
+	selected = true;
+	selectionChanged = true;
+
+	return true;
+}
+
 void setSelected(bool v)
 {
 	selected = v;
-	GuiLite::MainForm::instance->buttonStart->Enabled = selected;
 	GuiLite::MainForm::instance->buttonStart->Enabled = selected;
 
 	if (!selected)
@@ -217,7 +227,7 @@ void onButtonClick(System::Object^ button, System::String^ id)
 					return;
 
 				auto magnetPtr = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(GuiLite::MagnetInputForm::instance->textBoxMagnet->Text).ToPointer();
-				if (IoctlFunc(mtBI::MessageId::AddFromMetadata, magnetPtr, hash) == mtt::Status::Success)
+				if (addTorrentFromMetadata(magnetPtr))
 				{
 					GuiLite::MagnetInputForm::instance->magnetFormButton->Enabled = false;
 					GuiLite::MagnetInputForm::instance->labelText->Text = "Getting info...";
@@ -418,7 +428,7 @@ void refreshUi()
 void ProcessProgramArgument(System::String^ arg)
 {
 	auto magnetPtr = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(arg).ToPointer();
-	IoctlFunc(mtBI::MessageId::AddFromMetadata, magnetPtr, hash);
+	addTorrentFromMetadata(magnetPtr);
 }
 
 const int WM_MTT_ARGUMENT = WM_USER + 100;
@@ -477,7 +487,14 @@ void FormsMain(cli::array<System::String ^>^ args)
 #pragma comment(lib, "user32.lib")
 HWND GetExistingMainWindow()
 {
-	return FindWindowExA(0, 0, nullptr, "mtTorrent");
+	auto processes = System::Diagnostics::Process::GetProcessesByName("mtTorrent");
+	for (int i = 0; i < processes->Length; i++)
+	{
+		if (processes[i]->MainWindowTitle == "mtTorrent")
+			return (HWND)processes[i]->MainWindowHandle.ToInt64();
+	}
+
+	return 0;
 }
 
 void OnDuplicate(HWND hMainWindow, cli::array<System::String ^>^ args)
