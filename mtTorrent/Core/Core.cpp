@@ -44,6 +44,9 @@ mtt::TorrentPtr mtt::Core::addFile(const char* filename)
 	if (!torrent)
 		return nullptr;
 
+	if (auto t = getTorrent(torrent->infoFile.info.hash))
+		return t;
+
 	torrents.push_back(torrent);
 
 	auto onCheckFinish = [torrent](std::shared_ptr<PiecesCheck>)
@@ -63,15 +66,25 @@ mtt::TorrentPtr mtt::Core::addFile(const char* filename)
 
 mtt::TorrentPtr mtt::Core::addMagnet(const char* magnet)
 {
-	auto onMetadataUpdate = [](Status s, mtt::MetadataDownloadState& state)
-	{
-	};
-
-	auto torrent = Torrent::fromMagnetLink(magnet, onMetadataUpdate);// "G:\\[HorribleSubs] JoJo's Bizarre Adventure - Golden Wind - 13 [720p].mkv.torrent");
+	auto torrent = Torrent::fromMagnetLink(magnet);
 
 	if (!torrent)
 		return nullptr;
 
+	if (auto t = getTorrent(torrent->infoFile.info.hash))
+		return t;
+
+	auto onMetadataUpdate = [torrent](Status s, mtt::MetadataDownloadState& state)
+	{
+		auto onCheckFinish = [](std::shared_ptr<PiecesCheck>)
+		{
+		};
+
+		if(s == Status::Success && state.finished)
+			torrent->checkFiles(onCheckFinish);
+	};
+
+	torrent->downloadMetadata(onMetadataUpdate);
 	torrents.push_back(torrent);
 
 	return torrent;

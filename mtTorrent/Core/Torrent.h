@@ -26,7 +26,8 @@ namespace mtt
 		bool checking = false;
 
 		static TorrentPtr fromFile(std::string filepath);
-		static TorrentPtr fromMagnetLink(std::string link, std::function<void(Status, MetadataDownloadState&)> callback);
+		static TorrentPtr fromMagnetLink(std::string link);
+		void downloadMetadata(std::function<void(Status, MetadataDownloadState&)> callback);
 
 		bool start();
 		void pause();

@@ -23,36 +23,39 @@ mtt::TorrentPtr mtt::Torrent::fromFile(std::string filepath)
 		return nullptr;
 }
 
-mtt::TorrentPtr mtt::Torrent::fromMagnetLink(std::string link, std::function<void(Status,MetadataDownloadState&)> callback)
+mtt::TorrentPtr mtt::Torrent::fromMagnetLink(std::string link)
 {
 	mtt::TorrentPtr torrent = std::make_shared<Torrent>();
 	if (torrent->infoFile.parseMagnetLink(link) != Status::Success)
 		return nullptr;
 
-	torrent->state = State::DownloadUtm;
 	torrent->peers = std::make_unique<Peers>(torrent);
 	torrent->downloader = std::make_unique<Downloader>(torrent);
 	torrent->uploader = std::make_unique<Uploader>(torrent);
 
-	torrent->utmDl = std::make_unique<MetadataDownload>(*torrent->peers);
-	torrent->utmDl->start([torrent, callback](Status s, MetadataDownloadState& state)
+	return torrent;
+}
+
+void mtt::Torrent::downloadMetadata(std::function<void(Status, MetadataDownloadState&)> callback)
+{
+	state = State::DownloadUtm;
+	utmDl = std::make_unique<MetadataDownload>(*peers);
+	utmDl->start([this, callback](Status s, MetadataDownloadState& state)
 	{
 		if (s == Status::Success && state.finished)
 		{
-			torrent->infoFile.info = torrent->utmDl->metadata.getRecontructedInfo();
-			torrent->init();
+			infoFile.info = utmDl->metadata.getRecontructedInfo();
+			init();
 		}
 
 		if (state.finished)
 		{
-			torrent->state = State::Stopped;
+			this->state = State::Stopped;
 		}
 
 		callback(s, state);
 	}
 	);
-
-	return torrent;
 }
 
 void mtt::Torrent::init()

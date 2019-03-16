@@ -699,10 +699,12 @@ void TorrentTest::idealMagnetLinkTest()
 		TEST_LOG("UTM status " << (int)s << " from " << hexToString(state.source, 20) << ", parts: " << state.receivedParts << "/" << state.partsCount);
 	};
 
-	TorrentPtr torrent = Torrent::fromMagnetLink(tempLink, onMetadataUpdate);
+	TorrentPtr torrent = Torrent::fromMagnetLink(tempLink);
 
 	if (!torrent)
 		return;
+
+	torrent->downloadMetadata(onMetadataUpdate);
 
 	WAITFOR(finished);
 
