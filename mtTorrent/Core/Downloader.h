@@ -64,5 +64,7 @@ namespace mtt
 		bool pieceFinished(RequestInfo*);
 
 		TorrentPtr torrent;
+
+		void onFinish();
 	};
 }

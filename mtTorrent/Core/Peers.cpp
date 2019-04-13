@@ -386,9 +386,11 @@ void mtt::PeersAnalyzer::messageReceived(PeerCommunication* p, PeerMessage& msg)
 	{
 		std::lock_guard<std::mutex> guard(peers.peersMutex);
 
-		auto peer = peers.getActivePeer(p);
-		peer->timeLastPiece = (uint32_t)std::time(0);
-		peers.getKnownPeer(peer)->downloaded += msg.piece.info.length;
+		if (auto peer = peers.getActivePeer(p))
+		{
+			peer->timeLastPiece = (uint32_t)std::time(0);
+			peers.getKnownPeer(peer)->downloaded += msg.piece.info.length;
+		}
 	}
 	else if (msg.id == Interested)
 	{
@@ -400,9 +402,11 @@ void mtt::PeersAnalyzer::messageReceived(PeerCommunication* p, PeerMessage& msg)
 		{
 			std::lock_guard<std::mutex> guard(peers.peersMutex);
 
-			auto peer = peers.getKnownPeer(p);
-			peer->uploaded += msg.request.length;
-			uploaded += msg.request.length;
+			if (auto peer = peers.getKnownPeer(p))
+			{
+				peer->uploaded += msg.request.length;
+				uploaded += msg.request.length;
+			}
 		}
 	}
 

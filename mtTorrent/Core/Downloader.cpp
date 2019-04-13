@@ -370,6 +370,9 @@ void mtt::Downloader::pieceBlockReceived(PeerCommunication* p, PieceBlock& block
 			}
 		}
 	}
+
+	if (valid && finished && torrent->finished())
+		onFinish();
 }
 
 bool mtt::Downloader::pieceFinished(RequestInfo* r)
@@ -392,4 +395,9 @@ bool mtt::Downloader::pieceFinished(RequestInfo* r)
 	}
 
 	return valid;
+}
+
+void mtt::Downloader::onFinish()
+{
+	torrent->files.storage.flush();
 }
