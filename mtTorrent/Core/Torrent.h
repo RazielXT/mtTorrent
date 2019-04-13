@@ -24,6 +24,7 @@ namespace mtt
 		}
 		state = State::Stopped;
 		bool checking = false;
+		Status lastError = Status::Success;
 
 		static TorrentPtr fromFile(std::string filepath);
 		static TorrentPtr fromMagnetLink(std::string link);

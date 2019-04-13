@@ -19,7 +19,7 @@ namespace mtt
 		void storePiece(DownloadedPiece& piece);
 		PieceBlock getPieceBlock(PieceBlockInfo& piece);
 
-		void preallocateSelection(DownloadSelection& files);
+		Status preallocateSelection(DownloadSelection& files);
 		DataBuffer checkStoredPieces(std::vector<PieceInfo>& piecesInfo);
 		std::shared_ptr<PiecesCheck> checkStoredPiecesAsync(std::vector<PieceInfo>& piecesInfo, boost::asio::io_service& io, std::function<void(std::shared_ptr<PiecesCheck>)> onFinish);
 		void flush();
@@ -33,7 +33,7 @@ namespace mtt
 
 		void flushAllFiles();
 		void flush(File& file);
-		void preallocate(File& file);
+		Status preallocate(File& file);
 
 		std::string path;
 

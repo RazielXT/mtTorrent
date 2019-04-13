@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include "Status.h"
 
 namespace mtBI
 {
@@ -94,6 +95,7 @@ namespace mtBI
 		uint32_t connectedPeers;
 		bool checking;
 		float checkingProgress;
+		mtt::Status activeStatus;
 	};
 
 	struct PeerInfo

@@ -30,6 +30,5 @@ void mtt::Files::select(DownloadSelection& s)
 
 mtt::Status mtt::Files::prepareSelection()
 {
-	storage.preallocateSelection(selection);
-	return Status::Success;
+	return storage.preallocateSelection(selection);
 }

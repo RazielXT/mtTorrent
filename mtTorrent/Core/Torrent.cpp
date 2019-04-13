@@ -65,10 +65,14 @@ void mtt::Torrent::init()
 
 bool mtt::Torrent::start()
 {
+	lastError = Status::E_InvalidInput;
+
 	if (files.selection.files.empty())
 		return false;
 
-	if (files.prepareSelection() != mtt::Status::Success)
+	lastError = files.prepareSelection();
+
+	if (lastError != mtt::Status::Success)
 		return false;
 
 	service.start(2);
@@ -107,6 +111,7 @@ void mtt::Torrent::stop()
 
 	service.stop();
 	state = State::Stopped;
+	lastError = Status::Success;
 }
 
 std::shared_ptr<mtt::PiecesCheck> mtt::Torrent::checkFiles(std::function<void(std::shared_ptr<PiecesCheck>)> onFinish)

@@ -81,6 +81,7 @@ extern "C"
 			resp->uploaded = torrent->uploaded();
 			resp->uploadSpeed = torrent->uploadSpeed();
 			resp->progress = torrent->currentProgress();
+			resp->activeStatus = torrent->lastError;
 		}
 		else if (id == mtBI::MessageId::GetPeersInfo)
 		{

@@ -15,6 +15,7 @@ namespace mtt
 		E_InvalidInput,
 		E_Unsupported,
 		E_NotEnoughSpace,
+		E_AllocationProblem,
 
 		E_NetworkError = 2000,
 		E_ConnectionClosed

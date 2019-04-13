@@ -131,7 +131,7 @@ void mtt::Storage::loadPiece(File& file, CachedPiece& piece)
 	}
 }
 
-void mtt::Storage::preallocateSelection(DownloadSelection& selection)
+mtt::Status mtt::Storage::preallocateSelection(DownloadSelection& selection)
 {
 	{
 		std::lock_guard<std::mutex> guard(storageMutex);
@@ -139,7 +139,11 @@ void mtt::Storage::preallocateSelection(DownloadSelection& selection)
 		for (auto& f : selection.files)
 		{
 			if (f.selected)
-				preallocate(f.info);
+			{
+				auto s = preallocate(f.info);
+				if (s != Status::Success)
+					return s;
+			}
 		}
 	}
 
@@ -148,6 +152,8 @@ void mtt::Storage::preallocateSelection(DownloadSelection& selection)
 
 		cachedPieces.reset();
 	}
+
+	return Status::Success;
 }
 
 void mtt::Storage::flush()
@@ -285,17 +291,26 @@ std::shared_ptr<mtt::PiecesCheck> mtt::Storage::checkStoredPiecesAsync(std::vect
 	return request;
 }
 
-void mtt::Storage::preallocate(File& file)
+mtt::Status mtt::Storage::preallocate(File& file)
 {
 	auto fullpath = getFullpath(file);
 	createPath(fullpath);
 	boost::filesystem::path dir(fullpath);
 	if (!boost::filesystem::exists(dir) || boost::filesystem::file_size(dir) != file.size)
 	{
+		auto spaceInfo = boost::filesystem::space(path);
+		if (spaceInfo.available < file.size)
+			return Status::E_NotEnoughSpace;
+
 		std::ofstream fileOut(fullpath, std::ios_base::binary);
 		fileOut.seekp(file.size - 1);
 		fileOut.put(0);
+
+		if (fileOut.fail())
+			return Status::E_AllocationProblem;
 	}
+
+	return Status::Success;
 }
 
 std::string mtt::Storage::getFullpath(File& file)
