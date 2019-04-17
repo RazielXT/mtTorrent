@@ -355,9 +355,22 @@ void refreshUi()
 					speedInfo += ")";
 				}
 
+				String^ name = gcnew String(info.name.data);
+				if (name->Length == 0)
+				{
+					mtBI::MagnetLinkProgress magnetProgress;
+					if (IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, t.hash, &magnetProgress) == mtt::Status::Success)
+					{
+						if (magnetProgress.progress > 1.0f)
+							magnetProgress.progress = 1.0f;
+
+						name = "Metadata download " + float(magnetProgress.progress).ToString("P");
+					}
+				}
+
 				auto row = gcnew cli::array< System::String^  >(10) {
 					gcnew String(hexToString(t.hash, 20).data()),
-						gcnew String(info.name.data), info.checking ? "Checking " + float(info.checkingProgress).ToString("P") : float(info.progress).ToString("P"),
+						name, info.checking ? "Checking " + float(info.checkingProgress).ToString("P") : float(info.progress).ToString("P"),
 						activeStatus, speedInfo, float((info.uploadSpeed / 1024.f) / 1024.f).ToString("F"),
 						int(info.connectedPeers).ToString(), int(info.foundPeers).ToString(),
 						float((info.downloaded / 1024.f) / 1024.f).ToString("F"), float((info.uploaded / 1024.f) / 1024.f).ToString("F")
