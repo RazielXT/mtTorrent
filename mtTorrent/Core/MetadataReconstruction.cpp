@@ -37,18 +37,15 @@ bool mtt::MetadataReconstruction::finished()
 
 uint32_t mtt::MetadataReconstruction::getMissingPieceIndex()
 {
-	static uint32_t notRequestedFlag = remainingPiecesFlag;
+	if ((remainingPiecesFlag >> nextRequestedIndex) == 0)
+		nextRequestedIndex = 0;
 
 	uint32_t flag = 1;
-	for(uint32_t i = 0; i < pieces; i++)
+	for(uint32_t i = nextRequestedIndex; i < pieces; i++)
 	{
-		if (remainingPiecesFlag & flag && notRequestedFlag & flag)
+		if (remainingPiecesFlag & flag)
 		{
-			notRequestedFlag ^= flag;
-
-			if (notRequestedFlag == 0)
-				notRequestedFlag = remainingPiecesFlag;
-
+			nextRequestedIndex = i + 1;
 			return i;
 		}
 

@@ -15,7 +15,8 @@ void LogFile::append(std::stringstream& ss)
 	std::ofstream outfile;
 	outfile.open(logName, std::ios_base::app);
 
-	outfile << GetLogTime() << ": " << ss.str() << "\n";
+	if(outfile.good())
+		outfile << GetLogTime() << ": " << ss.str() << "\n";
 
 	logMutex.unlock();
 }

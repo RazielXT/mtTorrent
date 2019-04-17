@@ -6,6 +6,7 @@
 #include "Peers.h"
 #include "MetadataReconstruction.h"
 #include "Interface.h"
+#include "LogFile.h"
 
 namespace mtt
 {
@@ -21,6 +22,7 @@ namespace mtt
 		MetadataDownloadState state;
 		MetadataReconstruction metadata;
 
+		LogFile log;
 	private:
 
 		std::mutex commsMutex;

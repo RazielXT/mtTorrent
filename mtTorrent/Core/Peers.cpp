@@ -138,7 +138,7 @@ void mtt::Peers::add(std::shared_ptr<TcpAsyncStream> stream)
 	peer.comm->setStream(stream);
 }
 
-void mtt::Peers::disconnect(PeerCommunication* p)
+std::shared_ptr<mtt::PeerCommunication> mtt::Peers::disconnect(PeerCommunication* p)
 {
 	std::lock_guard<std::mutex> guard(peersMutex);
 
@@ -146,6 +146,7 @@ void mtt::Peers::disconnect(PeerCommunication* p)
 	{
 		if (it->comm.get() == p)
 		{
+			auto ptr = it->comm;
 			auto& peer = knownPeers[it->idx];
 
 			if (!p->isEstablished())
@@ -158,9 +159,11 @@ void mtt::Peers::disconnect(PeerCommunication* p)
 
 			activeConnections.erase(it);
 
-			break;
+			return ptr;
 		}
 	}
+
+	return nullptr;
 }
 
 mtt::TrackerInfo mtt::Peers::getSourceInfo(const std::string& source)
@@ -376,9 +379,8 @@ void mtt::PeersAnalyzer::handshakeFinished(PeerCommunication* p)
 
 void mtt::PeersAnalyzer::connectionClosed(PeerCommunication* p, int code)
 {
-	peers.disconnect(p);
-
-	peerListener->connectionClosed(p, code);
+	if(auto ptr = peers.disconnect(p))
+		peerListener->connectionClosed(p, code);
 }
 
 void mtt::PeersAnalyzer::messageReceived(PeerCommunication* p, PeerMessage& msg)
