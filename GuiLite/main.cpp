@@ -344,11 +344,21 @@ void refreshUi()
 				else
 					activeStatus = "Active";
 
+				String^ speedInfo = float((info.downloadSpeed / 1024.f) / 1024.f).ToString("F");
+				if (t.active && info.downloadSpeed > 0 && info.progress < 1.0f && info.downloaded > 0)
+				{
+					speedInfo += " (";
+					size_t leftBytes = ((size_t)(info.downloaded / info.progress)) - info.downloaded;
+					size_t leftSeconds = leftBytes / info.downloadSpeed;
+					TimeSpan time = System::TimeSpan::FromSeconds((double)leftSeconds);
+					speedInfo += time.ToString("d\\d\\ hh\\hmm\\mss\\s")->TrimStart(' ', 'd', 'h', 'm', 's', '0');
+					speedInfo += ")";
+				}
+
 				auto row = gcnew cli::array< System::String^  >(10) {
 					gcnew String(hexToString(t.hash, 20).data()),
 						gcnew String(info.name.data), info.checking ? "Checking " + float(info.checkingProgress).ToString("P") : float(info.progress).ToString("P"),
-						activeStatus,
-						float((info.downloadSpeed / 1024.f) / 1024.f).ToString("F"), float((info.uploadSpeed / 1024.f) / 1024.f).ToString("F"),
+						activeStatus, speedInfo, float((info.uploadSpeed / 1024.f) / 1024.f).ToString("F"),
 						int(info.connectedPeers).ToString(), int(info.foundPeers).ToString(),
 						float((info.downloaded / 1024.f) / 1024.f).ToString("F"), float((info.uploaded / 1024.f) / 1024.f).ToString("F")
 				};
