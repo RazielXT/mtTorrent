@@ -11,8 +11,8 @@ ScheduledTimer::~ScheduledTimer()
 
 void ScheduledTimer::schedule(uint32_t secondsOffset)
 {
-	timer.async_wait(std::bind(&ScheduledTimer::checkTimer, shared_from_this()));
 	timer.expires_from_now(boost::posix_time::seconds(secondsOffset));
+	timer.async_wait(std::bind(&ScheduledTimer::checkTimer, shared_from_this()));
 }
 
 void ScheduledTimer::disable()

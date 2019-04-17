@@ -4,6 +4,7 @@
 #include "Configuration.h"
 #include "Dht/Communication.h"
 #include "Uploader.h"
+#include "LogFile.h"
 
 class DummyPeerListener : public mtt::IPeerListener
 {
@@ -488,15 +489,24 @@ size_t mtt::PeersAnalyzer::getUploadSum()
 void mtt::PeersAnalyzer::start()
 {
 	std::lock_guard<std::mutex> guard(measureMutex);
+	log.logName = "analyzer";
+
 	speedMeasureTimer = ScheduledTimer::create(peers.torrent->service.io, [this]
 	{
+		LOG_APPEND("start");
+
 		updateMeasures();
 		evalCurrentPeers();
 		checkForDhtPeers();
 
+		LOG_APPEND("full measure: " << getDownloadSpeed());
+
 		std::lock_guard<std::mutex> guard(measureMutex);
-		if(speedMeasureTimer)
+		if (speedMeasureTimer)
+		{
 			speedMeasureTimer->schedule(1);
+			LOG_APPEND("scheduled");
+		}
 	}
 	);
 
@@ -510,6 +520,8 @@ void mtt::PeersAnalyzer::stop()
 		speedMeasureTimer->disable();
 	speedMeasureTimer = nullptr;
 	peerListener = &dummyListener;
+
+	LOG_APPEND("stopped");
 }
 
 void mtt::PeersAnalyzer::updateMeasures()
@@ -534,6 +546,9 @@ void mtt::PeersAnalyzer::updateMeasures()
 						peerInfo.info.downloadSpeed = (uint32_t)(peerInfo.downloaded - last.second.first);
 					if(peerInfo.uploaded > last.second.second)
 						peerInfo.info.uploadSpeed = (uint32_t)(peerInfo.uploaded - last.second.second);
+
+					LOG_APPEND("dl measure: " << peerInfo.info.downloadSpeed << " full:" << peerInfo.downloaded << " before:" << last.second.first);
+
 					break;
 				}
 			}

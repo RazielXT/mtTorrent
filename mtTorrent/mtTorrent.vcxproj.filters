@@ -175,6 +175,9 @@
     <ClCompile Include="Core\BinaryInterfaceInternal.cpp">
       <Filter>Source Files\Core</Filter>
     </ClCompile>
+    <ClCompile Include="Core\LogFile.cpp">
+      <Filter>Source Files\Core\General</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Storage.h">
@@ -317,6 +320,9 @@
     </ClInclude>
     <ClInclude Include="Core\Peers.h">
       <Filter>Source Files\Core\Torrent\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\LogFile.h">
+      <Filter>Source Files\Core\General</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

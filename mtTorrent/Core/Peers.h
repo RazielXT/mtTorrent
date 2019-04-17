@@ -3,6 +3,7 @@
 #include "IPeerListener.h"
 #include "TrackerManager.h"
 #include "Dht/Listener.h"
+#include "LogFile.h"
 
 namespace mtt
 {
@@ -60,6 +61,8 @@ namespace mtt
 
 		virtual uint32_t dhtFoundPeers(uint8_t* hash, std::vector<Addr>& values);
 		virtual void dhtFindingPeersFinished(uint8_t* hash, uint32_t count);
+
+		LogFile log;
 	};
 
 	class Peers
