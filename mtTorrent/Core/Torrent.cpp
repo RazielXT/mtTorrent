@@ -1,10 +1,9 @@
 #include "Torrent.h"
 #include "utils/TorrentFileParser.h"
 #include "MetadataDownload.h"
-#include "Downloader.h"
 #include "Peers.h"
 #include "Configuration.h"
-#include "Uploader.h"
+#include "FileTransfer.h"
 
 mtt::TorrentPtr mtt::Torrent::fromFile(std::string filepath)
 {
@@ -14,8 +13,7 @@ mtt::TorrentPtr mtt::Torrent::fromFile(std::string filepath)
 	if (!torrent->infoFile.info.name.empty())
 	{
 		torrent->peers = std::make_unique<Peers>(torrent);
-		torrent->downloader = std::make_unique<Downloader>(torrent);
-		torrent->uploader = std::make_unique<Uploader>(torrent);
+		torrent->fileTransfer = std::make_unique<FileTransfer>(torrent);
 		torrent->init();
 		return torrent;
 	}
@@ -30,8 +28,7 @@ mtt::TorrentPtr mtt::Torrent::fromMagnetLink(std::string link)
 		return nullptr;
 
 	torrent->peers = std::make_unique<Peers>(torrent);
-	torrent->downloader = std::make_unique<Downloader>(torrent);
-	torrent->uploader = std::make_unique<Uploader>(torrent);
+	torrent->fileTransfer = std::make_unique<FileTransfer>(torrent);
 
 	return torrent;
 }
@@ -82,7 +79,7 @@ bool mtt::Torrent::start()
 	if (checking)
 		return true;
 
-	downloader->start();
+	fileTransfer->start();
 
 	return true;
 }
@@ -99,14 +96,9 @@ void mtt::Torrent::stop()
 		utmDl->stop();
 	}
 
-	if (peers)
+	if (fileTransfer)
 	{
-		peers->stop();
-	}
-
-	if (downloader)
-	{
-		downloader->stop();
+		fileTransfer->stop();
 	}
 
 	service.stop();
@@ -164,6 +156,11 @@ bool mtt::Torrent::finished()
 	return files.progress.getPercentage() == 1;
 }
 
+uint8_t* mtt::Torrent::hash()
+{
+	return infoFile.info.hash;
+}
+
 std::string mtt::Torrent::name()
 {
 	return infoFile.info.name;
@@ -181,17 +178,17 @@ size_t mtt::Torrent::downloaded()
 
 size_t mtt::Torrent::downloadSpeed()
 {
-	return peers->analyzer.getDownloadSpeed();
+	return fileTransfer ? fileTransfer->getDownloadSpeed() : 0;
 }
 
 size_t mtt::Torrent::uploaded()
 {
-	return peers->analyzer.getUploadSum();
+	return fileTransfer ? fileTransfer->getUploadSum() : 0;
 }
 
 size_t mtt::Torrent::uploadSpeed()
 {
-	return peers->analyzer.getUploadSpeed();
+	return fileTransfer ? fileTransfer->getUploadSpeed() : 0;
 }
 
 size_t mtt::Torrent::dataLeft()

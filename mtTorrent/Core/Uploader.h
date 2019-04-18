@@ -14,6 +14,8 @@ namespace mtt
 		void isInterested(PeerCommunication* p);
 		bool pieceRequest(PeerCommunication* p, PieceBlockInfo& info);
 
+		size_t uploaded = 0;
+
 	private:
 
 		TorrentPtr torrent;

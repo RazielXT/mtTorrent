@@ -8,8 +8,7 @@
 namespace mtt
 {
 	class MetadataDownload;
-	class Downloader;
-	class Uploader;
+	class FileTransfer;
 	class Peers;
 
 	class Torrent
@@ -47,13 +46,14 @@ namespace mtt
 		size_t dataLeft();
 		bool finished();
 
+		uint8_t* hash();
+
 		Files files;
 		TorrentFileInfo infoFile;
 		ServiceThreadpool service;
 
 		std::unique_ptr<Peers> peers;
-		std::unique_ptr<Downloader> downloader;
-		std::unique_ptr<Uploader> uploader;
+		std::unique_ptr<FileTransfer> fileTransfer;
 		std::unique_ptr<MetadataDownload> utmDl;
 
 	protected:

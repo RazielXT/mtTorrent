@@ -105,8 +105,8 @@ namespace mtBI
 		float progress;
 		size_t dlSpeed;
 		size_t upSpeed;
-		char source[10];
 		string addr;
+		string client;
 	};
 
 	struct TorrentPeersInfo

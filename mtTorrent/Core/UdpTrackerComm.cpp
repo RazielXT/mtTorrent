@@ -113,7 +113,7 @@ DataBuffer UdpTrackerComm::createAnnounceRequest()
 	packet.add32(Announce);
 	packet.add32(transaction);
 
-	packet.add(torrent->infoFile.info.hash, 20);
+	packet.add(torrent->hash(), 20);
 	packet.add(mtt::config::internal_.hashId, 20);
 
 	packet.add64(torrent->downloaded());

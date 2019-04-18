@@ -16,6 +16,7 @@ bool mtt::Uploader::pieceRequest(PeerCommunication* p, PieceBlockInfo& info)
 {
 	auto block = torrent->files.storage.getPieceBlock(info);
 	p->sendPieceBlock(block);
+	uploaded += info.length;
 
 	return true;
 }

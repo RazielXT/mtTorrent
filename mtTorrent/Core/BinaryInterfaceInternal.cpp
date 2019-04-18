@@ -4,6 +4,7 @@
 #include "Dht/Communication.h"
 #include "Configuration.h"
 #include "Public/BinaryInterface.h"
+#include "FileTransfer.h"
 
 mtt::Core core;
 
@@ -20,7 +21,7 @@ extern "C"
 			if (!t)
 				return mtt::Status::E_InvalidInput;
 
-			memcpy(output, t->infoFile.info.hash, 20);
+			memcpy(output, t->hash(), 20);
 		}
 		else if (id == mtBI::MessageId::AddFromMetadata)
 		{
@@ -29,7 +30,7 @@ extern "C"
 			if (!t)
 				return mtt::Status::E_InvalidInput;
 
-			memcpy(output, t->infoFile.info.hash, 20);
+			memcpy(output, t->hash(), 20);
 		}
 		else if (id == mtBI::MessageId::Start)
 		{
@@ -59,7 +60,7 @@ extern "C"
 				for (size_t i = 0; i < resp->count; i++)
 				{
 					auto t = core.torrents[i];
-					memcpy(resp->list[i].hash, t->infoFile.info.hash, 20);
+					memcpy(resp->list[i].hash, t->hash(), 20);
 					resp->list[i].active = (t->state != mtt::Torrent::State::Stopped);
 				}
 			}
@@ -89,7 +90,7 @@ extern "C"
 			if (!torrent)
 				return mtt::Status::E_InvalidInput;
 			auto resp = (mtBI::TorrentPeersInfo*) output;
-			auto peers = torrent->peers->getConnectedInfo();
+			auto peers = torrent->fileTransfer->getPeersInfo();
 			resp->count = (uint32_t)std::min(resp->peers.size(), peers.size());
 			for (size_t i = 0; i < resp->count; i++)
 			{
@@ -99,17 +100,7 @@ extern "C"
 				out.progress = peer.percentage;
 				out.dlSpeed = peer.downloadSpeed;
 				out.upSpeed = peer.uploadSpeed;
-
-				if (peers[i].source == mtt::PeerSource::Tracker)
-					memcpy(out.source, "Tracker", 8);
-				else if (peers[i].source == mtt::PeerSource::Pex)
-					memcpy(out.source, "Pex", 4);
-				else if (peers[i].source == mtt::PeerSource::Dht)
-					memcpy(out.source, "Dht", 4);
-				else if (peers[i].source == mtt::PeerSource::Remote)
-					memcpy(out.source, "Remote", 7);
-				else
-					memcpy(out.source, "Manual", 7);
+				out.client.set(peers[i].client);
 			}
 		}
 		else if (id == mtBI::MessageId::GetTorrentInfo)

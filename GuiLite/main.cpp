@@ -399,7 +399,7 @@ void refreshUi()
 			auto peerRow = gcnew cli::array< System::String^  >(5) {
 				gcnew String(peerInfo.addr.data),
 					float(peerInfo.dlSpeed / (1024.f * 1024)).ToString("F"), float(peerInfo.upSpeed / (1024.f * 1024)).ToString("F"),
-					float(peerInfo.progress).ToString("P"),	gcnew String(peerInfo.source)
+					float(peerInfo.progress).ToString("P"),	gcnew String(peerInfo.client.data, 0, strlen(peerInfo.client.data), System::Text::Encoding::UTF8)
 			};
 
 			peersGrid->Rows[i]->SetValues(peerRow);

@@ -12,8 +12,7 @@
 #include "Torrent.h"
 #include "Peers.h"
 #include "MetadataDownload.h"
-#include "Downloader.h"
-#include "Uploader.h"
+#include "FileTransfer.h"
 #include "utils/HexEncoding.h"
 
 using namespace mtt;

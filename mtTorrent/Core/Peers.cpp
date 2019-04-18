@@ -6,24 +6,9 @@
 #include "Uploader.h"
 #include "LogFile.h"
 
-class DummyPeerListener : public mtt::IPeerListener
-{
-public:
-	virtual void handshakeFinished(mtt::PeerCommunication*) override {}
-	virtual void connectionClosed(mtt::PeerCommunication*, int code) override {}
-	virtual void messageReceived(mtt::PeerCommunication*, mtt::PeerMessage&) override {}
-	virtual void extHandshakeFinished(mtt::PeerCommunication*) override {}
-	virtual void metadataPieceReceived(mtt::PeerCommunication*, mtt::ext::UtMetadata::Message&) override {}
-	virtual void pexReceived(mtt::PeerCommunication*, mtt::ext::PeerExchange::Message&) override {}
-	virtual void progressUpdated(mtt::PeerCommunication*) override {}
-};
 
-DummyPeerListener dummyListener;
-
-mtt::Peers::Peers(TorrentPtr t) : torrent(t), trackers(t), analyzer(*this)
+mtt::Peers::Peers(TorrentPtr t) : torrent(t), trackers(t), dht(*this, t), peersListener(*this)
 {
-	dhtInfo.hostname = "DHT";
-	dhtInfo.state = TrackerState::Connected;
 	pexInfo.hostname = "PEX";
 	pexInfo.state = TrackerState::Connected;
 	trackers.addTrackers(t->infoFile.announceList);
@@ -32,7 +17,7 @@ mtt::Peers::Peers(TorrentPtr t) : torrent(t), trackers(t), analyzer(*this)
 void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listener)
 {
 	updateCallback = onPeersUpdated;
-	analyzer.peerListener = listener;
+	peersListener.setTarget(listener);
 	trackers.start([this](Status s, AnnounceResponse* r, Tracker* t)
 	{
 		if (r)
@@ -41,6 +26,8 @@ void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listen
 		}
 	}
 	);
+
+	dht.start();
 
 	std::lock_guard<std::mutex> guard(peersMutex);
 	for (auto c : activeConnections)
@@ -55,14 +42,13 @@ void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listen
 
 		c.comm->sendKeepAlive();
 	}
-
-	analyzer.start();
 }
 
 void mtt::Peers::stop()
 {
 	trackers.stop();
-	analyzer.stop();
+	dht.stop();
+	peersListener.setTarget(nullptr);
 	updateCallback = nullptr;
 }
 
@@ -71,21 +57,18 @@ void mtt::Peers::connectNext(uint32_t count)
 	std::lock_guard<std::mutex> guard(peersMutex);
 	count = std::min(count, mtt::config::external.maxTorrentConnections - (uint32_t)activeConnections.size());
 
-	int lastConnections = 0;
-
 	for (size_t i = 0; i < knownPeers.size(); i++)
 	{
 		if(count == 0)
 			break;
 
 		auto&p = knownPeers[i];
-		if (p.lastQuality == PeerQuality::Unknown)// || p.connections < lastConnections)
+		if (p.lastQuality == PeerQuality::Unknown)
 		{
 			connect((uint32_t)i);
+			p.lastConnectionTime = (uint32_t)std::time(0);
 			count--;
 		}
-
-		lastConnections = p.connections;
 	}
 }
 
@@ -120,18 +103,17 @@ std::shared_ptr<mtt::PeerCommunication> mtt::Peers::getPeer(PeerCommunication* p
 void mtt::Peers::add(std::shared_ptr<TcpAsyncStream> stream)
 {
 	ActivePeer peer;
-	peer.comm = std::make_shared<PeerCommunication>(torrent->infoFile.info, analyzer);
+	peer.comm = std::make_shared<PeerCommunication>(torrent->infoFile.info, peersListener);
 
 	{
 		std::lock_guard<std::mutex> guard(peersMutex);
 
 		KnownPeer p;
-		p.info.address = Addr(stream->getEndpoint().address(), stream->getEndpoint().port());
-		p.info.source = PeerSource::Remote;
+		p.address = Addr(stream->getEndpoint().address(), stream->getEndpoint().port());
+		p.source = PeerSource::Remote;
 		knownPeers.push_back(p);
 
 		peer.idx = (uint32_t)knownPeers.size() - 1;
-		peer.timeConnected = (uint32_t)std::time(0);
 		activeConnections.push_back(peer);
 	}
 
@@ -166,14 +148,6 @@ std::shared_ptr<mtt::PeerCommunication> mtt::Peers::disconnect(PeerCommunication
 	return nullptr;
 }
 
-mtt::TrackerInfo mtt::Peers::getSourceInfo(const std::string& source)
-{
-	if (auto t = trackers.getTracker(source))
-		return t->info;
-
-	return dhtInfo;
-}
-
 std::vector<mtt::TrackerInfo> mtt::Peers::getSourcesInfo()
 {
 	auto tr = trackers.getTrackers();
@@ -188,7 +162,7 @@ std::vector<mtt::TrackerInfo> mtt::Peers::getSourcesInfo()
 	out.push_back(pexInfo);
 
 	if(mtt::config::external.enableDht)
-		out.push_back(dhtInfo);
+		out.push_back(dht.info);
 
 	return out;
 }
@@ -203,7 +177,7 @@ void mtt::Peers::refreshSource(const std::string& name)
 	if (auto t = trackers.getTracker(name))
 		t->announce();
 	else if (name == "DHT")
-		analyzer.secondsFromLastDhtCheck = 9999;
+		dht.findPeers();
 }
 
 uint32_t mtt::Peers::connectedCount()
@@ -214,24 +188,6 @@ uint32_t mtt::Peers::connectedCount()
 uint32_t mtt::Peers::receivedCount()
 {
 	return (uint32_t)knownPeers.size();
-}
-
-std::vector<mtt::Peers::PeerInfo> mtt::Peers::getConnectedInfo()
-{
-	std::vector<mtt::Peers::PeerInfo> out;
-	std::lock_guard<std::mutex> guard(peersMutex);
-	out.resize(activeConnections.size());
-
-	int i = 0;
-	for (auto& p : activeConnections)
-	{
-		auto& info = out[i];
-		auto& knownInfo = knownPeers[p.idx];
-		info = knownInfo.info;
-		i++;
-	}
-
-	return out;
 }
 
 uint32_t mtt::Peers::updateKnownPeers(std::vector<Addr>& peers, PeerSource source)
@@ -269,8 +225,8 @@ uint32_t mtt::Peers::updateKnownPeers(std::vector<Addr>& peers, PeerSource sourc
 
 		for (uint32_t i = 0; i < accepted.size(); i++)
 		{
-			addedPeersPtr->info.address = peers[accepted[i]];
-			addedPeersPtr->info.source = source;
+			addedPeersPtr->address = peers[accepted[i]];
+			addedPeersPtr->source = source;
 			addedPeersPtr++;
 		}
 	}
@@ -290,8 +246,8 @@ uint32_t mtt::Peers::updateKnownPeers(Addr& addr, PeerSource source)
 	if (it == knownPeers.end())
 	{
 		KnownPeer peer;
-		peer.info.address = addr;
-		peer.info.source = source;
+		peer.address = addr;
+		peer.source = source;
 		knownPeers.push_back(peer);
 
 		return (uint32_t)knownPeers.size() - 1;
@@ -304,14 +260,12 @@ std::shared_ptr<mtt::PeerCommunication> mtt::Peers::connect(uint32_t idx)
 {
 	auto& knownPeer = knownPeers[idx];
 	if (knownPeer.lastQuality == PeerQuality::Unknown)
-		knownPeer.lastQuality = PeerQuality::Potential;
-	knownPeer.connections++;
+		knownPeer.lastQuality = PeerQuality::Connecting;
 
 	ActivePeer peer;
-	peer.comm = std::make_shared<PeerCommunication>(torrent->infoFile.info, analyzer, torrent->service.io);
-	peer.comm->sendHandshake(knownPeer.info.address);
+	peer.comm = std::make_shared<PeerCommunication>(torrent->infoFile.info, peersListener, torrent->service.io);
+	peer.comm->sendHandshake(knownPeer.address);
 	peer.idx = idx;
-	peer.timeConnected = (uint32_t)std::time(0);
 	activeConnections.push_back(peer);
 
 	return peer.comm;
@@ -324,7 +278,7 @@ std::shared_ptr<mtt::PeerCommunication> mtt::Peers::getActivePeer(Addr& addr)
 	for (auto& connection : activeConnections)
 	{
 		auto& peer = knownPeers[connection.idx];
-		if (peer.info.address == addr)
+		if (peer.address == addr)
 			return connection.comm;
 	}
 
@@ -354,298 +308,135 @@ mtt::Peers::KnownPeer* mtt::Peers::getKnownPeer(ActivePeer* p)
 
 bool mtt::Peers::KnownPeer::operator==(const Addr& r)
 {
-	return info.address == r;
+	return address == r;
 }
 
-mtt::PeersAnalyzer::PeersAnalyzer(Peers& p) : peers(p)
+mtt::Peers::DhtSource::DhtSource(Peers& p, TorrentPtr t) : peers(p), torrent(t)
 {
-	peerListener = &dummyListener;
+	info.hostname = "DHT";
+	info.state = TrackerState::Connected;
+	info.announceInterval = mtt::config::internal_.dhtPeersCheckInterval;
 }
 
-void mtt::PeersAnalyzer::handshakeFinished(PeerCommunication* p)
+void mtt::Peers::DhtSource::start()
 {
-	{
-		std::lock_guard<std::mutex> guard(peers.peersMutex);
+	std::lock_guard<std::mutex> guard(timerMtx);
 
-		auto peer = peers.getKnownPeer(p);
-		peer->lastQuality = Peers::PeerQuality::Normal;
-	}
-
-	if(!peers.torrent->files.progress.empty())
-		p->sendBitfield(peers.torrent->files.progress.toBitfield());
-
-	peerListener->handshakeFinished(p);
-}
-
-void mtt::PeersAnalyzer::connectionClosed(PeerCommunication* p, int code)
-{
-	if(auto ptr = peers.disconnect(p))
-		peerListener->connectionClosed(p, code);
-}
-
-void mtt::PeersAnalyzer::messageReceived(PeerCommunication* p, PeerMessage& msg)
-{
-	if (msg.id == Piece)
-	{
-		std::lock_guard<std::mutex> guard(peers.peersMutex);
-
-		if (auto peer = peers.getActivePeer(p))
+	dhtRefreshTimer = ScheduledTimer::create(torrent->service.io, [this]
 		{
-			peer->timeLastPiece = (uint32_t)std::time(0);
-			peers.getKnownPeer(peer)->downloaded += msg.piece.info.length;
+			std::lock_guard<std::mutex> guard(timerMtx);
+
+			uint32_t currentTime = (uint32_t)time(0);
+			uint32_t nextUpdate = info.announceInterval;
+
+			if (info.nextAnnounce <= currentTime)
+				findPeers();
+			else
+				nextUpdate = info.nextAnnounce - currentTime;
+			
+			dhtRefreshTimer->schedule(nextUpdate);
 		}
-	}
-	else if (msg.id == Interested)
-	{
-		peers.torrent->uploader->isInterested(p);
-	}
-	else if (msg.id == Request)
-	{
-		if (peers.torrent->uploader->pieceRequest(p, msg.request))
-		{
-			std::lock_guard<std::mutex> guard(peers.peersMutex);
-
-			if (auto peer = peers.getKnownPeer(p))
-			{
-				peer->uploaded += msg.request.length;
-				uploaded += msg.request.length;
-			}
-		}
-	}
-
-	peerListener->messageReceived(p, msg);
-}
-
-void mtt::PeersAnalyzer::extHandshakeFinished(PeerCommunication* p)
-{
-	peerListener->extHandshakeFinished(p);
-}
-
-void mtt::PeersAnalyzer::metadataPieceReceived(PeerCommunication* p, ext::UtMetadata::Message& msg)
-{
-	peerListener->metadataPieceReceived(p, msg);
-}
-
-void mtt::PeersAnalyzer::pexReceived(PeerCommunication* p, ext::PeerExchange::Message& msg)
-{
-	peers.pexInfo.peers += peers.updateKnownPeers(msg.addedPeers, PeerSource::Pex);
-	peerListener->pexReceived(p, msg);
-}
-
-void mtt::PeersAnalyzer::progressUpdated(PeerCommunication* p)
-{
-	{
-		std::lock_guard<std::mutex> guard(peers.peersMutex);
-
-		if (auto active = peers.getActivePeer(p))
-			peers.knownPeers[active->idx].info.percentage = active->comm->info.pieces.getPercentage();
-	}
-
-	peerListener->progressUpdated(p);
-}
-
-uint32_t mtt::PeersAnalyzer::getDownloadSpeed(PeerCommunication* p)
-{
-	std::lock_guard<std::mutex> guard(peers.peersMutex);
-
-	for (auto peer : peers.activeConnections)
-	{
-		if (peer.comm.get() == p)
-		{
-			return peers.knownPeers[peer.idx].info.downloadSpeed;
-		}
-	}
-
-	return 0;
-}
-
-uint32_t mtt::PeersAnalyzer::getDownloadSpeed()
-{
-	std::lock_guard<std::mutex> guard(peers.peersMutex);
-	uint32_t speed = 0;
-	for (auto peer : peers.activeConnections)
-	{
-		speed += peers.knownPeers[peer.idx].info.downloadSpeed;
-	}
-
-	return speed;
-}
-
-uint32_t mtt::PeersAnalyzer::getUploadSpeed()
-{
-	std::lock_guard<std::mutex> guard(peers.peersMutex);
-	uint32_t speed = 0;
-	for (auto peer : peers.activeConnections)
-	{
-		speed += peers.knownPeers[peer.idx].info.uploadSpeed;
-	}
-
-	return speed;
-}
-
-size_t mtt::PeersAnalyzer::getUploadSum()
-{
-	return uploaded;
-}
-
-void mtt::PeersAnalyzer::start()
-{
-	std::lock_guard<std::mutex> guard(measureMutex);
-	log.logName = "analyzer";
-
-	speedMeasureTimer = ScheduledTimer::create(peers.torrent->service.io, [this]
-	{
-		LOG_APPEND("start");
-
-		updateMeasures();
-		evalCurrentPeers();
-		checkForDhtPeers();
-
-		LOG_APPEND("full measure: " << getDownloadSpeed());
-
-		std::lock_guard<std::mutex> guard(measureMutex);
-		if (speedMeasureTimer)
-		{
-			speedMeasureTimer->schedule(1);
-			LOG_APPEND("scheduled");
-		}
-	}
 	);
 
-	speedMeasureTimer->schedule(1);
+	dhtRefreshTimer->schedule(1);
 }
 
-void mtt::PeersAnalyzer::stop()
+void mtt::Peers::DhtSource::stop()
 {
-	std::lock_guard<std::mutex> guard(measureMutex);
-	if(speedMeasureTimer)
-		speedMeasureTimer->disable();
-	speedMeasureTimer = nullptr;
-	peerListener = &dummyListener;
+	std::lock_guard<std::mutex> guard(timerMtx);
 
-	LOG_APPEND("stopped");
+	if (dhtRefreshTimer)
+		dhtRefreshTimer->disable();
+	dhtRefreshTimer = nullptr;
 }
 
-void mtt::PeersAnalyzer::updateMeasures()
+void mtt::Peers::DhtSource::findPeers()
 {
-	auto& freshPieces = peers.torrent->files.freshPieces;
-	std::vector<std::pair<PeerCommunication*, std::pair<size_t,size_t>>> currentMeasure;
-
+	if (mtt::config::external.enableDht && info.state != TrackerState::Announcing)
 	{
-		std::lock_guard<std::mutex> guard(peers.peersMutex);
-		for (auto peer : peers.activeConnections)
-		{
-			auto& peerInfo = peers.knownPeers[peer.idx];
-			currentMeasure.push_back({ peer.comm.get(), {peerInfo.downloaded, peerInfo.uploaded} });
-			peerInfo.info.downloadSpeed = 0;
-			peerInfo.info.uploadSpeed = 0;
-
-			for (auto last : lastSpeedMeasure)
-			{
-				if (last.first == peer.comm.get())
-				{
-					if(peerInfo.downloaded > last.second.first)
-						peerInfo.info.downloadSpeed = (uint32_t)(peerInfo.downloaded - last.second.first);
-					if(peerInfo.uploaded > last.second.second)
-						peerInfo.info.uploadSpeed = (uint32_t)(peerInfo.uploaded - last.second.second);
-
-					LOG_APPEND("dl measure: " << peerInfo.info.downloadSpeed << " full:" << peerInfo.downloaded << " before:" << last.second.first);
-
-					break;
-				}
-			}
-
-			for (auto& piece : freshPieces)
-				if(peer.comm->isEstablished())
-					peer.comm->sendHave(piece);
-		}
-	}
-	freshPieces.clear();
-	lastSpeedMeasure = currentMeasure;
-}
-
-void mtt::PeersAnalyzer::evalCurrentPeers()
-{
-	const uint32_t peersEvalInterval = 5;
-
-	secondsFromLastPeerEval++;
-	if (secondsFromLastPeerEval < peersEvalInterval)
-		return;
-
-	secondsFromLastPeerEval = 0;
-
-	std::vector<PeerCommunication*> removePeers;
-	{
-		std::lock_guard<std::mutex> guard(peers.peersMutex);
-
-		if ((uint32_t)peers.activeConnections.size() < mtt::config::external.maxTorrentConnections)
-			return;
-
-		const uint32_t minPeersTimeChance = 10;
-		uint32_t currentTime = (uint32_t)std::time(0);
-		auto minTimeToEval = currentTime - minPeersTimeChance;
-
-		const uint32_t minPeersPiecesTimeChance = 20;
-		auto minTimeToReceive = currentTime - minPeersPiecesTimeChance;
-
-		uint32_t slowestSpeed = -1;
-		PeerCommunication* slowestPeer;
-
-		for (auto peer : peers.activeConnections)
-		{
-			if(peer.timeConnected > minTimeToEval)
-				continue;
-
-			if (peer.timeLastPiece < minTimeToReceive)
-			{
-				removePeers.push_back(peer.comm.get());
-				continue;
-			}
-
-			auto speed = peers.knownPeers[peer.idx].info.downloadSpeed;
-			if (speed < slowestSpeed)
-			{
-				slowestSpeed = speed;
-				slowestPeer = peer.comm.get();
-			}
-		}
-
-		if (removePeers.empty())
-			removePeers.push_back(slowestPeer);
-	}
-
-	for (auto p : removePeers)
-	{
-		peers.disconnect(p);
+		info.state = TrackerState::Announcing;
+		dht::Communication::get().findPeers(torrent->hash(), this);
 	}
 }
 
-void mtt::PeersAnalyzer::checkForDhtPeers()
+uint32_t mtt::Peers::DhtSource::dhtFoundPeers(uint8_t* hash, std::vector<Addr>& values)
 {
-	const uint32_t dhtCheckInterval = 60;
+	info.peers += peers.updateKnownPeers(values, PeerSource::Dht);
+	return info.peers;
+}
 
-	secondsFromLastDhtCheck++;
-	if (secondsFromLastDhtCheck < dhtCheckInterval)
-		return;
-
-	secondsFromLastDhtCheck = 0;
-	peers.dhtInfo.state = TrackerState::Announcing;
+void mtt::Peers::DhtSource::dhtFindingPeersFinished(uint8_t* hash, uint32_t count)
+{
 	uint32_t currentTime = (uint32_t)std::time(0);
-	peers.dhtInfo.lastAnnounce = currentTime;
-	peers.dhtInfo.nextAnnounce = currentTime + dhtCheckInterval;
-	peers.dhtInfo.announceInterval = dhtCheckInterval;
-
-	dht::Communication::get().findPeers(peers.torrent->infoFile.info.hash, this);
+	info.lastAnnounce = currentTime;
+	info.nextAnnounce = currentTime + info.announceInterval;
+	info.state = TrackerState::Connected;
 }
 
-uint32_t mtt::PeersAnalyzer::dhtFoundPeers(uint8_t* hash, std::vector<Addr>& values)
+mtt::Peers::PeersListener::PeersListener(Peers& p) : peers(p)
 {
-	peers.dhtInfo.peers += peers.updateKnownPeers(values, PeerSource::Dht);
-
-	return peers.dhtInfo.peers;
 }
 
-void mtt::PeersAnalyzer::dhtFindingPeersFinished(uint8_t* hash, uint32_t count)
+void mtt::Peers::PeersListener::handshakeFinished(mtt::PeerCommunication* p)
 {
-	peers.dhtInfo.state = TrackerState::Connected;
+	if (auto peer = peers.getKnownPeer(p))
+		peer->lastQuality = Peers::PeerQuality::Normal;
+
+	std::lock_guard<std::mutex> guard(mtx);
+	if (target)
+		target->handshakeFinished(p);
+}
+
+void mtt::Peers::PeersListener::connectionClosed(mtt::PeerCommunication* p, int code)
+{
+	auto ptr = peers.disconnect(p);
+
+	std::lock_guard<std::mutex> guard(mtx);
+	if (target)
+		target->connectionClosed(p, code);
+}
+
+void mtt::Peers::PeersListener::messageReceived(mtt::PeerCommunication* p, mtt::PeerMessage& m)
+{
+	std::lock_guard<std::mutex> guard(mtx);
+	if (target)
+		target->messageReceived(p, m);
+}
+
+void mtt::Peers::PeersListener::extHandshakeFinished(mtt::PeerCommunication* p)
+{
+	std::lock_guard<std::mutex> guard(mtx);
+	if (target)
+		target->extHandshakeFinished(p);
+}
+
+void mtt::Peers::PeersListener::metadataPieceReceived(mtt::PeerCommunication* p, mtt::ext::UtMetadata::Message& m)
+{
+	std::lock_guard<std::mutex> guard(mtx);
+	if (target)
+		target->metadataPieceReceived(p, m);
+}
+
+void mtt::Peers::PeersListener::pexReceived(mtt::PeerCommunication* p, mtt::ext::PeerExchange::Message& msg)
+{
+	peers.pexInfo.peers += peers.updateKnownPeers(msg.addedPeers, PeerSource::Pex);
+
+	std::lock_guard<std::mutex> guard(mtx);
+	if (target)
+		target->pexReceived(p, msg);
+}
+
+void mtt::Peers::PeersListener::progressUpdated(mtt::PeerCommunication* p)
+{
+	//if (auto active = peers.getActivePeer(p))
+	//	peers.knownPeers[active->idx].info.percentage = active->comm->info.pieces.getPercentage();
+
+	std::lock_guard<std::mutex> guard(mtx);
+	if (target)
+		target->progressUpdated(p);
+}
+
+void mtt::Peers::PeersListener::setTarget(mtt::IPeerListener* t)
+{
+	target = t;
 }

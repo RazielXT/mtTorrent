@@ -44,7 +44,7 @@ mtt::TorrentPtr mtt::Core::addFile(const char* filename)
 	if (!torrent)
 		return nullptr;
 
-	if (auto t = getTorrent(torrent->infoFile.info.hash))
+	if (auto t = getTorrent(torrent->hash()))
 		return t;
 
 	torrents.push_back(torrent);
@@ -71,7 +71,7 @@ mtt::TorrentPtr mtt::Core::addMagnet(const char* magnet)
 	if (!torrent)
 		return nullptr;
 
-	if (auto t = getTorrent(torrent->infoFile.info.hash))
+	if (auto t = getTorrent(torrent->hash()))
 		return t;
 
 	auto onMetadataUpdate = [torrent](Status s, mtt::MetadataDownloadState& state)
@@ -94,7 +94,7 @@ mtt::TorrentPtr mtt::Core::getTorrent(const uint8_t* hash)
 {
 	for (auto t : torrents)
 	{
-		if (memcmp(t->infoFile.info.hash, hash, 20) == 0)
+		if (memcmp(t->hash(), hash, 20) == 0)
 			return t;
 	}
 

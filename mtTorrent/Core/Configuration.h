@@ -31,6 +31,8 @@ namespace mtt
 				uint32_t maxPeerValuesResponse = 32;
 			}
 			dht;
+
+			uint32_t dhtPeersCheckInterval = 60;
 		};
 
 		extern External external;

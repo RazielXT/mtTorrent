@@ -151,4 +151,13 @@ namespace mtt
 		bool rejected = false;
 		std::vector<uint8_t> pieces;
 	};
+
+	enum class PeerSource
+	{
+		Tracker,
+		Pex,
+		Dht,
+		Manual,
+		Remote
+	};
 }

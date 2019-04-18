@@ -100,7 +100,7 @@ void mtt::HttpTrackerComm::onTcpReceived()
 DataBuffer mtt::HttpTrackerComm::createAnnounceRequest(std::string host, std::string port)
 {
 	PacketBuilder builder(500);
-	builder << "GET /announce?info_hash=" << UrlEncode(torrent->infoFile.info.hash, 20);
+	builder << "GET /announce?info_hash=" << UrlEncode(torrent->hash(), 20);
 	builder << "&peer_id=" << UrlEncode(mtt::config::internal_.hashId, 20);
 	builder << "&port=" << std::to_string(mtt::config::external.tcpPort);
 	builder << "&uploaded=" << std::to_string(torrent->uploaded());

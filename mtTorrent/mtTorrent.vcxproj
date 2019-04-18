@@ -236,6 +236,7 @@
     <ClCompile Include="Core\BinaryInterfaceInternal.cpp" />
     <ClCompile Include="Core\Core.cpp" />
     <ClCompile Include="Core\Files.cpp" />
+    <ClCompile Include="Core\FileTransfer.cpp" />
     <ClCompile Include="Core\IncomingPeersListener.cpp" />
     <ClCompile Include="Core\LogFile.cpp" />
     <ClCompile Include="Core\Torrent.cpp" />
@@ -283,6 +284,7 @@
     <ClInclude Include="Core\Core.h" />
     <ClInclude Include="Core\Dht\Listener.h" />
     <ClInclude Include="Core\Files.h" />
+    <ClInclude Include="Core\FileTransfer.h" />
     <ClInclude Include="Core\IncomingPeersListener.h" />
     <ClInclude Include="Core\LogFile.h" />
     <ClInclude Include="Core\Peers.h" />
