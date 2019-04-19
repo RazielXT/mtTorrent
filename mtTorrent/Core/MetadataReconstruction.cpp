@@ -40,7 +40,7 @@ uint32_t mtt::MetadataReconstruction::getMissingPieceIndex()
 	if ((remainingPiecesFlag >> nextRequestedIndex) == 0)
 		nextRequestedIndex = 0;
 
-	uint32_t flag = 1;
+	uint32_t flag = 1 << nextRequestedIndex;
 	for(uint32_t i = nextRequestedIndex; i < pieces; i++)
 	{
 		if (remainingPiecesFlag & flag)
