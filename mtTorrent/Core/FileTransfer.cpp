@@ -39,6 +39,9 @@ void mtt::FileTransfer::stop()
 	torrent->peers->stop();
 	downloader.reset();
 	torrent->files.storage.flush();
+
+	std::lock_guard<std::mutex> guard(peersMutex);
+	activePeers.clear();
 }
 
 void mtt::FileTransfer::handshakeFinished(PeerCommunication* p)
