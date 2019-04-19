@@ -22,7 +22,16 @@ namespace mtt
 		MetadataDownloadState state;
 		MetadataReconstruction metadata;
 
-		LogFile log;
+		struct EventInfo
+		{
+			uint8_t sourceId[20];
+			enum Action { Connected, Disconnected, Request, Receive, Searching, End } action;
+			uint32_t index;
+		};
+
+		std::vector<EventInfo> getEvents();
+		uint32_t getEventsCount();
+
 	private:
 
 		std::mutex commsMutex;
@@ -45,5 +54,8 @@ namespace mtt
 
 		void requestPiece(std::shared_ptr<PeerCommunication> peer);
 		bool active = false;
+
+		std::vector<EventInfo> eventLog;
+		void addEventLog(uint8_t* id, EventInfo::Action action, uint32_t index);
 	};
 }

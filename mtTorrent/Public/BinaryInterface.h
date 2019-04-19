@@ -37,6 +37,7 @@ namespace mtBI
 		GetPeersInfo,	//uint8_t[20], TorrentPeersInfo
 		GetSourcesInfo,	//uint8_t[20], SourcesInfo
 		GetMagnetLinkProgress,	//uint8_t[20],MagnetLinkProgress
+		GetMagnetLinkProgressLogs,	//uint8_t[20],MagnetLinkProgressLogs
 		GetSettings, //null, SettingsInfo
 		SetSettings, //SettingsInfo, null
 		RefreshSource, //SourceId, null
@@ -61,6 +62,13 @@ namespace mtBI
 	{
 		float progress;
 		bool finished;
+	};
+
+	struct MagnetLinkProgressLogs
+	{
+		uint32_t count;
+		uint32_t start;
+		std::vector<string> logs;
 	};
 
 	struct TorrentsList

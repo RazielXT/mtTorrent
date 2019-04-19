@@ -5,6 +5,7 @@
 #include "Configuration.h"
 #include "Public/BinaryInterface.h"
 #include "FileTransfer.h"
+#include "utils/HexEncoding.h"
 
 mtt::Core core;
 
@@ -171,6 +172,39 @@ extern "C"
 			auto resp = (mtBI::MagnetLinkProgress*) output;
 			resp->finished = torrent->utmDl->state.finished;
 			resp->progress = torrent->utmDl->state.partsCount == 0 ? 0 : torrent->utmDl->state.receivedParts / (float)torrent->utmDl->state.partsCount;
+		}
+		else if (id == mtBI::MessageId::GetMagnetLinkProgressLogs)
+		{
+			auto torrent = core.getTorrent((const uint8_t*)request);
+			if (!torrent || !torrent->utmDl)
+				return mtt::Status::E_InvalidInput;
+
+			auto resp = (mtBI::MagnetLinkProgressLogs*) output;
+			if (resp->count == 0)
+				resp->count = torrent->utmDl->getEventsCount();
+			else
+			{
+				auto events = torrent->utmDl->getEvents();
+				if (events.size() >= (resp->start + resp->count))
+					for (size_t i = resp->start; i < events.size(); i++)
+					{
+						std::string txt;
+						if (events[i].action == mtt::MetadataDownload::EventInfo::Connected)
+							txt = hexToString(events[i].sourceId, 20) + " connected";
+						else if (events[i].action == mtt::MetadataDownload::EventInfo::Disconnected)
+							txt = hexToString(events[i].sourceId, 20) + " disconnected";
+						else if (events[i].action == mtt::MetadataDownload::EventInfo::End)
+							txt = "Finished";
+						else if (events[i].action == mtt::MetadataDownload::EventInfo::Searching)
+							txt = "Searching for peers, current count " + std::to_string(events[i].index);
+						else if (events[i].action == mtt::MetadataDownload::EventInfo::Request)
+							txt = hexToString(events[i].sourceId, 20) + " reqesting " + std::to_string(events[i].index);
+						else if (events[i].action == mtt::MetadataDownload::EventInfo::Receive)
+							txt = hexToString(events[i].sourceId, 20) + " sent " + std::to_string(events[i].index);
+
+						resp->logs[i - resp->start].set(txt);
+					}
+			}
 		}
 		else if (id == mtBI::MessageId::GetSettings)
 		{

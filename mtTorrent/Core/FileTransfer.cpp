@@ -40,6 +40,8 @@ void mtt::FileTransfer::stop()
 	downloader.reset();
 	torrent->files.storage.flush();
 
+	refreshTimer->disable();
+
 	std::lock_guard<std::mutex> guard(peersMutex);
 	activePeers.clear();
 }

@@ -132,7 +132,7 @@ void setSelected(bool v)
 }
 
 int magnetLinkSequence = 0;
-
+uint32_t lastMagnetLinkLogCount = 0;
 void onButtonClick(System::Object^ button, System::String^ id)
 {
 	if (button == GuiLite::MainForm::instance->buttonAddTorrent)
@@ -186,6 +186,7 @@ void onButtonClick(System::Object^ button, System::String^ id)
 		form.ShowDialog();
 		GuiLite::MagnetInputForm::instance = nullptr;
 		magnetLinkSequence = 0;
+		lastMagnetLinkLogCount = 0;
 	}
 	else if (button == GuiLite::MainForm::instance->buttonSettings)
 	{
@@ -229,12 +230,19 @@ void onButtonClick(System::Object^ button, System::String^ id)
 				auto magnetPtr = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(GuiLite::MagnetInputForm::instance->textBoxMagnet->Text).ToPointer();
 				if (addTorrentFromMetadata(magnetPtr))
 				{
-					GuiLite::MagnetInputForm::instance->magnetFormButton->Enabled = false;
 					GuiLite::MagnetInputForm::instance->labelText->Text = "Getting info...";
 					magnetLinkSequence = 2;
+
+					GuiLite::MagnetInputForm::instance->magnetFormButton->Text = "Logs";
 				}
 				else
 					GuiLite::MagnetInputForm::instance->labelText->Text = "Invalid magnet link";
+			}
+			else if (GuiLite::MagnetInputForm::instance->magnetFormButton->Text->StartsWith("Logs"))
+			{
+				GuiLite::MagnetInputForm::instance->magnetFormButton->Enabled = false;
+				GuiLite::MagnetInputForm::instance->logsTextBox->Visible = true;
+				magnetLinkSequence = 3;
 			}
 		}
 	}
@@ -275,8 +283,33 @@ void refreshUi()
 
 	if (magnetLinkSequence > 0)
 	{
-		if (magnetLinkSequence == 2)
+		if (magnetLinkSequence >= 2)
 		{
+			if (magnetLinkSequence == 3)
+			{
+				mtBI::MagnetLinkProgressLogs logs;
+				logs.count = 0;
+				if (IoctlFunc(mtBI::MessageId::GetMagnetLinkProgressLogs, hash, &logs) == mtt::Status::Success && logs.count > 0)
+				{
+					if (lastMagnetLinkLogCount < logs.count)
+					{
+						logs.count = logs.count - lastMagnetLinkLogCount;
+						logs.logs.resize(logs.count);
+						logs.start = lastMagnetLinkLogCount;
+
+						IoctlFunc(mtBI::MessageId::GetMagnetLinkProgressLogs, hash, &logs);
+
+						for (auto& l : logs.logs)
+						{
+							GuiLite::MagnetInputForm::instance->logsTextBox->Text += gcnew String(l.data);
+							GuiLite::MagnetInputForm::instance->logsTextBox->Text += "\n";
+						}
+
+						lastMagnetLinkLogCount += logs.count;
+					}
+				}
+			}
+
 			mtBI::MagnetLinkProgress progress;
 			if (IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, hash, &progress) == mtt::Status::Success)
 			{
@@ -287,7 +320,7 @@ void refreshUi()
 
 				if (progress.finished)
 				{
-					magnetLinkSequence = 3;
+					magnetLinkSequence = 4;
 					GuiLite::MagnetInputForm::instance->labelText->Text = "Finished";
 				}
 			}

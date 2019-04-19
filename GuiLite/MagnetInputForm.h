@@ -24,11 +24,24 @@ namespace GuiLite {
 			//TODO: Add the constructor code here
 			//
 			instance = this;
-			//labelText->Parent = progressBarMagnet;
-			labelText->BackColor = Drawing::Color::Transparent;
 		}
 
 	public: System::Windows::Forms::Label^  labelText;
+	public: System::Windows::Forms::TextBox^ textBoxMagnet;
+	public: System::Windows::Forms::ProgressBar^ progressBarMagnet;
+	public: System::Windows::Forms::Button^ magnetFormButton;
+	private: System::Windows::Forms::Panel^ panel1;
+	public: System::Windows::Forms::RichTextBox^ logsTextBox;
+	private:
+	public:
+
+
+	public:
+
+
+
+
+	public:
 	private:
 	public:
 
@@ -44,11 +57,11 @@ namespace GuiLite {
 				delete components;
 			}
 		}
-	public: System::Windows::Forms::ProgressBar^  progressBarMagnet;
+
 	protected:
 
-	public: System::Windows::Forms::Button^  magnetFormButton;
-	public: System::Windows::Forms::TextBox^  textBoxMagnet;
+
+
 	private:
 	protected:
 
@@ -70,70 +83,94 @@ namespace GuiLite {
 		/// </summary>
 		void InitializeComponent(void)
 		{
+			this->labelText = (gcnew System::Windows::Forms::Label());
+			this->textBoxMagnet = (gcnew System::Windows::Forms::TextBox());
 			this->progressBarMagnet = (gcnew System::Windows::Forms::ProgressBar());
 			this->magnetFormButton = (gcnew System::Windows::Forms::Button());
-			this->textBoxMagnet = (gcnew System::Windows::Forms::TextBox());
-			this->labelText = (gcnew System::Windows::Forms::Label());
+			this->panel1 = (gcnew System::Windows::Forms::Panel());
+			this->logsTextBox = (gcnew System::Windows::Forms::RichTextBox());
+			this->panel1->SuspendLayout();
 			this->SuspendLayout();
-			// 
-			// progressBarMagnet
-			// 
-			this->progressBarMagnet->Location = System::Drawing::Point(112, 78);
-			this->progressBarMagnet->Name = L"progressBarMagnet";
-			this->progressBarMagnet->Size = System::Drawing::Size(296, 23);
-			this->progressBarMagnet->TabIndex = 0;
-			// 
-			// magnetFormButton
-			// 
-			this->magnetFormButton->Location = System::Drawing::Point(15, 78);
-			this->magnetFormButton->Name = L"magnetFormButton";
-			this->magnetFormButton->Size = System::Drawing::Size(75, 23);
-			this->magnetFormButton->TabIndex = 1;
-			this->magnetFormButton->Text = L"Add";
-			this->magnetFormButton->UseVisualStyleBackColor = true;
-			this->magnetFormButton->Click += gcnew System::EventHandler(this, &MagnetInputForm::magnetFormButton_Click);
-			// 
-			// textBoxMagnet
-			// 
-			this->textBoxMagnet->Location = System::Drawing::Point(12, 29);
-			this->textBoxMagnet->Name = L"textBoxMagnet";
-			this->textBoxMagnet->Size = System::Drawing::Size(396, 22);
-			this->textBoxMagnet->TabIndex = 2;
 			// 
 			// labelText
 			// 
-			this->labelText->Anchor = System::Windows::Forms::AnchorStyles::Top;
 			this->labelText->AutoSize = true;
 			this->labelText->BackColor = System::Drawing::Color::Transparent;
-			this->labelText->Location = System::Drawing::Point(163, 58);
+			this->labelText->Location = System::Drawing::Point(225, 45);
 			this->labelText->Name = L"labelText";
 			this->labelText->Size = System::Drawing::Size(0, 17);
 			this->labelText->TabIndex = 4;
 			this->labelText->TextAlign = System::Drawing::ContentAlignment::MiddleCenter;
 			// 
+			// textBoxMagnet
+			// 
+			this->textBoxMagnet->Location = System::Drawing::Point(14, 14);
+			this->textBoxMagnet->Name = L"textBoxMagnet";
+			this->textBoxMagnet->Size = System::Drawing::Size(456, 22);
+			this->textBoxMagnet->TabIndex = 8;
+			// 
+			// progressBarMagnet
+			// 
+			this->progressBarMagnet->Location = System::Drawing::Point(114, 42);
+			this->progressBarMagnet->Name = L"progressBarMagnet";
+			this->progressBarMagnet->Size = System::Drawing::Size(356, 23);
+			this->progressBarMagnet->TabIndex = 6;
+			// 
+			// magnetFormButton
+			// 
+			this->magnetFormButton->Location = System::Drawing::Point(14, 42);
+			this->magnetFormButton->Name = L"magnetFormButton";
+			this->magnetFormButton->Size = System::Drawing::Size(94, 23);
+			this->magnetFormButton->TabIndex = 7;
+			this->magnetFormButton->Text = L"Add";
+			this->magnetFormButton->UseVisualStyleBackColor = true;
+			this->magnetFormButton->Click += gcnew System::EventHandler(this, &MagnetInputForm::MagnetFormButton_Click_1);
+			// 
+			// panel1
+			// 
+			this->panel1->AutoSize = true;
+			this->panel1->AutoSizeMode = System::Windows::Forms::AutoSizeMode::GrowAndShrink;
+			this->panel1->Controls->Add(this->logsTextBox);
+			this->panel1->Location = System::Drawing::Point(14, 71);
+			this->panel1->MaximumSize = System::Drawing::Size(455, 400);
+			this->panel1->Name = L"panel1";
+			this->panel1->Size = System::Drawing::Size(455, 258);
+			this->panel1->TabIndex = 10;
+			// 
+			// logsTextBox
+			// 
+			this->logsTextBox->Location = System::Drawing::Point(-1, 0);
+			this->logsTextBox->Name = L"logsTextBox";
+			this->logsTextBox->ReadOnly = true;
+			this->logsTextBox->Size = System::Drawing::Size(457, 255);
+			this->logsTextBox->TabIndex = 10;
+			this->logsTextBox->Text = L"";
+			this->logsTextBox->Visible = false;
+			// 
 			// MagnetInputForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(8, 16);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
+			this->AutoSize = true;
 			this->BackColor = System::Drawing::SystemColors::Control;
-			this->ClientSize = System::Drawing::Size(421, 120);
+			this->ClientSize = System::Drawing::Size(482, 85);
 			this->Controls->Add(this->labelText);
+			this->Controls->Add(this->panel1);
 			this->Controls->Add(this->textBoxMagnet);
-			this->Controls->Add(this->magnetFormButton);
 			this->Controls->Add(this->progressBarMagnet);
+			this->Controls->Add(this->magnetFormButton);
+			this->MaximumSize = System::Drawing::Size(500, 600);
 			this->Name = L"MagnetInputForm";
 			this->StartPosition = System::Windows::Forms::FormStartPosition::CenterScreen;
 			this->Text = L"Magnet link";
-			this->Load += gcnew System::EventHandler(this, &MagnetInputForm::MagnetInputForm_Load);
+			this->panel1->ResumeLayout(false);
 			this->ResumeLayout(false);
 			this->PerformLayout();
 
 		}
 #pragma endregion
-	private: System::Void magnetFormButton_Click(System::Object^  sender, System::EventArgs^  e) {
-		onButtonClick(sender, nullptr);
-	}
-	private: System::Void MagnetInputForm_Load(System::Object^  sender, System::EventArgs^  e) {
-	}
+private: System::Void MagnetFormButton_Click_1(System::Object^ sender, System::EventArgs^ e) {
+	onButtonClick(sender, nullptr);
+}
 };
 }
