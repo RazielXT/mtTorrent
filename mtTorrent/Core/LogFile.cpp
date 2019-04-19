@@ -21,3 +21,16 @@ void LogFile::append(std::stringstream& ss)
 	logMutex.unlock();
 }
 
+void LogFile::clear()
+{
+	logMutex.lock();
+
+	std::ofstream outfile;
+	outfile.open(logName);
+
+	if (outfile.good())
+		outfile << GetLogTime() << ": start\n";
+
+	logMutex.unlock();
+}
+

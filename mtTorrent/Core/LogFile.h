@@ -9,6 +9,7 @@ public:
 	LogFile(std::string name);
 
 	void append(std::stringstream&);
+	void clear();
 
 	std::string logName;
 	std::mutex logMutex;

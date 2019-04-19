@@ -13,6 +13,7 @@ mtt::MetadataDownload::MetadataDownload(Peers& p) : peers(p)
 void mtt::MetadataDownload::start(std::function<void(Status, MetadataDownloadState&)> f)
 {
 	log.logName = "utm_" + std::to_string(rand());
+	log.clear();
 
 	onUpdate = f;
 	active = true;
