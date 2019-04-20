@@ -177,6 +177,11 @@ bool mtt::Torrent::finished()
 	return files.progress.getPercentage() == 1;
 }
 
+bool mtt::Torrent::selectionFinished()
+{
+	return files.progress.getSelectedPercentage() == 1;
+}
+
 uint8_t* mtt::Torrent::hash()
 {
 	return infoFile.info.hash;
@@ -190,6 +195,11 @@ std::string mtt::Torrent::name()
 float mtt::Torrent::currentProgress()
 {
 	return files.progress.getPercentage();
+}
+
+float mtt::Torrent::currentSelectionProgress()
+{
+	return files.progress.getSelectedPercentage();
 }
 
 size_t mtt::Torrent::downloaded()

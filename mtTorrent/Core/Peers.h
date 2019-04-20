@@ -114,5 +114,7 @@ namespace mtt
 			Peers& peers;
 		}
 		peersListener;
+
+		LogFile log;
 	};
 }

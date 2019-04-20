@@ -122,6 +122,7 @@ namespace mtBI
 	{
 		string name;
 		float progress;
+		float selectionProgress;
 		size_t downloaded;
 		size_t downloadSpeed;
 		size_t uploaded;

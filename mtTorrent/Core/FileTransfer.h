@@ -5,6 +5,7 @@
 #include "Downloader.h"
 #include "Uploader.h"
 #include "utils/ScheduledTimer.h"
+#include "LogFile.h"
 
 namespace mtt
 {
@@ -62,5 +63,7 @@ namespace mtt
 		Uploader uploader;
 
 		TorrentPtr torrent;
+
+		LogFile log;
 	};
 }

@@ -14,6 +14,9 @@ const uint32_t MaxPendingPeerRequestsToSpeedRatio = (1024*1024);
 mtt::Downloader::Downloader(TorrentPtr t)
 {
 	torrent = t;
+
+	log.logName = "requests";
+	log.clear();
 }
 
 void mtt::Downloader::reset()
@@ -52,7 +55,9 @@ mtt::Downloader::PieceStatus mtt::Downloader::pieceBlockReceived(PieceBlock& blo
 		}
 	}
 
-	if (valid && finished && torrent->finished())
+	LOG_APPEND("receive " << block.info.index << " " << block.info.begin);
+
+	if (valid && finished && torrent->selectionFinished())
 		onFinish();
 
 	if (finished)
@@ -133,7 +138,7 @@ std::vector<uint32_t> mtt::Downloader::getBestNextPieces(ActivePeer* p)
 	{
 		if (p->comm->info.pieces.pieces[idx])
 		{
-			if (torrent->files.progress.pieces[idx] == 0)
+			if (torrent->files.progress.wantedPiece(idx))
 			{
 				bool alreadyRequested = false;
 				for (auto& r : p->requestedPieces)
@@ -242,6 +247,8 @@ uint32_t mtt::Downloader::sendPieceRequests(ActivePeer* peer, ActivePeer::Reques
 				request->blocks.push_back(info.begin);
 				peer->comm->requestPieceBlock(info);
 				count++;
+
+				LOG_APPEND("request " << info.index << " " << info.begin << " " << peer->comm->getAddressName());
 			}
 		}
 

@@ -267,7 +267,7 @@ boost::asio::ip::udp::endpoint Addr::toUdpEndpoint()
 
 std::string Addr::toString()
 {
-	return toUdpEndpoint().address().to_string();
+	return toUdpEndpoint().address().to_string() + ":" + std::to_string(port);
 }
 
 bool Addr::operator==(const Addr& r)

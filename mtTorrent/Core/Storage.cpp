@@ -189,16 +189,46 @@ void mtt::Storage::flush(File& file)
 	auto path = getFullpath(file);
 	createPath(path);
 
-	std::ofstream fileOut(path, std::ios_base::binary | std::ios_base::in);
+	boost::filesystem::path dir(path);
+	bool fileExists = boost::filesystem::exists(dir);
+	size_t existingSize = fileExists ? boost::filesystem::file_size(dir) : 0;
 
-	for (auto& p : filePieces)
+	if (fileExists && existingSize == file.size)
 	{
-		auto pieceDataPos = file.startPieceIndex == p->index ? file.startPiecePos : 0;
-		auto fileDataPos = file.startPieceIndex == p->index ? 0 : (pieceSize - file.startPiecePos + (p->index - file.startPieceIndex - 1)*pieceSize);
-		auto pieceDataSize = std::min(file.size, p->data.size() - pieceDataPos);
+		std::ofstream fileOut(path, std::ios_base::binary | std::ios_base::in);
 
-		fileOut.seekp(fileDataPos);
-		fileOut.write((const char*)p->data.data() + pieceDataPos, pieceDataSize);
+		if (fileOut)
+			for (auto& p : filePieces)
+			{
+				auto pieceDataPos = file.startPieceIndex == p->index ? file.startPiecePos : 0;
+				auto fileDataPos = file.startPieceIndex == p->index ? 0 : (pieceSize - file.startPiecePos + (p->index - file.startPieceIndex - 1) * pieceSize);
+				auto pieceDataSize = std::min(file.size, p->data.size() - pieceDataPos);
+
+				if (file.endPieceIndex == p->index)
+					pieceDataSize = std::min(pieceDataSize, (size_t)file.endPiecePos);
+
+				fileOut.seekp(fileDataPos);
+				fileOut.write((const char*)p->data.data() + pieceDataPos, pieceDataSize);
+			}
+	}
+	else
+	{
+		std::ofstream tempFileOut(path, fileExists ? (std::ios_base::binary | std::ios_base::in) : std::ios_base::binary);
+
+		if(tempFileOut)
+			for (auto& p : filePieces)
+			{
+				if (p->index == file.startPieceIndex)
+				{
+					tempFileOut.write((const char*)p->data.data() + file.startPiecePos, std::min(file.size, p->data.size() - file.startPiecePos));
+				}
+				else if (p->index == file.endPieceIndex)
+				{
+					tempFileOut.seekp(pieceSize - file.startPiecePos);
+					tempFileOut.write((const char*)p->data.data(), file.endPiecePos);
+				}
+
+			}
 	}
 }
 
@@ -235,28 +265,47 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 
 			if (fileIn)
 			{
-				auto readSize = pieceSize - currentFile->startPiecePos;
-				auto readBufferPos = currentFile->startPiecePos;
+				size_t existingSize = boost::filesystem::file_size(dir);
 
-				fileIn.read((char*)readBuffer.data() + readBufferPos, readSize);
-
-				while (fileIn && !checkState.rejected && currentPieceIdx <= currentFile->endPieceIndex)
+				if (existingSize == currentFile->size)
 				{
-					SHA1(readBuffer.data(), pieceSize, shaBuffer);
-					checkState.pieces[currentPieceIdx] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
-					fileIn.read((char*)readBuffer.data(), pieceSize);
+					auto readSize = pieceSize - currentFile->startPiecePos;
+					auto readBufferPos = currentFile->startPiecePos;
 
-					checkState.piecesChecked = (uint32_t)++currentPieceIdx;
+					fileIn.read((char*)readBuffer.data() + readBufferPos, readSize);
+
+					while (fileIn && !checkState.rejected && currentPieceIdx <= currentFile->endPieceIndex)
+					{
+						SHA1(readBuffer.data(), pieceSize, shaBuffer);
+						checkState.pieces[currentPieceIdx] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
+						fileIn.read((char*)readBuffer.data(), pieceSize);
+
+						checkState.piecesChecked = (uint32_t)++currentPieceIdx;
+					}
+
+					if (currentPieceIdx == currentFile->endPieceIndex && currentFile == lastFile)
+					{
+						SHA1(readBuffer.data(), currentFile->endPiecePos, shaBuffer);
+						checkState.pieces[currentPieceIdx] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
+						++currentPieceIdx;
+					}
 				}
-
-				if (checkState.rejected)
-					return;
-
-				if (currentPieceIdx == currentFile->endPieceIndex && currentFile == lastFile)
+				else
 				{
-					SHA1(readBuffer.data(), currentFile->endPiecePos, shaBuffer);
-					checkState.pieces[currentPieceIdx] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
-					++currentPieceIdx;
+					auto startPieceSize = pieceSize - currentFile->startPiecePos;
+					auto endPieceSize = currentFile->endPiecePos;
+					auto tempFileSize = startPieceSize + endPieceSize;
+
+					if (existingSize == tempFileSize /*|| existingSize == startPieceSize*/)
+					{
+						fileIn.read((char*)readBuffer.data() + currentFile->startPiecePos, startPieceSize);
+
+						SHA1(readBuffer.data(), pieceSize, shaBuffer);
+						checkState.pieces[currentFile->startPieceIndex] = memcmp(shaBuffer, piecesInfo[currentFile->startPieceIndex].hash, 20) == 0;
+
+						if(existingSize == tempFileSize)
+							fileIn.read((char*)readBuffer.data(), endPieceSize);
+					}
 				}
 			}
 
@@ -270,6 +319,9 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 			currentPieceIdx = currentFile->endPieceIndex + 1;
 
 		checkState.piecesChecked = (uint32_t)currentPieceIdx;
+
+		if (checkState.rejected)
+			return;
 
 		if(++currentFile > lastFile)
 			break;

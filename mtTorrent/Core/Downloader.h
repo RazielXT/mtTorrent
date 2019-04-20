@@ -2,6 +2,7 @@
 
 #include "Storage.h"
 #include "IPeerListener.h"
+#include "LogFile.h"
 
 namespace mtt
 {
@@ -62,5 +63,7 @@ namespace mtt
 		TorrentPtr torrent;
 
 		void onFinish();
+
+		LogFile log;
 	};
 }

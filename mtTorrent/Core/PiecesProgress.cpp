@@ -16,7 +16,7 @@ float mtt::PiecesProgress::getPercentage()
 
 float mtt::PiecesProgress::getSelectedPercentage()
 {
-	return selectedPieces == 0 ? 0 : (receivedPiecesCount / (float)selectedPieces);
+	return selectedPieces == 0 ? 0 : (selectedReceivedPiecesCount / (float)selectedPieces);
 }
 
 void mtt::PiecesProgress::init(size_t size)
@@ -24,7 +24,10 @@ void mtt::PiecesProgress::init(size_t size)
 	receivedPiecesCount = 0;
 	selectedReceivedPiecesCount = 0;
 
-	if(pieces.size() != size)
+	if(pieces.empty())
+		selectedPieces = size;
+
+	if (pieces.size() != size)
 		pieces.resize(size, 0);
 }
 
@@ -33,11 +36,11 @@ void mtt::PiecesProgress::select(DownloadSelection& selection)
 	init(selection.files.back().info.endPieceIndex + 1);
 	selectedPieces = 0;
 
-	uint32_t lastFilePiece = -1;
+	uint32_t lastWantedPiece = -1;
 	for (auto& f : selection.files)
 	{
 		uint32_t i = f.info.startPieceIndex;
-		if (lastFilePiece == i)
+		if (lastWantedPiece == i)
 			i++;
 
 		for (; i <= f.info.endPieceIndex; i++)
@@ -51,9 +54,16 @@ void mtt::PiecesProgress::select(DownloadSelection& selection)
 			}
 				
 			if (f.selected)
+			{
 				selectedPieces++;
+				pieces[i] &= ~UnselectedFlag;
+			}
+			else
+				pieces[i] |= UnselectedFlag;
 		}
-		lastFilePiece = f.info.endPieceIndex;
+
+		if(f.selected)
+			lastWantedPiece = f.info.endPieceIndex;
 	}
 }
 
@@ -64,7 +74,7 @@ void mtt::PiecesProgress::addPiece(uint32_t index)
 
 	if (!hasPiece(index))
 	{
-		if (pieces[index] == 0)
+		if (wantedPiece(index))
 			selectedReceivedPiecesCount++;
 
 		pieces[index] |= HasFlag;
@@ -80,6 +90,11 @@ bool mtt::PiecesProgress::hasPiece(uint32_t index)
 bool mtt::PiecesProgress::selectedPiece(uint32_t index)
 {
 	return (pieces[index] & UnselectedFlag) == 0;
+}
+
+bool mtt::PiecesProgress::wantedPiece(uint32_t index)
+{
+	return pieces[index] == 0;
 }
 
 uint32_t mtt::PiecesProgress::firstEmptyPiece()

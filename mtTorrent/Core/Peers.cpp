@@ -12,6 +12,9 @@ mtt::Peers::Peers(TorrentPtr t) : torrent(t), trackers(t), dht(*this, t), peersL
 	pexInfo.hostname = "PEX";
 	pexInfo.state = TrackerState::Connected;
 	trackers.addTrackers(t->infoFile.announceList);
+
+	log.logName = "peers";
+	log.clear();
 }
 
 void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listener)
@@ -22,6 +25,11 @@ void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listen
 	{
 		if (r)
 		{
+			LOG_APPEND(t->info.hostname << " returned " << r->peers.size());
+			for (auto& a : r->peers)
+			{
+				LOG_APPEND(t->info.hostname << " " << a.toString());
+			}
 			updateKnownPeers(r->peers, PeerSource::Tracker);
 		}
 	}

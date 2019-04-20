@@ -83,6 +83,7 @@ extern "C"
 			resp->uploaded = torrent->uploaded();
 			resp->uploadSpeed = torrent->uploadSpeed();
 			resp->progress = torrent->currentProgress();
+			resp->selectionProgress = torrent->currentSelectionProgress();
 			resp->activeStatus = torrent->lastError;
 		}
 		else if (id == mtBI::MessageId::GetPeersInfo)
@@ -198,7 +199,7 @@ extern "C"
 						else if (events[i].action == mtt::MetadataDownload::EventInfo::Searching)
 							txt = "Searching for peers, current count " + std::to_string(events[i].index);
 						else if (events[i].action == mtt::MetadataDownload::EventInfo::Request)
-							txt = hexToString(events[i].sourceId, 20) + " reqesting " + std::to_string(events[i].index);
+							txt = hexToString(events[i].sourceId, 20) + " requesting " + std::to_string(events[i].index);
 						else if (events[i].action == mtt::MetadataDownload::EventInfo::Receive)
 							txt = hexToString(events[i].sourceId, 20) + " sent " + std::to_string(events[i].index);
 
@@ -265,7 +266,7 @@ extern "C"
 			if (!torrent)
 				return mtt::Status::E_InvalidInput;
 
-			if (!torrent->files.selection.files.size() != selection->selection.size())
+			if (torrent->files.selection.files.size() != selection->selection.size())
 				return mtt::Status::E_InvalidInput;
 
 			std::vector<bool> dlSelect;

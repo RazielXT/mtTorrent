@@ -8,7 +8,8 @@
 
 mtt::FileTransfer::FileTransfer(TorrentPtr t) : downloader(t), uploader(t), torrent(t)
 {
-
+	log.logName = "download";
+	log.clear();
 }
 
 void mtt::FileTransfer::start()
@@ -48,6 +49,7 @@ void mtt::FileTransfer::stop()
 
 void mtt::FileTransfer::handshakeFinished(PeerCommunication* p)
 {
+	LOG_APPEND("handshake " << p->getAddressName());
 	if (!torrent->files.progress.empty())
 		p->sendBitfield(torrent->files.progress.toBitfield());
 
@@ -56,13 +58,18 @@ void mtt::FileTransfer::handshakeFinished(PeerCommunication* p)
 
 void mtt::FileTransfer::connectionClosed(PeerCommunication* p, int code)
 {
+	LOG_APPEND("closed " << p->getAddressName());
 	removePeer(p);
 }
 
 void mtt::FileTransfer::messageReceived(PeerCommunication* p, PeerMessage& msg)
 {
+	LOG_APPEND("msg " << msg.id << " " << p->getAddressName());
+
 	if (msg.id == Piece)
 	{
+		LOG_APPEND("piece " << msg.piece.info.index << " " << msg.piece.info.begin << " " << p->getAddressName());
+
 		auto status = downloader.pieceBlockReceived(msg.piece);
 
 		std::lock_guard<std::mutex> guard(peersMutex);
