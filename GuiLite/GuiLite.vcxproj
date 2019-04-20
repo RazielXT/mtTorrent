@@ -141,12 +141,16 @@
   <ItemGroup>
     <ClCompile Include="..\mtTorrent\Public\BinaryInterface.cpp" />
     <ClCompile Include="..\mtTorrent\utils\HexEncoding.cpp" />
+    <ClCompile Include="FileSelectionForm.cpp" />
     <ClCompile Include="MagnetInputForm.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainForm.cpp" />
     <ClCompile Include="SettingsForm.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="FileSelectionForm.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
     <ClInclude Include="MagnetInputForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
@@ -158,6 +162,9 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="FileSelectionForm.resx">
+      <DependentUpon>FileSelectionForm.h</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MagnetInputForm.resx">
       <DependentUpon>MagnetInputForm.h</DependentUpon>
     </EmbeddedResource>

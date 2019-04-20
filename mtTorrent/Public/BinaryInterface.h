@@ -41,6 +41,8 @@ namespace mtBI
 		GetSettings, //null, SettingsInfo
 		SetSettings, //SettingsInfo, null
 		RefreshSource, //SourceId, null
+		GetTorrentFilesSelection, //SourceId, TorrentFilesSelection
+		SetTorrentFilesSelection, //TorrentFilesSelectionRequest, null
 	};
 
 	struct SourceId
@@ -69,6 +71,30 @@ namespace mtBI
 		uint32_t count;
 		uint32_t start;
 		std::vector<string> logs;
+	};
+
+	struct FileSelection
+	{
+		string name;
+		bool selected;
+		size_t size;
+	};
+
+	struct TorrentFilesSelection
+	{
+		uint32_t count;
+		std::vector<FileSelection> selection;
+	};
+
+	struct FileSelectionRequest
+	{
+		bool selected;
+	};
+
+	struct TorrentFilesSelectionRequest
+	{
+		uint8_t hash[20];
+		std::vector<FileSelectionRequest> selection;
 	};
 
 	struct TorrentsList

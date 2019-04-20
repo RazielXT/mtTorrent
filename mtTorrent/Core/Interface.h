@@ -19,7 +19,6 @@ namespace mtt
 
 	struct File
 	{
-		int id;
 		std::vector<std::string> path;
 		size_t size;
 		uint32_t startPieceIndex;

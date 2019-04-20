@@ -236,6 +236,47 @@ extern "C"
 			settings.tcpPort = info->tcpPort;
 			settings.udpPort = info->udpPort;
 		}
+		else if (id == mtBI::MessageId::GetTorrentFilesSelection)
+		{
+			auto torrent = core.getTorrent((const uint8_t*)request);
+			if (!torrent)
+				return mtt::Status::E_InvalidInput;
+
+			auto & files = torrent->files.selection.files;
+
+			auto resp = (mtBI::TorrentFilesSelection*) output;
+			if (resp->count == 0)
+				resp->count = (uint32_t)files.size();
+			else if (resp->selection.size() == files.size())
+			{
+				for (size_t i = 0; i < resp->selection.size(); i++)
+				{
+					mtBI::FileSelection& f = resp->selection[i];
+					f.name.set(files[i].info.path.back());
+					f.selected = files[i].selected;
+					f.size = files[i].info.size;
+				}
+			}
+		}
+		else if (id == mtBI::MessageId::SetTorrentFilesSelection)
+		{
+			auto selection = (mtBI::TorrentFilesSelectionRequest*)request;
+			auto torrent = core.getTorrent(selection->hash);
+			if (!torrent)
+				return mtt::Status::E_InvalidInput;
+
+			if (!torrent->files.selection.files.size() != selection->selection.size())
+				return mtt::Status::E_InvalidInput;
+
+			std::vector<bool> dlSelect;
+			for (auto& f : selection->selection)
+			{
+				dlSelect.push_back(f.selected);
+			}
+
+			if (!torrent->selectFiles(dlSelect))
+				return mtt::Status::E_InvalidInput;
+		}
 		else if (id == mtBI::MessageId::RefreshSource)
 		{
 			auto info = (mtBI::SourceId*) request;

@@ -37,6 +37,8 @@ namespace mtt
 		float checkingProgress();
 		std::shared_ptr<mtt::PiecesCheck> getCheckState();
 
+		bool selectFiles(std::vector<bool>&);
+
 		std::string name();
 		float currentProgress();
 		size_t downloaded();

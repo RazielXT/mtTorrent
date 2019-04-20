@@ -151,6 +151,27 @@ std::shared_ptr<mtt::PiecesCheck> mtt::Torrent::getCheckState()
 	return checkState;
 }
 
+bool mtt::Torrent::selectFiles(std::vector<bool>& s)
+{
+	if (files.selection.files.size() != s.size())
+		return false;
+
+	for (size_t i = 0; i < s.size(); i++)
+	{
+		files.selection.files[i].selected = s[i];
+	}
+
+	files.select(files.selection);
+
+	if (state == State::Started)
+	{
+		lastError = files.prepareSelection();
+		return lastError == Status::Success;
+	}
+
+	return true;
+}
+
 bool mtt::Torrent::finished()
 {
 	return files.progress.getPercentage() == 1;

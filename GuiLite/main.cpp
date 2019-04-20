@@ -8,6 +8,7 @@
 #include <vcclr.h>
 #include "SettingsForm.h"
 #include <WinUser.h>
+#include "FileSelectionForm.h"
 
 using namespace System;
 using namespace System::Windows::Forms;
@@ -15,6 +16,11 @@ using namespace System::Windows::Forms;
 typedef mtt::Status(*IOCTL_FUNC)(mtBI::MessageId, const void*,void*);
 IOCTL_FUNC IoctlFunc = nullptr;
 HMODULE lib = nullptr;
+
+
+bool selected = false;
+uint8_t hash[20];
+bool selectionChanged = false;
 
 void applySettings(System::Object^ form)
 {
@@ -28,6 +34,95 @@ void applySettings(System::Object^ form)
 	info.tcpPort = (unsigned int)window->tcpPortNumeric->Value;
 
 	IoctlFunc(mtBI::MessageId::SetSettings, &info, nullptr);
+}
+
+mtBI::TorrentFilesSelection lastSelection;
+
+void updateSelectionFormFooter()
+{
+	size_t selectedSize = 0;
+	size_t fullsize = 0;
+	uint32_t selectedCount = 0;
+
+	for (auto& f : lastSelection.selection)
+	{
+		if (f.selected)
+		{
+			selectedCount++;
+			selectedSize += f.size;
+		}
+
+		fullsize += f.size;
+	}
+
+	String^ txt = gcnew String("Selected ");
+	txt += int(selectedCount).ToString();
+	txt += "/";
+	txt += int(lastSelection.count).ToString();
+	txt += " (";
+	txt += int(selectedSize / (1024ll * 1024ll)).ToString();
+	txt += " MB/";
+	txt += int(fullsize / (1024ll * 1024ll)).ToString();
+	txt += " MB)";
+
+	GuiLite::FileSelectionForm::instance->infoLabel->Text = txt;
+}
+
+void fileSelectionChanged(int id, bool selected)
+{
+	if (id >= lastSelection.selection.size())
+		return;
+
+	lastSelection.selection[id].selected = selected;
+
+	updateSelectionFormFooter();
+}
+
+void setAllFileSelection(bool selected)
+{
+	GuiLite::FileSelectionForm::instance->initialized = false;
+	auto rows = GuiLite::FileSelectionForm::instance->filesGridView->Rows;
+	int i = 0;
+
+	for (auto& s : lastSelection.selection)
+	{
+		s.selected = selected;
+		rows[i++]->Cells[1]->Value = selected;
+	}
+	GuiLite::FileSelectionForm::instance->initialized = true;
+	updateSelectionFormFooter();
+}
+
+void fillFilesSelectionForm()
+{
+	mtBI::TorrentFilesSelection& info = lastSelection;
+	info.count = 0;
+	IoctlFunc(mtBI::MessageId::GetTorrentFilesSelection, hash, &info);
+
+	if (info.count > 0)
+		info.selection.resize(info.count);
+
+	IoctlFunc(mtBI::MessageId::GetTorrentFilesSelection, hash, &info);
+
+	auto panel = GuiLite::FileSelectionForm::instance->filesGridView;
+	panel->Rows->Add(info.count);
+
+	int i = 0;
+	for (auto& f : info.selection)
+	{
+		auto row = gcnew cli::array<Object^>(4) {
+			int(i).ToString(),
+			f.selected,
+			gcnew String(f.name.data),
+			int(f.size / (1024ll * 1024ll)).ToString() + " MB"
+		};
+
+		panel->Rows[i]->SetValues(row);
+		i++;
+	}
+
+	panel->Sort(panel->Columns[2], System::ComponentModel::ListSortDirection::Ascending);
+	updateSelectionFormFooter();
 }
 
 void refreshTorrentInfo(uint8_t* hash)
@@ -76,6 +171,8 @@ void refreshTorrentInfo(uint8_t* hash)
 			infoLines->AppendText(Environment::NewLine);
 		}
 	}
+
+	GuiLite::MainForm::instance->selectButton->Visible = true;
 }
 
 void start()
@@ -88,10 +185,6 @@ void start()
 		IoctlFunc(mtBI::MessageId::Init, nullptr, nullptr);
 	}
 }
-
-bool selected = false;
-uint8_t hash[20];
-bool selectionChanged = false;
 
 void addTorrent()
 {
@@ -244,6 +337,46 @@ void onButtonClick(System::Object^ button, System::String^ id)
 				GuiLite::MagnetInputForm::instance->logsTextBox->Visible = true;
 				magnetLinkSequence = 3;
 			}
+		}
+	}
+	else if (button == GuiLite::MainForm::instance->selectButton)
+	{
+		GuiLite::FileSelectionForm form;
+		form.ShowDialog();
+		lastSelection.selection.clear();
+		GuiLite::FileSelectionForm::instance = nullptr;
+	}
+	else if (GuiLite::FileSelectionForm::instance)
+	{
+		if (button == GuiLite::FileSelectionForm::instance->okButton)
+		{
+			if (!lastSelection.selection.empty())
+			{
+				mtBI::TorrentFilesSelectionRequest selection;
+				memcpy(selection.hash, hash, 20);
+				for (auto& s : lastSelection.selection)
+				{
+					mtBI::FileSelectionRequest f;
+					f.selected = s.selected;
+					selection.selection.push_back(f);
+				}
+
+				IoctlFunc(mtBI::MessageId::SetTorrentFilesSelection, &selection, nullptr);
+			}
+
+			GuiLite::FileSelectionForm::instance->Close();
+		}
+		else if (button == GuiLite::FileSelectionForm::instance->cancelButton)
+		{
+			GuiLite::FileSelectionForm::instance->Close();
+		}
+		else if (button == GuiLite::FileSelectionForm::instance->selectAllButton)
+		{
+			setAllFileSelection(true);
+		}
+		else if (button == GuiLite::FileSelectionForm::instance->deselectAllButton)
+		{
+			setAllFileSelection(false);
 		}
 	}
 }
