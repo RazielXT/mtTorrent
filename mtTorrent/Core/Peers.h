@@ -47,6 +47,7 @@ namespace mtt
 			PeerSource source;
 			PeerQuality lastQuality = PeerQuality::Unknown;
 			uint32_t lastConnectionTime = 0;
+			uint32_t connectionAttempts = 0;
 		};
 
 		uint32_t updateKnownPeers(std::vector<Addr>& peers, PeerSource source);

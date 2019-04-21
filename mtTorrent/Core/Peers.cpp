@@ -65,6 +65,9 @@ void mtt::Peers::connectNext(uint32_t count)
 	std::lock_guard<std::mutex> guard(peersMutex);
 	count = std::min(count, mtt::config::external.maxTorrentConnections - (uint32_t)activeConnections.size());
 
+	auto currentTime = (uint32_t)std::time(0);
+	uint32_t leastConnectionAttempts = 0;
+
 	for (size_t i = 0; i < knownPeers.size(); i++)
 	{
 		if(count == 0)
@@ -74,8 +77,29 @@ void mtt::Peers::connectNext(uint32_t count)
 		if (p.lastQuality == PeerQuality::Unknown)
 		{
 			connect((uint32_t)i);
-			p.lastConnectionTime = (uint32_t)std::time(0);
+			p.lastConnectionTime = currentTime;
+			p.connectionAttempts++;
 			count--;
+		}
+		else if(p.lastQuality == PeerQuality::Offline)
+			leastConnectionAttempts = p.connectionAttempts;
+	}
+
+	if (count > 0)
+	{
+		for (size_t i = 0; i < knownPeers.size(); i++)
+		{
+			if (count == 0)
+				break;
+
+			auto & p = knownPeers[i];
+			if (p.lastQuality == PeerQuality::Offline && p.connectionAttempts <= leastConnectionAttempts && p.lastConnectionTime + 30 < currentTime)
+			{
+				connect((uint32_t)i);
+				p.lastConnectionTime = currentTime;
+				p.connectionAttempts++;
+				count--;
+			}
 		}
 	}
 }
@@ -260,7 +284,9 @@ uint32_t mtt::Peers::updateKnownPeers(Addr& addr, PeerSource source)
 
 		return (uint32_t)knownPeers.size() - 1;
 	}
-
+	else
+		it->lastQuality = PeerQuality::Unknown;
+		
 	return (uint32_t)std::distance(knownPeers.begin(), it);
 }
 
