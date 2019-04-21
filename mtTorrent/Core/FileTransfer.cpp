@@ -41,10 +41,18 @@ void mtt::FileTransfer::stop()
 	downloader.reset();
 	torrent->files.storage.flush();
 
-	refreshTimer->disable();
+	if(refreshTimer)
+		refreshTimer->disable();
 
 	std::lock_guard<std::mutex> guard(peersMutex);
 	activePeers.clear();
+}
+
+void mtt::FileTransfer::reevaluate()
+{
+	std::lock_guard<std::mutex> guard(peersMutex);
+	for(auto& p : activePeers)
+		downloader.evaluateNextRequests(&p);
 }
 
 void mtt::FileTransfer::handshakeFinished(PeerCommunication* p)
@@ -76,13 +84,19 @@ void mtt::FileTransfer::messageReceived(PeerCommunication* p, PeerMessage& msg)
 		downloader.removeBlockRequests(activePeers, msg.piece, status, p);
 
 		if (auto peer = getActivePeer(p))
+		{
 			peer->downloaded += msg.piece.info.length;
+			peer->lastActivityTime = (uint32_t)time(0);
+		}
 	}
 	else if (msg.id == Unchoke)
 	{
 		std::lock_guard<std::mutex> guard(peersMutex);
-		if(auto peer = getActivePeer(p))
+		if (auto peer = getActivePeer(p))
+		{
 			downloader.evaluateNextRequests(peer);
+			peer->lastActivityTime = (uint32_t)time(0);
+		}
 	}
 	else if (msg.id == Interested)
 	{

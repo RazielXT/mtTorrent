@@ -15,6 +15,8 @@ extern "C"
 	{
 		if (id == mtBI::MessageId::Init)
 			core.init();
+		else if (id == mtBI::MessageId::Deinit)
+			core.deinit();
 		else if (id == mtBI::MessageId::AddFromFile)
 		{
 			auto t = core.addFile((const char*)request);
@@ -187,7 +189,7 @@ extern "C"
 			{
 				auto events = torrent->utmDl->getEvents();
 				if (events.size() >= (resp->start + resp->count))
-					for (size_t i = resp->start; i < events.size(); i++)
+					for (size_t i = resp->start; i < resp->start + resp->count; i++)
 					{
 						std::string txt;
 						if (events[i].action == mtt::MetadataDownload::EventInfo::Connected)
@@ -287,6 +289,16 @@ extern "C"
 				return mtt::Status::E_InvalidInput;
 
 			torrent->peers->refreshSource(info->name.data);
+		}
+		else if (id == mtBI::MessageId::AddPeer)
+		{
+			auto info = (mtBI::AddPeerRequest*) request;
+
+			auto torrent = core.getTorrent(info->hash);
+			if (!torrent)
+				return mtt::Status::E_InvalidInput;
+
+			torrent->peers->connect(Addr(info->addr.data));
 		}
 		else
 			return mtt::Status::E_InvalidInput;

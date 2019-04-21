@@ -33,8 +33,8 @@ namespace mtt
 
 			void removeListener(ResultsListener* listener);
 
-			std::string save();
-			void load(const std::string&);
+			void save();
+			void load();
 
 		protected:
 

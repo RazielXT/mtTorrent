@@ -23,6 +23,7 @@ namespace mtt
 		std::vector<TorrentPtr> torrents;
 
 		void init();
+		void deinit();
 
 		TorrentPtr addFile(const char* filename);
 		TorrentPtr addMagnet(const char* magnet);

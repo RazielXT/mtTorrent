@@ -22,6 +22,7 @@ struct Addr
 	Addr(uint32_t ip, uint16_t port);
 	Addr(DataBuffer ip, uint16_t port);
 	Addr(const boost::asio::ip::address& addr, uint16_t port_num);
+	Addr(const char* str);
 
 	uint8_t addrBytes[16];
 	uint16_t port = 0;

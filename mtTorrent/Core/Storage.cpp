@@ -296,7 +296,7 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 					auto endPieceSize = currentFile->endPiecePos;
 					auto tempFileSize = startPieceSize + endPieceSize;
 
-					if (existingSize == tempFileSize /*|| existingSize == startPieceSize*/)
+					if (existingSize == tempFileSize || existingSize == startPieceSize)
 					{
 						fileIn.read((char*)readBuffer.data() + currentFile->startPiecePos, startPieceSize);
 

@@ -189,6 +189,22 @@ Addr::Addr(const boost::asio::ip::address& addr, uint16_t port_num)
 	set(addr, port_num);
 }
 
+Addr::Addr(const char* str)
+{
+	auto a = boost::asio::ip::address::from_string(str);
+
+	size_t portStart = strlen(str);
+	while (portStart > 0)
+		if (str[portStart] == ':')
+			break;
+		else
+			portStart--;
+
+	auto p = std::atoi(str + portStart + 1);
+
+	set(a, p);
+}
+
 void Addr::set(uint8_t* ip, uint16_t p, bool isIpv6)
 {
 	memcpy(addrBytes, ip, isIpv6 ? 16 : 4);

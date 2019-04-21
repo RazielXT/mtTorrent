@@ -15,5 +15,4 @@ public:
 	std::mutex logMutex;
 };
 
-#define LOG_APPEND_2(log, x) {std::stringstream ss; ss << x; log.append(ss);}
 #define LOG_APPEND(x) {std::stringstream ss; ss << x; log.append(ss);}

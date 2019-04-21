@@ -18,6 +18,8 @@ namespace mtt
 		void start();
 		void stop();
 
+		void reevaluate();
+
 		virtual void handshakeFinished(PeerCommunication*) override;
 		virtual void connectionClosed(PeerCommunication*, int code) override;
 		virtual void messageReceived(PeerCommunication*, PeerMessage&) override;

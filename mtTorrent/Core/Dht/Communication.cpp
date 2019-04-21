@@ -1,5 +1,6 @@
 #include "Dht/Communication.h"
 #include "Configuration.h"
+#include <fstream>
 
 mtt::dht::Communication* comm;
 
@@ -24,6 +25,8 @@ void mtt::dht::Communication::start()
 {
 	service.start(2);
 
+	load();
+
 	refreshTable();
 
 	loadDefaultRoots();
@@ -42,6 +45,8 @@ void mtt::dht::Communication::stop()
 		std::lock_guard<std::mutex> guard(peersQueriesMutex);
 		peersQueries.clear();
 	}
+
+	save();
 
 	if(refreshTimer)
 		refreshTimer->disable();
@@ -197,14 +202,27 @@ void mtt::dht::Communication::refreshTable()
 	}
 }
 
-std::string mtt::dht::Communication::save()
+void mtt::dht::Communication::save()
 {
-	return table.save();
+	auto saveFile = table.save();
+
+	{
+		std::ofstream out(".\\dht.sv", std::ios_base::binary);
+		out << saveFile;
+	}
 }
 
-void mtt::dht::Communication::load(const std::string& settings)
+void mtt::dht::Communication::load()
 {
-	uint32_t nodesCount = table.load(settings);
+	{
+		std::ifstream inFile(".\\dht.sv", std::ios_base::binary | std::ios_base::in);
+
+		if (inFile)
+		{
+			auto saveFile = std::string((std::istreambuf_iterator<char>(inFile)), std::istreambuf_iterator<char>());
+			table.load(saveFile);
+		}
+	}
 }
 
 void mtt::dht::Communication::announceTokenReceived(uint8_t* hash, std::string& token, udp::endpoint& source)

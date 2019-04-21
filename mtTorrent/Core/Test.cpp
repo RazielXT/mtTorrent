@@ -387,23 +387,13 @@ void TorrentTest::testPeerListen()
 
 void TorrentTest::testDhtTable()
 {
-	std::string saveFilePath = ".\\dht.sv";
-	std::string saveFile;
-
-	{
-		std::ifstream inFile(saveFilePath, std::ios_base::binary | std::ios_base::in);
-
-		if (inFile)
-			saveFile = std::string((std::istreambuf_iterator<char>(inFile)), std::istreambuf_iterator<char>());
-	}
-
 	mtt::BencodeParser::Object obj;
 	auto s = sizeof(obj);
 
 	auto torrent = mtt::TorrentFileParser::parseFile("D:\\hunter.torrent");
 
 	mtt::dht::Communication dhtComm;
-	dhtComm.load(saveFile);
+	dhtComm.load();
 
 	//ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J	boku 26
 	//6QBN6XVGKV7CWOT5QXKDYWF3LIMUVK4I	owarimonogagtari batch
@@ -421,12 +411,7 @@ void TorrentTest::testDhtTable()
 	//dhtComm.findNode(mtt::config::internal.hashId);
 	//Sleep(25000);
 
-	saveFile = dhtComm.save();
-
-	{
-		std::ofstream out(saveFilePath, std::ios_base::binary);
-		out << saveFile;
-	}
+	dhtComm.save();
 
 	WAITFOR(false);
 }

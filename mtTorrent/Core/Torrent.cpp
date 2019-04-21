@@ -52,7 +52,7 @@ void mtt::Torrent::downloadMetadata(std::function<void(Status, MetadataDownloadS
 
 		callback(s, state);
 	}
-	);
+	, service.io);
 }
 
 void mtt::Torrent::init()
@@ -166,6 +166,10 @@ bool mtt::Torrent::selectFiles(std::vector<bool>& s)
 	if (state == State::Started)
 	{
 		lastError = files.prepareSelection();
+
+		if (fileTransfer)
+			fileTransfer->reevaluate();
+
 		return lastError == Status::Success;
 	}
 

@@ -9,6 +9,7 @@
 #include "SettingsForm.h"
 #include <WinUser.h>
 #include "FileSelectionForm.h"
+#include "AddPeerForm.h"
 
 using namespace System;
 using namespace System::Windows::Forms;
@@ -213,6 +214,19 @@ bool addTorrentFromMetadata(const char* magnetPtr)
 	return true;
 }
 
+void customAction(System::String^ action, System::String^ param)
+{
+	if (action == "AddPeer")
+	{
+		mtBI::AddPeerRequest request;
+		memcpy(request.hash, hash, 20);
+		auto addrPtr = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(param).ToPointer();
+		request.addr.set(addrPtr);
+
+		IoctlFunc(mtBI::MessageId::AddPeer, &request, nullptr);
+	}
+}
+
 void setSelected(bool v)
 {
 	selected = v;
@@ -228,7 +242,15 @@ int magnetLinkSequence = 0;
 uint32_t lastMagnetLinkLogCount = 0;
 void onButtonClick(System::Object^ button, System::String^ id)
 {
-	if (button == GuiLite::MainForm::instance->buttonAddTorrent)
+	if (button == nullptr && id)
+	{
+		if (id == "AddPeer" && selected)
+		{
+			GuiLite::AddPeerForm form;
+			form.ShowDialog();
+		}
+	}
+	else if (button == GuiLite::MainForm::instance->buttonAddTorrent)
 	{
 		System::Threading::Thread^ newThread = gcnew System::Threading::Thread(gcnew System::Threading::ThreadStart(&addTorrent));
 		newThread->SetApartmentState(System::Threading::ApartmentState::STA);
@@ -575,7 +597,7 @@ void refreshUi()
 			auto peerRow = gcnew cli::array< System::String^  >(5) {
 				gcnew String(peerInfo.addr.data),
 					float(peerInfo.dlSpeed / (1024.f * 1024)).ToString("F"), float(peerInfo.upSpeed / (1024.f * 1024)).ToString("F"),
-					float(peerInfo.progress).ToString("P"),	gcnew String(peerInfo.client.data, 0, strlen(peerInfo.client.data), System::Text::Encoding::UTF8)
+					float(peerInfo.progress).ToString("P"),	gcnew String(peerInfo.client.data, 0, (int)strlen(peerInfo.client.data), System::Text::Encoding::UTF8)
 			};
 
 			peersGrid->Rows[i]->SetValues(peerRow);
@@ -691,6 +713,9 @@ void FormsMain(cli::array<System::String ^>^ args)
 	Application::AddMessageFilter(filter);
 
 	Application::Run(%form);
+
+	if(IoctlFunc)
+		IoctlFunc(mtBI::MessageId::Deinit, nullptr, nullptr);
 
 	if(lib)
 		FreeLibrary(lib);

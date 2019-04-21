@@ -37,6 +37,11 @@ void mtt::Core::init()
 	);
 }
 
+void mtt::Core::deinit()
+{
+	mtt::dht::Communication::get().save();
+}
+
 mtt::TorrentPtr mtt::Core::addFile(const char* filename)
 {
 	auto torrent = Torrent::fromFile(filename);// "G:\\[HorribleSubs] JoJo's Bizarre Adventure - Golden Wind - 13 [720p].mkv.torrent");

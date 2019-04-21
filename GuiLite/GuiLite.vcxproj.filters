@@ -36,6 +36,9 @@
     <ClCompile Include="FileSelectionForm.cpp">
       <Filter>Resource Files</Filter>
     </ClCompile>
+    <ClCompile Include="AddPeerForm.cpp">
+      <Filter>Resource Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainForm.h">
@@ -48,6 +51,9 @@
       <Filter>Resource Files</Filter>
     </ClInclude>
     <ClInclude Include="FileSelectionForm.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AddPeerForm.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
   </ItemGroup>

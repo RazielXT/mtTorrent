@@ -27,6 +27,7 @@ namespace mtBI
 	enum class MessageId
 	{
 		Init,
+		Deinit,
 		AddFromFile,	//char*, uint8_t[20]
 		AddFromMetadata, //char*, uint8_t[20]
 		Start,	//uint8_t[20], null
@@ -43,6 +44,7 @@ namespace mtBI
 		RefreshSource, //SourceId, null
 		GetTorrentFilesSelection, //SourceId, TorrentFilesSelection
 		SetTorrentFilesSelection, //TorrentFilesSelectionRequest, null
+		AddPeer,	//AddPeerRequest, null
 	};
 
 	struct SourceId
@@ -89,6 +91,12 @@ namespace mtBI
 	struct FileSelectionRequest
 	{
 		bool selected;
+	};
+
+	struct AddPeerRequest
+	{
+		uint8_t hash[20];
+		string addr;
 	};
 
 	struct TorrentFilesSelectionRequest
