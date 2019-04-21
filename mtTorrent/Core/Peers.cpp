@@ -13,8 +13,7 @@ mtt::Peers::Peers(TorrentPtr t) : torrent(t), trackers(t), dht(*this, t), peersL
 	pexInfo.state = TrackerState::Connected;
 	trackers.addTrackers(t->infoFile.announceList);
 
-	log.logName = "peers";
-	log.clear();
+	log.init("peers");
 }
 
 void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listener)

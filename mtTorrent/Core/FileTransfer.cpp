@@ -8,8 +8,7 @@
 
 mtt::FileTransfer::FileTransfer(TorrentPtr t) : downloader(t), uploader(t), torrent(t)
 {
-	log.logName = "download";
-	log.clear();
+	log.init("download");
 }
 
 void mtt::FileTransfer::start()

@@ -2,17 +2,24 @@
 #include <sstream>
 #include <mutex>
 
+#ifdef DEBUG
+#define BT_LOGFILE
+#endif // DEBUG
+
 class LogFile
 {
 public:
-	LogFile() {}
-	LogFile(std::string name);
+	LogFile();
 
 	void append(std::stringstream&);
-	void clear();
+	void init(std::string name);
 
 	std::string logName;
 	std::mutex logMutex;
 };
 
+#ifdef BT_LOGFILE
 #define LOG_APPEND(x) {std::stringstream ss; ss << x; log.append(ss);}
+#else
+#define LOG_APPEND(x) {}
+#endif

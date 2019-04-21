@@ -15,8 +15,7 @@ mtt::Downloader::Downloader(TorrentPtr t)
 {
 	torrent = t;
 
-	log.logName = "requests";
-	log.clear();
+	log.init("requests");
 }
 
 void mtt::Downloader::reset()
