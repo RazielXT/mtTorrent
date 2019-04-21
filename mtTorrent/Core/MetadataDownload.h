@@ -16,7 +16,7 @@ namespace mtt
 
 		MetadataDownload(Peers&);
 
-		void start(std::function<void(Status, MetadataDownloadState&)> onUpdate);
+		void start(std::function<void(Status, MetadataDownloadState&)> onUpdate, boost::asio::io_service& io);
 		void stop();
 
 		MetadataDownloadState state;
@@ -57,5 +57,8 @@ namespace mtt
 
 		std::vector<EventInfo> eventLog;
 		void addEventLog(uint8_t* id, EventInfo::Action action, uint32_t index);
+
+		std::shared_ptr<ScheduledTimer> retryTimer;
+		uint32_t lastActivityTime = 0;
 	};
 }

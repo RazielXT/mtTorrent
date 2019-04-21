@@ -7,10 +7,9 @@
 
 mtt::MetadataDownload::MetadataDownload(Peers& p) : peers(p)
 {
-
 }
 
-void mtt::MetadataDownload::start(std::function<void(Status, MetadataDownloadState&)> f)
+void mtt::MetadataDownload::start(std::function<void(Status, MetadataDownloadState&)> f, boost::asio::io_service& io)
 {
 	onUpdate = f;
 	active = true;
@@ -28,10 +27,36 @@ void mtt::MetadataDownload::start(std::function<void(Status, MetadataDownloadSta
 	, this);
 
 	//peers.connect(Addr({ 127,0,0,1 }, 31132));
+
+	std::lock_guard<std::mutex> guard(commsMutex);
+	retryTimer = ScheduledTimer::create(io, [this]()
+		{
+			auto currentTime = (uint32_t) time(0);
+			if (active && !state.finished && lastActivityTime + 5 < currentTime)
+			{
+				std::lock_guard<std::mutex> guard(commsMutex);
+				for (auto a : activeComms)
+				{
+					requestPiece(a);
+				}
+
+				if(retryTimer)
+					retryTimer->schedule(5);
+			}
+		}
+	);
+
+	retryTimer->schedule(5);
 }
 
 void mtt::MetadataDownload::stop()
 {
+	if (retryTimer)
+	{
+		retryTimer->disable();
+		retryTimer = nullptr;
+	}
+
 	addEventLog(nullptr, EventInfo::End, 0);
 
 	if(!state.finished && active)
@@ -173,6 +198,7 @@ void mtt::MetadataDownload::requestPiece(std::shared_ptr<PeerCommunication> peer
 		//BT_UTM_LOG("requesting piece idx " << mdPiece);
 		addEventLog(peer->info.id, EventInfo::Request, mdPiece);
 		onUpdate(Status::I_Requesting, state);
+		lastActivityTime = (uint32_t)time(0);
 	}
 }
 
