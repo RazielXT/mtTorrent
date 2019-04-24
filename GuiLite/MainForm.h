@@ -46,12 +46,10 @@ namespace GuiLite {
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  gridPeerPercentage;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  peerSource;
 	public: System::Windows::Forms::Button^  buttonStop;
-	private:
 	public: System::Windows::Forms::Button^  buttonStart;
 	public: System::Windows::Forms::Button^  buttonAddMagnet;
 	public: System::Windows::Forms::Button^  buttonSettings;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  torrentId;
-	public:
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentName;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentProgress;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  Column4;
@@ -63,13 +61,12 @@ namespace GuiLite {
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  Column3;
 	public: System::Windows::Forms::Button^ selectButton;
 	private: System::Windows::Forms::ContextMenuStrip^ peersContextMenuStrip;
-	public:
 	private: System::Windows::Forms::ToolStripMenuItem^ toolStripMenuItem1;
-	private:
-
+	private: System::Windows::Forms::TabPage^ tabPage3;
+	private: System::Windows::Forms::Panel^ panel1;
+	public: System::Windows::Forms::DataVisualization::Charting::Chart^ dlSpeedChart;
 
 	public:
-
 
 		static MainForm^ instance;
 
@@ -147,6 +144,9 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle21 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle18 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle19 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataVisualization::Charting::ChartArea^ chartArea1 = (gcnew System::Windows::Forms::DataVisualization::Charting::ChartArea());
+			System::Windows::Forms::DataVisualization::Charting::Legend^ legend1 = (gcnew System::Windows::Forms::DataVisualization::Charting::Legend());
+			System::Windows::Forms::DataVisualization::Charting::Series^ series1 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
 			this->splitContainer1 = (gcnew System::Windows::Forms::SplitContainer());
 			this->splitContainer2 = (gcnew System::Windows::Forms::SplitContainer());
 			this->buttonSettings = (gcnew System::Windows::Forms::Button());
@@ -185,6 +185,9 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->dataGridViewTextBoxColumn3 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->Column1 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->dataGridViewTextBoxColumn4 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->tabPage3 = (gcnew System::Windows::Forms::TabPage());
+			this->panel1 = (gcnew System::Windows::Forms::Panel());
+			this->dlSpeedChart = (gcnew System::Windows::Forms::DataVisualization::Charting::Chart());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->splitContainer1))->BeginInit();
 			this->splitContainer1->Panel1->SuspendLayout();
 			this->splitContainer1->Panel2->SuspendLayout();
@@ -201,6 +204,9 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->peersContextMenuStrip->SuspendLayout();
 			this->sourcesTab->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->sourcesGrid))->BeginInit();
+			this->tabPage3->SuspendLayout();
+			this->panel1->SuspendLayout();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->dlSpeedChart))->BeginInit();
 			this->SuspendLayout();
 			// 
 			// splitContainer1
@@ -432,6 +438,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->TorrentTabs->Controls->Add(this->tabPage1);
 			this->TorrentTabs->Controls->Add(this->tabPage2);
 			this->TorrentTabs->Controls->Add(this->sourcesTab);
+			this->TorrentTabs->Controls->Add(this->tabPage3);
 			this->TorrentTabs->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->TorrentTabs->Location = System::Drawing::Point(0, 0);
 			this->TorrentTabs->Name = L"TorrentTabs";
@@ -693,6 +700,45 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->dataGridViewTextBoxColumn4->Name = L"dataGridViewTextBoxColumn4";
 			this->dataGridViewTextBoxColumn4->ReadOnly = true;
 			// 
+			// tabPage3
+			// 
+			this->tabPage3->Controls->Add(this->panel1);
+			this->tabPage3->Location = System::Drawing::Point(4, 25);
+			this->tabPage3->Name = L"tabPage3";
+			this->tabPage3->Padding = System::Windows::Forms::Padding(3);
+			this->tabPage3->Size = System::Drawing::Size(1331, 200);
+			this->tabPage3->TabIndex = 3;
+			this->tabPage3->Text = L"Statistics";
+			this->tabPage3->UseVisualStyleBackColor = true;
+			// 
+			// panel1
+			// 
+			this->panel1->Controls->Add(this->dlSpeedChart);
+			this->panel1->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->panel1->Location = System::Drawing::Point(3, 3);
+			this->panel1->Name = L"panel1";
+			this->panel1->Size = System::Drawing::Size(1325, 194);
+			this->panel1->TabIndex = 0;
+			// 
+			// dlSpeedChart
+			// 
+			this->dlSpeedChart->BorderlineWidth = 5;
+			chartArea1->Name = L"ChartArea1";
+			this->dlSpeedChart->ChartAreas->Add(chartArea1);
+			this->dlSpeedChart->Dock = System::Windows::Forms::DockStyle::Fill;
+			legend1->Name = L"Legend1";
+			this->dlSpeedChart->Legends->Add(legend1);
+			this->dlSpeedChart->Location = System::Drawing::Point(0, 0);
+			this->dlSpeedChart->Name = L"dlSpeedChart";
+			this->dlSpeedChart->Palette = System::Windows::Forms::DataVisualization::Charting::ChartColorPalette::Bright;
+			series1->ChartArea = L"ChartArea1";
+			series1->Legend = L"Legend1";
+			series1->Name = L"Series1";
+			this->dlSpeedChart->Series->Add(series1);
+			this->dlSpeedChart->Size = System::Drawing::Size(1325, 194);
+			this->dlSpeedChart->TabIndex = 0;
+			this->dlSpeedChart->Text = L"Download speed";
+			// 
 			// MainForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(8, 16);
@@ -719,6 +765,9 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->peersContextMenuStrip->ResumeLayout(false);
 			this->sourcesTab->ResumeLayout(false);
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->sourcesGrid))->EndInit();
+			this->tabPage3->ResumeLayout(false);
+			this->panel1->ResumeLayout(false);
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->dlSpeedChart))->EndInit();
 			this->ResumeLayout(false);
 
 		}

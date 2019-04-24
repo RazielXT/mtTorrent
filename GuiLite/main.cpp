@@ -37,6 +37,26 @@ void applySettings(System::Object^ form)
 	IoctlFunc(mtBI::MessageId::SetSettings, &info, nullptr);
 }
 
+int chartTime = 0;
+
+void initSpeedChart()
+{
+	auto chart = GuiLite::MainForm::instance->dlSpeedChart;
+	chart->Series["Series1"]->XValueMember = "Time";
+	chart->Series["Series1"]->YValueMembers = "Speed";
+	chart->Series["Series1"]->ChartType = DataVisualization::Charting::SeriesChartType::Line;
+	chart->Series["Series1"]->IsVisibleInLegend = false;
+	chart->ChartAreas[0]->AxisX->MajorGrid->Enabled = false;
+	chart->ChartAreas[0]->AxisY->MajorGrid->LineColor = Drawing::Color::LightGray;
+
+	chartTime = 0;
+}
+
+void updateSpeedChart(float speed)
+{
+	GuiLite::MainForm::instance->dlSpeedChart->Series["Series1"]->Points->AddXY(++chartTime, speed);
+}
+
 mtBI::TorrentFilesSelection lastSelection;
 
 void updateSelectionFormFooter()
@@ -174,6 +194,8 @@ void refreshTorrentInfo(uint8_t* hash)
 	}
 
 	GuiLite::MainForm::instance->selectButton->Visible = true;
+
+	initSpeedChart();
 }
 
 void start()
@@ -531,6 +553,9 @@ void refreshUi()
 					activeStatus = "Stopped";
 				else
 					activeStatus = "Active";
+
+				if (t.active && !(info.downloadSpeed == 0 && info.selectionProgress == 1.0f))
+					updateSpeedChart((info.downloadSpeed / 1024.f) / 1024.f);
 
 				String^ speedInfo = float((info.downloadSpeed / 1024.f) / 1024.f).ToString("F");
 				if (t.active && info.downloadSpeed > 0 && info.selectionProgress < 1.0f && info.downloaded > 0)
