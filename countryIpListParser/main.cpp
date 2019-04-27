@@ -1,13 +1,12 @@
 //source csv http://software77.net/geo-ip/
+//oroginal csv parse code from https://gist.github.com/Trinitok/8bc11f3e33c38a7c384f462a937b9950
 
-#include <string>
-#include <fstream>
+#include "..\mtTorrent\utils\FastIpToCountry.h"
 #include <vector>
 #include <sstream>
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>
-#include <array>
 #include <map>
 
 std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
@@ -122,93 +121,14 @@ private:
 	}
 };
 
-class FastIpToCountry
-{
-protected:
-
-	std::map<std::string, uint16_t> countryMap;
-	std::array<std::vector<std::pair<IpAddress_t, uint16_t>>, 256> buckets;
-
-	const char* filename = "ipclist";
-
-public:
-
-	void toFile()
-	{
-		std::ofstream file(filename);
-
-		for (auto& c : countryMap)
-		{
-			file << c.second << c.first << '\n';
-		}
-
-		file << '\n';
-
-		for (auto& b : buckets)
-		{
-			for (auto& range : b)
-			{
-				file.write((char*)&range.first, sizeof(range.first));
-				file.write((char*)&range.second, sizeof(range.second));
-			}
-
-			file.write("\0\0\0\0\0\0", 6);
-		}
-	}
-
-	void fromFile()
-	{
-		size_t bucket = 0;
-		bool countriesLoaded = false;
-
-		std::ifstream file(filename, std::ios::binary);
-		while (file.good() && !file.eof())
-		{
-			if (!countriesLoaded)
-			{
-				std::string line;
-				std::getline(file, line);
-				line.pop_back();
-
-				if (line.empty())
-				{
-					countriesLoaded = true;
-					std::getline(file, line);
-				}
-				else
-				{
-					char* nameStart = nullptr;
-					uint16_t id = (uint16_t)strtol(line.data(), &nameStart, 10);
-					countryMap[nameStart] = id;
-				}
-			}
-			else
-			{
-				uint32_t ip = 0;
-				uint16_t country = 0;
-				file.read((char*)&ip, sizeof(ip));
-				file.read((char*)&country, sizeof(country));
-
-				if (country == 0 && ip == 0)
-				{
-					bucket++;
-				}
-				else
-				{
-					buckets[bucket].push_back({ ip, country });
-				}
-			}
-		}
-	}
-
-};
-
 class FastIpToCountryFromParser : public FastIpToCountry
 {
 public:
 
 	void fromParser(IpToCountry& parser)
 	{
+		std::map<std::string, uint16_t> countryMap;
+
 		int b = 0;
 		for (auto& bucket : parser.m_countryIpList)
 		{
@@ -227,26 +147,54 @@ public:
 
 				lastCountry = countryId;
 
-				buckets[b].push_back({ range.startAddress, countryId });
+				buckets[b].push_back({ range.startAddress, countryId - 1 });
 			}
 
 			b++;
 		}
+
+		countries.resize(countryMap.size());
+		for (auto& c : countryMap)
+		{
+			countries[c.second - 1] = c.first;
+		}
+	}
+
+	std::string GetCountry(const std::string& address) const
+	{
+		IpAddress_t integerIp = IntegerFromIp(address);
+		return FastIpToCountry::GetCountry(integerIp);
+	}
+
+private:
+
+	static IpAddress_t IntegerFromIp(const std::string& ip)
+	{
+		auto tokens = split(ip, '.');
+		auto integers = convertContainerTo<uint32_t>(tokens);
+		return (integers[0] << (3 * 8)) +
+			(integers[1] << (2 * 8)) +
+			(integers[2] << (1 * 8)) +
+			integers[3];
 	}
 };
 
 int main()
 {
+// 	FastIpToCountryFromParser fastParser2;
+// 	fastParser2.fromFile();
+// 
+// 	auto c = fastParser2.GetCountry("188.112.86.162");
+// 	auto c2 = fastParser2.GetCountry("185.184.28.0");
+// 	auto c3 = fastParser2.GetCountry("185.184.29.123");
+// 	auto c4 = fastParser2.GetCountry("185.184.31.255");
+// 	auto c5 = fastParser2.GetCountry("185.184.32.0");
+
+	IpToCountry parser("IpToCountry.csv");
+
 	FastIpToCountryFromParser fastParser;
-	fastParser.fromFile();
-
-	IpToCountry parser("D:\\IpToCountry.csv");
-
 	fastParser.fromParser(parser);
 	fastParser.toFile();
-
-	FastIpToCountryFromParser fastParser2;
-	fastParser2.fromFile();
 
 	return 0;
 }

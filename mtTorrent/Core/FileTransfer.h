@@ -39,6 +39,7 @@ namespace mtt
 			uint32_t uploadSpeed;
 			uint32_t downloadSpeed;
 			float percentage;
+			std::string country;
 		};
 		std::vector<ActivePeerInfo> getPeersInfo();
 

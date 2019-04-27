@@ -150,6 +150,7 @@ namespace mtBI
 		size_t upSpeed;
 		string addr;
 		string client;
+		string country;
 	};
 
 	struct TorrentPeersInfo

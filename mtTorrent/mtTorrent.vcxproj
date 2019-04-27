@@ -266,6 +266,7 @@
     <ClCompile Include="Core\Uploader.cpp" />
     <ClCompile Include="Public\BinaryInterface.cpp" />
     <ClCompile Include="utils\Base32.cpp" />
+    <ClCompile Include="utils\FastIpToCountry.cpp" />
     <ClCompile Include="utils\TorrentFileParser.cpp" />
     <ClCompile Include="utils\BencodeParser.cpp" />
     <ClCompile Include="utils\ScheduledTimer.cpp" />
@@ -317,6 +318,7 @@
     <ClInclude Include="Public\BinaryInterface.h" />
     <ClInclude Include="Public\Status.h" />
     <ClInclude Include="utils\Base32.h" />
+    <ClInclude Include="utils\FastIpToCountry.h" />
     <ClInclude Include="utils\TorrentFileParser.h" />
     <ClInclude Include="utils\BencodeParser.h" />
     <ClInclude Include="utils\ScheduledTimer.h" />

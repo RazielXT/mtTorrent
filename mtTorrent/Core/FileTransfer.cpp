@@ -5,10 +5,20 @@
 #include "Peers.h"
 #include "Configuration.h"
 #include "utils/ScheduledTimer.h"
+#include "utils/FastIpToCountry.h"
+
+FastIpToCountry ipToCountry;
+bool ipToCountryLoaded = false;
 
 mtt::FileTransfer::FileTransfer(TorrentPtr t) : downloader(t), uploader(t), torrent(t)
 {
 	log.init("download");
+
+	if (!ipToCountryLoaded)
+	{
+		ipToCountryLoaded = true;
+		ipToCountry.fromFile();
+	}
 }
 
 void mtt::FileTransfer::start()
@@ -171,6 +181,7 @@ std::vector<mtt::FileTransfer::ActivePeerInfo> mtt::FileTransfer::getPeersInfo()
 		out[i].downloadSpeed = peer.downloadSpeed;
 		out[i].uploadSpeed = peer.uploadSpeed;
 		out[i].client = peer.comm->ext.state.client;
+		out[i].country = out[i].address.ipv6 ? "" : ipToCountry.GetCountry(_byteswap_ulong(*reinterpret_cast<uint32_t*>(out[i].address.addrBytes)));
 		i++;
 	}
 

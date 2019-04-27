@@ -40,11 +40,11 @@ namespace GuiLite {
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  dataGridViewTextBoxColumn3;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  Column1;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^  dataGridViewTextBoxColumn4;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  gridPeerAddress;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  gridPeerSpeedDownload;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  Column2;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  gridPeerPercentage;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  peerSource;
+
+
+
+
+
 	public: System::Windows::Forms::Button^  buttonStop;
 	public: System::Windows::Forms::Button^  buttonStart;
 	public: System::Windows::Forms::Button^  buttonAddMagnet;
@@ -65,6 +65,13 @@ namespace GuiLite {
 	private: System::Windows::Forms::TabPage^ tabPage3;
 	private: System::Windows::Forms::Panel^ panel1;
 	public: System::Windows::Forms::DataVisualization::Charting::Chart^ dlSpeedChart;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ gridPeerAddress;
+	public:
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ gridPeerSpeedDownload;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column2;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ gridPeerPercentage;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ peerSource;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ peerCountry;
 
 	public:
 
@@ -136,9 +143,6 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle11 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle15 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle16 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle12 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle13 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle14 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle17 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle20 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle21 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
@@ -147,6 +151,9 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			System::Windows::Forms::DataVisualization::Charting::ChartArea^ chartArea1 = (gcnew System::Windows::Forms::DataVisualization::Charting::ChartArea());
 			System::Windows::Forms::DataVisualization::Charting::Legend^ legend1 = (gcnew System::Windows::Forms::DataVisualization::Charting::Legend());
 			System::Windows::Forms::DataVisualization::Charting::Series^ series1 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle12 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle13 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle14 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			this->splitContainer1 = (gcnew System::Windows::Forms::SplitContainer());
 			this->splitContainer2 = (gcnew System::Windows::Forms::SplitContainer());
 			this->buttonSettings = (gcnew System::Windows::Forms::Button());
@@ -171,11 +178,6 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->torrentInfoLabel = (gcnew System::Windows::Forms::TextBox());
 			this->tabPage2 = (gcnew System::Windows::Forms::TabPage());
 			this->peersGridView = (gcnew System::Windows::Forms::DataGridView());
-			this->gridPeerAddress = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->gridPeerSpeedDownload = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->Column2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->gridPeerPercentage = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->peerSource = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->peersContextMenuStrip = (gcnew System::Windows::Forms::ContextMenuStrip(this->components));
 			this->toolStripMenuItem1 = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->sourcesTab = (gcnew System::Windows::Forms::TabPage());
@@ -188,6 +190,12 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->tabPage3 = (gcnew System::Windows::Forms::TabPage());
 			this->panel1 = (gcnew System::Windows::Forms::Panel());
 			this->dlSpeedChart = (gcnew System::Windows::Forms::DataVisualization::Charting::Chart());
+			this->gridPeerAddress = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->gridPeerSpeedDownload = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->Column2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->gridPeerPercentage = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->peerSource = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->peerCountry = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->splitContainer1))->BeginInit();
 			this->splitContainer1->Panel1->SuspendLayout();
 			this->splitContainer1->Panel2->SuspendLayout();
@@ -513,9 +521,9 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			dataGridViewCellStyle11->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
 			this->peersGridView->ColumnHeadersDefaultCellStyle = dataGridViewCellStyle11;
 			this->peersGridView->ColumnHeadersHeightSizeMode = System::Windows::Forms::DataGridViewColumnHeadersHeightSizeMode::AutoSize;
-			this->peersGridView->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(5) {
+			this->peersGridView->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(6) {
 				this->gridPeerAddress,
-					this->gridPeerSpeedDownload, this->Column2, this->gridPeerPercentage, this->peerSource
+					this->gridPeerSpeedDownload, this->Column2, this->gridPeerPercentage, this->peerSource, this->peerCountry
 			});
 			this->peersGridView->ContextMenuStrip = this->peersContextMenuStrip;
 			dataGridViewCellStyle15->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleLeft;
@@ -545,47 +553,6 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->peersGridView->SelectionMode = System::Windows::Forms::DataGridViewSelectionMode::FullRowSelect;
 			this->peersGridView->Size = System::Drawing::Size(1325, 194);
 			this->peersGridView->TabIndex = 2;
-			// 
-			// gridPeerAddress
-			// 
-			this->gridPeerAddress->HeaderText = L"Address";
-			this->gridPeerAddress->MinimumWidth = 20;
-			this->gridPeerAddress->Name = L"gridPeerAddress";
-			this->gridPeerAddress->ReadOnly = true;
-			this->gridPeerAddress->Width = 200;
-			// 
-			// gridPeerSpeedDownload
-			// 
-			dataGridViewCellStyle12->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->gridPeerSpeedDownload->DefaultCellStyle = dataGridViewCellStyle12;
-			this->gridPeerSpeedDownload->HeaderText = L"Download speed";
-			this->gridPeerSpeedDownload->Name = L"gridPeerSpeedDownload";
-			this->gridPeerSpeedDownload->ReadOnly = true;
-			this->gridPeerSpeedDownload->Width = 150;
-			// 
-			// Column2
-			// 
-			dataGridViewCellStyle13->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->Column2->DefaultCellStyle = dataGridViewCellStyle13;
-			this->Column2->HeaderText = L"Upload speed";
-			this->Column2->Name = L"Column2";
-			this->Column2->ReadOnly = true;
-			this->Column2->Width = 150;
-			// 
-			// gridPeerPercentage
-			// 
-			dataGridViewCellStyle14->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->gridPeerPercentage->DefaultCellStyle = dataGridViewCellStyle14;
-			this->gridPeerPercentage->HeaderText = L"%";
-			this->gridPeerPercentage->Name = L"gridPeerPercentage";
-			this->gridPeerPercentage->ReadOnly = true;
-			// 
-			// peerSource
-			// 
-			this->peerSource->HeaderText = L"Source";
-			this->peerSource->Name = L"peerSource";
-			this->peerSource->ReadOnly = true;
-			this->peerSource->Width = 150;
 			// 
 			// peersContextMenuStrip
 			// 
@@ -738,6 +705,53 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->dlSpeedChart->Size = System::Drawing::Size(1325, 194);
 			this->dlSpeedChart->TabIndex = 0;
 			this->dlSpeedChart->Text = L"Download speed";
+			// 
+			// gridPeerAddress
+			// 
+			this->gridPeerAddress->HeaderText = L"Address";
+			this->gridPeerAddress->MinimumWidth = 20;
+			this->gridPeerAddress->Name = L"gridPeerAddress";
+			this->gridPeerAddress->ReadOnly = true;
+			this->gridPeerAddress->Width = 200;
+			// 
+			// gridPeerSpeedDownload
+			// 
+			dataGridViewCellStyle12->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->gridPeerSpeedDownload->DefaultCellStyle = dataGridViewCellStyle12;
+			this->gridPeerSpeedDownload->HeaderText = L"Download speed";
+			this->gridPeerSpeedDownload->Name = L"gridPeerSpeedDownload";
+			this->gridPeerSpeedDownload->ReadOnly = true;
+			this->gridPeerSpeedDownload->Width = 150;
+			// 
+			// Column2
+			// 
+			dataGridViewCellStyle13->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->Column2->DefaultCellStyle = dataGridViewCellStyle13;
+			this->Column2->HeaderText = L"Upload speed";
+			this->Column2->Name = L"Column2";
+			this->Column2->ReadOnly = true;
+			this->Column2->Width = 150;
+			// 
+			// gridPeerPercentage
+			// 
+			dataGridViewCellStyle14->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->gridPeerPercentage->DefaultCellStyle = dataGridViewCellStyle14;
+			this->gridPeerPercentage->HeaderText = L"%";
+			this->gridPeerPercentage->Name = L"gridPeerPercentage";
+			this->gridPeerPercentage->ReadOnly = true;
+			// 
+			// peerSource
+			// 
+			this->peerSource->HeaderText = L"Source";
+			this->peerSource->Name = L"peerSource";
+			this->peerSource->ReadOnly = true;
+			this->peerSource->Width = 150;
+			// 
+			// peerCountry
+			// 
+			this->peerCountry->HeaderText = L"Country";
+			this->peerCountry->Name = L"peerCountry";
+			this->peerCountry->ReadOnly = true;
 			// 
 			// MainForm
 			// 

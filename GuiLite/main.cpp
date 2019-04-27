@@ -558,7 +558,7 @@ void refreshUi()
 					updateSpeedChart((info.downloadSpeed / 1024.f) / 1024.f);
 
 				String^ speedInfo = float((info.downloadSpeed / 1024.f) / 1024.f).ToString("F");
-				if (t.active && info.downloadSpeed > 0 && info.selectionProgress < 1.0f && info.downloaded > 0)
+				if (t.active && info.downloadSpeed > 0 && info.selectionProgress && info.selectionProgress < 1.0f && info.downloaded > 0)
 				{
 					speedInfo += " (";
 					size_t leftBytes = ((size_t)(info.downloaded / info.selectionProgress)) - info.downloaded;
@@ -619,10 +619,11 @@ void refreshUi()
 		for (uint32_t i = 0; i < peers.count; i++)
 		{
 			auto& peerInfo = peers.peers[i];
-			auto peerRow = gcnew cli::array< System::String^  >(5) {
+			auto peerRow = gcnew cli::array< System::String^  >(6) {
 				gcnew String(peerInfo.addr.data),
 					float(peerInfo.dlSpeed / (1024.f * 1024)).ToString("F"), float(peerInfo.upSpeed / (1024.f * 1024)).ToString("F"),
-					float(peerInfo.progress).ToString("P"),	gcnew String(peerInfo.client.data, 0, (int)strlen(peerInfo.client.data), System::Text::Encoding::UTF8)
+					float(peerInfo.progress).ToString("P"),	gcnew String(peerInfo.client.data, 0, (int)strlen(peerInfo.client.data), System::Text::Encoding::UTF8),
+					gcnew String(peerInfo.country.data)
 			};
 
 			peersGrid->Rows[i]->SetValues(peerRow);

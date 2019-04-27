@@ -105,6 +105,7 @@ extern "C"
 				out.dlSpeed = peer.downloadSpeed;
 				out.upSpeed = peer.uploadSpeed;
 				out.client.set(peers[i].client);
+				out.country.set(peers[i].country);
 			}
 		}
 		else if (id == mtBI::MessageId::GetTorrentInfo)

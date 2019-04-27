@@ -181,6 +181,9 @@
     <ClCompile Include="Core\FileTransfer.cpp">
       <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClCompile>
+    <ClCompile Include="utils\FastIpToCountry.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Storage.h">
@@ -329,6 +332,9 @@
     </ClInclude>
     <ClInclude Include="Core\FileTransfer.h">
       <Filter>Source Files\Core\Torrent\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\FastIpToCountry.h">
+      <Filter>Source Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
