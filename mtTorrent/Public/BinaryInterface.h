@@ -6,22 +6,22 @@
 
 namespace mtBI
 {
+	class allocator;
+
 	struct string
 	{
 		string();
 		~string();
 
-		void set(const std::string& str);
-		void add(const std::string& str);
 		char* data = nullptr;
 
-		struct basic_allocator
-		{
-			void* alloc(size_t size);
-			void dealloc(void* data);
-		};
+		string& operator=(const std::string& str);
+		string& operator=(const char* str);
+
+		void assign(const char* str, size_t length);
+
 	private:
-		basic_allocator* allocator;
+		const allocator * const allocator;
 	};
 
 	enum class MessageId

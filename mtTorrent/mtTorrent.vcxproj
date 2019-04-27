@@ -316,6 +316,7 @@
     <ClInclude Include="Core\UdpTrackerComm.h" />
     <ClInclude Include="Core\Uploader.h" />
     <ClInclude Include="Public\BinaryInterface.h" />
+    <ClInclude Include="Public\ModuleAllocator.h" />
     <ClInclude Include="Public\Status.h" />
     <ClInclude Include="utils\Base32.h" />
     <ClInclude Include="utils\FastIpToCountry.h" />

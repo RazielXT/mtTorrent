@@ -336,5 +336,8 @@
     <ClInclude Include="utils\FastIpToCountry.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="Public\ModuleAllocator.h">
+      <Filter>Source Files\Public</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

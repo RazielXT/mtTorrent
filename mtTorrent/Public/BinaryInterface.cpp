@@ -1,45 +1,35 @@
 #include "BinaryInterface.h"
+#include "ModuleAllocator.h"
 
-void* mtBI::string::basic_allocator::alloc(size_t size)
+mtBI::string::string() : allocator(&mtBI::module_allocator<>::m_allocator)
 {
-	return malloc(size);
-}
-void mtBI::string::basic_allocator::dealloc(void* data)
-{
-	free(data);
-}
-
-static mtBI::string::basic_allocator sallocator;
-
-mtBI::string::string()
-{
-	allocator = &sallocator;
-
-	data = (char*)allocator->alloc(100);
-	data[0] = 0;
 }
 
 mtBI::string::~string()
 {
 	if (data)
-		sallocator.dealloc(data);
+		allocator->deallocate(data);
 }
 
-void mtBI::string::set(const std::string& str)
+void mtBI::string::assign(const char* str, size_t length)
 {
-	//if (data)
-	//	sallocator.dealloc(data);
+	if (data)
+		allocator->deallocate(data);
 
-	//data = (char*)allocator->alloc(str.length() + 1);
-	memcpy(data, str.data(), str.length() + 1);
+	data = (char*)allocator->allocate(length + 1);
+	memcpy(data, str, length + 1);
 }
 
-void mtBI::string::add(const std::string& str)
+mtBI::string& mtBI::string::operator=(const char* str)
 {
-	//if (data)
-	//	sallocator.dealloc(data);
+	assign(str, strlen(str));
 
-	//data = (char*)allocator->alloc(str.length() + 1);
+	return *this;
+}
 
-	memcpy(data + strlen((char*)data), str.data(), str.length() + 1);
+mtBI::string& mtBI::string::operator=(const std::string& str)
+{
+	assign(str.data(), str.length());
+
+	return *this;
 }

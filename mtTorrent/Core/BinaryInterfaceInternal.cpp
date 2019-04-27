@@ -74,7 +74,7 @@ extern "C"
 			if (!torrent)
 				return mtt::Status::E_InvalidInput;
 			auto resp = (mtBI::TorrentStateInfo*) output;
-			resp->name.set(torrent->name());
+			resp->name = torrent->name();
 			resp->connectedPeers = torrent->peers->connectedCount();
 			resp->checking = torrent->checking;
 			if (resp->checking)
@@ -100,12 +100,12 @@ extern "C"
 			{
 				auto& peer = peers[i];
 				auto& out = resp->peers[i];
-				out.addr.set(peer.address.toString());
+				out.addr = peer.address.toString();
 				out.progress = peer.percentage;
 				out.dlSpeed = peer.downloadSpeed;
 				out.upSpeed = peer.uploadSpeed;
-				out.client.set(peers[i].client);
-				out.country.set(peers[i].country);
+				out.client = peers[i].client;
+				out.country = peers[i].country;
 			}
 		}
 		else if (id == mtBI::MessageId::GetTorrentInfo)
@@ -114,7 +114,7 @@ extern "C"
 			if (!torrent)
 				return mtt::Status::E_InvalidInput;
 			auto resp = (mtBI::TorrentInfo*) output;
-			resp->name.set(torrent->infoFile.info.name);
+			resp->name = torrent->infoFile.info.name;
 			resp->fullsize = torrent->infoFile.info.fullSize;
 			resp->filesCount = (uint32_t)torrent->infoFile.info.files.size();
 
@@ -122,7 +122,7 @@ extern "C"
 			{
 				for (size_t i = 0; i < resp->filenames.size(); i++)
 				{
-					resp->filenames[i].set(torrent->infoFile.info.files[i].path.back());
+					resp->filenames[i] = torrent->infoFile.info.files[i].path.back();
 					resp->filesizes[i] = torrent->infoFile.info.files[i].size;
 				}
 			}
@@ -148,7 +148,7 @@ extern "C"
 					auto& to = resp->sources[i];
 					auto& from = sources[i];
 
-					to.name.set(from.hostname);
+					to.name = from.hostname;
 					to.peers = from.peers;
 					to.seeds = from.seeds;
 					to.interval = from.announceInterval;
@@ -206,7 +206,7 @@ extern "C"
 						else if (events[i].action == mtt::MetadataDownload::EventInfo::Receive)
 							txt = hexToString(events[i].sourceId, 20) + " sent " + std::to_string(events[i].index);
 
-						resp->logs[i - resp->start].set(txt);
+						resp->logs[i - resp->start] = txt;
 					}
 			}
 		}
@@ -215,7 +215,7 @@ extern "C"
 			auto resp = (mtBI::SettingsInfo*) output;
 			auto& settings = mtt::config::external;
 			resp->dhtEnabled = settings.enableDht;
-			resp->directory.set(settings.defaultDirectory);
+			resp->directory = settings.defaultDirectory;
 			resp->maxConnections = settings.maxTorrentConnections;
 			resp->tcpPort = settings.tcpPort;
 			resp->udpPort = settings.udpPort;
@@ -256,7 +256,7 @@ extern "C"
 				for (size_t i = 0; i < resp->selection.size(); i++)
 				{
 					mtBI::FileSelection& f = resp->selection[i];
-					f.name.set(files[i].info.path.back());
+					f.name = files[i].info.path.back();
 					f.selected = files[i].selected;
 					f.size = files[i].info.size;
 				}
