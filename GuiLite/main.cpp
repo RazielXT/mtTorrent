@@ -29,7 +29,7 @@ void applySettings(System::Object^ form)
 	mtBI::SettingsInfo info;
 	info.dhtEnabled = window->checkBoxDht->Checked;
 	auto dirPtr = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(window->directoryTextBox->Text).ToPointer();
-	info.directory.set(dirPtr);
+	info.directory = dirPtr;
 	info.maxConnections = (unsigned int)window->maxConnectionsNumeric->Value;
 	info.udpPort = (unsigned int)window->udpPortNumeric->Value;
 	info.tcpPort = (unsigned int)window->tcpPortNumeric->Value;
@@ -243,7 +243,7 @@ void customAction(System::String^ action, System::String^ param)
 		mtBI::AddPeerRequest request;
 		memcpy(request.hash, hash, 20);
 		auto addrPtr = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(param).ToPointer();
-		request.addr.set(addrPtr);
+		request.addr = addrPtr;
 
 		IoctlFunc(mtBI::MessageId::AddPeer, &request, nullptr);
 	}
@@ -270,6 +270,22 @@ void onButtonClick(System::Object^ button, System::String^ id)
 		{
 			GuiLite::AddPeerForm form;
 			form.ShowDialog();
+		}
+		else if (id == "Info" && selected)
+		{
+			mtBI::MagnetLinkProgress magnetProgress;
+			if (!GuiLite::MagnetInputForm::instance && IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, hash, &magnetProgress) == mtt::Status::Success)
+			{
+				GuiLite::MagnetInputForm form;
+				form.labelText->Text = "Getting info...";
+				form.magnetFormButton->Text = "Logs";
+				form.textBoxMagnet->Text = gcnew String(hexToString(hash, 20).data());
+				magnetLinkSequence = 2;
+				form.ShowDialog();
+				GuiLite::MagnetInputForm::instance = nullptr;
+				magnetLinkSequence = 0;
+				lastMagnetLinkLogCount = 0;
+			}
 		}
 	}
 	else if (button == GuiLite::MainForm::instance->buttonAddTorrent)
@@ -347,7 +363,7 @@ void onButtonClick(System::Object^ button, System::String^ id)
 		if (item->Text == "Refresh")
 		{
 			mtBI::SourceId info;
-			info.name.set((char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(id).ToPointer());
+			info.name = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(id).ToPointer();
 			memcpy(info.hash, hash, 20);
 			IoctlFunc(mtBI::MessageId::RefreshSource, &info, nullptr);
 		}
