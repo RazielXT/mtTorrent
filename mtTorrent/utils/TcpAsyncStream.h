@@ -37,7 +37,7 @@ public:
 	std::function<void()> onReceiveCallback;
 	std::function<void(int)> onCloseCallback;
 
-	std::string getName();
+	std::string& getHostname();
 	tcp::endpoint& getEndpoint();
 
 protected:

@@ -4,6 +4,7 @@
 #include "Configuration.h"
 #include "utils/TcpAsyncServer.h"
 #include "PeerMessage.h"
+#include "utils/UpnpPortMapping.h"
 
 mtt::IncomingPeersListener::IncomingPeersListener(std::function<void(std::shared_ptr<TcpAsyncStream>, const uint8_t* hash)> cb)
 {
@@ -34,10 +35,16 @@ mtt::IncomingPeersListener::IncomingPeersListener(std::function<void(std::shared
 	};
 
 	listener->listen();
+
+	upnp = std::make_shared<UpnpPortMapping>(pool.io);
+	upnp->mapActiveAdapters(mtt::config::external.tcpPort, UpnpPortMapping::PortType::Tcp);
+	upnp->mapActiveAdapters(mtt::config::external.udpPort, UpnpPortMapping::PortType::Udp);
 }
 
 void mtt::IncomingPeersListener::stop()
 {
+	upnp->unmapAllMappedAdapters();
+
 	listener->stop();
 
 	std::lock_guard<std::mutex> guard(peersMutex);

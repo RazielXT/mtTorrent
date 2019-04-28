@@ -211,7 +211,7 @@ Addr mtt::PeerCommunication::getAddress()
 
 std::string mtt::PeerCommunication::getAddressName()
 {
-	return stream->getName();
+	return stream->getHostname();
 }
 
 void mtt::PeerCommunication::connectionClosed(int code)
@@ -343,7 +343,7 @@ void mtt::PeerCommunication::LogMsg(std::stringstream& s)
 void mtt::PeerCommunication::SerializeLogs()
 {
 	std::lock_guard<std::mutex> guard(logMtx);
-	std::ofstream file(stream->getName());
+	std::ofstream file(stream->getHostname());
 	for (auto& l : logs)
 	{
 		file << l << "\n";

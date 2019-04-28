@@ -39,6 +39,7 @@ void mtt::Core::init()
 
 void mtt::Core::deinit()
 {
+	listener->stop();
 	mtt::dht::Communication::get().save();
 }
 

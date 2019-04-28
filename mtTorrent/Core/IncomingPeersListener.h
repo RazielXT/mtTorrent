@@ -2,6 +2,8 @@
 #include "utils/ServiceThreadpool.h"
 #include "utils/TcpAsyncStream.h"
 
+class UpnpPortMapping;
+
 namespace mtt
 {
 	class IncomingPeersListener
@@ -24,5 +26,8 @@ namespace mtt
 
 		void removePeer(TcpAsyncStream* s);
 		void addPeer(TcpAsyncStream* s, const uint8_t* hash);
+
+
+		std::shared_ptr<UpnpPortMapping> upnp;
 	};
 }

@@ -31,16 +31,5 @@ namespace mtt
 		DataBuffer createAnnounceRequest(std::string host, std::string port);
 		uint32_t readAnnounceResponse(DataBuffer& buffer, AnnounceResponse& out);
 
-		struct HttpHeaderInfo
-		{
-			bool valid = true;
-			bool success = false;
-			uint32_t dataStart = 0;
-			uint32_t dataSize = 0;
-
-			std::vector<std::pair<std::string, std::string>> headerParameters;
-		};
-		HttpHeaderInfo readHttpHeader(DataBuffer& buffer);
-
 	};
 }

@@ -267,6 +267,8 @@
     <ClCompile Include="Public\BinaryInterface.cpp" />
     <ClCompile Include="utils\Base32.cpp" />
     <ClCompile Include="utils\FastIpToCountry.cpp" />
+    <ClCompile Include="utils\HttpHeader.cpp" />
+    <ClCompile Include="utils\NetAdaptersListWin.cpp" />
     <ClCompile Include="utils\TorrentFileParser.cpp" />
     <ClCompile Include="utils\BencodeParser.cpp" />
     <ClCompile Include="utils\ScheduledTimer.cpp" />
@@ -279,6 +281,7 @@
     <ClCompile Include="utils\UdpAsyncWriter.cpp" />
     <ClCompile Include="utils\UdpAsyncComm.cpp" />
     <ClCompile Include="utils\UdpAsyncReceiver.cpp" />
+    <ClCompile Include="utils\UpnpPortMapping.cpp" />
     <ClCompile Include="utils\UrlEncoding.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -320,6 +323,8 @@
     <ClInclude Include="Public\Status.h" />
     <ClInclude Include="utils\Base32.h" />
     <ClInclude Include="utils\FastIpToCountry.h" />
+    <ClInclude Include="utils\HttpHeader.h" />
+    <ClInclude Include="utils\NetAdaptersList.h" />
     <ClInclude Include="utils\TorrentFileParser.h" />
     <ClInclude Include="utils\BencodeParser.h" />
     <ClInclude Include="utils\ScheduledTimer.h" />
@@ -332,6 +337,7 @@
     <ClInclude Include="utils\UdpAsyncWriter.h" />
     <ClInclude Include="utils\UdpAsyncComm.h" />
     <ClInclude Include="utils\UdpAsyncReceiver.h" />
+    <ClInclude Include="utils\UpnpPortMapping.h" />
     <ClInclude Include="utils\UrlEncoding.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

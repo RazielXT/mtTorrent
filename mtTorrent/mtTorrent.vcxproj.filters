@@ -184,6 +184,15 @@
     <ClCompile Include="utils\FastIpToCountry.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="utils\UpnpPortMapping.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\NetAdaptersListWin.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\HttpHeader.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Storage.h">
@@ -338,6 +347,15 @@
     </ClInclude>
     <ClInclude Include="Public\ModuleAllocator.h">
       <Filter>Source Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\UpnpPortMapping.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\NetAdaptersList.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\HttpHeader.h">
+      <Filter>Source Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
