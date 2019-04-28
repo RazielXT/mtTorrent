@@ -46,9 +46,9 @@ void initSpeedChart()
 	chart->Series["Series1"]->YValueMembers = "Speed";
 	chart->Series["Series1"]->ChartType = DataVisualization::Charting::SeriesChartType::Line;
 	chart->Series["Series1"]->IsVisibleInLegend = false;
+	chart->Series["Series1"]->Points->Clear();
 	chart->ChartAreas[0]->AxisX->MajorGrid->Enabled = false;
 	chart->ChartAreas[0]->AxisY->MajorGrid->LineColor = Drawing::Color::LightGray;
-
 	chartTime = 0;
 }
 
