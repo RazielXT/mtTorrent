@@ -233,7 +233,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Core\BinaryInterfaceInternal.cpp" />
+    <ClCompile Include="Core\BinaryInterfaceHandler.cpp" />
     <ClCompile Include="Core\Core.cpp" />
     <ClCompile Include="Core\Files.cpp" />
     <ClCompile Include="Core\FileTransfer.cpp" />

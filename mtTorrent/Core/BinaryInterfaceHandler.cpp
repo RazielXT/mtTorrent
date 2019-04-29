@@ -43,7 +43,6 @@ extern "C"
 				return mtt::Status::E_InvalidInput;
 
 			t->start();
-			//t->peers->connect(Addr({ 127,0,0,1 }, 31132));
 		}
 		else if (id == mtBI::MessageId::Stop)
 		{
@@ -87,6 +86,7 @@ extern "C"
 			resp->progress = torrent->currentProgress();
 			resp->selectionProgress = torrent->currentSelectionProgress();
 			resp->activeStatus = torrent->lastError;
+			resp->utmActive = torrent->utmDl && !torrent->utmDl->state.finished;
 		}
 		else if (id == mtBI::MessageId::GetPeersInfo)
 		{

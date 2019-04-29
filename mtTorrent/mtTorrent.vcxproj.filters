@@ -172,9 +172,6 @@
     <ClCompile Include="Core\IncomingPeersListener.cpp">
       <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClCompile>
-    <ClCompile Include="Core\BinaryInterfaceInternal.cpp">
-      <Filter>Source Files\Core</Filter>
-    </ClCompile>
     <ClCompile Include="Core\LogFile.cpp">
       <Filter>Source Files\Core\General</Filter>
     </ClCompile>
@@ -192,6 +189,9 @@
     </ClCompile>
     <ClCompile Include="utils\HttpHeader.cpp">
       <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\BinaryInterfaceHandler.cpp">
+      <Filter>Source Files\Core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
