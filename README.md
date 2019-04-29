@@ -1,5 +1,5 @@
 # mtTorrent
-Basic torrent protocol implementation using boost::asio including DHT
+Bittorrent protocol implementation using boost::asio including DHT
 
 [Windows binaries](https://docs.google.com/uc?export=download&id=1HZHLIXKXn51aPE81rgLhcV1iTImd-JM-)
 
