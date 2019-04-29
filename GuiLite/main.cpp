@@ -11,6 +11,9 @@
 #include "FileSelectionForm.h"
 #include "AddPeerForm.h"
 
+#include <Shlwapi.h>
+#pragma comment(lib,"shlwapi.lib")
+
 using namespace System;
 using namespace System::Windows::Forms;
 
@@ -42,19 +45,25 @@ int chartTime = 0;
 void initSpeedChart()
 {
 	auto chart = GuiLite::MainForm::instance->dlSpeedChart;
-	chart->Series["Series1"]->XValueMember = "Time";
-	chart->Series["Series1"]->YValueMembers = "Speed";
-	chart->Series["Series1"]->ChartType = DataVisualization::Charting::SeriesChartType::Line;
-	chart->Series["Series1"]->IsVisibleInLegend = false;
-	chart->Series["Series1"]->Points->Clear();
+	chart->Series["DlSeries"]->XValueMember = "Time";
+	chart->Series["DlSeries"]->YValueMembers = "Speed";
+	chart->Series["DlSeries"]->ChartType = DataVisualization::Charting::SeriesChartType::Line;
+	chart->Series["DlSeries"]->IsVisibleInLegend = false;
+	chart->Series["DlSeries"]->Points->Clear();
+	chart->Series["UpSeries"]->XValueMember = "Time";
+	chart->Series["UpSeries"]->YValueMembers = "Speed";
+	chart->Series["UpSeries"]->ChartType = DataVisualization::Charting::SeriesChartType::Line;
+	chart->Series["UpSeries"]->IsVisibleInLegend = false;
+	chart->Series["UpSeries"]->Points->Clear();
 	chart->ChartAreas[0]->AxisX->MajorGrid->Enabled = false;
 	chart->ChartAreas[0]->AxisY->MajorGrid->LineColor = Drawing::Color::LightGray;
 	chartTime = 0;
 }
 
-void updateSpeedChart(float speed)
+void updateSpeedChart(float dlSpeed, float upSpeed)
 {
-	GuiLite::MainForm::instance->dlSpeedChart->Series["Series1"]->Points->AddXY(++chartTime, speed);
+	GuiLite::MainForm::instance->dlSpeedChart->Series["DlSeries"]->Points->AddXY(++chartTime, dlSpeed);
+	GuiLite::MainForm::instance->dlSpeedChart->Series["UpSeries"]->Points->AddXY(chartTime, upSpeed);
 }
 
 mtBI::TorrentFilesSelection lastSelection;
@@ -570,8 +579,8 @@ void refreshUi()
 				else
 					activeStatus = "Active";
 
-				if (t.active && !(info.downloadSpeed == 0 && info.selectionProgress == 1.0f))
-					updateSpeedChart((info.downloadSpeed / 1024.f) / 1024.f);
+				if (t.active)
+					updateSpeedChart((info.downloadSpeed / 1024.f) / 1024.f, (info.uploadSpeed / 1024.f) / 1024.f);
 
 				String^ speedInfo = float((info.downloadSpeed / 1024.f) / 1024.f).ToString("F");
 				if (t.active && info.downloadSpeed > 0 && info.selectionProgress && info.selectionProgress < 1.0f && info.downloaded > 0)
@@ -585,7 +594,7 @@ void refreshUi()
 				}
 
 				String^ name = gcnew String(info.name.data);
-				if (name->Length == 0)
+				if (info.utmActive)
 				{
 					mtBI::MagnetLinkProgress magnetProgress;
 					if (IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, t.hash, &magnetProgress) == mtt::Status::Success)
@@ -703,6 +712,13 @@ void refreshUi()
 
 void ProcessProgramArgument(System::String^ arg)
 {
+	wchar_t pathBuffer[256];
+	if (GetModuleFileName(NULL, pathBuffer, 256))
+	{
+		PathRemoveFileSpec(pathBuffer);
+		SetCurrentDirectory(pathBuffer);
+	}
+
 	auto magnetPtr = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(arg).ToPointer();
 	addTorrentFromMetadata(magnetPtr);
 }
