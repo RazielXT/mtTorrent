@@ -54,18 +54,7 @@ mtt::TorrentPtr mtt::Core::addFile(const char* filename)
 		return t;
 
 	torrents.push_back(torrent);
-
-	auto onCheckFinish = [torrent](std::shared_ptr<PiecesCheck>)
-	{
-		//torrent->peers->trackers.removeTrackers();
-
-		//if (!torrent->start())
-		//	return;
-
-		//torrent->peers->connect(Addr({ 127,0,0,1 }, 31132));
-	};
-
-	torrent->checkFiles(onCheckFinish);
+	torrent->checkFiles();
 
 	return torrent;
 }
@@ -82,12 +71,8 @@ mtt::TorrentPtr mtt::Core::addMagnet(const char* magnet)
 
 	auto onMetadataUpdate = [torrent](Status s, mtt::MetadataDownloadState& state)
 	{
-		auto onCheckFinish = [](std::shared_ptr<PiecesCheck>)
-		{
-		};
-
 		if(s == Status::Success && state.finished)
-			torrent->checkFiles(onCheckFinish);
+			torrent->checkFiles();
 	};
 
 	torrent->downloadMetadata(onMetadataUpdate);

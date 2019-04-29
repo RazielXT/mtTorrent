@@ -33,9 +33,10 @@ namespace mtt
 		void pause();
 		void stop();
 
+		void checkFiles();
 		std::shared_ptr<PiecesCheck> checkFiles(std::function<void(std::shared_ptr<PiecesCheck>)> onFinish);
 		float checkingProgress();
-		std::shared_ptr<mtt::PiecesCheck> getCheckState();
+		bool filesChecked();
 
 		bool selectFiles(std::vector<bool>&);
 
@@ -64,6 +65,7 @@ namespace mtt
 
 		std::mutex checkStateMutex;
 		std::shared_ptr<mtt::PiecesCheck> checkState;
+		bool checked = false;
 		void init();
 	};
 }
