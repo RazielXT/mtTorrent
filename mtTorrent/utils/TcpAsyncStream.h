@@ -28,6 +28,7 @@ public:
 	void close();
 
 	void write(const DataBuffer& data);
+	void prepareWrite(const DataBuffer& data);
 
 	DataBuffer getReceivedData();
 	void consumeData(size_t size);

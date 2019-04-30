@@ -87,6 +87,13 @@ void TcpAsyncStream::write(const DataBuffer& data)
 	io_service.post(std::bind(&TcpAsyncStream::do_write, this, data));
 }
 
+void TcpAsyncStream::prepareWrite(const DataBuffer& data)
+{
+	std::lock_guard<std::mutex> guard(write_msgs_mutex);
+
+	write_msgs.push_back(data);
+}
+
 DataBuffer TcpAsyncStream::getReceivedData()
 {
 	std::lock_guard<std::mutex> guard(receiveBuffer_mutex);
@@ -224,12 +231,14 @@ void TcpAsyncStream::do_write(DataBuffer data)
 {
 	std::lock_guard<std::mutex> guard(write_msgs_mutex);
 
-	if (state != Disconnected)
+	write_msgs.push_back(data);
+
+	if (state == Connected)
 	{
 		TCP_LOG("writing " << data.size() << " bytes");
 
-		bool write_in_progress = !write_msgs.empty();
-		write_msgs.push_back(data);
+		bool write_in_progress = write_msgs.size() > 1;
+
 		if (!write_in_progress)
 		{
 			boost::asio::async_write(socket,
@@ -237,23 +246,23 @@ void TcpAsyncStream::do_write(DataBuffer data)
 				std::bind(&TcpAsyncStream::handle_write, shared_from_this(), std::placeholders::_1));
 		}
 	}
-	else if (info.remoteInitialized)
+	else if (state != Connecting)
 	{
-		write_msgs.push_back(data);
-		state = Connecting;
+		if (info.remoteInitialized)
+		{
+			state = Connecting;
 
-		socket.async_connect(info.endpoint, std::bind(&TcpAsyncStream::handle_connect, shared_from_this(), std::placeholders::_1));
+			socket.async_connect(info.endpoint, std::bind(&TcpAsyncStream::handle_connect, shared_from_this(), std::placeholders::_1));
+		}
+		else if (info.hostInitialized)
+		{
+			state = Connecting;
+
+			tcp::resolver::query query(info.host, info.port);
+			auto resolver = std::make_shared<tcp::resolver>(io_service);
+			resolver->async_resolve(query, std::bind(&TcpAsyncStream::handle_resolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2, resolver));
+		}
 	}
-	else if(info.hostInitialized)
-	{
-		write_msgs.push_back(data);
-		state = Connecting;
-
-		tcp::resolver::query query(info.host, info.port);
-		auto resolver = std::make_shared<tcp::resolver>(io_service);
-		resolver->async_resolve(query, std::bind(&TcpAsyncStream::handle_resolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2, resolver));
-	}
-
 }
 
 void TcpAsyncStream::handle_write(const boost::system::error_code& error)
