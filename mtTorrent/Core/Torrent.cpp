@@ -125,6 +125,8 @@ void mtt::Torrent::stop()
 
 		if(checkState)
 			checkState->rejected = true;
+
+		checking = false;
 	}
 
 	service.stop();
