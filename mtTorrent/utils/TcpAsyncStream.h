@@ -43,6 +43,8 @@ public:
 
 protected:
 
+	void connectByHostname();
+	void connectEndpoint();
 	void setAsConnected();
 
 	void postFail(std::string place, const boost::system::error_code& error);
@@ -76,10 +78,9 @@ protected:
 	struct  
 	{
 		std::string host;
-		std::string port;
+		uint16_t port;
 		tcp::endpoint endpoint;
-		bool hostInitialized = false;
-		bool remoteInitialized = false;
+		bool endpointInitialized = false;
 	}
 	info;
 
