@@ -9,8 +9,7 @@ using namespace mtt;
 
 bool generateInfoHash(BencodeParser& parsed, TorrentFileInfo&);
 void loadTorrentFileInfo(BencodeParser& parsed, TorrentFileInfo&);
-TorrentInfo parseTorrentInfo(BencodeParser::Object* info);
-mtt::TorrentInfo parseTorrentInfo(BencodeParser::Object* infoDictionary);
+TorrentInfo parseTorrentInfo(const BencodeParser::Object* info);
 
 TorrentFileInfo TorrentFileParser::parse(const uint8_t* data, size_t length)
 {
@@ -167,7 +166,7 @@ mtt::TorrentInfo mtt::TorrentFileParser::parseTorrentInfo(const uint8_t* data, s
 		return mtt::TorrentInfo();
 }
 
-mtt::TorrentInfo parseTorrentInfo(BencodeParser::Object* infoDictionary)
+mtt::TorrentInfo parseTorrentInfo(const BencodeParser::Object* infoDictionary)
 {
 	mtt::TorrentInfo info;
 

@@ -21,30 +21,43 @@ namespace mtt
 				uint16_t nextSiblingOffset = 0;
 				enum Type : uint16_t { None, Number, Text, List, Dictionary } type = None;
 
-				bool equals(const char*, size_t);
+				bool equals(const char*, size_t) const;
 			}
 			info;
-		
-			Object* getNextSibling();
 
-			Object* getDictItem(const char* name);
-			Object* getListItem(const char* name);
-			Item* getTxtItem(const char* name);
-			std::string getTxt(const char* name);
-			std::string getTxt();
-			Object* getIntItem(const char* name);
-			int getInt(const char* name);
-			int getInt();
-			size_t getBigInt(const char* name);
-			size_t getBigInt();
+			const Object* getDictItem(const char* name) const;
+			const Object* getListItem(const char* name) const;
+			const Item* getTxtItem(const char* name) const;
+			std::string getTxt(const char* name) const;
+			std::string getTxt() const;
+			const Object* getIntItem(const char* name) const;
+			int getInt(const char* name) const;
+			int getInt() const;
+			size_t getBigInt(const char* name) const;
+			size_t getBigInt() const;
 
-			Object* getFirstItem();
 
-			bool isMap();
-			bool isList();
-			bool isInt();
-			bool isText();
-			bool isText(const char*, size_t);
+			const Object* getFirstItem() const;
+			const Object* getNextSibling() const;
+
+			struct iterator {
+			public:
+				iterator(const Object* ptr) : ptr(ptr) {}
+				iterator operator++() { ptr = ptr->getNextSibling(); return *this; }
+				bool operator!=(const iterator& other) const { return ptr != other.ptr; }
+				const Object& operator*() const { return *ptr; }
+			private:
+				const Object* ptr;
+			};
+
+			iterator begin() const { return iterator(getFirstItem()); };
+			iterator end() const { return iterator(nullptr); };
+
+			bool isMap() const;
+			bool isList() const;
+			bool isInt() const;
+			bool isText() const;
+			bool isText(const char*, size_t) const;
 		};
 
 		Object* getRoot();

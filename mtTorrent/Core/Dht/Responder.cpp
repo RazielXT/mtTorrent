@@ -92,7 +92,7 @@ bool mtt::dht::Responder::handlePacket(udp::endpoint& endpoint, DataBuffer& data
 	return true;
 }
 
-bool mtt::dht::Responder::writeNodes(const char* hash, udp::endpoint& endpoint, mtt::BencodeParser::Object* requestData, PacketBuilder& out)
+bool mtt::dht::Responder::writeNodes(const char* hash, udp::endpoint& endpoint, const mtt::BencodeParser::Object* requestData, PacketBuilder& out)
 {
 	bool wantV4 = endpoint.address().is_v4();
 	bool wantV6 = endpoint.address().is_v6();

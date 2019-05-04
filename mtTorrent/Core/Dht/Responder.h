@@ -24,7 +24,7 @@ namespace mtt
 			Table& table;
 			DataListener& listener;
 
-			bool writeNodes(const char* hash, udp::endpoint& e, mtt::BencodeParser::Object* requestData, PacketBuilder& out);
+			bool writeNodes(const char* hash, udp::endpoint& e, const mtt::BencodeParser::Object* requestData, PacketBuilder& out);
 			bool writeValues(const char* infoHash, udp::endpoint& e, PacketBuilder& out);
 
 			struct StoredValue

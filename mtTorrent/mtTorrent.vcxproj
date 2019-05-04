@@ -266,6 +266,7 @@
     <ClCompile Include="Core\Uploader.cpp" />
     <ClCompile Include="Public\BinaryInterface.cpp" />
     <ClCompile Include="utils\Base32.cpp" />
+    <ClCompile Include="utils\BencodeWriter.cpp" />
     <ClCompile Include="utils\FastIpToCountry.cpp" />
     <ClCompile Include="utils\HttpHeader.cpp" />
     <ClCompile Include="utils\NetAdaptersListWin.cpp" />
@@ -322,6 +323,7 @@
     <ClInclude Include="Public\ModuleAllocator.h" />
     <ClInclude Include="Public\Status.h" />
     <ClInclude Include="utils\Base32.h" />
+    <ClInclude Include="utils\BencodeWriter.h" />
     <ClInclude Include="utils\FastIpToCountry.h" />
     <ClInclude Include="utils\HttpHeader.h" />
     <ClInclude Include="utils\NetAdaptersList.h" />

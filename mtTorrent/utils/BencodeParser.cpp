@@ -196,12 +196,7 @@ mtt::BencodeParser::Object* mtt::BencodeParser::getRoot()
 	return objects.empty() ? nullptr : &objects[0];
 }
 
-mtt::BencodeParser::Object* mtt::BencodeParser::Object::getNextSibling()
-{
-	return info.nextSiblingOffset ? this + info.nextSiblingOffset : nullptr;
-}
-
-mtt::BencodeParser::Object* mtt::BencodeParser::Object::getDictItem(const char* name)
+const mtt::BencodeParser::Object* mtt::BencodeParser::Object::getDictItem(const char* name) const
 {
 	auto obj = getFirstItem();
 	auto len = strlen(name);
@@ -217,7 +212,7 @@ mtt::BencodeParser::Object* mtt::BencodeParser::Object::getDictItem(const char* 
 	return nullptr;
 }
 
-mtt::BencodeParser::Object* mtt::BencodeParser::Object::getListItem(const char* name)
+const mtt::BencodeParser::Object* mtt::BencodeParser::Object::getListItem(const char* name) const
 {
 	auto obj = getFirstItem();
 	auto len = strlen(name);
@@ -233,7 +228,7 @@ mtt::BencodeParser::Object* mtt::BencodeParser::Object::getListItem(const char* 
 	return nullptr;
 }
 
-mtt::BencodeParser::Object::Item* mtt::BencodeParser::Object::getTxtItem(const char* name)
+const mtt::BencodeParser::Object::Item* mtt::BencodeParser::Object::getTxtItem(const char* name) const
 {
 	auto obj = getFirstItem();
 	auto len = strlen(name);
@@ -249,19 +244,19 @@ mtt::BencodeParser::Object::Item* mtt::BencodeParser::Object::getTxtItem(const c
 	return nullptr;
 }
 
-std::string mtt::BencodeParser::Object::getTxt(const char* name)
+std::string mtt::BencodeParser::Object::getTxt(const char* name) const
 {
 	auto item = getTxtItem(name);
 
 	return item ? std::string(item->data, item->size) : std::string();
 }
 
-std::string mtt::BencodeParser::Object::getTxt()
+std::string mtt::BencodeParser::Object::getTxt() const
 {
 	return isText() ? std::string(info.data, info.size) : std::string();
 }
 
-mtt::BencodeParser::Object* mtt::BencodeParser::Object::getIntItem(const char* name)
+const mtt::BencodeParser::Object* mtt::BencodeParser::Object::getIntItem(const char* name) const
 {
 	auto obj = getFirstItem();
 	auto len = strlen(name);
@@ -277,59 +272,64 @@ mtt::BencodeParser::Object* mtt::BencodeParser::Object::getIntItem(const char* n
 	return nullptr;
 }
 
-int mtt::BencodeParser::Object::getInt(const char* name)
+int mtt::BencodeParser::Object::getInt(const char* name) const
 {
 	auto o = getIntItem(name);
 	return o ? o->getInt() : 0;
 }
 
-int mtt::BencodeParser::Object::getInt()
+int mtt::BencodeParser::Object::getInt() const
 {
 	return strtol(info.data, 0, 10);
 }
 
-size_t mtt::BencodeParser::Object::getBigInt(const char* name)
+size_t mtt::BencodeParser::Object::getBigInt(const char* name) const
 {
 	auto o = getIntItem(name);
 	return o ? o->getBigInt() : 0;
 }
 
-size_t mtt::BencodeParser::Object::getBigInt()
+size_t mtt::BencodeParser::Object::getBigInt() const
 {
 	return strtoull(info.data, 0, 10);
 }
 
-mtt::BencodeParser::Object* mtt::BencodeParser::Object::getFirstItem()
+const mtt::BencodeParser::Object* mtt::BencodeParser::Object::getFirstItem() const
 {
 	return info.size ? this + 1 : nullptr;
 }
 
-bool mtt::BencodeParser::Object::Item::equals(const char* txt, size_t l)
+const mtt::BencodeParser::Object* mtt::BencodeParser::Object::getNextSibling() const
+{
+	return info.nextSiblingOffset ? this + info.nextSiblingOffset : nullptr;
+}
+
+bool mtt::BencodeParser::Object::Item::equals(const char* txt, size_t l) const
 {
 	return l != size ? false : strncmp(txt, data, size) == 0;
 }
 
-bool mtt::BencodeParser::Object::isMap()
+bool mtt::BencodeParser::Object::isMap() const
 {
 	return info.type == Item::Dictionary;
 }
 
-bool mtt::BencodeParser::Object::isList()
+bool mtt::BencodeParser::Object::isList() const
 {
 	return info.type == Item::List;
 }
 
-bool mtt::BencodeParser::Object::isInt()
+bool mtt::BencodeParser::Object::isInt() const
 {
 	return info.type == Item::Number;
 }
 
-bool mtt::BencodeParser::Object::isText()
+bool mtt::BencodeParser::Object::isText() const
 {
 	return info.type == Item::Text;
 }
 
-bool mtt::BencodeParser::Object::isText(const char* str, size_t l)
+bool mtt::BencodeParser::Object::isText(const char* str, size_t l) const
 {
 	return isText() && info.equals(str, l);
 }
