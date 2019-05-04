@@ -70,7 +70,7 @@ namespace mtt
 		TorrentInfo info;
 
 		Status parseMagnetLink(std::string link);
-		DataBuffer createTorrentFileData();
+		std::string createTorrentFileData();
 	};
 
 	struct FileSelectionInfo

@@ -3,6 +3,7 @@
 #include "utils/UrlEncoding.h"
 #include "utils/HexEncoding.h"
 #include "utils/PacketHelper.h"
+#include "utils/BencodeWriter.h"
 
 using namespace mtt;
 
@@ -106,64 +107,66 @@ Status mtt::TorrentFileInfo::parseMagnetLink(std::string link)
 	return correct ? Status::Success : Status::E_InvalidInput;
 }
 
-DataBuffer mtt::TorrentFileInfo::createTorrentFileData()
+std::string mtt::TorrentFileInfo::createTorrentFileData()
 {
-	PacketBuilder out;
-	out.add('d');
+	BencodeWriter writer;
+
+	writer.startMap();
 
 	if (!announce.empty())
 	{
-		out << "8:announce" << std::to_string(announce.length()) << ":" << announce;
+		writer.addRawItem("8:announce", announce);
 	}
-	
+
 	if (!announceList.empty())
 	{
-		out << "13:announce-listl";
+		writer.startRawArrayItem("13:announce-list");
 
 		for (auto& a : announceList)
 		{
-			out << "l" << std::to_string(a.length()) << ":" << a << "e";
+			writer.startArray();
+			writer.addText(a);
+			writer.endArray();
 		}
 
-		out << "e";
+		writer.endArray();
 	}
 
-	out << "4:infod";
+	writer.startRawMapItem("4:info");
 
 	if (info.files.size() > 1)
 	{
-		out << "5:filesl";
+		writer.startRawArrayItem("5:files");
 
 		for (auto f : info.files)
 		{
-			out << "d6:lengthi" << std::to_string(f.size) << "e4:pathl";
+			writer.startMap();
+			writer.addRawItem("6:length", f.size);
+			writer.startRawArrayItem("4:path");
 			
 			for (size_t i = 1; i < f.path.size(); i++)
 			{
-				auto& p = f.path[i];
-				out << std::to_string(p.length()) << ":" << p;
+				writer.addText(f.path[i]);
 			}
 
-			out << "ee";
+			writer.endArray();
+			writer.endMap();
 		}
 
-		out << "e";
+		writer.endArray();
 	}
 	else if (info.files.size() == 1)
-		out << "6:lengthi" << std::to_string(info.files.front().size) << "e";
+		writer.addRawItem("6:length", info.files.front().size);
 
-	out << "4:name" << std::to_string(info.name.length()) << ":" << info.name;
-	out << "12:piece lengthi" << std::to_string(info.pieceSize) << "e";
-	out << "6:pieces" << std::to_string(info.pieces.size()*20) << ":";
-	
-	for (auto& p : info.pieces)
-	{
-		out.add(p.hash, 20);
-	}
+	writer.addRawItem("4:name", info.name);
+	writer.addRawItem("12:piece length", info.pieceSize);
 
-	out << "ee";
+	writer.addRawItemFromBuffer("6:pieces", (const char*)info.pieces.data(), info.pieces.size() * 20);
 
-	return out.getBuffer();
+	writer.endMap();
+	writer.endMap();
+
+	return writer.data;
 }
 
 std::vector<mtt::PieceBlockInfo> mtt::TorrentInfo::makePieceBlocksInfo(uint32_t index)

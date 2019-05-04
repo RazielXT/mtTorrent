@@ -52,9 +52,6 @@ namespace mtt
 		const char* bodyEnd = nullptr;
 		size_t remainingData = 0;
 
-		const char* infoStart = nullptr;
-		const char* infoEnd = nullptr;
-
 	protected:
 
 		std::vector<Object> objects;

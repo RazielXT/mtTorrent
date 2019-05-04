@@ -420,24 +420,24 @@ void TorrentTest::testTorrentFileSerialization()
 {
 	auto torrent = mtt::TorrentFileParser::parseFile("D:\\hunter.torrent");
 	auto file = torrent.createTorrentFileData();
-	auto torrentOut = mtt::TorrentFileParser::parse(file.data(), file.size());
+	auto torrentOut = mtt::TorrentFileParser::parse((const uint8_t*)file.data(), file.size());
 	bool ok = memcmp(torrent.info.hash, torrentOut.info.hash, 20) == 0;
 
 	torrent = mtt::TorrentFileParser::parseFile("D:\\folk.torrent");
 	file = torrent.createTorrentFileData();
-	torrentOut = mtt::TorrentFileParser::parse(file.data(), file.size());
+	torrentOut = mtt::TorrentFileParser::parse((const uint8_t*)file.data(), file.size());
 	ok = memcmp(torrent.info.hash, torrentOut.info.hash, 20) == 0;
 
 	torrent = mtt::TorrentFileParser::parseFile("D:\\wifi.torrent");
 	file = torrent.createTorrentFileData();
 	std::ofstream fileOut("D:\\wifi2.torrent", std::ios_base::binary);
 	fileOut.write((const char*)file.data(), file.size());
-	torrentOut = mtt::TorrentFileParser::parse(file.data(), file.size());
+	torrentOut = mtt::TorrentFileParser::parse((const uint8_t*)file.data(), file.size());
 	ok = memcmp(torrent.info.hash, torrentOut.info.hash, 20) == 0;
 
 	torrent = mtt::TorrentFileParser::parseFile("D:\\Shoujo.torrent");
 	file = torrent.createTorrentFileData();
-	torrentOut = mtt::TorrentFileParser::parse(file.data(), file.size());
+	torrentOut = mtt::TorrentFileParser::parse((const uint8_t*)file.data(), file.size());
 	ok = memcmp(torrent.info.hash, torrentOut.info.hash, 20) == 0;
 }
 
@@ -769,5 +769,5 @@ void idealLocalTest()
 
 void TorrentTest::start()
 {
-	idealMagnetLinkTest();
+	testTorrentFileSerialization();
 }
