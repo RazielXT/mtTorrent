@@ -1,8 +1,8 @@
 #include "FastIpToCountry.h"
 
-void FastIpToCountry::toFile()
+void FastIpToCountry::toFile(const std::string& folder)
 {
-	std::ofstream file(filename, std::ios::binary);
+	std::ofstream file(folder + filename, std::ios::binary);
 
 	for (auto& c : countries)
 	{
@@ -23,12 +23,12 @@ void FastIpToCountry::toFile()
 	}
 }
 
-void FastIpToCountry::fromFile()
+void FastIpToCountry::fromFile(const std::string& folder)
 {
 	size_t bucket = 0;
 	bool countriesLoaded = false;
 
-	std::ifstream file(filename, std::ios::binary);
+	std::ifstream file(folder + filename, std::ios::binary);
 	while (file.good() && !file.eof())
 	{
 		if (countriesLoaded)

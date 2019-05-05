@@ -8,8 +8,8 @@ class FastIpToCountry
 {
 public:
 
-	void toFile();
-	void fromFile();
+	void toFile(const std::string& folder);
+	void fromFile(const std::string& folder);
 
 	std::string GetCountry(const uint32_t integerIp) const;
 

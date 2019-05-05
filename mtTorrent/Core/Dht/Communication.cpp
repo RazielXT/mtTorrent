@@ -207,7 +207,7 @@ void mtt::dht::Communication::save()
 	auto saveFile = table.save();
 
 	{
-		std::ofstream out(".\\dht", std::ios_base::binary);
+		std::ofstream out(mtt::config::internal_.programFolderPath + "dht", std::ios_base::binary);
 		out << saveFile;
 	}
 }
@@ -215,7 +215,7 @@ void mtt::dht::Communication::save()
 void mtt::dht::Communication::load()
 {
 	{
-		std::ifstream inFile(".\\dht", std::ios_base::binary | std::ios_base::in);
+		std::ifstream inFile(mtt::config::internal_.programFolderPath + "dht", std::ios_base::binary | std::ios_base::in);
 
 		if (inFile)
 		{

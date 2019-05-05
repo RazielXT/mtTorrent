@@ -40,8 +40,8 @@ void mtt::Core::init()
 	{
 		boost::system::error_code ec;
 
-		if(boost::filesystem::create_directory(mtt::config::internal_.programFolderPath, ec))
-			boost::filesystem::create_directory(dir, ec);
+		boost::filesystem::create_directory(mtt::config::internal_.programFolderPath, ec);
+		boost::filesystem::create_directory(dir, ec);
 	}
 
 	listener = std::make_shared<IncomingPeersListener>([this](std::shared_ptr<TcpAsyncStream> s, const uint8_t* hash)

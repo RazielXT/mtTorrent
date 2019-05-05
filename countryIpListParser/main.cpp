@@ -194,7 +194,7 @@ int main()
 
 	FastIpToCountryFromParser fastParser;
 	fastParser.fromParser(parser);
-	fastParser.toFile();
+	fastParser.toFile(".\\");
 
 	return 0;
 }

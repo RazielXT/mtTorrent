@@ -17,7 +17,7 @@ mtt::FileTransfer::FileTransfer(TorrentPtr t) : downloader(t), uploader(t), torr
 	if (!ipToCountryLoaded)
 	{
 		ipToCountryLoaded = true;
-		ipToCountry.fromFile();
+		ipToCountry.fromFile(mtt::config::internal_.programFolderPath);
 	}
 }
 
