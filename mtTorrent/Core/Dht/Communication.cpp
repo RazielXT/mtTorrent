@@ -13,7 +13,6 @@ mtt::dht::Communication::Communication() : responder(table, *this)
 
 mtt::dht::Communication::~Communication()
 {
-	stop();
 }
 
 mtt::dht::Communication& mtt::dht::Communication::get()
@@ -214,14 +213,12 @@ void mtt::dht::Communication::save()
 
 void mtt::dht::Communication::load()
 {
-	{
-		std::ifstream inFile(mtt::config::internal_.programFolderPath + "dht", std::ios_base::binary | std::ios_base::in);
+	std::ifstream inFile(mtt::config::internal_.programFolderPath + "dht", std::ios_base::binary | std::ios_base::in);
 
-		if (inFile)
-		{
-			auto saveFile = std::string((std::istreambuf_iterator<char>(inFile)), std::istreambuf_iterator<char>());
-			table.load(saveFile);
-		}
+	if (inFile)
+	{
+		auto saveFile = std::string((std::istreambuf_iterator<char>(inFile)), std::istreambuf_iterator<char>());
+		table.load(saveFile);
 	}
 }
 

@@ -33,9 +33,7 @@ void mtt::Core::init()
 	if(mtt::config::external.enableDht)
 		dht->start();
 
-	auto folderPath = mtt::config::internal_.programFolderPath + mtt::config::internal_.stateFolder;
-
-	boost::filesystem::path dir(folderPath);
+	boost::filesystem::path dir(mtt::config::internal_.programFolderPath + mtt::config::internal_.stateFolder);
 	if (!boost::filesystem::exists(dir))
 	{
 		boost::system::error_code ec;
@@ -74,7 +72,7 @@ void mtt::Core::init()
 void mtt::Core::deinit()
 {
 	listener->stop();
-	mtt::dht::Communication::get().save();
+	mtt::dht::Communication::get().stop();
 
 	TorrentsList list;
 	for (auto& t : torrents)
