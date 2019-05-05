@@ -29,5 +29,7 @@ namespace mtt
 		TorrentPtr addMagnet(const char* magnet);
 
 		TorrentPtr getTorrent(const uint8_t* hash);
+
+		void saveTorrentFile(TorrentPtr t);
 	};
 }

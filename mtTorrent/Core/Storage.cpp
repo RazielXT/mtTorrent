@@ -390,7 +390,8 @@ void mtt::Storage::createPath(std::string& path)
 		boost::filesystem::path dir(dirPath);
 		if (!boost::filesystem::exists(dir))
 		{
-			if (!boost::filesystem::create_directory(dir))
+			boost::system::error_code ec;
+			if (!boost::filesystem::create_directory(dir, ec))
 				return;
 		}
 	}

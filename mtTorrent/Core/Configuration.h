@@ -33,6 +33,8 @@ namespace mtt
 			dht;
 
 			uint32_t dhtPeersCheckInterval = 60;
+			std::string programFolderPath;
+			std::string stateFolder;
 		};
 
 		extern External external;

@@ -4,6 +4,8 @@
 #include "Peers.h"
 #include "Configuration.h"
 #include "FileTransfer.h"
+#include "State.h"
+#include "utils/HexEncoding.h"
 
 mtt::TorrentPtr mtt::Torrent::fromFile(std::string filepath)
 {
@@ -31,6 +33,49 @@ mtt::TorrentPtr mtt::Torrent::fromMagnetLink(std::string link)
 	torrent->fileTransfer = std::make_unique<FileTransfer>(torrent);
 
 	return torrent;
+}
+
+mtt::TorrentPtr mtt::Torrent::fromSavedState(std::string name)
+{
+	if (auto ptr = fromFile(mtt::config::internal_.programFolderPath + mtt::config::internal_.stateFolder + "\\" + name + ".torrent"))
+	{
+		TorrentState state(ptr->files.progress.pieces);
+		if (state.loadState(name))
+		{
+			ptr->files.progress.recheckPieces();
+
+			if (ptr->files.selection.files.size() == state.files.size())
+			{
+				for (size_t i = 0; i < state.files.size(); i++)
+				{
+					ptr->files.selection.files[i].selected = state.files[i].selected;
+				}
+			}
+
+			if (state.lastStateTime != 0)
+				ptr->checked = true;
+
+			if (state.started)
+				ptr->start();
+		}
+
+		return ptr;
+	}
+
+	return nullptr;
+}
+
+void mtt::Torrent::save()
+{
+	TorrentState saveState(files.progress.pieces);
+	saveState.downloadPath = mtt::config::external.defaultDirectory;
+	saveState.lastStateTime = checked ? (uint32_t)::time(0) : 0;
+	saveState.started = state == State::Started;
+
+	for (auto& f : files.selection.files)
+		saveState.files.push_back({ f.selected });
+
+	saveState.saveState(hashString());
 }
 
 void mtt::Torrent::downloadMetadata(std::function<void(Status, MetadataDownloadState&)> callback)
@@ -132,6 +177,8 @@ void mtt::Torrent::stop()
 	service.stop();
 	state = State::Stopped;
 	lastError = Status::Success;
+
+	save();
 }
 
 std::shared_ptr<mtt::PiecesCheck> mtt::Torrent::checkFiles(std::function<void(std::shared_ptr<PiecesCheck>)> onFinish)
@@ -221,6 +268,11 @@ bool mtt::Torrent::selectionFinished()
 uint8_t* mtt::Torrent::hash()
 {
 	return infoFile.info.hash;
+}
+
+std::string mtt::Torrent::hashString()
+{
+	return hexToString(infoFile.info.hash, 20);
 }
 
 std::string mtt::Torrent::name()

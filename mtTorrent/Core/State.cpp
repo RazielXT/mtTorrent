@@ -1,65 +1,129 @@
 #include "State.h"
 #include <fstream>
-#include "json\picojson.h"
+#include "Configuration.h"
+#include <boost/filesystem.hpp>
+#include "utils/BencodeWriter.h"
+#include "utils/BencodeParser.h"
 
-void mtt::TorrentsState::saveState()
+mtt::TorrentState::TorrentState(std::vector<uint8_t>& p) : pieces(p)
 {
-	std::ofstream file("mtt.state");
 
-	if (!file)
-		return;
-
-	picojson::object jsState;
-
-	picojson::array jsTorrentsState;
-	for (auto t : torrents)
-	{
-		picojson::object tstate;
-		tstate["torrentFile"] = picojson::value(t.torrentFilePath);
-		tstate["downloadPath"] = picojson::value(t.downloadPath);
-
-		jsTorrentsState.push_back(picojson::value(tstate));
-	}
-	jsState["torrents"] = picojson::value(jsTorrentsState);
-
-	auto out = picojson::value(jsState).serialize();
-
-	file << out;
 }
 
-void mtt::TorrentsState::loadState()
+void mtt::TorrentState::saveState(const std::string& name)
 {
-	torrents.clear();
+	auto folderPath = mtt::config::internal_.programFolderPath + mtt::config::internal_.stateFolder + "\\" + name + ".state";
 
-	std::ifstream file("mtt.state");
+	std::ofstream file(folderPath, std::ios::binary);
 
 	if (!file)
 		return;
+
+	BencodeWriter writer;
+
+	writer.startArray();
+	writer.addRawItem("12:downloadPath", downloadPath);
+	writer.addRawItemFromBuffer("6:pieces", (const char*)pieces.data(), pieces.size());
+	writer.addRawItem("13:lastStateTime", lastStateTime);
+	writer.addRawItem("7:started", started);
+
+	writer.startRawArrayItem("9:selection");
+	for (auto& f : files)
+	{
+		writer.addNumber(f.selected);
+	}
+	writer.endArray();
+	writer.endArray();
+
+	file << writer.data;
+}
+
+bool mtt::TorrentState::loadState(const std::string& name)
+{
+	std::ifstream file(mtt::config::internal_.programFolderPath + mtt::config::internal_.stateFolder + "\\" + name + ".state", std::ios::binary);
+
+	if (!file)
+		return false;
 
 	std::string data((std::istreambuf_iterator<char>(file)),
 		std::istreambuf_iterator<char>());
 
-	picojson::value jsState;
-	auto res = picojson::parse(jsState, data);
+	BencodeParser parser;
 
-	if (res.empty() && jsState.is<picojson::object>())
+	if (!parser.parse((uint8_t*)data.data(), data.length()))
+		return false;
+
+	if (auto root = parser.getRoot())
 	{
-		auto jsTorrents = jsState.get("torrents");
-
-		if (jsTorrents.is<picojson::array>())
+		downloadPath = root->getTxt("downloadPath");
+		lastStateTime = (uint32_t)root->getBigInt("lastStateTime");
+		started = root->getInt("started");
+		if (auto pItem = root->getTxtItem("pieces"))
 		{
-			auto torrentsArray = jsTorrents.get<picojson::array>();
-			for (auto& t : torrentsArray)
+			pieces.assign(pItem->data, pItem->data + pItem->size);
+		}
+		if (auto fList = root->getListItem("selection"))
+		{
+			files.clear();
+			for (auto f : *fList)
 			{
-				TorrentState state;
-				auto props = t.get<picojson::object>();
-
-				state.torrentFilePath = props["torrentFile"].to_str();
-				state.downloadPath = props["downloadPath"].to_str();
-
-				torrents.push_back(state);
+				files.push_back({f.getInt() != 0});
 			}
 		}
 	}
+
+	return true;
 }
 
+void mtt::TorrentsList::saveState()
+{
+	auto folderPath = mtt::config::internal_.programFolderPath + mtt::config::internal_.stateFolder + "\\list";
+
+	std::ofstream file(folderPath, std::ios::binary);
+
+	if (!file)
+		return;
+
+	BencodeWriter writer;
+
+	writer.startArray();
+	for (auto& t : torrents)
+	{
+		writer.startMap();
+		writer.addRawItem("4:name", t.name);
+		writer.endMap();
+	}
+	writer.endArray();
+
+	file << writer.data;
+}
+
+bool mtt::TorrentsList::loadState()
+{
+	std::ifstream file(mtt::config::internal_.programFolderPath + mtt::config::internal_.stateFolder + "\\list", std::ios::binary);
+
+	if (!file)
+		return false;
+
+	std::string data((std::istreambuf_iterator<char>(file)),
+		std::istreambuf_iterator<char>());
+
+	BencodeParser parser;
+	if (!parser.parse((uint8_t*)data.data(), data.length()))
+		return false;
+
+	torrents.clear();
+
+	if (auto root = parser.getRoot())
+	{
+		for (auto& it : *root)
+		{
+			TorrentInfo info;
+			info.name = it.getTxt("name");
+
+			torrents.push_back(info);
+		}
+	}
+
+	return true;
+}

@@ -27,6 +27,7 @@ namespace mtt
 
 		static TorrentPtr fromFile(std::string filepath);
 		static TorrentPtr fromMagnetLink(std::string link);
+		static TorrentPtr fromSavedState(std::string name);
 		void downloadMetadata(std::function<void(Status, MetadataDownloadState&)> callback);
 
 		bool start();
@@ -52,6 +53,7 @@ namespace mtt
 		bool selectionFinished();
 
 		uint8_t* hash();
+		std::string hashString();
 
 		Files files;
 		TorrentFileInfo infoFile;
@@ -61,6 +63,8 @@ namespace mtt
 		std::unique_ptr<FileTransfer> fileTransfer;
 		std::unique_ptr<MetadataDownload> utmDl;
 
+		void save();
+	
 	protected:
 
 		std::mutex checkStateMutex;

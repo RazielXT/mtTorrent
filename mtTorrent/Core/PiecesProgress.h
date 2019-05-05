@@ -5,6 +5,7 @@ namespace mtt
 {
 	struct PiecesProgress
 	{
+		void recheckPieces();
 		void init(size_t size);
 
 		void select(DownloadSelection& selection);

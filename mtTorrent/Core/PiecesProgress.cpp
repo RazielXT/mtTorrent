@@ -19,6 +19,28 @@ float mtt::PiecesProgress::getSelectedPercentage()
 	return selectedPieces == 0 ? 0 : (selectedReceivedPiecesCount / (float)selectedPieces);
 }
 
+void mtt::PiecesProgress::recheckPieces()
+{
+	receivedPiecesCount = 0;
+	selectedReceivedPiecesCount = 0;
+	selectedPieces = 0;
+
+	for (auto& p : pieces)
+	{
+		if (p & HasFlag)
+			receivedPiecesCount++;
+
+		if (!(p & UnselectedFlag))
+		{
+			selectedPieces++;
+
+			if (p & HasFlag)
+				selectedReceivedPiecesCount++;
+
+		}
+	}
+}
+
 void mtt::PiecesProgress::init(size_t size)
 {
 	receivedPiecesCount = 0;

@@ -6,6 +6,8 @@
 #include "Dht/Communication.h"
 #include "utils/TcpAsyncServer.h"
 #include "IncomingPeersListener.h"
+#include "State.h"
+#include <boost/filesystem.hpp>
 
 void mtt::Core::init()
 {
@@ -22,9 +24,25 @@ void mtt::Core::init()
 
 	mtt::config::external.tcpPort = mtt::config::external.udpPort = 55125;
 
+	mtt::config::internal_.programFolderPath = ".\\data\\";
+	
+	mtt::config::internal_.stateFolder = "state";
+
 	dht = std::make_shared<dht::Communication>();
-	//dht->load("");
-	//dht->start();
+
+	if(mtt::config::external.enableDht)
+		dht->start();
+
+	auto folderPath = mtt::config::internal_.programFolderPath + mtt::config::internal_.stateFolder;
+
+	boost::filesystem::path dir(folderPath);
+	if (!boost::filesystem::exists(dir))
+	{
+		boost::system::error_code ec;
+
+		if(boost::filesystem::create_directory(mtt::config::internal_.programFolderPath, ec))
+			boost::filesystem::create_directory(dir, ec);
+	}
 
 	listener = std::make_shared<IncomingPeersListener>([this](std::shared_ptr<TcpAsyncStream> s, const uint8_t* hash)
 	{
@@ -35,17 +53,42 @@ void mtt::Core::init()
 		}
 	}
 	);
+
+	TorrentsList list;
+	list.loadState();
+
+	for (auto& t : list.torrents)
+	{
+		auto tPtr = Torrent::fromSavedState(t.name);
+
+		if(!tPtr)
+			continue;
+
+		if (auto t = getTorrent(tPtr->hash()))
+			continue;
+
+		torrents.push_back(tPtr);
+	}
 }
 
 void mtt::Core::deinit()
 {
 	listener->stop();
 	mtt::dht::Communication::get().save();
+
+	TorrentsList list;
+	for (auto& t : torrents)
+	{
+		list.torrents.push_back({ t->hashString() });
+		t->save();
+	}
+
+	list.saveState();
 }
 
 mtt::TorrentPtr mtt::Core::addFile(const char* filename)
 {
-	auto torrent = Torrent::fromFile(filename);// "G:\\[HorribleSubs] JoJo's Bizarre Adventure - Golden Wind - 13 [720p].mkv.torrent");
+	auto torrent = Torrent::fromFile(filename);
 
 	if (!torrent)
 		return nullptr;
@@ -53,6 +96,7 @@ mtt::TorrentPtr mtt::Core::addFile(const char* filename)
 	if (auto t = getTorrent(torrent->hash()))
 		return t;
 
+	saveTorrentFile(torrent);
 	torrents.push_back(torrent);
 	torrent->checkFiles();
 
@@ -69,10 +113,13 @@ mtt::TorrentPtr mtt::Core::addMagnet(const char* magnet)
 	if (auto t = getTorrent(torrent->hash()))
 		return t;
 
-	auto onMetadataUpdate = [torrent](Status s, mtt::MetadataDownloadState& state)
+	auto onMetadataUpdate = [this, torrent](Status s, mtt::MetadataDownloadState& state)
 	{
-		if(s == Status::Success && state.finished)
+		if (s == Status::Success && state.finished)
+		{
+			saveTorrentFile(torrent);
 			torrent->checkFiles();
+		}
 	};
 
 	torrent->downloadMetadata(onMetadataUpdate);
@@ -90,5 +137,17 @@ mtt::TorrentPtr mtt::Core::getTorrent(const uint8_t* hash)
 	}
 
 	return nullptr;
+}
+
+void mtt::Core::saveTorrentFile(TorrentPtr t)
+{
+	auto folderPath = mtt::config::internal_.programFolderPath + mtt::config::internal_.stateFolder + "\\" + t->hashString() + ".torrent";
+
+	std::ofstream file(folderPath, std::ios::binary);
+
+	if (!file)
+		return;
+
+	file << t->infoFile.createTorrentFileData();
 }
 

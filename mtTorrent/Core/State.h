@@ -6,24 +6,33 @@ namespace mtt
 {
 	struct TorrentState
 	{
-		std::string torrentFilePath;
+		TorrentState(std::vector<uint8_t>&);
+
 		std::string downloadPath;
 
-		struct SelectedFile
+		struct File
 		{
-			uint32_t id;
-			bool active;
+			bool selected;
 		};
-		std::vector<SelectedFile> selection;
+		std::vector<File> files;
 
-		std::vector<uint32_t> progress;
+		std::vector<uint8_t>& pieces;
+		uint32_t lastStateTime = 0;
+		bool started = false;
+
+		void saveState(const std::string& name);
+		bool loadState(const std::string& name);
 	};
 
-	struct TorrentsState
+	struct TorrentsList
 	{
-		std::vector<TorrentState> torrents;
+		struct TorrentInfo
+		{
+			std::string name;
+		};
+		std::vector<TorrentInfo> torrents;
 
 		void saveState();
-		void loadState();
+		bool loadState();
 	};
 }
