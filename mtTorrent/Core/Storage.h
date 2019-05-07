@@ -24,6 +24,8 @@ namespace mtt
 		std::shared_ptr<PiecesCheck> checkStoredPiecesAsync(std::vector<PieceInfo>& piecesInfo, boost::asio::io_service& io, std::function<void(std::shared_ptr<PiecesCheck>)> onFinish);
 		void flush();
 
+		Status deleteAll();
+
 	private:
 
 		void checkStoredPieces(PiecesCheck& checkState, const std::vector<PieceInfo>& piecesInfo);

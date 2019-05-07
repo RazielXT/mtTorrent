@@ -30,6 +30,10 @@ namespace mtt
 
 		TorrentPtr getTorrent(const uint8_t* hash);
 
+		Status removeTorrent(const uint8_t* hash, bool deleteFiles);
+
+	private:
+
 		void saveTorrentFile(TorrentPtr t);
 	};
 }

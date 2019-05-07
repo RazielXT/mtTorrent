@@ -72,6 +72,8 @@ namespace GuiLite {
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ gridPeerPercentage;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ peerSource;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ peerCountry;
+	public: System::Windows::Forms::Button^ buttonRemove;
+	private:
 
 	public:
 
@@ -157,6 +159,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			System::Windows::Forms::DataVisualization::Charting::Series^ series2 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
 			this->splitContainer1 = (gcnew System::Windows::Forms::SplitContainer());
 			this->splitContainer2 = (gcnew System::Windows::Forms::SplitContainer());
+			this->buttonRemove = (gcnew System::Windows::Forms::Button());
 			this->buttonSettings = (gcnew System::Windows::Forms::Button());
 			this->buttonAddMagnet = (gcnew System::Windows::Forms::Button());
 			this->buttonStop = (gcnew System::Windows::Forms::Button());
@@ -246,6 +249,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			// 
 			// splitContainer2.Panel1
 			// 
+			this->splitContainer2->Panel1->Controls->Add(this->buttonRemove);
 			this->splitContainer2->Panel1->Controls->Add(this->buttonSettings);
 			this->splitContainer2->Panel1->Controls->Add(this->buttonAddMagnet);
 			this->splitContainer2->Panel1->Controls->Add(this->buttonStop);
@@ -258,6 +262,18 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->splitContainer2->Size = System::Drawing::Size(1339, 264);
 			this->splitContainer2->SplitterDistance = 43;
 			this->splitContainer2->TabIndex = 2;
+			// 
+			// buttonRemove
+			// 
+			this->buttonRemove->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(255)), static_cast<System::Int32>(static_cast<System::Byte>(128)),
+				static_cast<System::Int32>(static_cast<System::Byte>(128)));
+			this->buttonRemove->Location = System::Drawing::Point(366, 12);
+			this->buttonRemove->Name = L"buttonRemove";
+			this->buttonRemove->Size = System::Drawing::Size(75, 23);
+			this->buttonRemove->TabIndex = 7;
+			this->buttonRemove->Text = L"Remove";
+			this->buttonRemove->UseVisualStyleBackColor = false;
+			this->buttonRemove->Click += gcnew System::EventHandler(this, &MainForm::ButtonRemove_Click);
 			// 
 			// buttonSettings
 			// 
@@ -838,6 +854,9 @@ private: System::Void ToolStripMenuItem1_Click(System::Object^ sender, System::E
 }
 private: System::Void TorrentsGrid_CellContentClick_1(System::Object^ sender, System::Windows::Forms::DataGridViewCellMouseEventArgs^ e) {
 	onButtonClick(nullptr, "Info");
+}
+private: System::Void ButtonRemove_Click(System::Object^ sender, System::EventArgs^ e) {
+	onButtonClick(nullptr, "Remove");
 }
 };
 }

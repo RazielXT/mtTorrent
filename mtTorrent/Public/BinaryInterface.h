@@ -32,6 +32,7 @@ namespace mtBI
 		AddFromMetadata, //char*, uint8_t[20]
 		Start,	//uint8_t[20], null
 		Stop,	//uint8_t[20], null
+		Remove,	//RemoveTorrentRequest, null
 		GetTorrents,	//null,TorrentsList
 		GetTorrentInfo,			//uint8_t[20], TorrentInfo
 		GetTorrentStateInfo,	//uint8_t[20], TorrentStateInfo
@@ -73,6 +74,12 @@ namespace mtBI
 		uint32_t count;
 		uint32_t start;
 		std::vector<string> logs;
+	};
+
+	struct RemoveTorrentRequest
+	{
+		uint8_t hash[20];
+		bool deleteFiles;
 	};
 
 	struct FileSelection

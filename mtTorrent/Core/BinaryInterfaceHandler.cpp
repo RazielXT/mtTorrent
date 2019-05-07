@@ -53,6 +53,14 @@ extern "C"
 
 			t->stop();
 		}
+		else if (id == mtBI::MessageId::Remove)
+		{
+			auto info = (mtBI::RemoveTorrentRequest*) request;
+			auto s = core.removeTorrent(info->hash, info->deleteFiles);
+
+			if (s != mtt::Status::Success)
+				return s;
+		}
 		else if (id == mtBI::MessageId::GetTorrents)
 		{
 			auto resp = (mtBI::TorrentsList*) output;

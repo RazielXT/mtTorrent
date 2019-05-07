@@ -137,6 +137,33 @@ mtt::TorrentPtr mtt::Core::getTorrent(const uint8_t* hash)
 	return nullptr;
 }
 
+mtt::Status mtt::Core::removeTorrent(const uint8_t* hash, bool deleteFiles)
+{
+	for (auto it = torrents.begin(); it != torrents.end(); it++)
+	{
+		if (memcmp((*it)->hash(), hash, 20) == 0)
+		{
+			auto t = *it;
+			t->stop();
+
+			auto path = mtt::config::internal_.programFolderPath + mtt::config::internal_.stateFolder + "\\" + t->hashString();
+			std::remove((path + ".torrent").data());
+			std::remove((path + ".state").data());
+
+			torrents.erase(it);
+	
+			if (deleteFiles)
+			{
+				t->files.storage.deleteAll();
+			}
+
+			return Status::Success;
+		}
+	}
+
+	return Status::E_InvalidInput;
+}
+
 void mtt::Core::saveTorrentFile(TorrentPtr t)
 {
 	auto folderPath = mtt::config::internal_.programFolderPath + mtt::config::internal_.stateFolder + "\\" + t->hashString() + ".torrent";

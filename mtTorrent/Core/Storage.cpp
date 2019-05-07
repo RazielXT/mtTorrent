@@ -163,6 +163,20 @@ void mtt::Storage::flush()
 	flushAllFiles();
 }
 
+mtt::Status mtt::Storage::deleteAll()
+{
+	std::lock_guard<std::mutex> guard(storageMutex);
+
+	for (auto& f : files)
+	{
+		auto path = getFullpath(f);
+
+		std::remove(path.data());
+	}
+
+	return Status::Success;
+}
+
 void mtt::Storage::flushAllFiles()
 {
 	for (auto& f : files)

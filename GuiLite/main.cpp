@@ -209,6 +209,13 @@ void refreshTorrentInfo(uint8_t* hash)
 
 void start()
 {
+	wchar_t pathBuffer[256];
+	if (GetModuleFileName(NULL, pathBuffer, 256))
+	{
+		PathRemoveFileSpec(pathBuffer);
+		SetCurrentDirectory(pathBuffer);
+	}
+
 	lib = LoadLibrary(L"mtTorrent.dll");
 
 	if (lib)
@@ -295,6 +302,28 @@ void onButtonClick(System::Object^ button, System::String^ id)
 				magnetLinkSequence = 0;
 				lastMagnetLinkLogCount = 0;
 			}
+		}
+		else if (id == "Remove" && selected)
+		{
+			mtBI::RemoveTorrentRequest request;
+
+			auto result = ::MessageBox(NULL, L"Delete files?", L"Torrent remove", MB_YESNOCANCEL);
+
+			if (result == IDYES)
+			{
+				request.deleteFiles = true;
+			}
+			else if (result == IDNO)
+			{
+				request.deleteFiles = false;
+			}
+			else if (result == IDCANCEL)
+			{
+				return;
+			}
+
+			memcpy(request.hash, hash, 20);
+			IoctlFunc(mtBI::MessageId::Remove, &request, nullptr);
 		}
 	}
 	else if (button == GuiLite::MainForm::instance->buttonAddTorrent)
@@ -712,13 +741,6 @@ void refreshUi()
 
 void ProcessProgramArgument(System::String^ arg)
 {
-	wchar_t pathBuffer[256];
-	if (GetModuleFileName(NULL, pathBuffer, 256))
-	{
-		PathRemoveFileSpec(pathBuffer);
-		SetCurrentDirectory(pathBuffer);
-	}
-
 	auto magnetPtr = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(arg).ToPointer();
 	addTorrentFromMetadata(magnetPtr);
 }
