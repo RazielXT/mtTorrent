@@ -30,10 +30,10 @@ void UpnpPortMapping::mapActiveAdapters(uint16_t port, PortType type)
 
 void UpnpPortMapping::unmapMappedAdapters(uint16_t port, PortType type, bool waitForFinish)
 {
-	waitForRequests();
+	if(waitForFinish)
+		waitForRequests();
 
 	{
-		std::lock_guard<std::mutex> guard(state->stateMutex);
 		for (auto& map : state->mappedPorts)
 		{
 			if((port == 0 || map.port == port) && map.type == type)
@@ -64,7 +64,6 @@ void UpnpPortMapping::mapPort(const std::string& gateway, const std::string& cli
 				todo.mapping = { gateway, port, type };
 				todo.client = client;
 				todo.enable = enable;
-				todo.blockingStream = (*it).get();
 				state->waitingMapping.push_back(todo);
 				return;
 			}
@@ -115,7 +114,7 @@ void UpnpPortMapping::mapPort(const std::string& gateway, const std::string& cli
 		}
 	};
 
-	stream->onCloseCallback = [streamPtr, upnpState, this](int code)
+	stream->onCloseCallback = [streamPtr, upnpState, gateway, this](int code)
 	{
 		{
 			std::lock_guard<std::mutex> guard(upnpState->stateMutex);
@@ -132,7 +131,7 @@ void UpnpPortMapping::mapPort(const std::string& gateway, const std::string& cli
 
 		if (upnpState->active)
 		{
-			checkPendingMapping(streamPtr);
+			checkPendingMapping(gateway);
 		}
 	};
 
@@ -146,6 +145,22 @@ void UpnpPortMapping::mapPort(const std::string& gateway, const std::string& cli
 
 void UpnpPortMapping::unmapPort(const std::string& gateway, uint16_t port, PortType type)
 {
+	{
+		std::lock_guard<std::mutex> guard(state->stateMutex);
+
+		for (auto it = state->pendingRequests.begin(); it != state->pendingRequests.end(); it++)
+		{
+			if ((*it)->getHostname() == gateway)
+			{
+				UpnpMappingState::TodoMapping todo;
+				todo.mapping = { gateway, port, type };
+				todo.unmap = true;
+				state->waitingMapping.push_back(todo);
+				return;
+			}
+		}
+	}
+
 	std::string portStr = std::to_string(port);
 	std::string portType = type == PortType::Tcp ? "TCP" : "UDP";
 
@@ -192,17 +207,24 @@ void UpnpPortMapping::unmapPort(const std::string& gateway, uint16_t port, PortT
 		}
 	};
 
-	stream->onCloseCallback = [streamPtr, upnpState](int code)
+	stream->onCloseCallback = [streamPtr, upnpState, gateway, this](int code)
 	{
-		std::lock_guard<std::mutex> guard(upnpState->stateMutex);
-
-		for (auto it = upnpState->pendingRequests.begin(); it != upnpState->pendingRequests.end(); it++)
 		{
-			if ((*it).get() == streamPtr)
+			std::lock_guard<std::mutex> guard(upnpState->stateMutex);
+
+			for (auto it = upnpState->pendingRequests.begin(); it != upnpState->pendingRequests.end(); it++)
 			{
-				upnpState->pendingRequests.erase(it);
-				break;
+				if ((*it).get() == streamPtr)
+				{
+					upnpState->pendingRequests.erase(it);
+					break;
+				}
 			}
+		}
+
+		if (upnpState->active)
+		{
+			checkPendingMapping(gateway);
 		}
 	};
 
@@ -214,7 +236,7 @@ void UpnpPortMapping::unmapPort(const std::string& gateway, uint16_t port, PortT
 	stream->connect(gateway, 1900);
 }
 
-void UpnpPortMapping::checkPendingMapping(TcpAsyncStream* blockingStream)
+void UpnpPortMapping::checkPendingMapping(const std::string& gateway)
 {
 	if (state->waitingMapping.empty())
 		return;
@@ -225,7 +247,7 @@ void UpnpPortMapping::checkPendingMapping(TcpAsyncStream* blockingStream)
 		std::lock_guard<std::mutex> guard(state->stateMutex);
 		for (auto it = state->waitingMapping.begin(); it != state->waitingMapping.end(); it++)
 		{
-			if (it->blockingStream == blockingStream)
+			if (it->mapping.gateway == gateway)
 			{
 				todo = *it;
 				state->waitingMapping.erase(it);
@@ -236,7 +258,10 @@ void UpnpPortMapping::checkPendingMapping(TcpAsyncStream* blockingStream)
 
 	if (!todo.mapping.gateway.empty())
 	{
-		mapPort(todo.mapping.gateway, todo.client, todo.mapping.port, todo.mapping.type, todo.enable);
+		if (todo.unmap)
+			unmapPort(todo.mapping.gateway, todo.mapping.port, todo.mapping.type);
+		else
+			mapPort(todo.mapping.gateway, todo.client, todo.mapping.port, todo.mapping.type, todo.enable);
 	}
 }
 
@@ -246,7 +271,7 @@ void UpnpPortMapping::waitForRequests()
 	while (++i < 30)	//3 sec timeout
 	{
 		if (!state->pendingRequests.empty())
-			Sleep(100);
+			Sleep(50);
 	}
 }
 

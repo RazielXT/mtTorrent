@@ -20,7 +20,7 @@ public:
 
 private:
 
-	void checkPendingMapping(TcpAsyncStream*);
+	void checkPendingMapping(const std::string& gateway);
 
 	void waitForRequests();
 
@@ -46,7 +46,7 @@ private:
 			MappedPort mapping;
 			bool enable;
 			std::string client;
-			TcpAsyncStream* blockingStream;
+			bool unmap = false;
 		};
 		std::vector<TodoMapping> waitingMapping;
 		std::vector<std::shared_ptr<TcpAsyncStream>> pendingRequests;
