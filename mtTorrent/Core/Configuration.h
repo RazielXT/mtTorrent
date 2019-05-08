@@ -11,10 +11,10 @@ namespace mtt
 		{
 			struct Connection
 			{
-				uint16_t tcpPort;
-				uint16_t udpPort;
+				uint16_t tcpPort = 55125;
+				uint16_t udpPort = 55125;
 
-				uint32_t maxTorrentConnections = 30;
+				uint32_t maxTorrentConnections = 50;
 			}
 			connection;
 

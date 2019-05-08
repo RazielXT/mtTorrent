@@ -112,54 +112,34 @@ namespace mtt
 
 			internal_.defaultRootHosts = { { "dht.transmissionbt.com", "6881" },{ "router.bittorrent.com" , "6881" } };
 
-			auto filesSettings = mtt::config::getExternal().files;
-			filesSettings.defaultDirectory = "E:\\";
-			setValues(filesSettings);
-
-			auto connectionSettings = mtt::config::getExternal().connection;
-			connectionSettings.tcpPort = connectionSettings.udpPort = 55125;
-			setValues(connectionSettings);
+			external.files.defaultDirectory = "E:\\";
 		}
 
 		void load()
 		{
 			setDefaultValues();
 
+			std::ifstream file(mtt::config::getInternal().programFolderPath + "cfg", std::ios::binary);
+
+			if (file)
 			{
-				std::ifstream file(mtt::config::getInternal().programFolderPath + "cfgInternal", std::ios::binary);
+				std::string data((std::istreambuf_iterator<char>(file)),
+					std::istreambuf_iterator<char>());
 
-				if (file)
+				BencodeParser parser;
+				if (parser.parse((uint8_t*)data.data(), data.length()))
 				{
-					std::string data((std::istreambuf_iterator<char>(file)),
-						std::istreambuf_iterator<char>());
-
-					BencodeParser parser;
-					if (parser.parse((uint8_t*)data.data(), data.length()))
+					if (auto root = parser.getRoot())
 					{
-						if (auto root = parser.getRoot())
+						if (auto internalSettings = root->getDictItem("internal"))
 						{
-							auto hash = root->getTxt("hashId");
+							auto hash = internalSettings->getTxt("hashId");
 							if (hash.length() == 20)
 							{
 								memcpy(internal_.hashId, hash.data(), 20);
 							}
 						}
-					}		
-				}
-			}
-
-			{
-				std::ifstream file(mtt::config::getInternal().programFolderPath + "cfgExternal", std::ios::binary);
-
-				if (file)
-				{
-					std::string data((std::istreambuf_iterator<char>(file)),
-						std::istreambuf_iterator<char>());
-
-					BencodeParser parser;
-					if (parser.parse((uint8_t*)data.data(), data.length()))
-					{
-						if (auto root = parser.getRoot())
+						if (auto externalSettings = root->getDictItem("external"))
 						{
 							if (auto conn = root->getDictItem("connection"))
 							{
@@ -183,50 +163,41 @@ namespace mtt
 
 		void save()
 		{
+			std::ofstream file(mtt::config::getInternal().programFolderPath + "cfg", std::ios::binary);
+
+			if (file)
 			{
-				auto folderPath = mtt::config::getInternal().programFolderPath + "cfgInternal";
-
-				std::ofstream file(folderPath, std::ios::binary);
-
-				if (!file)
-					return;
-
 				BencodeWriter writer;
 
 				writer.startMap();
-				writer.addRawItemFromBuffer("6:hashId", (const char*)internal_.hashId, 20);
-				writer.endArray();
 
-				file << writer.data;
-			}
-	
-			{
-				auto folderPath = mtt::config::getInternal().programFolderPath + "cfgExternal";
+				{
+					writer.startRawMapItem("8:internal");
+					writer.addRawItemFromBuffer("6:hashId", (const char*)internal_.hashId, 20);
+					writer.endMap();
+				}
 
-				std::ofstream file(folderPath, std::ios::binary);
+				{
+					writer.startRawMapItem("8:external");
 
-				if (!file)
-					return;
+					writer.startRawMapItem("10:connection");
+					writer.addRawItem("7:tcpPort", external.connection.tcpPort);
+					writer.addRawItem("7:udpPort", external.connection.udpPort);
+					writer.addRawItem("7:maxConn", external.connection.maxTorrentConnections);
+					writer.endMap();
 
-				BencodeWriter writer;
+					writer.startRawMapItem("3:dht");
+					writer.addRawItem("7:enabled", external.dht.enable);
+					writer.endMap();
 
-				writer.startMap();
-				
-				writer.startRawMapItem("10:connection");
-				writer.addRawItem("7:tcpPort", external.connection.tcpPort);
-				writer.addRawItem("7:udpPort", external.connection.udpPort);
-				writer.addRawItem("7:maxConn", external.connection.maxTorrentConnections);
-				writer.endArray();
+					writer.startRawMapItem("5:files");
+					writer.addRawItem("9:directory", external.files.defaultDirectory);
+					writer.endMap();
 
-				writer.startRawMapItem("3:dht");
-				writer.addRawItem("7:enabled", external.dht.enable);
-				writer.endArray();
+					writer.endMap();
+				}
 
-				writer.startRawMapItem("5:files");
-				writer.addRawItem("9:directory", external.files.defaultDirectory);
-				writer.endArray();
-
-				writer.endArray();
+				writer.endMap();
 
 				file << writer.data;
 			}
