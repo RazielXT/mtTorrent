@@ -80,10 +80,10 @@ uint32_t mtt::MetadataDownload::getEventsCount()
 
 void mtt::MetadataDownload::evalComms()
 {
-	if (activeComms.size() < mtt::config::external.maxTorrentConnections && !state.finished)
+	if (activeComms.size() < mtt::config::getExternal().connection.maxTorrentConnections && !state.finished)
 	{
 		addEventLog(nullptr, EventInfo::Searching, (uint32_t)activeComms.size());
-		peers.connectNext(mtt::config::external.maxTorrentConnections);
+		peers.connectNext(mtt::config::getExternal().connection.maxTorrentConnections);
 		//BT_UTM_LOG("searching for more peers");
 	}
 }

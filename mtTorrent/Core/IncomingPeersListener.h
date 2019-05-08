@@ -16,6 +16,8 @@ namespace mtt
 
 	private:
 
+		void createListener();
+
 		std::function<void(std::shared_ptr<TcpAsyncStream>, const uint8_t* hash)> onNewPeer;
 
 		std::mutex peersMutex;
@@ -29,5 +31,12 @@ namespace mtt
 
 
 		std::shared_ptr<UpnpPortMapping> upnp;
+
+		struct UsedPorts
+		{
+			uint16_t tcp;
+			uint16_t udp;
+		}
+		usedPorts;
 	};
 }

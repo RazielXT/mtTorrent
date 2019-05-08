@@ -46,7 +46,7 @@ bool mtt::dht::Responder::handlePacket(udp::endpoint& endpoint, DataBuffer& data
 	response.add(transactionId->data, transactionId->size);
 	response.add("1:y1:r", 6);
 	response.add("1:rd2:id20:", 11);
-	response.add(mtt::config::internal_.hashId, 20);
+	response.add(mtt::config::getInternal().hashId, 20);
 
 	if (requestType->equals("find_node", 9))
 	{
@@ -155,7 +155,7 @@ bool mtt::dht::Responder::writeValues(const char* infoHash, udp::endpoint& endpo
 
 	bool wantv6 = endpoint.address().is_v6();
 
-	uint32_t maxcount = mtt::config::internal_.dht.maxPeerValuesResponse;
+	uint32_t maxcount = mtt::config::getInternal().dht.maxPeerValuesResponse;
 	if (wantv6)
 		maxcount = uint32_t(maxcount / 3.0f);
 	uint32_t count = 0;
@@ -204,7 +204,7 @@ void mtt::dht::Responder::announcedPeer(const char* infoHash, Addr& peer)
 
 	if (it != vals.end())
 		*it = v;
-	else if (vals.size() < mtt::config::internal_.dht.maxStoredAnnouncedPeers)
+	else if (vals.size() < mtt::config::getInternal().dht.maxStoredAnnouncedPeers)
 		vals.push_back(v);
 }
 

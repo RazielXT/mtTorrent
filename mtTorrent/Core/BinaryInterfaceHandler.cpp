@@ -221,32 +221,27 @@ extern "C"
 		else if (id == mtBI::MessageId::GetSettings)
 		{
 			auto resp = (mtBI::SettingsInfo*) output;
-			auto& settings = mtt::config::external;
-			resp->dhtEnabled = settings.enableDht;
-			resp->directory = settings.defaultDirectory;
-			resp->maxConnections = settings.maxTorrentConnections;
-			resp->tcpPort = settings.tcpPort;
-			resp->udpPort = settings.udpPort;
+			auto& settings = mtt::config::getExternal();
+			resp->dhtEnabled = settings.dht.enable;
+			resp->directory = settings.files.defaultDirectory;
+			resp->maxConnections = settings.connection.maxTorrentConnections;
+			resp->tcpPort = settings.connection.tcpPort;
+			resp->udpPort = settings.connection.udpPort;
 		}
 		else if (id == mtBI::MessageId::SetSettings)
 		{
 			auto info = (mtBI::SettingsInfo*) request;
-			auto& settings = mtt::config::external;
+			auto settings = mtt::config::getExternal();
 
-			if (settings.enableDht != info->dhtEnabled)
-			{
-				settings.enableDht = info->dhtEnabled;
+			settings.dht.enable = info->dhtEnabled;
+			settings.files.defaultDirectory = info->directory.data;
+			settings.connection.maxTorrentConnections = info->maxConnections;
+			settings.connection.tcpPort = info->tcpPort;
+			settings.connection.udpPort = info->udpPort;
 
-				if (settings.enableDht)
-					core.dht->start();
-				else
-					core.dht->stop();
-			}
-
-			settings.defaultDirectory = info->directory.data;
-			settings.maxTorrentConnections = info->maxConnections;
-			settings.tcpPort = info->tcpPort;
-			settings.udpPort = info->udpPort;
+			mtt::config::setValues(settings.dht);
+			mtt::config::setValues(settings.connection);
+			mtt::config::setValues(settings.files);
 		}
 		else if (id == mtBI::MessageId::GetTorrentFilesSelection)
 		{

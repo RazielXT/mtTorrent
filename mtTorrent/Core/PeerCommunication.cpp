@@ -20,7 +20,7 @@ namespace mtt
 			uint8_t reserved_byte[8] = { 0 };
 			reserved_byte[5] |= 0x10;	//Extension Protocol
 
-			if (mtt::config::external.enableDht)
+			if (mtt::config::getExternal().dht.enable)
 				reserved_byte[7] |= 0x80;
 
 			packet.add(reserved_byte, 8);
@@ -169,7 +169,7 @@ void mtt::PeerCommunication::sendHandshake()
 	{
 		LOG_MGS("Handshake");
 		state.action = PeerCommunicationState::Handshake;
-		stream->write(mtt::bt::createHandshake(torrent.hash, mtt::config::internal_.hashId));
+		stream->write(mtt::bt::createHandshake(torrent.hash, mtt::config::getInternal().hashId));
 	}
 }
 
@@ -415,7 +415,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 			if (!state.finishedHandshake)
 			{
 				if(state.action == PeerCommunicationState::Connected)
-					stream->write(mtt::bt::createHandshake(torrent.hash, mtt::config::internal_.hashId));
+					stream->write(mtt::bt::createHandshake(torrent.hash, mtt::config::getInternal().hashId));
 
 				state.action = PeerCommunicationState::Established;
 				state.finishedHandshake = true;
@@ -427,8 +427,8 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 				if (info.supportsExtensions())
 					ext.sendHandshake();
 
-				if (info.supportsDht() && mtt::config::external.enableDht)
-					sendPort(mtt::config::external.udpPort);
+				if (info.supportsDht() && mtt::config::getExternal().dht.enable)
+					sendPort(mtt::config::getExternal().connection.udpPort);
 
 				listener.handshakeFinished(this);
 			}

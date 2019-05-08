@@ -313,7 +313,7 @@ DataBuffer mtt::dht::Query::GetPeers::createRequest(uint8_t* hash, bool bothProt
 {
 	PacketBuilder packet(128);
 	packet.add("d1:ad2:id20:", 12);
-	packet.add(mtt::config::internal_.hashId, 20);
+	packet.add(mtt::config::getInternal().hashId, 20);
 	packet.add("9:info_hash20:", 14);
 	packet.add(hash, 20);
 
@@ -348,7 +348,7 @@ DataBuffer mtt::dht::Query::FindNode::createRequest(uint8_t* hash, bool bothProt
 {
 	PacketBuilder packet(128);
 	packet.add("d1:ad2:id20:", 12);
-	packet.add(mtt::config::internal_.hashId, 20);
+	packet.add(mtt::config::getInternal().hashId, 20);
 	packet.add("6:target20:", 11);
 	packet.add(hash, 20);
 
@@ -563,7 +563,7 @@ DataBuffer mtt::dht::Query::PingNodes::createRequest(uint16_t transactionId)
 {
 	PacketBuilder packet(60);
 	packet.add("d1:ad2:id20:", 12);
-	packet.add(mtt::config::internal_.hashId, 20);
+	packet.add(mtt::config::getInternal().hashId, 20);
 	packet.add("e1:q4:ping1:t2:", 15);
 	packet.add(reinterpret_cast<char*>(&transactionId), 2);
 	packet.add("1:y1:qe", 7);
@@ -669,12 +669,12 @@ void mtt::dht::Query::AnnouncePeer(uint8_t* infohash, std::string& token, udp::e
 {
 	PacketBuilder packet(64);
 	packet.add("d1:ad2:id20:", 12);
-	packet.add(mtt::config::internal_.hashId, 20);
+	packet.add(mtt::config::getInternal().hashId, 20);
 
-	if(mtt::config::external.tcpPort == mtt::config::external.udpPort)
+	if(mtt::config::getExternal().connection.tcpPort == mtt::config::getExternal().connection.udpPort)
 		packet.add("12:implied_porti1e", 18);
 	packet.add("4:porti", 7);
-	packet << std::to_string(mtt::config::external.udpPort);
+	packet << std::to_string(mtt::config::getExternal().connection.udpPort);
 	packet.add('e');
 
 	packet.add("9:info_hash20:", 14);

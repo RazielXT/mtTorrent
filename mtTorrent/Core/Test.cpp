@@ -26,16 +26,18 @@ void testInit()
 {
 	for (size_t i = 0; i < 20; i++)
 	{
-		mtt::config::internal_.hashId[i] = (uint8_t)rand();
+		mtt::config::getInternal().hashId[i] = (uint8_t)rand();
 	}
 
-	mtt::config::internal_.trackerKey = 1111;
+	mtt::config::getInternal().defaultRootHosts = { { "dht.transmissionbt.com", "6881" },{ "router.bittorrent.com" , "6881" } };
 
-	mtt::config::external.defaultDirectory = "E:\\";
+	auto filesSettings = mtt::config::getExternal().files;
+	filesSettings.defaultDirectory = "E:\\";
+	mtt::config::setValues(filesSettings);
 
-	mtt::config::internal_.defaultRootHosts = { { "dht.transmissionbt.com", "6881" },{ "router.bittorrent.com" , "6881" } };
-
-	mtt::config::external.tcpPort = mtt::config::external.udpPort = 55125;
+	auto connectionSettings = mtt::config::getExternal().connection;
+	connectionSettings.tcpPort = connectionSettings.udpPort = 55125;
+	mtt::config::setValues(connectionSettings);
 }
 
 TorrentTest::TorrentTest()
@@ -62,7 +64,7 @@ void TorrentTest::testAsyncDhtUdpRequest()
 
 	PacketBuilder packet(104);
 	packet.add("d1:ad2:id20:", 12);
-	packet.add(mtt::config::internal_.hashId, 20);
+	packet.add(mtt::config::getInternal().hashId, 20);
 	packet.add("9:info_hash20:", 14);
 	packet.add(targetId.data(), 20);
 	packet.add("e1:q9:get_peers1:v4:", 20);
@@ -318,7 +320,7 @@ void TorrentTest::testPeerListen()
 	ServiceThreadpool service(2);
 
 	std::shared_ptr<TcpAsyncStream> peerStream;
-	TcpAsyncServer server(service.io, mtt::config::external.tcpPort, false);
+	TcpAsyncServer server(service.io, mtt::config::getExternal().connection.tcpPort, false);
 	server.acceptCallback = [&](std::shared_ptr<TcpAsyncStream> c) { peerStream = c; };
 	server.listen();
 

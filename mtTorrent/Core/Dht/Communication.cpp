@@ -30,7 +30,7 @@ void mtt::dht::Communication::start()
 
 	loadDefaultRoots();
 
-	findNode(mtt::config::internal_.hashId);
+	findNode(mtt::config::getInternal().hashId);
 
 	refreshTimer = ScheduledTimer::create(service.io, std::bind(&Communication::refreshTable, this));
 	refreshTimer->schedule(5 * 60 + 5);
@@ -180,7 +180,7 @@ void mtt::dht::Communication::loadDefaultRoots()
 		}
 	};
 
-	for (auto& r : mtt::config::internal_.defaultRootHosts)
+	for (auto& r : mtt::config::getInternal().defaultRootHosts)
 	{
 		udp::resolver::query query(r.first, r.second);
 		auto resolver = std::make_shared<udp::resolver>(service.io);
@@ -206,14 +206,14 @@ void mtt::dht::Communication::save()
 	auto saveFile = table.save();
 
 	{
-		std::ofstream out(mtt::config::internal_.programFolderPath + "dht", std::ios_base::binary);
+		std::ofstream out(mtt::config::getInternal().programFolderPath + "dht", std::ios_base::binary);
 		out << saveFile;
 	}
 }
 
 void mtt::dht::Communication::load()
 {
-	std::ifstream inFile(mtt::config::internal_.programFolderPath + "dht", std::ios_base::binary | std::ios_base::in);
+	std::ifstream inFile(mtt::config::getInternal().programFolderPath + "dht", std::ios_base::binary | std::ios_base::in);
 
 	if (inFile)
 	{

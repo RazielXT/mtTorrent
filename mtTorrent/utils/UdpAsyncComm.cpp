@@ -11,7 +11,7 @@ std::shared_ptr<UdpAsyncComm> UdpAsyncComm::Get()
 	if (!ptr)
 	{
 		ptr = std::make_shared<UdpAsyncComm>();
-		ptr->setBindPort(mtt::config::external.udpPort);
+		ptr->setBindPort(mtt::config::getExternal().connection.udpPort);
 		ptr->pool.start(4);
 	}
 

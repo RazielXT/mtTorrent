@@ -36,6 +36,18 @@ namespace mtt
 			size_t getBigInt(const char* name) const;
 			size_t getBigInt() const;
 
+			template <typename T>
+			T getValueOr(const char* name, T def) const
+			{
+				auto o = getIntItem(name);
+				return o ? (T)o->getInt() : def;
+			}
+			template <>
+			std::string getValueOr(const char* name, std::string def) const
+			{
+				auto item = getTxtItem(name);
+				return item ? std::string(item->data, item->size) : def;
+			}
 
 			const Object* getFirstItem() const;
 			const Object* getNextSibling() const;

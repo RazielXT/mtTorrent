@@ -62,7 +62,7 @@ void mtt::Peers::stop()
 void mtt::Peers::connectNext(uint32_t count)
 {
 	std::lock_guard<std::mutex> guard(peersMutex);
-	count = std::min(count, mtt::config::external.maxTorrentConnections - (uint32_t)activeConnections.size());
+	count = std::min(count, mtt::config::getExternal().connection.maxTorrentConnections - (uint32_t)activeConnections.size());
 
 	auto currentTime = (uint32_t)std::time(0);
 	uint32_t leastConnectionAttempts = 0;
@@ -192,7 +192,7 @@ std::vector<mtt::TrackerInfo> mtt::Peers::getSourcesInfo()
 
 	out.push_back(pexInfo);
 
-	if(mtt::config::external.enableDht)
+	if(mtt::config::getExternal().dht.enable)
 		out.push_back(dht.info);
 
 	return out;
@@ -200,7 +200,7 @@ std::vector<mtt::TrackerInfo> mtt::Peers::getSourcesInfo()
 
 uint32_t mtt::Peers::getSourcesCount()
 {
-	return trackers.getTrackersCount() + (mtt::config::external.enableDht ? 2 : 1);
+	return trackers.getTrackersCount() + (mtt::config::getExternal().dht.enable ? 2 : 1);
 }
 
 void mtt::Peers::refreshSource(const std::string& name)
@@ -348,7 +348,7 @@ mtt::Peers::DhtSource::DhtSource(Peers& p, TorrentPtr t) : peers(p), torrent(t)
 {
 	info.hostname = "DHT";
 	info.state = TrackerState::Connected;
-	info.announceInterval = mtt::config::internal_.dhtPeersCheckInterval;
+	info.announceInterval = mtt::config::getInternal().dhtPeersCheckInterval;
 }
 
 void mtt::Peers::DhtSource::start()
@@ -385,7 +385,7 @@ void mtt::Peers::DhtSource::stop()
 
 void mtt::Peers::DhtSource::findPeers()
 {
-	if (mtt::config::external.enableDht && info.state != TrackerState::Announcing)
+	if (mtt::config::getExternal().dht.enable && info.state != TrackerState::Announcing)
 	{
 		info.state = TrackerState::Announcing;
 		dht::Communication::get().findPeers(torrent->hash(), this);

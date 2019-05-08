@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <functional>
 
 namespace mtt
 {
@@ -8,13 +9,26 @@ namespace mtt
 	{
 		struct External
 		{
-			uint16_t tcpPort;
-			uint16_t udpPort;
+			struct Connection
+			{
+				uint16_t tcpPort;
+				uint16_t udpPort;
 
-			std::string defaultDirectory;
-			bool enableDht = false;
+				uint32_t maxTorrentConnections = 30;
+			}
+			connection;
 
-			uint32_t maxTorrentConnections = 30;
+			struct Dht
+			{
+				bool enable = false;
+			}
+			dht;
+
+			struct Files
+			{
+				std::string defaultDirectory;
+			}
+			files;
 		};
 
 		struct Internal
@@ -37,7 +51,18 @@ namespace mtt
 			std::string stateFolder;
 		};
 
-		extern External external;
-		extern Internal internal_;
+		const External& getExternal();
+		Internal& getInternal();
+
+		enum class ValueType { Connection, Dht, Files };
+		void setValues(const External::Connection& val);
+		void setValues(const External::Dht& val);
+		void setValues(const External::Files& val);
+
+		int registerOnChangeCallback(ValueType, std::function<void(ValueType)>);
+		void unregisterOnChangeCallback(int);
+
+		void load();
+		void save();
 	}
 }

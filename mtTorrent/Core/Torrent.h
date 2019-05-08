@@ -64,7 +64,9 @@ namespace mtt
 		std::unique_ptr<MetadataDownload> utmDl;
 
 		void save();
-	
+		void saveTorrentFile();
+		void removeMetaFiles();
+
 	protected:
 
 		std::mutex checkStateMutex;

@@ -4,7 +4,7 @@
 void mtt::Files::init(TorrentInfo& info)
 {
 	storage.init(info);
-	storage.setPath(mtt::config::external.defaultDirectory);
+	storage.setPath(mtt::config::getExternal().files.defaultDirectory);
 
 	for (auto& f : info.files)
 	{

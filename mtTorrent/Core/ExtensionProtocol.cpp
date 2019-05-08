@@ -191,7 +191,7 @@ DataBuffer ExtensionProtocol::createExtendedHandshakeMessage(bool enablePex, uin
 	}
 
 	extDict.add("1:pi", 4);
-	auto portStr = std::to_string(mtt::config::external.tcpPort);
+	auto portStr = std::to_string(mtt::config::getExternal().connection.tcpPort);
 	extDict.add(portStr.data(), portStr.length());
 	extDict.add('e');
 

@@ -7,40 +7,15 @@
 #include "utils/TcpAsyncServer.h"
 #include "IncomingPeersListener.h"
 #include "State.h"
-#include <boost/filesystem.hpp>
 
 void mtt::Core::init()
 {
-	for (size_t i = 0; i < 20; i++)
-	{
-		mtt::config::internal_.hashId[i] = (uint8_t)rand();
-	}
-
-	mtt::config::internal_.trackerKey = 1111;
-
-	mtt::config::external.defaultDirectory = "E:\\";
-
-	mtt::config::internal_.defaultRootHosts = { { "dht.transmissionbt.com", "6881" },{ "router.bittorrent.com" , "6881" } };
-
-	mtt::config::external.tcpPort = mtt::config::external.udpPort = 55125;
-
-	mtt::config::internal_.programFolderPath = ".\\data\\";
-	
-	mtt::config::internal_.stateFolder = "state";
+	mtt::config::load();
 
 	dht = std::make_shared<dht::Communication>();
 
-	if(mtt::config::external.enableDht)
+	if(mtt::config::getExternal().dht.enable)
 		dht->start();
-
-	boost::filesystem::path dir(mtt::config::internal_.programFolderPath + mtt::config::internal_.stateFolder);
-	if (!boost::filesystem::exists(dir))
-	{
-		boost::system::error_code ec;
-
-		boost::filesystem::create_directory(mtt::config::internal_.programFolderPath, ec);
-		boost::filesystem::create_directory(dir, ec);
-	}
 
 	listener = std::make_shared<IncomingPeersListener>([this](std::shared_ptr<TcpAsyncStream> s, const uint8_t* hash)
 	{
@@ -67,6 +42,14 @@ void mtt::Core::init()
 
 		torrents.push_back(tPtr);
 	}
+
+	config::registerOnChangeCallback(config::ValueType::Dht, [this](config::ValueType)
+		{
+			if (mtt::config::getExternal().dht.enable)
+				dht->start();
+			else
+				dht->stop();
+		});
 }
 
 void mtt::Core::deinit()
@@ -82,6 +65,8 @@ void mtt::Core::deinit()
 	}
 
 	list.saveState();
+
+	mtt::config::save();
 }
 
 mtt::TorrentPtr mtt::Core::addFile(const char* filename)
@@ -94,8 +79,8 @@ mtt::TorrentPtr mtt::Core::addFile(const char* filename)
 	if (auto t = getTorrent(torrent->hash()))
 		return t;
 
-	saveTorrentFile(torrent);
 	torrents.push_back(torrent);
+	torrent->saveTorrentFile();
 	torrent->checkFiles();
 
 	return torrent;
@@ -115,7 +100,7 @@ mtt::TorrentPtr mtt::Core::addMagnet(const char* magnet)
 	{
 		if (s == Status::Success && state.finished)
 		{
-			saveTorrentFile(torrent);
+			torrent->saveTorrentFile();
 			torrent->checkFiles();
 		}
 	};
@@ -146,9 +131,7 @@ mtt::Status mtt::Core::removeTorrent(const uint8_t* hash, bool deleteFiles)
 			auto t = *it;
 			t->stop();
 
-			auto path = mtt::config::internal_.programFolderPath + mtt::config::internal_.stateFolder + "\\" + t->hashString();
-			std::remove((path + ".torrent").data());
-			std::remove((path + ".state").data());
+			t->removeMetaFiles();
 
 			torrents.erase(it);
 	
@@ -163,16 +146,3 @@ mtt::Status mtt::Core::removeTorrent(const uint8_t* hash, bool deleteFiles)
 
 	return Status::E_InvalidInput;
 }
-
-void mtt::Core::saveTorrentFile(TorrentPtr t)
-{
-	auto folderPath = mtt::config::internal_.programFolderPath + mtt::config::internal_.stateFolder + "\\" + t->hashString() + ".torrent";
-
-	std::ofstream file(folderPath, std::ios::binary);
-
-	if (!file)
-		return;
-
-	file << t->infoFile.createTorrentFileData();
-}
-

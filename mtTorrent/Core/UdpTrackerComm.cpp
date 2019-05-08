@@ -114,7 +114,7 @@ DataBuffer UdpTrackerComm::createAnnounceRequest()
 	packet.add32(transaction);
 
 	packet.add(torrent->hash(), 20);
-	packet.add(mtt::config::internal_.hashId, 20);
+	packet.add(mtt::config::getInternal().hashId, 20);
 
 	packet.add64(torrent->downloaded());
 	packet.add64(torrent->dataLeft());
@@ -123,9 +123,9 @@ DataBuffer UdpTrackerComm::createAnnounceRequest()
 	packet.add32(torrent->finished() ? Completed : Started);
 	packet.add32(0);
 
-	packet.add32(mtt::config::internal_.trackerKey);
-	packet.add32(mtt::config::internal_.maxPeersPerTrackerRequest);
-	packet.add32(mtt::config::external.tcpPort);
+	packet.add32(mtt::config::getInternal().trackerKey);
+	packet.add32(mtt::config::getInternal().maxPeersPerTrackerRequest);
+	packet.add32(mtt::config::getExternal().connection.tcpPort);
 	packet.add16(0);
 
 	return packet.getBuffer();

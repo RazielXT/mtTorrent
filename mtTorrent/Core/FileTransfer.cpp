@@ -17,7 +17,7 @@ mtt::FileTransfer::FileTransfer(TorrentPtr t) : downloader(t), uploader(t), torr
 	if (!ipToCountryLoaded)
 	{
 		ipToCountryLoaded = true;
-		ipToCountry.fromFile(mtt::config::internal_.programFolderPath);
+		ipToCountry.fromFile(mtt::config::getInternal().programFolderPath);
 	}
 }
 
@@ -245,7 +245,7 @@ void mtt::FileTransfer::removePeer(PeerCommunication * p)
 
 void mtt::FileTransfer::evaluateCurrentPeers()
 {
-	if (activePeers.size() < mtt::config::external.maxTorrentConnections)
+	if (activePeers.size() < mtt::config::getExternal().connection.maxTorrentConnections)
 		torrent->peers->connectNext(10);
 }
 
@@ -262,7 +262,7 @@ void mtt::FileTransfer::evalCurrentPeers()
 	{
 		std::lock_guard<std::mutex> guard(peersMutex);
 
-		if ((uint32_t)activePeers.size() < mtt::config::external.maxTorrentConnections)
+		if ((uint32_t)activePeers.size() < mtt::config::getExternal().connection.maxTorrentConnections)
 			return;
 
 		const uint32_t minPeersTimeChance = 10;
