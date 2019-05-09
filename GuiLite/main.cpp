@@ -278,61 +278,68 @@ void setSelected(bool v)
 
 int magnetLinkSequence = 0;
 uint32_t lastMagnetLinkLogCount = 0;
-void onButtonClick(System::Object^ button, System::String^ id)
+
+void onButtonClick(ButtonId id, System::String^ param)
 {
-	if (button == nullptr && id)
+	if (id == ButtonId::AddPeer)
 	{
-		if (id == "AddPeer" && selected)
+		if (!selected)
+			return;
+
+		GuiLite::AddPeerForm form;
+		form.ShowDialog();
+	}
+	else if (id == ButtonId::TorrentDoubleClick)
+	{
+		if (!selected)
+			return;
+
+		mtBI::MagnetLinkProgress magnetProgress;
+		if (!GuiLite::MagnetInputForm::instance && IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, hash, &magnetProgress) == mtt::Status::Success)
 		{
-			GuiLite::AddPeerForm form;
+			GuiLite::MagnetInputForm form;
+			form.labelText->Text = "Getting info...";
+			form.magnetFormButton->Text = "Logs";
+			form.textBoxMagnet->Text = gcnew String(hexToString(hash, 20).data());
+			magnetLinkSequence = 2;
 			form.ShowDialog();
-		}
-		else if (id == "Info" && selected)
-		{
-			mtBI::MagnetLinkProgress magnetProgress;
-			if (!GuiLite::MagnetInputForm::instance && IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, hash, &magnetProgress) == mtt::Status::Success)
-			{
-				GuiLite::MagnetInputForm form;
-				form.labelText->Text = "Getting info...";
-				form.magnetFormButton->Text = "Logs";
-				form.textBoxMagnet->Text = gcnew String(hexToString(hash, 20).data());
-				magnetLinkSequence = 2;
-				form.ShowDialog();
-				GuiLite::MagnetInputForm::instance = nullptr;
-				magnetLinkSequence = 0;
-				lastMagnetLinkLogCount = 0;
-			}
-		}
-		else if (id == "Remove" && selected)
-		{
-			mtBI::RemoveTorrentRequest request;
-
-			auto result = ::MessageBox(NULL, L"Delete files?", L"Torrent remove", MB_YESNOCANCEL);
-
-			if (result == IDYES)
-			{
-				request.deleteFiles = true;
-			}
-			else if (result == IDNO)
-			{
-				request.deleteFiles = false;
-			}
-			else if (result == IDCANCEL)
-			{
-				return;
-			}
-
-			memcpy(request.hash, hash, 20);
-			IoctlFunc(mtBI::MessageId::Remove, &request, nullptr);
+			GuiLite::MagnetInputForm::instance = nullptr;
+			magnetLinkSequence = 0;
+			lastMagnetLinkLogCount = 0;
 		}
 	}
-	else if (button == GuiLite::MainForm::instance->buttonAddTorrent)
+	else if (id == ButtonId::Remove)
+	{
+		if (!selected)
+			return;
+
+		mtBI::RemoveTorrentRequest request;
+
+		auto result = ::MessageBox(NULL, L"Delete files?", L"Torrent remove", MB_YESNOCANCEL);
+
+		if (result == IDYES)
+		{
+			request.deleteFiles = true;
+		}
+		else if (result == IDNO)
+		{
+			request.deleteFiles = false;
+		}
+		else if (result == IDCANCEL)
+		{
+			return;
+		}
+
+		memcpy(request.hash, hash, 20);
+		IoctlFunc(mtBI::MessageId::Remove, &request, nullptr);
+	}
+	else if (id == ButtonId::AddTorrentFile)
 	{
 		System::Threading::Thread^ newThread = gcnew System::Threading::Thread(gcnew System::Threading::ThreadStart(&addTorrent));
 		newThread->SetApartmentState(System::Threading::ApartmentState::STA);
 		newThread->Start();
 	}
-	else if (button == GuiLite::MainForm::instance->getGrid())
+	else if (id == ButtonId::TorrentGrid)
 	{
 		if (GuiLite::MainForm::instance->getGrid()->SelectedRows->Count == 0)
 		{
@@ -354,7 +361,7 @@ void onButtonClick(System::Object^ button, System::String^ id)
 			}
 		}
 	}
-	else if (button == GuiLite::MainForm::instance->buttonStart)
+	else if (id == ButtonId::Start)
 	{
 		if (selected)
 		{
@@ -362,7 +369,7 @@ void onButtonClick(System::Object^ button, System::String^ id)
 				selectionChanged = true;
 		}
 	}
-	else if (button == GuiLite::MainForm::instance->buttonStop)
+	else if (id == ButtonId::Stop)
 	{
 		if (selected)
 		{
@@ -370,7 +377,7 @@ void onButtonClick(System::Object^ button, System::String^ id)
 				selectionChanged = true;
 		}
 	}
-	else if (button == GuiLite::MainForm::instance->buttonAddMagnet)
+	else if (id == ButtonId::AddTorrentMagnet)
 	{
 		magnetLinkSequence = 1;
 		GuiLite::MagnetInputForm form;
@@ -379,7 +386,7 @@ void onButtonClick(System::Object^ button, System::String^ id)
 		magnetLinkSequence = 0;
 		lastMagnetLinkLogCount = 0;
 	}
-	else if (button == GuiLite::MainForm::instance->buttonSettings)
+	else if (id == ButtonId::Settings)
 	{
 		GuiLite::SettingsForm form;
 		mtBI::SettingsInfo info;
@@ -394,21 +401,26 @@ void onButtonClick(System::Object^ button, System::String^ id)
 
 		form.ShowDialog();
 	}
-	else if (id && button->GetType()->Name == "MenuItem")
+	else if (id == ButtonId::SourceRefresh)
 	{
-		auto item = (MenuItem^)button;
-
-		if (item->Text == "Refresh")
+		if (param)
 		{
 			mtBI::SourceId info;
-			info.name = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(id).ToPointer();
+			info.name = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(param).ToPointer();
 			memcpy(info.hash, hash, 20);
 			IoctlFunc(mtBI::MessageId::RefreshSource, &info, nullptr);
 		}
 	}
+	else if (id == ButtonId::SelectFiles)
+	{
+		GuiLite::FileSelectionForm form;
+		form.ShowDialog();
+		lastSelection.selection.clear();
+		GuiLite::FileSelectionForm::instance = nullptr;
+	}
 	else if (GuiLite::MagnetInputForm::instance)
 	{
-		if (button == GuiLite::MagnetInputForm::instance->magnetFormButton)
+		if (id == ButtonId::MagnetButton)
 		{
 			if (GuiLite::MagnetInputForm::instance->magnetFormButton->Text->StartsWith("Add"))
 			{
@@ -437,16 +449,9 @@ void onButtonClick(System::Object^ button, System::String^ id)
 			}
 		}
 	}
-	else if (button == GuiLite::MainForm::instance->selectButton)
-	{
-		GuiLite::FileSelectionForm form;
-		form.ShowDialog();
-		lastSelection.selection.clear();
-		GuiLite::FileSelectionForm::instance = nullptr;
-	}
 	else if (GuiLite::FileSelectionForm::instance)
 	{
-		if (button == GuiLite::FileSelectionForm::instance->okButton)
+		if (id == ButtonId::SelectionOk)
 		{
 			if (!lastSelection.selection.empty())
 			{
@@ -464,24 +469,24 @@ void onButtonClick(System::Object^ button, System::String^ id)
 
 			GuiLite::FileSelectionForm::instance->Close();
 		}
-		else if (button == GuiLite::FileSelectionForm::instance->cancelButton)
+		else if (id == ButtonId::SelectionCancel)
 		{
 			GuiLite::FileSelectionForm::instance->Close();
 		}
-		else if (button == GuiLite::FileSelectionForm::instance->selectAllButton)
+		else if (id == ButtonId::SelectionAll)
 		{
 			setAllFileSelection(true);
 		}
-		else if (button == GuiLite::FileSelectionForm::instance->deselectAllButton)
+		else if (id == ButtonId::SelectionNone)
 		{
 			setAllFileSelection(false);
 		}
 	}
 }
 
-void onButtonClick(System::Object^ button)
+void onButtonClick(ButtonId id)
 {
-	onButtonClick(button, nullptr);
+	onButtonClick(id, nullptr);
 }
 
 void adjustGridRowsCount(System::Windows::Forms::DataGridView^ grid, int count)

@@ -1,6 +1,6 @@
 #pragma once
 
-extern void onButtonClick(System::Object^ button);
+#include "Buttons.h"
 extern void fillFilesSelectionForm();
 extern void fileSelectionChanged(int id, bool selected);
 
@@ -215,10 +215,10 @@ namespace GuiLite {
 		}
 #pragma endregion
 	private: System::Void Button1_Click(System::Object^ sender, System::EventArgs^ e) {
-		onButtonClick(sender);
+		onButtonClick(ButtonId::SelectionOk);
 	}
 	private: System::Void Button2_Click(System::Object^ sender, System::EventArgs^ e) {
-		onButtonClick(sender);
+		onButtonClick(ButtonId::SelectionCancel);
 	}
 
 private: System::Void FilesGridView_CellContentClick(System::Object^ sender, System::Windows::Forms::DataGridViewCellEventArgs^ e) {
@@ -237,10 +237,10 @@ private: System::Void FilesGridView_CellContentClick(System::Object^ sender, Sys
 			 }
 		 }
 private: System::Void SelectAllButton_Click(System::Object^ sender, System::EventArgs^ e) {
-	onButtonClick(sender);
+	onButtonClick(ButtonId::SelectionAll);
 }
 private: System::Void DeselectAllButton_Click(System::Object^ sender, System::EventArgs^ e) {
-	onButtonClick(sender);
+	onButtonClick(ButtonId::SelectionNone);
 }
 };
 }

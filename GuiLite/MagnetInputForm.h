@@ -1,6 +1,6 @@
 #pragma once
 
-extern void onButtonClick(System::Object^ button, System::String^ id);
+#include "Buttons.h"
 
 namespace GuiLite {
 
@@ -170,7 +170,7 @@ namespace GuiLite {
 		}
 #pragma endregion
 private: System::Void MagnetFormButton_Click_1(System::Object^ sender, System::EventArgs^ e) {
-	onButtonClick(sender, nullptr);
+	onButtonClick(ButtonId::MagnetButton);
 }
 };
 }

@@ -1,8 +1,8 @@
 #pragma once
 
+#include "Buttons.h"
+
 extern void refreshUi();
-extern void onButtonClick(System::Object^ button, System::String^ id);
-extern void onButtonClick(System::Object^ button);
 
 namespace GuiLite {
 
@@ -809,27 +809,27 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 		}
 #pragma endregion
 	private: System::Void button1_Click(System::Object^  sender, System::EventArgs^  e) {
-		onButtonClick(sender);
+		onButtonClick(ButtonId::AddTorrentFile);
 	}
 
 private: System::Void torrentsGrid_CellContentClick(System::Object^  sender, System::Windows::Forms::DataGridViewCellEventArgs^  e) {
-		onButtonClick(sender);
+	onButtonClick(ButtonId::TorrentGrid);
 }
 	private: System::Void buttonStart_Click(System::Object^  sender, System::EventArgs^  e) {
-		onButtonClick(sender);
+		onButtonClick(ButtonId::Start);
 	}
 	private: System::Void buttonStop_Click(System::Object^  sender, System::EventArgs^  e) {
-		onButtonClick(sender);
+		onButtonClick(ButtonId::Stop);
 	}
 private: System::Void buttonAddMagnet_Click(System::Object^  sender, System::EventArgs^  e) {
-	onButtonClick(sender);
+	onButtonClick(ButtonId::AddTorrentMagnet);
 }
 private: System::Void buttonSettings_Click(System::Object^  sender, System::EventArgs^  e) {
-	onButtonClick(sender);
+	onButtonClick(ButtonId::Settings);
 }
 System::String^ ctxMenuHint;
 private: System::Void ctxMenu_Click(System::Object^  sender, System::EventArgs^  e) {
-	onButtonClick(sender, ctxMenuHint);
+	onButtonClick(ButtonId::SourceRefresh, ctxMenuHint);
 }
 private: System::Void sourcesGrid_MouseClick(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
 	if (e->Button == System::Windows::Forms::MouseButtons::Right)
@@ -847,16 +847,16 @@ private: System::Void sourcesGrid_MouseClick(System::Object^  sender, System::Wi
 	}
 }
 private: System::Void SelectButton_Click(System::Object^ sender, System::EventArgs^ e) {
-	onButtonClick(sender);
+	onButtonClick(ButtonId::SelectFiles);
 }
 private: System::Void ToolStripMenuItem1_Click(System::Object^ sender, System::EventArgs^ e) {
-	onButtonClick(nullptr, "AddPeer");
+	onButtonClick(ButtonId::AddPeer);
 }
 private: System::Void TorrentsGrid_CellContentClick_1(System::Object^ sender, System::Windows::Forms::DataGridViewCellMouseEventArgs^ e) {
-	onButtonClick(nullptr, "Info");
+	onButtonClick(ButtonId::TorrentDoubleClick);
 }
 private: System::Void ButtonRemove_Click(System::Object^ sender, System::EventArgs^ e) {
-	onButtonClick(nullptr, "Remove");
+	onButtonClick(ButtonId::Remove);
 }
 };
 }

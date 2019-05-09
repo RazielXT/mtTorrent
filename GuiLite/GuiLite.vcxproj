@@ -153,6 +153,7 @@
     <ClInclude Include="AddPeerForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
+    <ClInclude Include="Buttons.h" />
     <ClInclude Include="FileSelectionForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
