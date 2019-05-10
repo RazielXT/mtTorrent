@@ -26,16 +26,19 @@ bool selected = false;
 uint8_t hash[20];
 bool selectionChanged = false;
 
-void applySettings(System::Object^ form)
+const char* getStringPtr(System::String^ str)
 {
-	auto window = (GuiLite::SettingsForm^)form;
+	return (const char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(str).ToPointer();
+}
+
+void applySettings(GuiLite::SettingsForm^ form)
+{
 	mtBI::SettingsInfo info;
-	info.dhtEnabled = window->checkBoxDht->Checked;
-	auto dirPtr = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(window->directoryTextBox->Text).ToPointer();
-	info.directory = dirPtr;
-	info.maxConnections = (unsigned int)window->maxConnectionsNumeric->Value;
-	info.udpPort = (unsigned int)window->udpPortNumeric->Value;
-	info.tcpPort = (unsigned int)window->tcpPortNumeric->Value;
+	info.dhtEnabled = form->checkBoxDht->Checked;
+	info.directory = getStringPtr(form->directoryTextBox->Text);
+	info.maxConnections = (unsigned int)form->maxConnectionsNumeric->Value;
+	info.udpPort = (unsigned int)form->udpPortNumeric->Value;
+	info.tcpPort = (unsigned int)form->tcpPortNumeric->Value;
 
 	IoctlFunc(mtBI::MessageId::SetSettings, &info, nullptr);
 }
@@ -231,7 +234,7 @@ void addTorrent()
 
 	if (openFileDialog->ShowDialog() == System::Windows::Forms::DialogResult::OK)
 	{
-		auto filenamePtr = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(openFileDialog->FileName).ToPointer();
+		auto filenamePtr = getStringPtr(openFileDialog->FileName);
 		
 		if (IoctlFunc(mtBI::MessageId::AddFromFile, filenamePtr, hash) == mtt::Status::Success)
 		{
@@ -258,8 +261,7 @@ void customAction(System::String^ action, System::String^ param)
 	{
 		mtBI::AddPeerRequest request;
 		memcpy(request.hash, hash, 20);
-		auto addrPtr = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(param).ToPointer();
-		request.addr = addrPtr;
+		request.addr = getStringPtr(param);
 
 		IoctlFunc(mtBI::MessageId::AddPeer, &request, nullptr);
 	}
@@ -406,7 +408,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 		if (param)
 		{
 			mtBI::SourceId info;
-			info.name = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(param).ToPointer();
+			info.name = getStringPtr(param);
 			memcpy(info.hash, hash, 20);
 			IoctlFunc(mtBI::MessageId::RefreshSource, &info, nullptr);
 		}
@@ -430,7 +432,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 				if (magnetLinkSequence > 1)
 					return;
 
-				auto magnetPtr = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(GuiLite::MagnetInputForm::instance->textBoxMagnet->Text).ToPointer();
+				auto magnetPtr = getStringPtr(GuiLite::MagnetInputForm::instance->textBoxMagnet->Text);
 				if (addTorrentFromMetadata(magnetPtr))
 				{
 					GuiLite::MagnetInputForm::instance->labelText->Text = "Getting info...";

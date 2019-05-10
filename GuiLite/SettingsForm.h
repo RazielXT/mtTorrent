@@ -1,6 +1,10 @@
 #pragma once
 
-extern void applySettings(System::Object^ form);
+namespace GuiLite {
+	ref class SettingsForm;
+}
+
+extern void applySettings(GuiLite::SettingsForm^ form);
 
 namespace GuiLite {
 
