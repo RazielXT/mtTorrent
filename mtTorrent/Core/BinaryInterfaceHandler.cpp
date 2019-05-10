@@ -227,6 +227,7 @@ extern "C"
 			resp->maxConnections = settings.connection.maxTorrentConnections;
 			resp->tcpPort = settings.connection.tcpPort;
 			resp->udpPort = settings.connection.udpPort;
+			resp->upnpEnabled = settings.connection.upnpPortMapping;
 		}
 		else if (id == mtBI::MessageId::SetSettings)
 		{
@@ -238,6 +239,7 @@ extern "C"
 			settings.connection.maxTorrentConnections = info->maxConnections;
 			settings.connection.tcpPort = info->tcpPort;
 			settings.connection.udpPort = info->udpPort;
+			settings.connection.upnpPortMapping = info->upnpEnabled;
 
 			mtt::config::setValues(settings.dht);
 			mtt::config::setValues(settings.connection);

@@ -39,6 +39,7 @@ void applySettings(GuiLite::SettingsForm^ form)
 	info.maxConnections = (unsigned int)form->maxConnectionsNumeric->Value;
 	info.udpPort = (unsigned int)form->udpPortNumeric->Value;
 	info.tcpPort = (unsigned int)form->tcpPortNumeric->Value;
+	info.upnpEnabled = form->upnpMapCheckBox->Checked;
 
 	IoctlFunc(mtBI::MessageId::SetSettings, &info, nullptr);
 }
@@ -399,6 +400,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 			form.maxConnectionsNumeric->Value = info.maxConnections;
 			form.udpPortNumeric->Value = info.udpPort;
 			form.tcpPortNumeric->Value = info.tcpPort;
+			form.upnpMapCheckBox->Checked = info.upnpEnabled;
 		}
 
 		form.ShowDialog();

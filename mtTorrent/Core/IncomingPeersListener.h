@@ -31,6 +31,7 @@ namespace mtt
 
 
 		std::shared_ptr<UpnpPortMapping> upnp;
+		bool upnpEnabled;
 
 		struct UsedPorts
 		{

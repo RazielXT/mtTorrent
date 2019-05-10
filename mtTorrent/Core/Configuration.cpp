@@ -42,6 +42,7 @@ namespace mtt
 			bool changed = val.tcpPort != external.connection.tcpPort;
 			changed |= val.udpPort != external.connection.udpPort;
 			changed |= val.maxTorrentConnections != external.connection.maxTorrentConnections;
+			changed |= val.upnpPortMapping != external.connection.upnpPortMapping;
 
 			if (changed)
 			{
@@ -141,17 +142,18 @@ namespace mtt
 						}
 						if (auto externalSettings = root->getDictItem("external"))
 						{
-							if (auto conn = root->getDictItem("connection"))
+							if (auto conn = externalSettings->getDictItem("connection"))
 							{
 								external.connection.tcpPort = conn->getValueOr("tcpPort", external.connection.tcpPort);
 								external.connection.udpPort = conn->getValueOr("udpPort", external.connection.udpPort);
 								external.connection.maxTorrentConnections = conn->getValueOr("maxConn", external.connection.maxTorrentConnections);
+								external.connection.upnpPortMapping = conn->getValueOr("upnp", external.connection.upnpPortMapping);
 							}
-							if (auto dht = root->getDictItem("dht"))
+							if (auto dht = externalSettings->getDictItem("dht"))
 							{
 								external.dht.enable = dht->getValueOr("enabled", external.dht.enable);
 							}
-							if (auto files = root->getDictItem("files"))
+							if (auto files = externalSettings->getDictItem("files"))
 							{
 								external.files.defaultDirectory = files->getValueOr("directory", external.files.defaultDirectory);
 							}
@@ -184,6 +186,7 @@ namespace mtt
 					writer.addRawItem("7:tcpPort", external.connection.tcpPort);
 					writer.addRawItem("7:udpPort", external.connection.udpPort);
 					writer.addRawItem("7:maxConn", external.connection.maxTorrentConnections);
+					writer.addRawItem("4:upnp", external.connection.upnpPortMapping);
 					writer.endMap();
 
 					writer.startRawMapItem("3:dht");

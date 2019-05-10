@@ -13,26 +13,49 @@ mtt::IncomingPeersListener::IncomingPeersListener(std::function<void(std::shared
 
 	createListener();
 
+	upnpEnabled = mtt::config::getExternal().connection.upnpPortMapping;
 	upnp = std::make_shared<UpnpPortMapping>(pool.io);
-	upnp->mapActiveAdapters(mtt::config::getExternal().connection.tcpPort, UpnpPortMapping::PortType::Tcp);
-	upnp->mapActiveAdapters(mtt::config::getExternal().connection.udpPort, UpnpPortMapping::PortType::Udp);
+
+	if (upnpEnabled)
+	{
+		upnp->mapActiveAdapters(mtt::config::getExternal().connection.tcpPort, UpnpPortMapping::PortType::Tcp);
+		upnp->mapActiveAdapters(mtt::config::getExternal().connection.udpPort, UpnpPortMapping::PortType::Udp);
+	}
 
 	config::registerOnChangeCallback(config::ValueType::Connection, [this](config::ValueType)
 		{
-			if (usedPorts.udp != mtt::config::getExternal().connection.udpPort)
-			{
-				upnp->unmapMappedAdapters(usedPorts.udp, UpnpPortMapping::PortType::Udp, false);
-				upnp->mapActiveAdapters(mtt::config::getExternal().connection.udpPort, UpnpPortMapping::PortType::Udp);
-			}
-			if (usedPorts.tcp != mtt::config::getExternal().connection.tcpPort)
-			{
-				upnp->unmapMappedAdapters(usedPorts.udp, UpnpPortMapping::PortType::Tcp, false);
-				upnp->mapActiveAdapters(mtt::config::getExternal().connection.tcpPort, UpnpPortMapping::PortType::Tcp);
+			auto& settings = mtt::config::getExternal().connection;
 
-				createListener();
+			if (settings.upnpPortMapping != upnpEnabled)
+			{
+				if (settings.upnpPortMapping)
+				{
+					upnp->mapActiveAdapters(settings.tcpPort, UpnpPortMapping::PortType::Tcp);
+					upnp->mapActiveAdapters(settings.udpPort, UpnpPortMapping::PortType::Udp);
+				}
+				else
+					upnp->unmapAllMappedAdapters(false);
 			}
-			usedPorts.tcp = mtt::config::getExternal().connection.tcpPort;
-			usedPorts.udp = mtt::config::getExternal().connection.udpPort;
+			else if(upnpEnabled)
+			{
+				if (usedPorts.udp != settings.udpPort)
+				{
+					upnp->unmapMappedAdapters(usedPorts.udp, UpnpPortMapping::PortType::Udp, false);
+					upnp->mapActiveAdapters(settings.udpPort, UpnpPortMapping::PortType::Udp);
+				}
+				if (usedPorts.tcp != settings.tcpPort)
+				{
+					upnp->unmapMappedAdapters(usedPorts.udp, UpnpPortMapping::PortType::Tcp, false);
+					upnp->mapActiveAdapters(settings.tcpPort, UpnpPortMapping::PortType::Tcp);
+				}
+			}
+			
+			if (usedPorts.tcp != settings.tcpPort)
+				createListener();
+
+			usedPorts.tcp = settings.tcpPort;
+			usedPorts.udp = settings.udpPort;
+			upnpEnabled = settings.upnpPortMapping;
 		});
 
 	usedPorts.tcp = mtt::config::getExternal().connection.tcpPort;

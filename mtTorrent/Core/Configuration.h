@@ -15,6 +15,8 @@ namespace mtt
 				uint16_t udpPort = 55125;
 
 				uint32_t maxTorrentConnections = 50;
+
+				bool upnpPortMapping = true;
 			}
 			connection;
 

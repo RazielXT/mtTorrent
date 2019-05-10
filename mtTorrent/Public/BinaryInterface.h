@@ -61,6 +61,7 @@ namespace mtBI
 		bool dhtEnabled;
 		string directory;
 		uint32_t maxConnections;
+		bool upnpEnabled;
 	};
 
 	struct MagnetLinkProgress
