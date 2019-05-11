@@ -850,7 +850,7 @@ private: System::Void SelectButton_Click(System::Object^ sender, System::EventAr
 	onButtonClick(ButtonId::SelectFiles);
 }
 private: System::Void ToolStripMenuItem1_Click(System::Object^ sender, System::EventArgs^ e) {
-	onButtonClick(ButtonId::AddPeer);
+	onButtonClick(ButtonId::AddPeerMenu);
 }
 private: System::Void TorrentsGrid_CellContentClick_1(System::Object^ sender, System::Windows::Forms::DataGridViewCellMouseEventArgs^ e) {
 	onButtonClick(ButtonId::TorrentDoubleClick);

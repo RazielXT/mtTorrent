@@ -8,6 +8,7 @@ enum class ButtonId
 	Start,
 	Stop,
 	Settings,
+	AddPeerMenu,
 	AddPeer,
 	TorrentGrid,
 	SourceRefresh,

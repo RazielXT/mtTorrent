@@ -1,6 +1,5 @@
 #pragma once
-
-extern void customAction(System::String^ action, System::String^ param);
+#include "Buttons.h"
 
 namespace GuiLite {
 
@@ -90,7 +89,7 @@ namespace GuiLite {
 		}
 #pragma endregion
 	private: System::Void AddPeerButton_Click(System::Object^ sender, System::EventArgs^ e) {
-		customAction("AddPeer", textBox1->Text);
+		onButtonClick(ButtonId::AddPeer, textBox1->Text);
 		Close();
 	}
 	};
