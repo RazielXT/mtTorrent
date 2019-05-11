@@ -110,7 +110,7 @@ bool mtt::PeerInfo::supportsExtensions()
 
 bool mtt::PeerInfo::supportsDht()
 {
-	return (protocol[8] & 0x80) != 0;
+	return (protocol[7] & 0x80) != 0;
 }
 
 PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l) : torrent(t), listener(l)
@@ -372,7 +372,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 
 		BT_LOG("new percentage: " << std::to_string(info.pieces.getPercentage()));
 		LOG_MGS("Received progress: " << info.pieces.getPercentage());
-		listener.progressUpdated(this);
+		listener.progressUpdated(this, -1);
 	}
 	else if (message.id == Have)
 	{
@@ -380,7 +380,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 
 		BT_LOG("new percentage: " << std::to_string(info.pieces.getPercentage()));
 		LOG_MGS("Received progress: " << info.pieces.getPercentage());
-		listener.progressUpdated(this);
+		listener.progressUpdated(this, message.havePieceIndex);
 	}
 	else if (message.id == Unchoke)
 	{
@@ -423,6 +423,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 
 				memcpy(info.id, message.handshake.peerId, 20);
 				memcpy(info.protocol, message.handshake.reservedBytes, 8);
+				info.pieces.init(torrent.pieces.size());
 
 				if (info.supportsExtensions())
 					ext.sendHandshake();
