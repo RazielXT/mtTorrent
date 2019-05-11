@@ -177,6 +177,27 @@ mtt::Status mtt::Storage::deleteAll()
 	return Status::Success;
 }
 
+uint32_t mtt::Storage::getLastModifiedTime()
+{
+	uint32_t time = 0;
+
+	std::lock_guard<std::mutex> guard(storageMutex);
+
+	for (auto& f : files)
+	{
+		auto path = getFullpath(f);
+		boost::system::error_code ec;
+
+		auto tm = boost::filesystem::last_write_time(path, ec);
+		if (!ec)
+		{
+			time = std::max(time, (uint32_t)tm);
+		}
+	}
+
+	return time;
+}
+
 void mtt::Storage::flushAllFiles()
 {
 	for (auto& f : files)

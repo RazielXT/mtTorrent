@@ -49,8 +49,19 @@ void mtt::PiecesProgress::init(size_t size)
 	if(pieces.empty())
 		selectedPieces = size;
 
-	if (pieces.size() != size)
+	if (pieces.size() < size)
 		pieces.resize(size, 0);
+}
+
+void mtt::PiecesProgress::removeReceived()
+{
+	receivedPiecesCount = 0;
+	selectedReceivedPiecesCount = 0;
+
+	for (auto& p : pieces)
+	{
+		p &= ~HasFlag;
+	}
 }
 
 void mtt::PiecesProgress::select(DownloadSelection& selection)

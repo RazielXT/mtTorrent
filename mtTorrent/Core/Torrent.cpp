@@ -42,8 +42,6 @@ mtt::TorrentPtr mtt::Torrent::fromSavedState(std::string name)
 		TorrentState state(ptr->files.progress.pieces);
 		if (state.loadState(name))
 		{
-			ptr->files.progress.recheckPieces();
-
 			if (ptr->files.selection.files.size() == state.files.size())
 			{
 				for (size_t i = 0; i < state.files.size(); i++)
@@ -53,7 +51,15 @@ mtt::TorrentPtr mtt::Torrent::fromSavedState(std::string name)
 			}
 
 			if (state.lastStateTime != 0)
-				ptr->checked = true;
+			{
+				auto filesTime = ptr->files.storage.getLastModifiedTime();
+				ptr->checked = filesTime == 0 ? false : (state.lastStateTime >= filesTime);
+			}
+
+			if(ptr->checked)
+				ptr->files.progress.recheckPieces();
+			else
+				ptr->files.progress.removeReceived();
 
 			if (state.started)
 				ptr->start();

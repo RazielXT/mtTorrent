@@ -25,6 +25,7 @@ namespace mtt
 		void flush();
 
 		Status deleteAll();
+		uint32_t getLastModifiedTime();
 
 	private:
 
