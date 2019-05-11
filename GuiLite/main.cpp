@@ -49,6 +49,7 @@ int chartTime = 0;
 void initSpeedChart()
 {
 	auto chart = GuiLite::MainForm::instance->dlSpeedChart;
+	chart->Visible = true;
 	chart->Series["DlSeries"]->XValueMember = "Time";
 	chart->Series["DlSeries"]->YValueMembers = "Speed";
 	chart->Series["DlSeries"]->ChartType = DataVisualization::Charting::SeriesChartType::Line;
@@ -256,18 +257,6 @@ bool addTorrentFromMetadata(const char* magnetPtr)
 	return true;
 }
 
-void customAction(System::String^ action, System::String^ param)
-{
-	if (action == "AddPeer")
-	{
-		mtBI::AddPeerRequest request;
-		memcpy(request.hash, hash, 20);
-		request.addr = getStringPtr(param);
-
-		IoctlFunc(mtBI::MessageId::AddPeer, &request, nullptr);
-	}
-}
-
 void setSelected(bool v)
 {
 	selected = v;
@@ -276,6 +265,33 @@ void setSelected(bool v)
 	if (!selected)
 	{
 		GuiLite::MainForm::instance->getGrid()->ClearSelection();
+
+		GuiLite::MainForm::instance->torrentInfoLabel->Clear();
+		GuiLite::MainForm::instance->selectButton->Visible = false;
+		GuiLite::MainForm::instance->dlSpeedChart->Visible = false;
+	}
+}
+
+void refreshSelection()
+{
+	if (GuiLite::MainForm::instance->getGrid()->SelectedRows->Count == 0)
+	{
+		setSelected(false);
+	}
+	else
+	{
+		setSelected(true);
+
+		auto idStr = (String^)GuiLite::MainForm::instance->getGrid()->SelectedRows[0]->Cells[0]->Value;
+		auto stdStr = msclr::interop::marshal_as<std::string>(idStr);
+		uint8_t selectedHash[20];
+		decodeHexa(stdStr, selectedHash);
+
+		if (memcmp(hash, selectedHash, 20) != 0)
+		{
+			memcpy(hash, selectedHash, 20);
+			selectionChanged = true;
+		}
 	}
 }
 
@@ -284,13 +300,21 @@ uint32_t lastMagnetLinkLogCount = 0;
 
 void onButtonClick(ButtonId id, System::String^ param)
 {
-	if (id == ButtonId::AddPeer)
+	if (id == ButtonId::AddPeerMenu)
 	{
 		if (!selected)
 			return;
 
 		GuiLite::AddPeerForm form;
 		form.ShowDialog();
+	}
+	else if (id == ButtonId::AddPeer)
+	{
+		mtBI::AddPeerRequest request;
+		memcpy(request.hash, hash, 20);
+		request.addr = getStringPtr(param);
+
+		IoctlFunc(mtBI::MessageId::AddPeer, &request, nullptr);
 	}
 	else if (id == ButtonId::TorrentDoubleClick)
 	{
@@ -344,25 +368,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 	}
 	else if (id == ButtonId::TorrentGrid)
 	{
-		if (GuiLite::MainForm::instance->getGrid()->SelectedRows->Count == 0)
-		{
-			setSelected(false);
-		}
-		else
-		{
-			setSelected(true);
-
-			auto idStr = (String^)GuiLite::MainForm::instance->getGrid()->SelectedRows[0]->Cells[0]->Value;
-			auto stdStr = msclr::interop::marshal_as<std::string>(idStr);
-			uint8_t selectedHash[20];
-			decodeHexa(stdStr, selectedHash);
-
-			if (memcmp(hash, selectedHash, 20) != 0)
-			{
-				memcpy(hash, selectedHash, 20);
-				selectionChanged = true;
-			}
-		}
+		refreshSelection();
 	}
 	else if (id == ButtonId::Start)
 	{
@@ -515,6 +521,7 @@ void adjustGridRowsCount(System::Windows::Forms::DataGridView^ grid, int count)
 	}
 }
 
+bool lastInfoIncomplete = false;
 int RefreshTimeCounter = 0;
 void refreshUi()
 {
@@ -663,8 +670,21 @@ void refreshUi()
 				};
 
 				torrentGrid->Rows[i]->SetValues(row);
+
+				if (memcmp(t.hash, hash, 20) == 0)
+				{
+					if (lastInfoIncomplete && !info.utmActive)
+						selectionChanged = true;
+
+					lastInfoIncomplete = info.utmActive;
+				}
 			}
 		}
+	}
+
+	if (torrents.count && !selected)
+	{
+		refreshSelection();
 	}
 
 	mtBI::TorrentPeersInfo peers;
