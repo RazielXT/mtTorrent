@@ -39,6 +39,7 @@ private:
 		void reset();
 	};
 
+	std::mutex respondingMutex;
 	std::mutex responsesMutex;
 	std::vector<std::shared_ptr<ResponseRetryInfo>> pendingResponses;
 	void addPendingResponse(DataBuffer& data, UdpRequest target, UdpResponseCallback response, uint32_t timeout = 1);

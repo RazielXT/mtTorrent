@@ -86,7 +86,8 @@ void UdpAsyncComm::sendMessage(DataBuffer& data, udp::endpoint& endpoint)
 
 void UdpAsyncComm::removeCallback(UdpRequest target)
 {
-	std::lock_guard<std::mutex> guard(responsesMutex);
+	std::lock_guard<std::mutex> guard(respondingMutex);
+	std::lock_guard<std::mutex> guard2(responsesMutex);
 
 	for(auto it = pendingResponses.begin(); it != pendingResponses.end(); it++)
 	{
@@ -136,6 +137,8 @@ void UdpAsyncComm::onUdpReceive(udp::endpoint& source, DataBuffer& data)
 {
 	std::vector<std::shared_ptr<ResponseRetryInfo>> foundPendingResponses;
 
+	std::lock_guard<std::mutex> guard(respondingMutex);
+
 	{
 		std::lock_guard<std::mutex> guard(responsesMutex);
 
@@ -179,6 +182,8 @@ void UdpAsyncComm::onUdpReceive(udp::endpoint& source, DataBuffer& data)
 void UdpAsyncComm::onUdpClose(UdpRequest source)
 {
 	std::vector<std::shared_ptr<ResponseRetryInfo>> foundPendingResponses;
+
+	std::lock_guard<std::mutex> guard(respondingMutex);
 
 	{
 		std::lock_guard<std::mutex> guard(responsesMutex);
