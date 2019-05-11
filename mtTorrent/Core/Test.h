@@ -19,7 +19,7 @@ public:
 	{
 	}
 
-	virtual void progressUpdated(mtt::PeerCommunication*) override
+	virtual void progressUpdated(mtt::PeerCommunication*, uint32_t) override
 	{
 	}
 

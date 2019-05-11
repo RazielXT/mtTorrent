@@ -2,7 +2,7 @@
 #include <sstream>
 #include <mutex>
 
-#ifdef DEBUG
+#ifdef _DEBUG
 #define BT_LOGFILE
 #endif // DEBUG
 

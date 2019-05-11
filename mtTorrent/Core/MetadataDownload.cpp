@@ -63,7 +63,11 @@ void mtt::MetadataDownload::stop()
 		onUpdate(Status::I_Stopped, state);
 
 	active = false;
-	activeComms.clear();
+	{
+		std::lock_guard<std::mutex> guard(commsMutex);
+		activeComms.clear();
+	}
+
 	peers.stop();
 }
 
@@ -143,24 +147,26 @@ void mtt::MetadataDownload::messageReceived(PeerCommunication* p, PeerMessage& m
 
 void mtt::MetadataDownload::metadataPieceReceived(PeerCommunication* p, ext::UtMetadata::Message& msg)
 {
-	std::lock_guard<std::mutex> guard(commsMutex);
-	addEventLog(p->info.id, EventInfo::Receive, msg.piece);
-	//BT_UTM_LOG("received piece idx " << msg.piece);
-	metadata.addPiece(msg.metadata, msg.piece);
-	state.partsCount = metadata.pieces;
-	state.receivedParts++;
-
-	if (metadata.finished() && active)
 	{
-		state.finished = true;
-	}
-	else
-	{
-		auto peer = peers.getPeer(p);
+		std::lock_guard<std::mutex> guard(commsMutex);
+		addEventLog(p->info.id, EventInfo::Receive, msg.piece);
+		//BT_UTM_LOG("received piece idx " << msg.piece);
+		metadata.addPiece(msg.metadata, msg.piece);
+		state.partsCount = metadata.pieces;
+		state.receivedParts++;
 
-		if (peer)
+		if (metadata.finished() && active)
 		{
-			requestPiece(peer);
+			state.finished = true;
+		}
+		else
+		{
+			auto peer = peers.getPeer(p);
+
+			if (peer)
+			{
+				requestPiece(peer);
+			}
 		}
 	}
 
@@ -184,7 +190,7 @@ void mtt::MetadataDownload::pexReceived(PeerCommunication*, ext::PeerExchange::M
 {
 }
 
-void mtt::MetadataDownload::progressUpdated(PeerCommunication*)
+void mtt::MetadataDownload::progressUpdated(PeerCommunication*, uint32_t)
 {
 }
 

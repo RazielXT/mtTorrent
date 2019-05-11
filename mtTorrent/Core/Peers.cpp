@@ -459,14 +459,11 @@ void mtt::Peers::PeersListener::pexReceived(mtt::PeerCommunication* p, mtt::ext:
 		target->pexReceived(p, msg);
 }
 
-void mtt::Peers::PeersListener::progressUpdated(mtt::PeerCommunication* p)
+void mtt::Peers::PeersListener::progressUpdated(mtt::PeerCommunication* p, uint32_t idx)
 {
-	//if (auto active = peers.getActivePeer(p))
-	//	peers.knownPeers[active->idx].info.percentage = active->comm->info.pieces.getPercentage();
-
 	std::lock_guard<std::mutex> guard(mtx);
 	if (target)
-		target->progressUpdated(p);
+		target->progressUpdated(p, idx);
 }
 
 void mtt::Peers::PeersListener::setTarget(mtt::IPeerListener* t)

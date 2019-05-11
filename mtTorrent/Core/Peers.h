@@ -106,7 +106,7 @@ namespace mtt
 			virtual void extHandshakeFinished(mtt::PeerCommunication*) override;
 			virtual void metadataPieceReceived(mtt::PeerCommunication*, mtt::ext::UtMetadata::Message&) override;
 			virtual void pexReceived(mtt::PeerCommunication*, mtt::ext::PeerExchange::Message&) override;
-			virtual void progressUpdated(mtt::PeerCommunication*) override;
+			virtual void progressUpdated(mtt::PeerCommunication*, uint32_t) override;
 			void setTarget(mtt::IPeerListener*);
 
 		private:
