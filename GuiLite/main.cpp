@@ -522,7 +522,7 @@ void adjustGridRowsCount(System::Windows::Forms::DataGridView^ grid, int count)
 }
 
 bool lastInfoIncomplete = false;
-int RefreshTimeCounter = 0;
+int RefreshTimeCounter = 10;
 void refreshUi()
 {
 	if (!IoctlFunc)
