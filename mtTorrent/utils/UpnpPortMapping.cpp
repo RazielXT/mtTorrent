@@ -96,6 +96,15 @@ void UpnpPortMapping::mapPort(const std::string& gateway, const std::string& cli
 	auto streamPtr = stream.get();
 	auto upnpState = state;
 
+	DataBuffer buffer;
+	buffer.assign(httpHeader.begin(), httpHeader.end());
+	buffer.insert(buffer.end(), request.begin(), request.end());
+
+	stream->onConnectCallback = [streamPtr, buffer]()
+	{
+		streamPtr->write(buffer);
+	};
+
 	stream->onReceiveCallback = [streamPtr, upnpState, gateway, port, type]()
 	{
 		auto data = streamPtr->getReceivedData();
@@ -135,11 +144,6 @@ void UpnpPortMapping::mapPort(const std::string& gateway, const std::string& cli
 		}
 	};
 
-	DataBuffer buffer;
-	buffer.assign(httpHeader.begin(), httpHeader.end());
-	buffer.insert(buffer.end(), request.begin(), request.end());
-
-	stream->prepareWrite(buffer);
 	stream->connect(gateway, 1900);
 }
 
@@ -181,6 +185,15 @@ void UpnpPortMapping::unmapPort(const std::string& gateway, uint16_t port, PortT
 	auto streamPtr = stream.get();
 	state->pendingRequests.push_back(stream);
 	auto upnpState = state;
+
+	DataBuffer buffer;
+	buffer.assign(httpHeader.begin(), httpHeader.end());
+	buffer.insert(buffer.end(), request.begin(), request.end());
+
+	stream->onConnectCallback = [streamPtr, buffer]()
+	{
+		streamPtr->write(buffer);
+	};
 
 	stream->onReceiveCallback = [streamPtr, upnpState, gateway, port, type]()
 	{
@@ -228,11 +241,6 @@ void UpnpPortMapping::unmapPort(const std::string& gateway, uint16_t port, PortT
 		}
 	};
 
-	DataBuffer buffer;
-	buffer.assign(httpHeader.begin(), httpHeader.end());
-	buffer.insert(buffer.end(), request.begin(), request.end());
-
-	stream->prepareWrite(buffer);
 	stream->connect(gateway, 1900);
 }
 

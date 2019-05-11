@@ -28,7 +28,6 @@ public:
 	void close();
 
 	void write(const DataBuffer& data);
-	void prepareWrite(const DataBuffer& data);
 
 	DataBuffer getReceivedData();
 	void consumeData(size_t size);
@@ -55,7 +54,6 @@ protected:
 	void handle_connect(const boost::system::error_code& err);
 	void do_close();
 
-	void check_write();
 	void do_write(DataBuffer data);
 	std::mutex write_msgs_mutex;
 	std::deque<DataBuffer> write_msgs;
@@ -85,4 +83,5 @@ protected:
 	info;
 
 	int32_t timeout = 15;
+	bool writing = false;
 };

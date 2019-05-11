@@ -75,13 +75,6 @@ void TcpAsyncStream::write(const DataBuffer& data)
 	io_service.post(std::bind(&TcpAsyncStream::do_write, this, data));
 }
 
-void TcpAsyncStream::prepareWrite(const DataBuffer& data)
-{
-	std::lock_guard<std::mutex> guard(write_msgs_mutex);
-
-	write_msgs.push_back(data);
-}
-
 DataBuffer TcpAsyncStream::getReceivedData()
 {
 	std::lock_guard<std::mutex> guard(receiveBuffer_mutex);
@@ -130,8 +123,6 @@ void TcpAsyncStream::setAsConnected()
 	info.endpointInitialized = true;
 
 	socket.async_receive(boost::asio::buffer(recv_buffer), std::bind(&TcpAsyncStream::handle_receive, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
-
-	check_write();
 
 	{
 		std::lock_guard<std::mutex> guard(callbackMutex);
@@ -221,18 +212,6 @@ void TcpAsyncStream::do_close()
 	postFail("Close", boost::system::error_code());
 }
 
-void TcpAsyncStream::check_write()
-{
-	std::lock_guard<std::mutex> guard(write_msgs_mutex);
-
-	if (!write_msgs.empty())
-	{
-		boost::asio::async_write(socket,
-			boost::asio::buffer(write_msgs.front().data(), write_msgs.front().size()),
-			std::bind(&TcpAsyncStream::handle_write, shared_from_this(), std::placeholders::_1));
-	}
-}
-
 void TcpAsyncStream::do_write(DataBuffer data)
 {
 	std::lock_guard<std::mutex> guard(write_msgs_mutex);
@@ -272,6 +251,7 @@ void TcpAsyncStream::handle_write(const boost::system::error_code& error)
 		std::lock_guard<std::mutex> guard(write_msgs_mutex);
 
 		write_msgs.pop_front();
+
 		if (!write_msgs.empty())
 		{
 			boost::asio::async_write(socket,
