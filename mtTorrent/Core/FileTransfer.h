@@ -26,7 +26,7 @@ namespace mtt
 		virtual void extHandshakeFinished(PeerCommunication*) override;
 		virtual void metadataPieceReceived(PeerCommunication*, ext::UtMetadata::Message&) override;
 		virtual void pexReceived(PeerCommunication*, ext::PeerExchange::Message&) override;
-		virtual void progressUpdated(PeerCommunication*) override;
+		virtual void progressUpdated(PeerCommunication*, uint32_t) override;
 
 		size_t getDownloadSpeed();
 		size_t getUploadSum();
@@ -44,6 +44,8 @@ namespace mtt
 		std::vector<ActivePeerInfo> getPeersInfo();
 
 	private:
+
+		std::vector<uint32_t> piecesAvailability;
 
 		std::vector<ActivePeer> activePeers;
 		std::mutex peersMutex;

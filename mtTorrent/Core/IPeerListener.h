@@ -18,6 +18,6 @@ namespace mtt
 		virtual void extHandshakeFinished(PeerCommunication*) = 0;
 		virtual void metadataPieceReceived(PeerCommunication*, ext::UtMetadata::Message&) = 0;
 		virtual void pexReceived(PeerCommunication*, ext::PeerExchange::Message&) = 0;
-		virtual void progressUpdated(PeerCommunication*) = 0;
+		virtual void progressUpdated(PeerCommunication*, uint32_t) = 0;
 	};
 }

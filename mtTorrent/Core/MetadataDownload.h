@@ -50,7 +50,7 @@ namespace mtt
 		virtual void extHandshakeFinished(PeerCommunication*) override;
 		virtual void metadataPieceReceived(PeerCommunication*, ext::UtMetadata::Message&) override;
 		virtual void pexReceived(PeerCommunication*, ext::PeerExchange::Message&) override;
-		virtual void progressUpdated(PeerCommunication*) override;
+		virtual void progressUpdated(PeerCommunication*, uint32_t) override;
 
 		void requestPiece(std::shared_ptr<PeerCommunication> peer);
 		bool active = false;

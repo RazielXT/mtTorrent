@@ -42,8 +42,12 @@ namespace mtt
 		void evaluateNextRequests(ActivePeer*);
 
 		void reset();
+		void sortPriorityByAvailability(std::vector<uint32_t>& availability);
 
 	private:
+
+		std::vector<uint32_t> piecesPriority;
+		std::mutex priorityMutex;
 
 		struct RequestInfo
 		{

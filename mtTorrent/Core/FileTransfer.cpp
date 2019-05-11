@@ -23,6 +23,9 @@ mtt::FileTransfer::FileTransfer(TorrentPtr t) : downloader(t), uploader(t), torr
 
 void mtt::FileTransfer::start()
 {
+	piecesAvailability.resize(torrent->infoFile.info.pieces.size());
+	downloader.reset();
+
 	torrent->peers->start([this](Status s, mtt::PeerSource)
 		{
 			if (s == Status::Success)
@@ -134,8 +137,20 @@ void mtt::FileTransfer::pexReceived(PeerCommunication*, ext::PeerExchange::Messa
 {
 }
 
-void mtt::FileTransfer::progressUpdated(PeerCommunication* p)
+void mtt::FileTransfer::progressUpdated(PeerCommunication* p, uint32_t idx)
 {
+	if (idx != -1)
+		piecesAvailability[idx]++;
+	else
+	{
+		auto& peerPieces = p->info.pieces.pieces;
+
+		for(size_t i = 0; i < piecesAvailability.size(); i++)
+		{
+			piecesAvailability[i] += peerPieces[i] ? 1 : 0;
+		}
+	}
+
 	evaluateNextRequests(p);
 }
 
@@ -357,4 +372,7 @@ void mtt::FileTransfer::updateMeasures()
 	}
 	freshPieces.clear();
 	lastSpeedMeasure = currentMeasure;
+
+	if (!torrent->selectionFinished())
+		downloader.sortPriorityByAvailability(piecesAvailability);
 }

@@ -3,6 +3,7 @@
 #include "Torrent.h"
 #include "utils/HexEncoding.h"
 #include "Configuration.h"
+#include <numeric>
 
 #define DL_LOG(x) WRITE_LOG(LogTypeDownload, x)
 
@@ -20,8 +21,27 @@ mtt::Downloader::Downloader(TorrentPtr t)
 
 void mtt::Downloader::reset()
 {
-	std::lock_guard<std::mutex> guard(requestsMutex);
-	requests.clear();
+	{
+		std::lock_guard<std::mutex> guard(requestsMutex);
+		requests.clear();
+	}
+
+	{
+		std::lock_guard<std::mutex> guard(priorityMutex);
+
+		piecesPriority.resize(torrent->infoFile.info.pieces.size());
+		std::iota(piecesPriority.begin(), piecesPriority.end(), 0);
+	}
+}
+
+void mtt::Downloader::sortPriorityByAvailability(std::vector<uint32_t>& availability)
+{
+	std::lock_guard<std::mutex> guard(priorityMutex);
+
+	std::iota(piecesPriority.begin(), piecesPriority.end(), 0);
+
+	std::sort(piecesPriority.begin(), piecesPriority.end(),
+		[&availability](uint32_t i1, uint32_t i2) {return availability[i1] < availability[i2]; });
 }
 
 mtt::Downloader::PieceStatus mtt::Downloader::pieceBlockReceived(PieceBlock& block)
@@ -133,7 +153,9 @@ std::vector<uint32_t> mtt::Downloader::getBestNextPieces(ActivePeer* p)
 	std::vector<uint32_t> out;
 	std::vector<uint32_t> requestedElsewhere;
 
-	for(uint32_t idx = 0; idx < p->comm->info.pieces.pieces.size(); idx++)
+	std::lock_guard<std::mutex> guard(priorityMutex);
+
+	for(auto idx : piecesPriority)
 	{
 		if (p->comm->info.pieces.pieces[idx])
 		{
