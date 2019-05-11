@@ -72,7 +72,7 @@ void TcpAsyncStream::close()
 
 void TcpAsyncStream::write(const DataBuffer& data)
 {
-	io_service.post(std::bind(&TcpAsyncStream::do_write, this, data));
+	io_service.post(std::bind(&TcpAsyncStream::do_write, shared_from_this(), data));
 }
 
 DataBuffer TcpAsyncStream::getReceivedData()
