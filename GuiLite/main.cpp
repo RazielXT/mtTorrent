@@ -611,6 +611,8 @@ void refreshUi()
 
 			if (IoctlFunc(mtBI::MessageId::GetTorrentStateInfo, t.hash, &info) == mtt::Status::Success)
 			{
+				bool isSelected = (memcmp(t.hash, hash, 20) == 0);
+
 				String^ activeStatus;
 				if (info.activeStatus != mtt::Status::Success)
 				{
@@ -624,7 +626,7 @@ void refreshUi()
 				else
 					activeStatus = "Active";
 
-				if (t.active)
+				if (isSelected && t.active)
 					updateSpeedChart((info.downloadSpeed / 1024.f) / 1024.f, (info.uploadSpeed / 1024.f) / 1024.f);
 
 				String^ speedInfo = float((info.downloadSpeed / 1024.f) / 1024.f).ToString("F");
@@ -671,7 +673,7 @@ void refreshUi()
 
 				torrentGrid->Rows[i]->SetValues(row);
 
-				if (memcmp(t.hash, hash, 20) == 0)
+				if(isSelected)
 				{
 					if (lastInfoIncomplete && !info.utmActive)
 						selectionChanged = true;
