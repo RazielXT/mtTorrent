@@ -66,7 +66,6 @@ namespace mtt
 		};
 		std::vector<ActivePeer> activeConnections;
 		mtt::Peers::KnownPeer* mtt::Peers::getKnownPeer(PeerCommunication* p);
-		mtt::Peers::KnownPeer* mtt::Peers::getKnownPeer(mtt::Peers::ActivePeer* p);
 		mtt::Peers::ActivePeer* mtt::Peers::getActivePeer(PeerCommunication* p);
 
 		TrackerInfo pexInfo;

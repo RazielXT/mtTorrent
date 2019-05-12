@@ -342,12 +342,10 @@ mtt::Peers::ActivePeer* mtt::Peers::getActivePeer(PeerCommunication* p)
 
 mtt::Peers::KnownPeer* mtt::Peers::getKnownPeer(PeerCommunication* p)
 {
-	return &knownPeers[getActivePeer(p)->idx];
-}
-
-mtt::Peers::KnownPeer* mtt::Peers::getKnownPeer(ActivePeer* p)
-{
-	return &knownPeers[p->idx];
+	if (auto peer = getActivePeer(p))
+		return &knownPeers[peer->idx];
+	else
+		return nullptr;
 }
 
 bool mtt::Peers::KnownPeer::operator==(const Addr& r)
@@ -423,8 +421,11 @@ mtt::Peers::PeersListener::PeersListener(Peers& p) : peers(p)
 
 void mtt::Peers::PeersListener::handshakeFinished(mtt::PeerCommunication* p)
 {
-	if (auto peer = peers.getKnownPeer(p))
-		peer->lastQuality = Peers::PeerQuality::Normal;
+	{
+		std::lock_guard<std::mutex> guard(peers.peersMutex);
+		if (auto peer = peers.getKnownPeer(p))
+			peer->lastQuality = Peers::PeerQuality::Normal;
+	}
 
 	std::lock_guard<std::mutex> guard(mtx);
 	if (target)
