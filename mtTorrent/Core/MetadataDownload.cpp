@@ -170,10 +170,12 @@ void mtt::MetadataDownload::metadataPieceReceived(PeerCommunication* p, ext::UtM
 		}
 	}
 
-	onUpdate(Status::Success, state);
-
-	if(state.finished)
+	if (state.finished)
+	{
 		stop();
+	}
+
+	onUpdate(Status::Success, state);
 }
 
 void mtt::MetadataDownload::extHandshakeFinished(PeerCommunication* peer)
