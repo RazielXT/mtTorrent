@@ -66,7 +66,8 @@ void mtt::IncomingPeersListener::stop()
 {
 	upnp->unmapAllMappedAdapters();
 
-	listener->stop();
+	if (listener)
+		listener->stop();
 
 	std::lock_guard<std::mutex> guard(peersMutex);
 	pendingPeers.clear();
@@ -77,7 +78,16 @@ void mtt::IncomingPeersListener::createListener()
 	if (listener)
 		listener->stop();
 
-	listener = std::make_shared<TcpAsyncServer>(pool.io, mtt::config::getExternal().connection.tcpPort, false);
+	try
+	{
+		listener = std::make_shared<TcpAsyncServer>(pool.io, mtt::config::getExternal().connection.tcpPort, false);
+	}
+	catch (const boost::system::system_error&)
+	{
+		listener = nullptr;
+		return;
+	}
+
 	listener->acceptCallback = [this](std::shared_ptr<TcpAsyncStream> c)
 	{
 		auto sPtr = c.get();
