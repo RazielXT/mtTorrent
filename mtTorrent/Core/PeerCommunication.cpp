@@ -368,7 +368,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 
 	if (message.id == Bitfield)
 	{
-		info.pieces.fromBitfield(message.bitfield, torrent.pieces.size());
+		info.pieces.fromBitfield(message.bitfield);
 
 		BT_LOG("new percentage: " << std::to_string(info.pieces.getPercentage()));
 		LOG_MGS("Received progress: " << info.pieces.getPercentage());

@@ -221,6 +221,17 @@ uint32_t mtt::Peers::receivedCount()
 	return (uint32_t)knownPeers.size();
 }
 
+void mtt::Peers::reloadTorrentInfo()
+{
+	std::lock_guard<std::mutex> guard(peersMutex);
+
+	for (auto& peer : activeConnections)
+	{
+		if (peer.comm->state.finishedHandshake)
+			peer.comm->info.pieces.resize(torrent->infoFile.info.pieces.size());
+	}
+}
+
 uint32_t mtt::Peers::updateKnownPeers(std::vector<Addr>& peers, PeerSource source)
 {
 	std::vector<uint32_t> accepted;

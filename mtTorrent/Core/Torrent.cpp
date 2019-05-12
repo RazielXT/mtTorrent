@@ -112,6 +112,7 @@ void mtt::Torrent::downloadMetadata(std::function<void(Status, MetadataDownloadS
 		if (s == Status::Success && state.finished)
 		{
 			infoFile.info = utmDl->metadata.getRecontructedInfo();
+			peers->reloadTorrentInfo();
 			init();
 		}
 

@@ -36,7 +36,6 @@ void mtt::PiecesProgress::recheckPieces()
 
 			if (p & HasFlag)
 				selectedReceivedPiecesCount++;
-
 		}
 	}
 }
@@ -45,12 +44,27 @@ void mtt::PiecesProgress::init(size_t size)
 {
 	receivedPiecesCount = 0;
 	selectedReceivedPiecesCount = 0;
-
-	if(pieces.empty())
-		selectedPieces = size;
+	selectedPieces = size;
 
 	if (pieces.size() < size)
+	{
 		pieces.resize(size, 0);
+	}
+}
+
+void mtt::PiecesProgress::resize(size_t size)
+{
+	if (pieces.size() != size)
+	{
+		auto previous = std::move(pieces);
+		pieces.clear();
+		pieces.resize(size);
+
+		if(!previous.empty())
+			memcpy(pieces.data(), previous.data(), std::min(size, previous.size()));
+
+		recheckPieces();
+	}
 }
 
 void mtt::PiecesProgress::removeReceived()
@@ -103,7 +117,7 @@ void mtt::PiecesProgress::select(DownloadSelection& selection)
 void mtt::PiecesProgress::addPiece(uint32_t index)
 {
 	if (index >= pieces.size())
-		init(index + 1);
+		resize(index + 1);
 
 	if (!hasPiece(index))
 	{
@@ -141,11 +155,13 @@ uint32_t mtt::PiecesProgress::firstEmptyPiece()
 	return -1;
 }
 
-void mtt::PiecesProgress::fromBitfield(DataBuffer& bitfield, size_t piecesCount)
+void mtt::PiecesProgress::fromBitfield(DataBuffer& bitfield)
 {
-	init(piecesCount);
+	size_t maxPiecesCount = pieces.empty() ? bitfield.size() * 8 : pieces.size();
 
-	for (int i = 0; i < piecesCount; i++)
+	init(maxPiecesCount);
+
+	for (int i = 0; i < maxPiecesCount; i++)
 	{
 		size_t idx = static_cast<size_t>(i / 8.0f);
 		unsigned char bitmask = 128 >> i % 8;

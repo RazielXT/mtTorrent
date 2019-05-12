@@ -34,6 +34,8 @@ namespace mtt
 		uint32_t connectedCount();
 		uint32_t receivedCount();
 
+		void reloadTorrentInfo();
+
 	private:
 
 		PeersUpdateCallback updateCallback;

@@ -7,10 +7,11 @@ namespace mtt
 	{
 		void recheckPieces();
 		void init(size_t size);
+		void resize(size_t size);
 		void removeReceived();
 
 		void select(DownloadSelection& selection);
-		void fromBitfield(DataBuffer& bitfield, size_t piecesCount);
+		void fromBitfield(DataBuffer& bitfield);
 		void fromList(std::vector<uint8_t>& pieces);
 		DataBuffer toBitfield();
 
