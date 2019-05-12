@@ -145,7 +145,8 @@ void mtt::Downloader::evaluateNextRequests(ActivePeer* peer)
 		}
 	}
 
-	sendPieceRequests(peer);
+	if (!peer->requestedPieces.empty())
+		sendPieceRequests(peer);
 }
 
 std::vector<uint32_t> mtt::Downloader::getBestNextPieces(ActivePeer* p)

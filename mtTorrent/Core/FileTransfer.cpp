@@ -260,7 +260,7 @@ void mtt::FileTransfer::removePeer(PeerCommunication * p)
 
 void mtt::FileTransfer::evaluateCurrentPeers()
 {
-	if (activePeers.size() < mtt::config::getExternal().connection.maxTorrentConnections)
+	if (activePeers.size() < mtt::config::getExternal().connection.maxTorrentConnections && !torrent->selectionFinished())
 		torrent->peers->connectNext(10);
 }
 
