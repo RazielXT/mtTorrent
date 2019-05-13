@@ -46,6 +46,7 @@ namespace mtBI
 		GetTorrentFilesSelection, //SourceId, TorrentFilesSelection
 		SetTorrentFilesSelection, //TorrentFilesSelectionRequest, null
 		AddPeer,	//AddPeerRequest, null
+		GetPiecesProgress, //uint8_t[20], PiecesProgress
 	};
 
 	struct SourceId
@@ -62,6 +63,13 @@ namespace mtBI
 		string directory;
 		uint32_t maxConnections;
 		bool upnpEnabled;
+	};
+
+	struct PiecesProgress
+	{
+		uint32_t bitfieldSize;
+		uint32_t piecesCount;
+		std::vector<uint8_t> bitfield;
 	};
 
 	struct MagnetLinkProgress

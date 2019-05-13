@@ -73,7 +73,8 @@ namespace GuiLite {
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ peerSource;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ peerCountry;
 	public: System::Windows::Forms::Button^ buttonRemove;
-	private:
+	public: System::Windows::Forms::TabPage^ progressTabPage;
+	public: System::Windows::Forms::DataVisualization::Charting::Chart^ pieceChart;
 
 	public:
 
@@ -157,6 +158,12 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			System::Windows::Forms::DataVisualization::Charting::Legend^ legend1 = (gcnew System::Windows::Forms::DataVisualization::Charting::Legend());
 			System::Windows::Forms::DataVisualization::Charting::Series^ series1 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
 			System::Windows::Forms::DataVisualization::Charting::Series^ series2 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
+			System::Windows::Forms::DataVisualization::Charting::ChartArea^ chartArea2 = (gcnew System::Windows::Forms::DataVisualization::Charting::ChartArea());
+			System::Windows::Forms::DataVisualization::Charting::Series^ series3 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
+			System::Windows::Forms::DataVisualization::Charting::DataPoint^ dataPoint1 = (gcnew System::Windows::Forms::DataVisualization::Charting::DataPoint(2,
+				1));
+			System::Windows::Forms::DataVisualization::Charting::DataPoint^ dataPoint2 = (gcnew System::Windows::Forms::DataVisualization::Charting::DataPoint(3,
+				1));
 			this->splitContainer1 = (gcnew System::Windows::Forms::SplitContainer());
 			this->splitContainer2 = (gcnew System::Windows::Forms::SplitContainer());
 			this->buttonRemove = (gcnew System::Windows::Forms::Button());
@@ -200,6 +207,8 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->tabPage3 = (gcnew System::Windows::Forms::TabPage());
 			this->panel1 = (gcnew System::Windows::Forms::Panel());
 			this->dlSpeedChart = (gcnew System::Windows::Forms::DataVisualization::Charting::Chart());
+			this->progressTabPage = (gcnew System::Windows::Forms::TabPage());
+			this->pieceChart = (gcnew System::Windows::Forms::DataVisualization::Charting::Chart());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->splitContainer1))->BeginInit();
 			this->splitContainer1->Panel1->SuspendLayout();
 			this->splitContainer1->Panel2->SuspendLayout();
@@ -219,6 +228,8 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->tabPage3->SuspendLayout();
 			this->panel1->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->dlSpeedChart))->BeginInit();
+			this->progressTabPage->SuspendLayout();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pieceChart))->BeginInit();
 			this->SuspendLayout();
 			// 
 			// splitContainer1
@@ -465,6 +476,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->TorrentTabs->Controls->Add(this->tabPage2);
 			this->TorrentTabs->Controls->Add(this->sourcesTab);
 			this->TorrentTabs->Controls->Add(this->tabPage3);
+			this->TorrentTabs->Controls->Add(this->progressTabPage);
 			this->TorrentTabs->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->TorrentTabs->Location = System::Drawing::Point(0, 0);
 			this->TorrentTabs->Name = L"TorrentTabs";
@@ -775,6 +787,59 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->dlSpeedChart->TabIndex = 0;
 			this->dlSpeedChart->Text = L"Download speed";
 			// 
+			// progressTabPage
+			// 
+			this->progressTabPage->Controls->Add(this->pieceChart);
+			this->progressTabPage->Location = System::Drawing::Point(4, 25);
+			this->progressTabPage->Name = L"progressTabPage";
+			this->progressTabPage->Padding = System::Windows::Forms::Padding(3);
+			this->progressTabPage->Size = System::Drawing::Size(1331, 200);
+			this->progressTabPage->TabIndex = 4;
+			this->progressTabPage->Text = L"Progress";
+			this->progressTabPage->UseVisualStyleBackColor = true;
+			// 
+			// pieceChart
+			// 
+			this->pieceChart->BorderlineWidth = 0;
+			chartArea2->AxisX->Crossing = -1.7976931348623157E+308;
+			chartArea2->AxisX->Enabled = System::Windows::Forms::DataVisualization::Charting::AxisEnabled::True;
+			chartArea2->AxisX->InterlacedColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(255)),
+				static_cast<System::Int32>(static_cast<System::Byte>(192)), static_cast<System::Int32>(static_cast<System::Byte>(255)));
+			chartArea2->AxisX->Interval = 10;
+			chartArea2->AxisX->IntervalAutoMode = System::Windows::Forms::DataVisualization::Charting::IntervalAutoMode::VariableCount;
+			chartArea2->AxisX->IntervalOffsetType = System::Windows::Forms::DataVisualization::Charting::DateTimeIntervalType::Number;
+			chartArea2->AxisX->IsMarginVisible = false;
+			chartArea2->AxisX->Minimum = 0;
+			chartArea2->AxisY->Crossing = -1.7976931348623157E+308;
+			chartArea2->AxisY->Enabled = System::Windows::Forms::DataVisualization::Charting::AxisEnabled::False;
+			chartArea2->AxisY->Interval = 1;
+			chartArea2->AxisY->IsMarginVisible = false;
+			chartArea2->AxisY->MaximumAutoSize = 1;
+			chartArea2->BackColor = System::Drawing::Color::Silver;
+			chartArea2->BackImageTransparentColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(255)),
+				static_cast<System::Int32>(static_cast<System::Byte>(192)), static_cast<System::Int32>(static_cast<System::Byte>(255)));
+			chartArea2->BackSecondaryColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(192)), static_cast<System::Int32>(static_cast<System::Byte>(255)),
+				static_cast<System::Int32>(static_cast<System::Byte>(255)));
+			chartArea2->BorderWidth = 0;
+			chartArea2->IsSameFontSizeForAllAxes = true;
+			chartArea2->Name = L"ChartArea1";
+			this->pieceChart->ChartAreas->Add(chartArea2);
+			this->pieceChart->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->pieceChart->Location = System::Drawing::Point(3, 3);
+			this->pieceChart->Name = L"pieceChart";
+			this->pieceChart->Palette = System::Windows::Forms::DataVisualization::Charting::ChartColorPalette::Fire;
+			series3->ChartArea = L"ChartArea1";
+			series3->Color = System::Drawing::Color::Blue;
+			series3->CustomProperties = L"PointWidth=2";
+			series3->Name = L"HasSeries";
+			series3->Points->Add(dataPoint1);
+			series3->Points->Add(dataPoint2);
+			this->pieceChart->Series->Add(series3);
+			this->pieceChart->Size = System::Drawing::Size(1325, 194);
+			this->pieceChart->TabIndex = 0;
+			this->pieceChart->Text = L"pieceChart";
+			this->pieceChart->Visible = false;
+			// 
 			// MainForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(8, 16);
@@ -804,6 +869,8 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->tabPage3->ResumeLayout(false);
 			this->panel1->ResumeLayout(false);
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->dlSpeedChart))->EndInit();
+			this->progressTabPage->ResumeLayout(false);
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pieceChart))->EndInit();
 			this->ResumeLayout(false);
 
 		}

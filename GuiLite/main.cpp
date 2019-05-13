@@ -71,6 +71,54 @@ void updateSpeedChart(float dlSpeed, float upSpeed)
 	GuiLite::MainForm::instance->dlSpeedChart->Series["UpSeries"]->Points->AddXY(chartTime, upSpeed);
 }
 
+std::vector<uint8_t> lastBitfield;
+
+void initPiecesChart(uint32_t bitfieldSize, uint32_t pieces)
+{
+	if (lastBitfield.size() != bitfieldSize)
+	{
+		lastBitfield.clear();
+		lastBitfield.resize(bitfieldSize);
+
+		auto chart = GuiLite::MainForm::instance->pieceChart;
+		chart->Visible = true;
+
+		chart->Series["HasSeries"]->Points->Clear();
+		chart->ChartAreas[0]->AxisX->Interval = pieces;
+	}
+}
+
+void updatePiecesChart()
+{
+	mtBI::PiecesProgress progress;
+	if (IoctlFunc(mtBI::MessageId::GetPiecesProgress, &hash, &progress) == mtt::Status::Success && progress.bitfieldSize)
+	{
+		progress.bitfield.resize(progress.bitfieldSize);
+
+		if (IoctlFunc(mtBI::MessageId::GetPiecesProgress, &hash, &progress) == mtt::Status::Success)
+		{
+			initPiecesChart(progress.bitfieldSize, progress.piecesCount);
+			auto chart = GuiLite::MainForm::instance->pieceChart;
+
+			for (int i = 0; i < progress.piecesCount; i++)
+			{
+				size_t idx = static_cast<size_t>(i / 8.0f);
+				unsigned char bitmask = 128 >> i % 8;
+
+				bool value = (progress.bitfield[idx] & bitmask) != 0;
+				bool lastValue = (lastBitfield[idx] & bitmask) != 0;
+
+				if (value && !lastValue)
+				{
+					chart->Series["HasSeries"]->Points->AddXY(i, 1);
+				}
+			}
+
+			lastBitfield = std::move(progress.bitfield);
+		}
+	}
+}
+
 mtBI::TorrentFilesSelection lastSelection;
 
 void updateSelectionFormFooter()
@@ -626,8 +674,13 @@ void refreshUi()
 				else
 					activeStatus = "Active";
 
-				if (isSelected && t.active)
-					updateSpeedChart((info.downloadSpeed / 1024.f) / 1024.f, (info.uploadSpeed / 1024.f) / 1024.f);
+				if (isSelected)
+				{
+					if(t.active)
+						updateSpeedChart((info.downloadSpeed / 1024.f) / 1024.f, (info.uploadSpeed / 1024.f) / 1024.f);
+
+					updatePiecesChart();
+				}
 
 				String^ speedInfo = float((info.downloadSpeed / 1024.f) / 1024.f).ToString("F");
 				if (t.active && info.downloadSpeed > 0 && info.selectionProgress && info.selectionProgress < 1.0f && info.downloaded > 0)

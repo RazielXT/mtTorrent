@@ -175,6 +175,19 @@ extern "C"
 				}
 			}
 		}
+		else if (id == mtBI::MessageId::GetPiecesProgress)
+		{
+			auto torrent = core.getTorrent((const uint8_t*)request);
+			if (!torrent)
+				return mtt::Status::E_InvalidInput;	
+
+			auto resp = (mtBI::PiecesProgress*) output;
+			resp->piecesCount = (uint32_t)torrent->files.progress.pieces.size();
+			resp->bitfieldSize = (uint32_t)torrent->files.progress.getBitfieldSize();
+
+			if(resp->bitfield.size() == resp->bitfieldSize)
+				torrent->files.progress.toBitfield(resp->bitfield);
+		}
 		else if (id == mtBI::MessageId::GetMagnetLinkProgress)
 		{
 			auto torrent = core.getTorrent((const uint8_t*)request);

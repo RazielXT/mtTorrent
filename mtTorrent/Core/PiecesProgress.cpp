@@ -191,17 +191,28 @@ void mtt::PiecesProgress::fromList(std::vector<uint8_t>& piecesList)
 DataBuffer mtt::PiecesProgress::toBitfield()
 {
 	DataBuffer buffer;
-	buffer.resize((size_t)ceil(pieces.size() / 8.0f));
+
+	toBitfield(buffer);
+
+	return buffer;
+}
+
+void mtt::PiecesProgress::toBitfield(DataBuffer& buffer)
+{
+	buffer.resize(getBitfieldSize());
 
 	for (int i = 0; i < pieces.size(); i++)
 	{
-		if(!hasPiece(i))
+		if (!hasPiece(i))
 			continue;
 
 		size_t idx = static_cast<size_t>(i / 8.0f);
 		unsigned char bitmask = 128 >> i % 8;
 		buffer[idx] |= bitmask;
 	}
+}
 
-	return buffer;
+size_t mtt::PiecesProgress::getBitfieldSize()
+{
+	return (size_t)ceil(pieces.size() / 8.0f);
 }

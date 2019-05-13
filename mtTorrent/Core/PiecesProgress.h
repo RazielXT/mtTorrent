@@ -14,6 +14,8 @@ namespace mtt
 		void fromBitfield(DataBuffer& bitfield);
 		void fromList(std::vector<uint8_t>& pieces);
 		DataBuffer toBitfield();
+		void toBitfield(DataBuffer&);
+		size_t getBitfieldSize();
 
 		bool empty();
 		float getPercentage();
