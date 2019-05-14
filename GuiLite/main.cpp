@@ -94,20 +94,25 @@ void updatePiecesChart()
 	if (!GuiLite::MainForm::instance->progressTabPage->Visible)
 		return;
 
-	mtBI::PiecesInfo progress;
+	static mtBI::PiecesInfo progress;
+	progress.requestSize = progress.bitfieldSize = 0;
+	progress.bitfield.clear();
+	progress.requests.clear();
+
+	auto chart = GuiLite::MainForm::instance->pieceChart;
+
 	if (IoctlFunc(mtBI::MessageId::GetPiecesInfo, &hash, &progress) == mtt::Status::Success && progress.bitfieldSize)
 	{
 		progress.bitfield.resize(progress.bitfieldSize);
 
-		if(progress.requestSize)
+		if (progress.requestSize)
 			progress.requests.resize(progress.requestSize);
 
 		if (IoctlFunc(mtBI::MessageId::GetPiecesInfo, &hash, &progress) == mtt::Status::Success)
 		{
 			initPiecesChart(progress.bitfieldSize, progress.piecesCount);
-			auto chart = GuiLite::MainForm::instance->pieceChart;
 
-			for (int i = 0; i < progress.piecesCount; i++)
+			for (uint32_t i = 0; i < progress.piecesCount; i++)
 			{
 				size_t idx = static_cast<size_t>(i / 8.0f);
 				unsigned char bitmask = 128 >> i % 8;
@@ -123,14 +128,16 @@ void updatePiecesChart()
 
 			chart->Series["Request"]->Points->Clear();
 
-			for (int i = 0; i < progress.requestSize; i++)
+			for (uint32_t i = 0; i < progress.requestSize; i++)
 			{
 				chart->Series["Request"]->Points->AddXY(progress.requests[i], 0);
 			}
 
-			lastBitfield = std::move(progress.bitfield);
+			std::swap(progress.bitfield, lastBitfield);
 		}
 	}
+	else
+		chart->Visible = false;
 }
 
 mtBI::TorrentFilesSelection lastSelection;
