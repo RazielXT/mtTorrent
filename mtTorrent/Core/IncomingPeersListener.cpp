@@ -22,7 +22,7 @@ mtt::IncomingPeersListener::IncomingPeersListener(std::function<void(std::shared
 		upnp->mapActiveAdapters(mtt::config::getExternal().connection.udpPort, UpnpPortMapping::PortType::Udp);
 	}
 
-	config::registerOnChangeCallback(config::ValueType::Connection, [this](config::ValueType)
+	config::registerOnChangeCallback(config::ValueType::Connection, [this]()
 		{
 			auto& settings = mtt::config::getExternal().connection;
 

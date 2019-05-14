@@ -13,7 +13,7 @@ namespace mtt
 		Internal internal_;
 
 		std::mutex cbMutex;
-		std::map<int, std::pair<ValueType, std::function<void(ValueType)>>> callbacks;
+		std::map<int, std::pair<ValueType, std::function<void()>>> callbacks;
 		int registerCounter = 1;
 
 		static void triggerChange(ValueType type)
@@ -23,7 +23,7 @@ namespace mtt
 			for (auto cb : callbacks)
 			{
 				if(cb.second.first == type)
-					cb.second.second(type);
+					cb.second.second();
 			}
 		}
 
@@ -73,7 +73,7 @@ namespace mtt
 			}
 		}
 
-		int registerOnChangeCallback(ValueType v, std::function<void(ValueType)> cb)
+		int registerOnChangeCallback(ValueType v, std::function<void()> cb)
 		{
 			std::lock_guard<std::mutex> guard(cbMutex);
 			callbacks[++registerCounter] = { v, cb };

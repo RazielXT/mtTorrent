@@ -61,7 +61,7 @@ namespace mtt
 		void setValues(const External::Dht& val);
 		void setValues(const External::Files& val);
 
-		int registerOnChangeCallback(ValueType, std::function<void(ValueType)>);
+		int registerOnChangeCallback(ValueType, std::function<void()>);
 		void unregisterOnChangeCallback(int);
 
 		void load();

@@ -43,7 +43,7 @@ void mtt::Core::init()
 		torrents.push_back(tPtr);
 	}
 
-	config::registerOnChangeCallback(config::ValueType::Dht, [this](config::ValueType)
+	config::registerOnChangeCallback(config::ValueType::Dht, [this]()
 		{
 			if (mtt::config::getExternal().dht.enable)
 				dht->start();
