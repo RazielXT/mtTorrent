@@ -164,6 +164,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 				1));
 			System::Windows::Forms::DataVisualization::Charting::DataPoint^ dataPoint2 = (gcnew System::Windows::Forms::DataVisualization::Charting::DataPoint(3,
 				1));
+			System::Windows::Forms::DataVisualization::Charting::Series^ series4 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
 			this->splitContainer1 = (gcnew System::Windows::Forms::SplitContainer());
 			this->splitContainer2 = (gcnew System::Windows::Forms::SplitContainer());
 			this->buttonRemove = (gcnew System::Windows::Forms::Button());
@@ -491,7 +492,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->tabPage1->Location = System::Drawing::Point(4, 25);
 			this->tabPage1->Name = L"tabPage1";
 			this->tabPage1->Padding = System::Windows::Forms::Padding(3);
-			this->tabPage1->Size = System::Drawing::Size(1331, 200);
+			this->tabPage1->Size = System::Drawing::Size(1244, 200);
 			this->tabPage1->TabIndex = 0;
 			this->tabPage1->Text = L"General";
 			this->tabPage1->UseVisualStyleBackColor = true;
@@ -519,7 +520,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->torrentInfoLabel->Name = L"torrentInfoLabel";
 			this->torrentInfoLabel->ReadOnly = true;
 			this->torrentInfoLabel->ScrollBars = System::Windows::Forms::ScrollBars::Both;
-			this->torrentInfoLabel->Size = System::Drawing::Size(1325, 194);
+			this->torrentInfoLabel->Size = System::Drawing::Size(1238, 194);
 			this->torrentInfoLabel->TabIndex = 0;
 			// 
 			// tabPage2
@@ -800,8 +801,10 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			// 
 			// pieceChart
 			// 
+			this->pieceChart->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+				| System::Windows::Forms::AnchorStyles::Right));
 			this->pieceChart->BorderlineWidth = 0;
-			chartArea2->AxisX->Crossing = -1.7976931348623157E+308;
+			chartArea2->AxisX->Crossing = 1.7976931348623157E+308;
 			chartArea2->AxisX->Enabled = System::Windows::Forms::DataVisualization::Charting::AxisEnabled::True;
 			chartArea2->AxisX->InterlacedColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(255)),
 				static_cast<System::Int32>(static_cast<System::Byte>(192)), static_cast<System::Int32>(static_cast<System::Byte>(255)));
@@ -810,32 +813,33 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			chartArea2->AxisX->IntervalOffsetType = System::Windows::Forms::DataVisualization::Charting::DateTimeIntervalType::Number;
 			chartArea2->AxisX->IsMarginVisible = false;
 			chartArea2->AxisX->Minimum = 0;
-			chartArea2->AxisY->Crossing = -1.7976931348623157E+308;
+			chartArea2->AxisY->Crossing = 1.7976931348623157E+308;
 			chartArea2->AxisY->Enabled = System::Windows::Forms::DataVisualization::Charting::AxisEnabled::False;
 			chartArea2->AxisY->Interval = 1;
 			chartArea2->AxisY->IsMarginVisible = false;
+			chartArea2->AxisY->Maximum = 1;
 			chartArea2->AxisY->MaximumAutoSize = 1;
+			chartArea2->AxisY->Minimum = 0;
 			chartArea2->BackColor = System::Drawing::Color::Silver;
-			chartArea2->BackImageTransparentColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(255)),
-				static_cast<System::Int32>(static_cast<System::Byte>(192)), static_cast<System::Int32>(static_cast<System::Byte>(255)));
-			chartArea2->BackSecondaryColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(192)), static_cast<System::Int32>(static_cast<System::Byte>(255)),
-				static_cast<System::Int32>(static_cast<System::Byte>(255)));
 			chartArea2->BorderWidth = 0;
 			chartArea2->IsSameFontSizeForAllAxes = true;
 			chartArea2->Name = L"ChartArea1";
 			this->pieceChart->ChartAreas->Add(chartArea2);
-			this->pieceChart->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->pieceChart->Location = System::Drawing::Point(3, 3);
+			this->pieceChart->Location = System::Drawing::Point(3, 25);
 			this->pieceChart->Name = L"pieceChart";
 			this->pieceChart->Palette = System::Windows::Forms::DataVisualization::Charting::ChartColorPalette::Fire;
 			series3->ChartArea = L"ChartArea1";
-			series3->Color = System::Drawing::Color::Blue;
+			series3->Color = System::Drawing::Color::RoyalBlue;
 			series3->CustomProperties = L"PointWidth=2";
 			series3->Name = L"HasSeries";
 			series3->Points->Add(dataPoint1);
 			series3->Points->Add(dataPoint2);
+			series4->ChartArea = L"ChartArea1";
+			series4->Color = System::Drawing::Color::DarkOrange;
+			series4->Name = L"Request";
 			this->pieceChart->Series->Add(series3);
-			this->pieceChart->Size = System::Drawing::Size(1325, 194);
+			this->pieceChart->Series->Add(series4);
+			this->pieceChart->Size = System::Drawing::Size(1325, 53);
 			this->pieceChart->TabIndex = 0;
 			this->pieceChart->Text = L"pieceChart";
 			this->pieceChart->Visible = false;

@@ -44,6 +44,25 @@ void mtt::Downloader::sortPriorityByAvailability(std::vector<uint32_t>& availabi
 		[&availability](uint32_t i1, uint32_t i2) {return availability[i1] < availability[i2]; });
 }
 
+std::vector<uint32_t> mtt::Downloader::getCurrentRequests()
+{
+	std::vector<uint32_t> out;
+
+	std::lock_guard<std::mutex> guard(requestsMutex);
+	for (auto& r : requests)
+	{
+		out.push_back(r.pieceIdx);
+	}
+
+	return out;
+}
+
+uint32_t mtt::Downloader::getCurrentRequestsCount()
+{
+	std::lock_guard<std::mutex> guard(requestsMutex);
+	return (uint32_t) requests.size();
+}
+
 mtt::Downloader::PieceStatus mtt::Downloader::pieceBlockReceived(PieceBlock& block)
 {
 	bool valid = true;

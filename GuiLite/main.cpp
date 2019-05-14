@@ -84,18 +84,25 @@ void initPiecesChart(uint32_t bitfieldSize, uint32_t pieces)
 		chart->Visible = true;
 
 		chart->Series["HasSeries"]->Points->Clear();
+		chart->Series["Request"]->Points->Clear();
 		chart->ChartAreas[0]->AxisX->Interval = pieces;
 	}
 }
 
 void updatePiecesChart()
 {
-	mtBI::PiecesProgress progress;
-	if (IoctlFunc(mtBI::MessageId::GetPiecesProgress, &hash, &progress) == mtt::Status::Success && progress.bitfieldSize)
+	if (!GuiLite::MainForm::instance->progressTabPage->Visible)
+		return;
+
+	mtBI::PiecesInfo progress;
+	if (IoctlFunc(mtBI::MessageId::GetPiecesInfo, &hash, &progress) == mtt::Status::Success && progress.bitfieldSize)
 	{
 		progress.bitfield.resize(progress.bitfieldSize);
 
-		if (IoctlFunc(mtBI::MessageId::GetPiecesProgress, &hash, &progress) == mtt::Status::Success)
+		if(progress.requestSize)
+			progress.requests.resize(progress.requestSize);
+
+		if (IoctlFunc(mtBI::MessageId::GetPiecesInfo, &hash, &progress) == mtt::Status::Success)
 		{
 			initPiecesChart(progress.bitfieldSize, progress.piecesCount);
 			auto chart = GuiLite::MainForm::instance->pieceChart;
@@ -110,8 +117,15 @@ void updatePiecesChart()
 
 				if (value && !lastValue)
 				{
-					chart->Series["HasSeries"]->Points->AddXY(i, 1);
+					chart->Series["HasSeries"]->Points->AddXY(i, 0);
 				}
+			}
+
+			chart->Series["Request"]->Points->Clear();
+
+			for (int i = 0; i < progress.requestSize; i++)
+			{
+				chart->Series["Request"]->Points->AddXY(progress.requests[i], 0);
 			}
 
 			lastBitfield = std::move(progress.bitfield);

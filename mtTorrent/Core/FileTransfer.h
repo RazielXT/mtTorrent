@@ -43,6 +43,9 @@ namespace mtt
 		};
 		std::vector<ActivePeerInfo> getPeersInfo();
 
+		std::vector<uint32_t> getCurrentRequests();
+		uint32_t getCurrentRequestsCount();
+
 	private:
 
 		std::vector<uint32_t> piecesAvailability;

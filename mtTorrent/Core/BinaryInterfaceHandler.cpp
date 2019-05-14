@@ -175,18 +175,33 @@ extern "C"
 				}
 			}
 		}
-		else if (id == mtBI::MessageId::GetPiecesProgress)
+		else if (id == mtBI::MessageId::GetPiecesInfo)
 		{
 			auto torrent = core.getTorrent((const uint8_t*)request);
 			if (!torrent)
 				return mtt::Status::E_InvalidInput;	
 
-			auto resp = (mtBI::PiecesProgress*) output;
+			auto resp = (mtBI::PiecesInfo*) output;
 			resp->piecesCount = (uint32_t)torrent->files.progress.pieces.size();
 			resp->bitfieldSize = (uint32_t)torrent->files.progress.getBitfieldSize();
+			resp->requestSize = (uint32_t)(torrent->fileTransfer ? torrent->fileTransfer->getCurrentRequestsCount() : 0);
 
 			if(resp->bitfield.size() == resp->bitfieldSize)
 				torrent->files.progress.toBitfield(resp->bitfield);
+
+			if (!resp->requests.empty())
+			{
+				auto requests = torrent->fileTransfer->getCurrentRequests();
+				if (resp->requests.size() > requests.size())
+					resp->requests.resize(requests.size());
+
+				for (size_t i = 0; i < resp->requests.size(); i++)
+				{
+					resp->requests[i] = requests[i];
+				}
+
+				resp->requestSize = (uint32_t)resp->requests.size();
+			}
 		}
 		else if (id == mtBI::MessageId::GetMagnetLinkProgress)
 		{
@@ -277,6 +292,8 @@ extern "C"
 					f.name = files[i].info.path.back();
 					f.selected = files[i].selected;
 					f.size = files[i].info.size;
+					f.pieceStart = files[i].info.startPieceIndex;
+					f.pieceEnd = files[i].info.endPieceIndex;
 				}
 			}
 		}

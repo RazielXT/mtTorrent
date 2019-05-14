@@ -203,6 +203,16 @@ std::vector<mtt::FileTransfer::ActivePeerInfo> mtt::FileTransfer::getPeersInfo()
 	return out;
 }
 
+std::vector<uint32_t> mtt::FileTransfer::getCurrentRequests()
+{
+	return downloader.getCurrentRequests();
+}
+
+uint32_t mtt::FileTransfer::getCurrentRequestsCount()
+{
+	return downloader.getCurrentRequestsCount();
+}
+
 mtt::ActivePeer* mtt::FileTransfer::getActivePeer(PeerCommunication* p)
 {
 	for (auto& peer : activePeers)

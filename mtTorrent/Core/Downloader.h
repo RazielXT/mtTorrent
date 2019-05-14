@@ -44,6 +44,9 @@ namespace mtt
 		void reset();
 		void sortPriorityByAvailability(std::vector<uint32_t>& availability);
 
+		std::vector<uint32_t> getCurrentRequests();
+		uint32_t getCurrentRequestsCount();
+
 	private:
 
 		std::vector<uint32_t> piecesPriority;
