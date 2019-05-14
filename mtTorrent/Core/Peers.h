@@ -92,6 +92,8 @@ namespace mtt
 
 			Peers& peers;
 			TorrentPtr torrent;
+
+			int cfgCallbackId = -1;
 		}
 		dht;
 

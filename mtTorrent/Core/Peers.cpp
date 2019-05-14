@@ -364,21 +364,24 @@ void mtt::Peers::DhtSource::start()
 {
 	std::lock_guard<std::mutex> guard(timerMtx);
 
-	dhtRefreshTimer = ScheduledTimer::create(torrent->service.io, [this]
-		{
-			std::lock_guard<std::mutex> guard(timerMtx);
+	auto refreshFunc = [this]
+	{
+		std::lock_guard<std::mutex> guard(timerMtx);
 
-			uint32_t currentTime = (uint32_t)time(0);
-			uint32_t nextUpdate = info.announceInterval;
+		uint32_t currentTime = (uint32_t)time(0);
+		uint32_t nextUpdate = info.announceInterval;
 
-			if (info.nextAnnounce <= currentTime)
-				findPeers();
-			else
-				nextUpdate = info.nextAnnounce - currentTime;
-			
-			dhtRefreshTimer->schedule(nextUpdate);
-		}
-	);
+		if (info.nextAnnounce <= currentTime)
+			findPeers();
+		else
+			nextUpdate = info.nextAnnounce - currentTime;
+
+		dhtRefreshTimer->schedule(nextUpdate);
+	};
+
+	cfgCallbackId = mtt::config::registerOnChangeCallback(config::ValueType::Dht, refreshFunc);
+
+	dhtRefreshTimer = ScheduledTimer::create(torrent->service.io, refreshFunc);
 
 	dhtRefreshTimer->schedule(1);
 }
@@ -390,6 +393,9 @@ void mtt::Peers::DhtSource::stop()
 	if (dhtRefreshTimer)
 		dhtRefreshTimer->disable();
 	dhtRefreshTimer = nullptr;
+
+	mtt::config::unregisterOnChangeCallback(cfgCallbackId);
+	info.nextAnnounce = 0;
 }
 
 void mtt::Peers::DhtSource::findPeers()
