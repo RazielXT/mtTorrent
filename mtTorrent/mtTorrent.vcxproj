@@ -145,13 +145,14 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost_1_68_0;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\include64;$(ProjectDir);$(ProjectDir)\Core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost_1_68_0;$(ProjectDir);$(ProjectDir)\Core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\..\boost_1_68_0\lib64-msvc-14.1;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ssleay32MTd.lib;libeay32MTd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\..\boost_1_68_0\lib64-msvc-14.1;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugStandalone|x64'">
@@ -203,15 +204,16 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost_1_68_0;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\include64;$(ProjectDir);$(ProjectDir)\Core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\boost_1_68_0;$(ProjectDir);$(ProjectDir)\Core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\..\boost_1_68_0\lib64-msvc-14.1;$(ProjectDir)..\..\openssl-1.0.1r-vs2015\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ssleay32MT.lib;libeay32MT.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\..\boost_1_68_0\lib64-msvc-14.1;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release Standalone|x64'">
@@ -270,12 +272,12 @@
     <ClCompile Include="utils\FastIpToCountry.cpp" />
     <ClCompile Include="utils\HttpHeader.cpp" />
     <ClCompile Include="utils\NetAdaptersListWin.cpp" />
+    <ClCompile Include="utils\SHA.cpp" />
     <ClCompile Include="utils\TorrentFileParser.cpp" />
     <ClCompile Include="utils\BencodeParser.cpp" />
     <ClCompile Include="utils\ScheduledTimer.cpp" />
     <ClCompile Include="utils\HexEncoding.cpp" />
     <ClCompile Include="utils\Network.cpp" />
-    <ClCompile Include="utils\RiotRestApi.cpp" />
     <ClCompile Include="utils\ServiceThreadpool.cpp" />
     <ClCompile Include="utils\TcpAsyncServer.cpp" />
     <ClCompile Include="utils\TcpAsyncStream.cpp" />
@@ -327,12 +329,12 @@
     <ClInclude Include="utils\FastIpToCountry.h" />
     <ClInclude Include="utils\HttpHeader.h" />
     <ClInclude Include="utils\NetAdaptersList.h" />
+    <ClInclude Include="utils\SHA.h" />
     <ClInclude Include="utils\TorrentFileParser.h" />
     <ClInclude Include="utils\BencodeParser.h" />
     <ClInclude Include="utils\ScheduledTimer.h" />
     <ClInclude Include="utils\HexEncoding.h" />
     <ClInclude Include="utils\Network.h" />
-    <ClInclude Include="utils\RiotRestApi.h" />
     <ClInclude Include="utils\ServiceThreadpool.h" />
     <ClInclude Include="utils\TcpAsyncServer.h" />
     <ClInclude Include="utils\TcpAsyncStream.h" />

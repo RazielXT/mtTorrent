@@ -3,6 +3,7 @@
 #include <boost/filesystem.hpp>
 #include <iostream>
 #include "utils/ServiceThreadpool.h"
+#include "utils/SHA.h"
 
 mtt::Storage::Storage(TorrentInfo& info)
 {

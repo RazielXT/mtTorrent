@@ -4,6 +4,7 @@
 #include "utils/HexEncoding.h"
 #include "utils/PacketHelper.h"
 #include "utils/BencodeWriter.h"
+#include "utils/SHA.h"
 
 using namespace mtt;
 

@@ -183,7 +183,7 @@ void TorrentTest::testAsyncDhtGetPeers()
 std::string GetClipboardText()
 {
 	std::string text;
-	if (OpenClipboard(nullptr))
+	/*if (OpenClipboard(nullptr))
 	{
 		HANDLE hData = GetClipboardData(CF_TEXT);
 		if (hData)
@@ -195,7 +195,7 @@ std::string GetClipboardText()
 		}
 
 		CloseClipboard();
-	}
+	}*/
 
 	return text;
 }
@@ -620,36 +620,6 @@ void TorrentTest::dhtFindingPeersFinished(uint8_t* hash, uint32_t count)
 	TEST_LOG("DHT final values count :" << count)
 
 		dhtResult.finalCount = count;
-}
-
-void TorrentTest::testGetCountry()
-{
-	// Create a context that uses the default paths for
-	// finding CA certificates.
-	ssl::context ctx(ssl::context::tlsv12);
-	ctx.set_default_verify_paths();
-
-	// Open a socket and connect it to the remote host.
-	boost::asio::io_service io_service;
-	ssl_socket sock(io_service, ctx);
-	tcp::resolver resolver(io_service);
-
-	const char* server = "tools.keycdn.com";
-	const char* req = "https://tools.keycdn.com/geo.json?host=";
-	const char* targetHost = "www.google.com";
-
-	// Form the request. We specify the "Connection: close" header so that the
-	// server will close the socket after transmitting the response. This will
-	// allow us to treat all data up until the EOF as the content.
-	boost::asio::streambuf request;
-	std::ostream request_stream(&request);
-	request_stream << "GET " << req << targetHost << " HTTP/1.1\r\n";
-	request_stream << "Host: " << server << "\r\n";
-	request_stream << "Accept: */*\r\n";
-	request_stream << "Connection: close\r\n\r\n";
-
-	
-	auto message = sendHttpsRequest(sock, resolver, request, server);
 }
 
 void idealGeneralTest()

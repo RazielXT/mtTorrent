@@ -94,9 +94,6 @@
     <ClCompile Include="utils\Network.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="utils\RiotRestApi.cpp">
-      <Filter>Source Files\Utils</Filter>
-    </ClCompile>
     <ClCompile Include="utils\ServiceThreadpool.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
@@ -196,6 +193,9 @@
     <ClCompile Include="utils\BencodeWriter.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="utils\SHA.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Storage.h">
@@ -247,9 +247,6 @@
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="utils\Network.h">
-      <Filter>Source Files\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="utils\RiotRestApi.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="utils\ServiceThreadpool.h">
@@ -361,6 +358,9 @@
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="utils\BencodeWriter.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\SHA.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>

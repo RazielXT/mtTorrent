@@ -1,7 +1,7 @@
 #include "TorrentFileParser.h"
 #include <iostream>
-#include <openssl/sha.h>
 #include <boost/filesystem.hpp>
+#include "SHA.h"
 
 #define TPARSER_LOG(x) WRITE_LOG(LogTypeFileParser, x)
 

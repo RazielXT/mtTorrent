@@ -1,5 +1,3 @@
-//auto data = stream->getReceivedData();
-//PeerMessage msg(data);
 #include "IncomingPeersListener.h"
 #include "Configuration.h"
 #include "utils/TcpAsyncServer.h"

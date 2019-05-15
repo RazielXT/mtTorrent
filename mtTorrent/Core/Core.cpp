@@ -67,6 +67,8 @@ void mtt::Core::deinit()
 	list.saveState();
 
 	mtt::config::save();
+
+	dht.reset();
 }
 
 mtt::TorrentPtr mtt::Core::addFile(const char* filename)
