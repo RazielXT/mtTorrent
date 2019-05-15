@@ -185,11 +185,12 @@ namespace mtBI
 	struct SourceInfo
 	{
 		string name;
-		char status[11];
 		uint32_t peers;
 		uint32_t seeds;
+		uint32_t leechers;
 		uint32_t nextCheck;
 		uint32_t interval;
+		enum : char { Stopped, Ready, Offline, Connecting, Announcing, Announced } status;
 	};
 
 	struct SourcesInfo

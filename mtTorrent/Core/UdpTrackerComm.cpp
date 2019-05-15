@@ -47,7 +47,7 @@ void mtt::UdpTrackerComm::fail()
 	UDP_TRACKER_LOG("fail");
 
 	if (info.state < TrackerState::Connected)
-		info.state = TrackerState::Initialized;
+		info.state = TrackerState::Offline;
 	else if (info.state < TrackerState::Announced)
 		info.state = TrackerState::Connected;
 	else

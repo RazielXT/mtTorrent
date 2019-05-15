@@ -129,7 +129,22 @@ std::vector<std::shared_ptr<mtt::Tracker>> mtt::TrackerManager::getTrackers()
 
 	for (auto& t : trackers)
 	{
-		out.push_back(t.comm);
+		if(t.comm)
+			out.push_back(t.comm);
+	}
+
+	return out;
+}
+
+std::vector<std::string> mtt::TrackerManager::getTrackersList()
+{
+	std::vector<std::string> out;
+
+	std::lock_guard<std::mutex> guard(trackersMutex);
+
+	for (auto& t : trackers)
+	{
+		out.push_back(t.host);
 	}
 
 	return out;

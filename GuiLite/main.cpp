@@ -819,22 +819,42 @@ void refreshUi()
 		for (uint32_t i = 0; i < sources.count; i++)
 		{
 			auto& source = sources.sources[i];
-			auto timeTo = TimeSpan::FromSeconds(source.nextCheck);
-			auto nextStr = timeTo.ToString("T");
+			auto nextCheck = (source.nextCheck == 0) ? gcnew String("") : TimeSpan::FromSeconds(source.nextCheck).ToString("T");
+			char status[11];
 
-			auto sourceRow = gcnew cli::array< System::String^  >(5) {
-				gcnew String(source.name.data), gcnew String(source.status),
-					int(source.peers).ToString(), nextStr, int(source.interval).ToString()
+			if(source.status == mtBI::SourceInfo::Ready)
+				memcpy(status, "Ready", 6);
+			else if (source.status == mtBI::SourceInfo::Connecting)
+				memcpy(status, "Connecting", 11);
+			else if (source.status == mtBI::SourceInfo::Announcing)
+				memcpy(status, "Announcing", 11);
+			else if (source.status == mtBI::SourceInfo::Announced)
+				memcpy(status, "Announced", 10);
+			else if (source.status == mtBI::SourceInfo::Offline)
+				memcpy(status, "Offline", 8);
+			else
+				memcpy(status, "Stopped", 8);
+
+			auto sourceRow = gcnew cli::array< System::String^  >(7) {
+				gcnew String(source.name.data), gcnew String(status),
+					int(source.peers).ToString(), int(source.seeds).ToString(), int(source.leechers).ToString(), nextCheck, int(source.interval).ToString()
 			};
 
-			if (source.status[0] == 0)
+			if (source.status == mtBI::SourceInfo::Stopped)
 			{
 				sourceRow[2] = "";
+				sourceRow[3] = "";
+				sourceRow[4] = "";
+				sourceRow[6] = "";
+			}
+			else if (source.status != mtBI::SourceInfo::Announced)
+			{
+				if(source.peers == 0)
+					sourceRow[2] = "";
+
+				sourceRow[3] = "";
 				sourceRow[4] = "";
 			}
-
-			if (source.nextCheck == 0)
-				sourceRow[3] = "";
 
 			sourcesGrid->Rows[i]->SetValues(sourceRow);
 		}

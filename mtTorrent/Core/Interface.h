@@ -119,7 +119,7 @@ namespace mtt
 		std::vector<Addr> peers;
 	};
 
-	enum class TrackerState { Clear, Initialized, Alive, Connecting, Connected, Announcing, Announced, Reannouncing };
+	enum class TrackerState { Clear, Initialized, Offline, Alive, Connecting, Connected, Announcing, Announced, Reannouncing };
 
 	struct TrackerInfo
 	{

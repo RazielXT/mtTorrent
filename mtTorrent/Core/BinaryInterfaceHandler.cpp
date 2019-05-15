@@ -159,19 +159,22 @@ extern "C"
 					to.name = from.hostname;
 					to.peers = from.peers;
 					to.seeds = from.seeds;
+					to.leechers = from.leechers;
 					to.interval = from.announceInterval;
 					to.nextCheck = from.nextAnnounce < currentTime ? 0 : from.nextAnnounce - currentTime;
 
-					if (from.state == mtt::TrackerState::Connected)
-						memcpy(to.status, "Ready", 6);
+					if (from.state == mtt::TrackerState::Connected || from.state == mtt::TrackerState::Alive)
+						to.status = mtBI::SourceInfo::Ready;
 					else if (from.state == mtt::TrackerState::Connecting)
-						memcpy(to.status, "Connecting", 11);
+						to.status = mtBI::SourceInfo::Connecting;
 					else if (from.state == mtt::TrackerState::Announcing || from.state == mtt::TrackerState::Reannouncing)
-						memcpy(to.status, "Announcing", 11);
+						to.status = mtBI::SourceInfo::Announcing;
 					else if (from.state == mtt::TrackerState::Announced)
-						memcpy(to.status, "Announced", 10);
+						to.status = mtBI::SourceInfo::Announced;
+					else if (from.state == mtt::TrackerState::Offline)
+						to.status = mtBI::SourceInfo::Offline;
 					else
-						to.status[0] = 0;
+						to.status = mtBI::SourceInfo::Stopped;
 				}
 			}
 		}

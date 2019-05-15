@@ -44,7 +44,7 @@ void mtt::HttpTrackerComm::fail()
 		if (info.state == TrackerState::Reannouncing)
 			info.state = TrackerState::Alive;
 		else
-			info.state = TrackerState::Initialized;
+			info.state = TrackerState::Offline;
 
 		if (onFail)
 			onFail();

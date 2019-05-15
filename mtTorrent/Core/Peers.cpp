@@ -10,7 +10,6 @@
 mtt::Peers::Peers(TorrentPtr t) : torrent(t), trackers(t), dht(*this, t), peersListener(*this)
 {
 	pexInfo.hostname = "PEX";
-	pexInfo.state = TrackerState::Connected;
 	trackers.addTrackers(t->infoFile.announceList);
 
 	log.init("peers");
@@ -49,6 +48,8 @@ void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listen
 
 		c.comm->sendKeepAlive();
 	}
+
+	pexInfo.state = TrackerState::Connected;
 }
 
 void mtt::Peers::stop()
@@ -57,6 +58,7 @@ void mtt::Peers::stop()
 	dht.stop();
 	peersListener.setTarget(nullptr);
 	updateCallback = nullptr;
+	pexInfo.state = TrackerState::Clear;
 }
 
 void mtt::Peers::connectNext(uint32_t count)
@@ -181,13 +183,23 @@ std::shared_ptr<mtt::PeerCommunication> mtt::Peers::disconnect(PeerCommunication
 
 std::vector<mtt::TrackerInfo> mtt::Peers::getSourcesInfo()
 {
-	auto tr = trackers.getTrackers();
 	std::vector<mtt::TrackerInfo> out;
+	auto tr = trackers.getTrackers();
 
-	for (auto& t : tr)
+	if(!tr.empty())
+		for (auto& t : tr)
+		{
+			if (t)
+				out.push_back(t->info);
+		}
+	else
 	{
-		if(t)
-			out.push_back(t->info);
+		auto list = trackers.getTrackersList();
+
+		for (auto& name : list)
+		{
+			out.push_back({ name });
+		}
 	}
 
 	out.push_back(pexInfo);
@@ -356,7 +368,6 @@ bool mtt::Peers::KnownPeer::operator==(const Addr& r)
 mtt::Peers::DhtSource::DhtSource(Peers& p, TorrentPtr t) : peers(p), torrent(t)
 {
 	info.hostname = "DHT";
-	info.state = TrackerState::Connected;
 	info.announceInterval = mtt::config::getInternal().dhtPeersCheckInterval;
 }
 
@@ -379,6 +390,8 @@ void mtt::Peers::DhtSource::start()
 		dhtRefreshTimer->schedule(nextUpdate);
 	};
 
+	info.state = TrackerState::Connected;
+
 	cfgCallbackId = mtt::config::registerOnChangeCallback(config::ValueType::Dht, refreshFunc);
 
 	dhtRefreshTimer = ScheduledTimer::create(torrent->service.io, refreshFunc);
@@ -396,6 +409,7 @@ void mtt::Peers::DhtSource::stop()
 
 	mtt::config::unregisterOnChangeCallback(cfgCallbackId);
 	info.nextAnnounce = 0;
+	info.state = TrackerState::Clear;
 }
 
 void mtt::Peers::DhtSource::findPeers()
