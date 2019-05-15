@@ -60,7 +60,7 @@ void UdpAsyncWriter::write(const DataBuffer& data)
 
 void UdpAsyncWriter::write()
 {
-	io_service.post(std::bind(&UdpAsyncWriter::do_rewrite, this));
+	io_service.post(std::bind(&UdpAsyncWriter::do_rewrite, shared_from_this()));
 }
 
 void UdpAsyncWriter::handle_resolve(const boost::system::error_code& error, udp::resolver::iterator iterator, std::shared_ptr<udp::resolver> resolver)
