@@ -21,7 +21,7 @@ typedef mtt::Status(*IOCTL_FUNC)(mtBI::MessageId, const void*,void*);
 IOCTL_FUNC IoctlFunc = nullptr;
 HMODULE lib = nullptr;
 
-
+bool initialized = true;
 bool selected = false;
 uint8_t hash[20];
 bool selectionChanged = false;
@@ -594,7 +594,7 @@ bool lastInfoIncomplete = false;
 int RefreshTimeCounter = 10;
 void refreshUi()
 {
-	if (!IoctlFunc)
+	if (!IoctlFunc || !initialized)
 		return;
 
 	if (magnetLinkSequence > 0)
@@ -918,6 +918,8 @@ void FormsMain(cli::array<System::String ^>^ args)
 	Application::AddMessageFilter(filter);
 
 	Application::Run(%form);
+
+	initialized = false;
 
 	if(IoctlFunc)
 		IoctlFunc(mtBI::MessageId::Deinit, nullptr, nullptr);
