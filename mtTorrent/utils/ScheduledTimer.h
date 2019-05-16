@@ -17,5 +17,5 @@ private:
 
 	void checkTimer();
 	std::function<void()> func;
-	boost::asio::deadline_timer timer;
+	std::unique_ptr<boost::asio::deadline_timer> timer;
 };
