@@ -26,7 +26,7 @@ void TcpAsyncServer::startListening()
 
 void TcpAsyncServer::handle_accept(std::shared_ptr<TcpAsyncStream> connection, const boost::system::error_code& error)
 {
-	if (!error)
+	if (!error && acceptor_.is_open())
 	{
 		connection->setAsConnected();
 

@@ -221,8 +221,12 @@ void mtt::PeerCommunication::connectionClosed(int code)
 		LOG_MGS("Closed code " << code);
 		SerializeLogs();
 	}
-	state.action = PeerCommunicationState::Disconnected;
-	listener.connectionClosed(this, code);
+
+	if (state.action != PeerCommunicationState::Disconnected)
+	{
+		state.action = PeerCommunicationState::Disconnected;
+		listener.connectionClosed(this, code);
+	}
 }
 
 mtt::PeerMessage mtt::PeerCommunication::readNextStreamMessage()
@@ -240,7 +244,7 @@ mtt::PeerMessage mtt::PeerCommunication::readNextStreamMessage()
 
 mtt::PeerCommunication::~PeerCommunication()
 {
-	stream->close();
+	//stream->close();
 }
 
 void mtt::PeerCommunication::setInterested(bool enabled)

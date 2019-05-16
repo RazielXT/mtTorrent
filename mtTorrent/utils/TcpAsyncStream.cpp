@@ -159,6 +159,10 @@ void TcpAsyncStream::postFail(std::string place, const boost::system::error_code
 
 		if (onCloseCallback)
 			onCloseCallback(error.value());
+
+		onConnectCallback = nullptr;
+		onCloseCallback = nullptr;
+		onReceiveCallback = nullptr;
 	}
 }
 

@@ -65,7 +65,10 @@ void mtt::IncomingPeersListener::stop()
 	upnp->unmapAllMappedAdapters();
 
 	if (listener)
+	{
 		listener->stop();
+		listener = nullptr;
+	}
 
 	std::lock_guard<std::mutex> guard(peersMutex);
 	pendingPeers.clear();

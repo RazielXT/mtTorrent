@@ -14,7 +14,7 @@ mtt::TorrentPtr mtt::Torrent::fromFile(std::string filepath)
 
 	if (!torrent->infoFile.info.name.empty())
 	{
-		torrent->peers = std::make_unique<Peers>(torrent);
+		torrent->peers = std::make_shared<Peers>(torrent);
 		torrent->fileTransfer = std::make_unique<FileTransfer>(torrent);
 		torrent->init();
 		return torrent;
@@ -29,7 +29,7 @@ mtt::TorrentPtr mtt::Torrent::fromMagnetLink(std::string link)
 	if (torrent->infoFile.parseMagnetLink(link) != Status::Success)
 		return nullptr;
 
-	torrent->peers = std::make_unique<Peers>(torrent);
+	torrent->peers = std::make_shared<Peers>(torrent);
 	torrent->fileTransfer = std::make_unique<FileTransfer>(torrent);
 
 	return torrent;
@@ -40,7 +40,7 @@ mtt::TorrentPtr mtt::Torrent::fromSavedState(std::string name)
 	if (auto ptr = fromFile(mtt::config::getInternal().programFolderPath + mtt::config::getInternal().stateFolder + "\\" + name + ".torrent"))
 	{
 		TorrentState state(ptr->files.progress.pieces);
-		if (state.loadState(name))
+		if (state.load(name))
 		{
 			if (ptr->files.selection.files.size() == state.files.size())
 			{
@@ -81,7 +81,7 @@ void mtt::Torrent::save()
 	for (auto& f : files.selection.files)
 		saveState.files.push_back({ f.selected });
 
-	saveState.saveState(hashString());
+	saveState.save(hashString());
 }
 
 void mtt::Torrent::saveTorrentFile()
@@ -201,10 +201,11 @@ void mtt::Torrent::stop()
 	}
 
 	service.stop();
-	state = State::Stopped;
-	lastError = Status::Success;
 
 	save();
+
+	state = State::Stopped;
+	lastError = Status::Success;
 }
 
 std::shared_ptr<mtt::PiecesCheck> mtt::Torrent::checkFiles(std::function<void(std::shared_ptr<PiecesCheck>)> onFinish)

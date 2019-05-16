@@ -28,7 +28,7 @@ void mtt::Core::init()
 	);
 
 	TorrentsList list;
-	list.loadState();
+	list.load();
 
 	for (auto& t : list.torrents)
 	{
@@ -55,20 +55,25 @@ void mtt::Core::init()
 void mtt::Core::deinit()
 {
 	listener->stop();
-	mtt::dht::Communication::get().stop();
+	listener.reset();
 
 	TorrentsList list;
 	for (auto& t : torrents)
 	{
 		list.torrents.push_back({ t->hashString() });
 		t->save();
+		t->stop();
 	}
 
-	list.saveState();
+	list.save();
+	torrents.clear();
+
+	mtt::dht::Communication::get().stop();
+	dht.reset();
+
+	UdpAsyncComm::Deinit();
 
 	mtt::config::save();
-
-	dht.reset();
 }
 
 mtt::TorrentPtr mtt::Core::addFile(const char* filename)

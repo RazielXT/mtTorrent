@@ -10,7 +10,7 @@ mtt::TorrentState::TorrentState(std::vector<uint8_t>& p) : pieces(p)
 
 }
 
-void mtt::TorrentState::saveState(const std::string& name)
+void mtt::TorrentState::save(const std::string& name)
 {
 	auto folderPath = mtt::config::getInternal().programFolderPath + mtt::config::getInternal().stateFolder + "\\" + name + ".state";
 
@@ -38,7 +38,7 @@ void mtt::TorrentState::saveState(const std::string& name)
 	file << writer.data;
 }
 
-bool mtt::TorrentState::loadState(const std::string& name)
+bool mtt::TorrentState::load(const std::string& name)
 {
 	std::ifstream file(mtt::config::getInternal().programFolderPath + mtt::config::getInternal().stateFolder + "\\" + name + ".state", std::ios::binary);
 
@@ -75,7 +75,7 @@ bool mtt::TorrentState::loadState(const std::string& name)
 	return true;
 }
 
-void mtt::TorrentsList::saveState()
+void mtt::TorrentsList::save()
 {
 	auto folderPath = mtt::config::getInternal().programFolderPath + mtt::config::getInternal().stateFolder + "\\list";
 
@@ -98,7 +98,7 @@ void mtt::TorrentsList::saveState()
 	file << writer.data;
 }
 
-bool mtt::TorrentsList::loadState()
+bool mtt::TorrentsList::load()
 {
 	std::ifstream file(mtt::config::getInternal().programFolderPath + mtt::config::getInternal().stateFolder + "\\list", std::ios::binary);
 

@@ -15,7 +15,7 @@ mtt::UdpTrackerComm::UdpTrackerComm()
 
 mtt::UdpTrackerComm::~UdpTrackerComm()
 {
-	udp->removeCallback(comm);
+	deinit();
 }
 
 void UdpTrackerComm::init(std::string host, std::string port, TorrentPtr t)
@@ -25,6 +25,11 @@ void UdpTrackerComm::init(std::string host, std::string port, TorrentPtr t)
 
 	udp = UdpAsyncComm::Get();
 	comm = udp->create(host, port);
+}
+
+void mtt::UdpTrackerComm::deinit()
+{
+	udp->removeCallback(comm);
 }
 
 DataBuffer UdpTrackerComm::createConnectRequest()

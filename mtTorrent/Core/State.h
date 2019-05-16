@@ -20,8 +20,8 @@ namespace mtt
 		uint32_t lastStateTime = 0;
 		bool started = false;
 
-		void saveState(const std::string& name);
-		bool loadState(const std::string& name);
+		void save(const std::string& name);
+		bool load(const std::string& name);
 	};
 
 	struct TorrentsList
@@ -32,7 +32,7 @@ namespace mtt
 		};
 		std::vector<TorrentInfo> torrents;
 
-		void saveState();
-		bool loadState();
+		void save();
+		bool load();
 	};
 }

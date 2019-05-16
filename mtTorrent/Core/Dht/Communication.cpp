@@ -4,11 +4,13 @@
 
 mtt::dht::Communication* comm;
 
-mtt::dht::Communication::Communication() : responder(table, *this)
+mtt::dht::Communication::Communication() : responder(*this)
 {
 	udp = UdpAsyncComm::Get();
 	udp->listen(std::bind(&Communication::onUnknownUdpPacket, this, std::placeholders::_1, std::placeholders::_2));
 	comm = this;
+	
+	responder.table = table = std::make_shared<Table>();
 }
 
 mtt::dht::Communication::~Communication()
@@ -42,15 +44,21 @@ void mtt::dht::Communication::stop()
 {
 	{
 		std::lock_guard<std::mutex> guard(peersQueriesMutex);
+
+		for (auto it = peersQueries.begin(); it != peersQueries.end(); it++)
+			it->q->stop();
+
 		peersQueries.clear();
 	}
-
-	save();
 
 	if(refreshTimer)
 		refreshTimer->disable();
 	refreshTimer = nullptr;
+
+	udp->removeListener();
 	service.stop();
+
+	save();
 }
 
 void mtt::dht::Communication::removeListener(ResultsListener* listener)
@@ -89,7 +97,7 @@ void mtt::dht::Communication::findPeers(uint8_t* hash, ResultsListener* listener
 		peersQueries.push_back(info);
 	}
 
-	info.q->start(hash, &table, this);
+	info.q->start(hash, table, this);
 }
 
 void mtt::dht::Communication::stopFindingPeers(uint8_t* hash)
@@ -107,13 +115,13 @@ void mtt::dht::Communication::stopFindingPeers(uint8_t* hash)
 void mtt::dht::Communication::findNode(uint8_t* hash)
 {
 	auto q = std::make_shared<Query::FindNode>();
-	q->start(hash, &table, this);
+	q->start(hash, table, this);
 }
 
 void mtt::dht::Communication::pingNode(Addr& addr)
 {
 	auto q = std::make_shared<Query::PingNodes>();
-	q->start(addr, &table, this);
+	q->start(addr, table, this);
 }
 
 uint32_t mtt::dht::Communication::onFoundPeers(uint8_t* hash, std::vector<Addr>& values)
@@ -134,27 +142,27 @@ uint32_t mtt::dht::Communication::onFoundPeers(uint8_t* hash, std::vector<Addr>&
 
 void mtt::dht::Communication::findingPeersFinished(uint8_t* hash, uint32_t count)
 {
-	ResultsListener* listener = nullptr;
+	std::lock_guard<std::mutex> guard(peersQueriesMutex);
 
-	{
-		std::lock_guard<std::mutex> guard(peersQueriesMutex);
+	for (auto it = peersQueries.begin(); it != peersQueries.end(); it++)
+		if (it->q == hash)
+		{
+			if(it->listener)
+				it->listener->dhtFindingPeersFinished(hash, count);
 
-		for (auto it = peersQueries.begin(); it != peersQueries.end(); it++)
-			if (it->q == hash)
-			{
-				listener = it->listener;
-				peersQueries.erase(it);
-				break;
-			}
-	}
-
-	if(listener)
-		listener->dhtFindingPeersFinished(hash, count);
+			peersQueries.erase(it);
+			break;
+		}
 }
 
 UdpRequest mtt::dht::Communication::sendMessage(Addr& addr, DataBuffer& data, UdpResponseCallback response)
 {
 	return udp->sendMessage(data, addr, response);
+}
+
+void mtt::dht::Communication::stopMessage(UdpRequest r)
+{
+	udp->removeCallback(r);
 }
 
 void mtt::dht::Communication::sendMessage(udp::endpoint& endpoint, DataBuffer& data)
@@ -192,18 +200,18 @@ void mtt::dht::Communication::refreshTable()
 {
 	responder.refresh();
 
-	auto inactive = table.getInactiveNodes();
+	auto inactive = table->getInactiveNodes();
 
 	if (!inactive.empty())
 	{
 		auto q = std::make_shared<Query::PingNodes>();
-		q->start(inactive, &table, this);
+		q->start(inactive, table, this);
 	}
 }
 
 void mtt::dht::Communication::save()
 {
-	auto saveFile = table.save();
+	auto saveFile = table->save();
 
 	{
 		std::ofstream out(mtt::config::getInternal().programFolderPath + "dht", std::ios_base::binary);
@@ -218,7 +226,7 @@ void mtt::dht::Communication::load()
 	if (inFile)
 	{
 		auto saveFile = std::string((std::istreambuf_iterator<char>(inFile)), std::istreambuf_iterator<char>());
-		table.load(saveFile);
+		table->load(saveFile);
 	}
 }
 

@@ -17,6 +17,7 @@ namespace mtt
 			virtual void findingPeersFinished(uint8_t* hash, uint32_t count) = 0;
 
 			virtual UdpRequest sendMessage(Addr&, DataBuffer&, UdpResponseCallback response) = 0;
+			virtual void stopMessage(UdpRequest r) = 0;
 			virtual void sendMessage(udp::endpoint&, DataBuffer&) = 0;
 		};
 	}

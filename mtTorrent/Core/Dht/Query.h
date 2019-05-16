@@ -57,7 +57,7 @@ namespace mtt
 				DhtQuery();
 				~DhtQuery();
 
-				void start(uint8_t* hash, Table* table, DataListener* dhtListener);
+				void start(uint8_t* hash, std::shared_ptr<Table> table, DataListener* dhtListener);
 				void stop();
 
 				bool finished();
@@ -81,7 +81,7 @@ namespace mtt
 				virtual void sendRequest(Addr& addr, DataBuffer& data, RequestInfo& info) = 0;
 				virtual bool onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request) = 0;
 
-				Table* table;
+				std::shared_ptr<Table> table;
 				DataListener* listener = nullptr;
 			};
 
@@ -100,7 +100,7 @@ namespace mtt
 
 			struct FindNode : public DhtQuery, public std::enable_shared_from_this<FindNode>
 			{
-				void startOne(uint8_t* hash, Addr& addr, Table* table, DataListener* dhtListener);
+				void startOne(uint8_t* hash, Addr& addr, std::shared_ptr<Table> table, DataListener* dhtListener);
 
 				uint32_t resultCount = 0;
 				
@@ -118,13 +118,13 @@ namespace mtt
 			{
 				~PingNodes();
 
-				void start(Addr& addr, Table* table, DataListener* dhtListener);
-				void start(std::vector<NodeInfo>& nodes, Table* table, DataListener* dhtListener);
+				void start(Addr& addr, std::shared_ptr<Table> table, DataListener* dhtListener);
+				void start(std::vector<NodeInfo>& nodes, std::shared_ptr<Table> table, DataListener* dhtListener);
 				void stop();
 
 			protected:
 
-				Table* table;
+				std::shared_ptr<Table> table;
 				DataListener* listener;
 
 				uint32_t MaxSimultaneousRequests = 5;

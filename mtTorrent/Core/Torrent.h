@@ -59,7 +59,7 @@ namespace mtt
 		TorrentFileInfo infoFile;
 		ServiceThreadpool service;
 
-		std::unique_ptr<Peers> peers;
+		std::shared_ptr<Peers> peers;
 		std::unique_ptr<FileTransfer> fileTransfer;
 		std::unique_ptr<MetadataDownload> utmDl;
 

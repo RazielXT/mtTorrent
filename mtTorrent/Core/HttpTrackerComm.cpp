@@ -17,8 +17,15 @@ mtt::HttpTrackerComm::HttpTrackerComm()
 
 mtt::HttpTrackerComm::~HttpTrackerComm()
 {
+	deinit();
+}
+
+void mtt::HttpTrackerComm::deinit()
+{
 	if (tcpComm)
 		tcpComm->close();
+
+	tcpComm.reset();
 }
 
 void mtt::HttpTrackerComm::init(std::string host, std::string p, TorrentPtr t)

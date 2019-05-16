@@ -9,6 +9,7 @@ namespace mtt
 	public:
 
 		virtual void init(std::string host, std::string port, TorrentPtr torrent) = 0;
+		virtual void deinit() = 0;
 
 		virtual void announce() = 0;
 

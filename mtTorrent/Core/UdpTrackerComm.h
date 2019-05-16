@@ -14,6 +14,7 @@ namespace mtt
 		~UdpTrackerComm();
 
 		virtual void init(std::string host, std::string port, TorrentPtr core) override;
+		virtual void deinit() override;
 
 		virtual void announce() override;
 
@@ -29,13 +30,13 @@ namespace mtt
 
 		struct TrackerMessage
 		{
-			uint32_t action;
-			uint32_t transaction;
+			uint32_t action = 0;
+			uint32_t transaction = 0;
 		};
 
 		struct ConnectResponse : public TrackerMessage
 		{
-			uint64_t connectionId;
+			uint64_t connectionId = 0;
 		};
 
 		struct UdpAnnounceResponse : public AnnounceResponse
@@ -70,6 +71,6 @@ namespace mtt
 
 		TrackerMessage lastMessage;
 
-		uint64_t connectionId;
+		uint64_t connectionId = 0;
 	};
 }

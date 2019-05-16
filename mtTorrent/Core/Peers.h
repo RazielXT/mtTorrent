@@ -38,6 +38,29 @@ namespace mtt
 
 	private:
 
+		TorrentPtr torrent;
+
+		class PeersListener : public mtt::IPeerListener, public std::enable_shared_from_this<PeersListener>
+		{
+		public:
+			PeersListener(Peers*);
+			virtual void handshakeFinished(mtt::PeerCommunication*) override;
+			virtual void connectionClosed(mtt::PeerCommunication*, int) override;
+			virtual void messageReceived(mtt::PeerCommunication*, mtt::PeerMessage&) override;
+			virtual void extHandshakeFinished(mtt::PeerCommunication*) override;
+			virtual void metadataPieceReceived(mtt::PeerCommunication*, mtt::ext::UtMetadata::Message&) override;
+			virtual void pexReceived(mtt::PeerCommunication*, mtt::ext::PeerExchange::Message&) override;
+			virtual void progressUpdated(mtt::PeerCommunication*, uint32_t) override;
+			void setTarget(mtt::IPeerListener*);
+			void setParent(Peers*);
+
+			std::mutex mtx;
+			mtt::IPeerListener* target = nullptr;
+			Peers* peers;
+		};
+
+		std::shared_ptr<PeersListener> peersListener;
+
 		PeersUpdateCallback updateCallback;
 
 		enum class PeerQuality {Unknown, Connecting, Offline, Unwanted, Bad, Normal, Good};
@@ -96,28 +119,6 @@ namespace mtt
 			int cfgCallbackId = -1;
 		}
 		dht;
-
-		TorrentPtr torrent;
-
-		class PeersListener : public mtt::IPeerListener
-		{
-		public:
-			PeersListener(Peers&);
-			virtual void handshakeFinished(mtt::PeerCommunication*) override;
-			virtual void connectionClosed(mtt::PeerCommunication*, int) override;
-			virtual void messageReceived(mtt::PeerCommunication*, mtt::PeerMessage&) override;
-			virtual void extHandshakeFinished(mtt::PeerCommunication*) override;
-			virtual void metadataPieceReceived(mtt::PeerCommunication*, mtt::ext::UtMetadata::Message&) override;
-			virtual void pexReceived(mtt::PeerCommunication*, mtt::ext::PeerExchange::Message&) override;
-			virtual void progressUpdated(mtt::PeerCommunication*, uint32_t) override;
-			void setTarget(mtt::IPeerListener*);
-
-		private:
-			std::mutex mtx;
-			mtt::IPeerListener* target = nullptr;
-			Peers& peers;
-		}
-		peersListener;
 
 		LogFile log;
 	};

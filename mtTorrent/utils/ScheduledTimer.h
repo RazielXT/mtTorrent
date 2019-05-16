@@ -18,4 +18,5 @@ private:
 	void checkTimer();
 	std::function<void()> func;
 	std::unique_ptr<boost::asio::deadline_timer> timer;
+	std::mutex mtx;
 };

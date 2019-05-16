@@ -3,7 +3,7 @@
 #include "utils\PacketHelper.h"
 #include "Configuration.h"
 
-mtt::dht::Responder::Responder(Table& t, DataListener& l) : table(t), listener(l)
+mtt::dht::Responder::Responder(DataListener& l) : listener(l)
 {
 
 }
@@ -87,7 +87,7 @@ bool mtt::dht::Responder::handlePacket(udp::endpoint& endpoint, DataBuffer& data
 
 	listener.sendMessage(endpoint, response.getBuffer());
 
-	table.nodeResponded(NodeInfo{ sourceId->data, Addr(endpoint.address(), endpoint.port()) });
+	table->nodeResponded(NodeInfo{ sourceId->data, Addr(endpoint.address(), endpoint.port()) });
 
 	return true;
 }
@@ -111,7 +111,7 @@ bool mtt::dht::Responder::writeNodes(const char* hash, udp::endpoint& endpoint, 
 		}
 	}
 
-	auto found = table.getClosestNodes((const uint8_t*)hash);
+	auto found = table->getClosestNodes((const uint8_t*)hash);
 
 	if (found.empty())
 		return false;

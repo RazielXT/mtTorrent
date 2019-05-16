@@ -12,15 +12,23 @@ ScheduledTimer::~ScheduledTimer()
 
 void ScheduledTimer::schedule(uint32_t secondsOffset)
 {
-	timer->expires_from_now(boost::posix_time::seconds(secondsOffset));
-	timer->async_wait(std::bind(&ScheduledTimer::checkTimer, shared_from_this()));
+	std::lock_guard<std::mutex> guard(mtx);
+
+	if (timer)
+	{
+		timer->expires_from_now(boost::posix_time::seconds(secondsOffset));
+		timer->async_wait(std::bind(&ScheduledTimer::checkTimer, shared_from_this()));
+	}
 }
 
 void ScheduledTimer::disable()
 {
+	std::lock_guard<std::mutex> guard(mtx);
+
 	if (timer)
 	{
-		timer->cancel();
+		boost::system::error_code ec;
+		timer->cancel(ec);
 		timer.reset();
 	}
 
@@ -42,15 +50,26 @@ uint32_t ScheduledTimer::getSecondsTillNextUpdate()
 
 void ScheduledTimer::checkTimer()
 {
-	if (timer->expires_at() <= boost::asio::deadline_timer::traits_type::now())
-	{
-		timer->expires_at(boost::posix_time::pos_infin);
+	std::function<void()> runFunc;
 
-		if (func)
-			func();
+	{
+		std::lock_guard<std::mutex> guard(mtx);
+
+		if (timer)
+		{
+			if (timer->expires_at() <= boost::asio::deadline_timer::traits_type::now())
+			{
+				timer->expires_at(boost::posix_time::pos_infin);
+
+				runFunc = func;
+			}
+			else
+				timer->async_wait(std::bind(&ScheduledTimer::checkTimer, shared_from_this()));
+		}
 	}
-	else
-		timer->async_wait(std::bind(&ScheduledTimer::checkTimer, shared_from_this()));
+
+	if (runFunc)
+		runFunc();
 }
 
 std::shared_ptr<ScheduledTimer> ScheduledTimer::create(boost::asio::io_service& io, std::function<void()> callback)

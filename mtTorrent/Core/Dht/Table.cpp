@@ -191,7 +191,7 @@ bool mtt::dht::Table::empty()
 
 std::string mtt::dht::Table::save()
 {
-	std::mutex tableMutex;
+	std::lock_guard<std::mutex> guard(tableMutex);
 
 	std::string state;
 	state += "[buckets]\n";

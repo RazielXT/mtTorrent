@@ -46,6 +46,7 @@ namespace mtt
 
 			virtual UdpRequest sendMessage(Addr&, DataBuffer&, UdpResponseCallback response) override;
 			virtual void sendMessage(udp::endpoint&, DataBuffer&) override;
+			virtual void stopMessage(UdpRequest r) override;
 
 			virtual void announceTokenReceived(uint8_t* hash, std::string& token, udp::endpoint& source) override;	
 
@@ -60,7 +61,7 @@ namespace mtt
 			std::mutex peersQueriesMutex;
 			std::vector<QueryInfo> peersQueries;
 
-			Table table;
+			std::shared_ptr<Table> table;
 			Responder responder;
 			ServiceThreadpool service;
 

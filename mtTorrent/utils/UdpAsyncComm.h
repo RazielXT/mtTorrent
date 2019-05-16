@@ -14,10 +14,12 @@ class UdpAsyncComm
 public:
 
 	static UdpCommPtr Get();
+	static void Deinit();
 
 	void setBindPort(uint16_t port);
 
 	void listen(UdpPacketCallback received);
+	void removeListener();
 
 	UdpRequest create(std::string& host, std::string& port);
 	UdpRequest sendMessage(DataBuffer& data, std::string& host, std::string& port, UdpResponseCallback response, bool ipv6 = false);
@@ -42,10 +44,11 @@ private:
 	std::mutex respondingMutex;
 	std::mutex responsesMutex;
 	std::vector<std::shared_ptr<ResponseRetryInfo>> pendingResponses;
+	void clearPendingResponses();
 	void addPendingResponse(DataBuffer& data, UdpRequest target, UdpResponseCallback response, uint32_t timeout = 1);
 	UdpRequest findPendingConnection(UdpRequest);
 
-	void checkTimeout(std::shared_ptr<ResponseRetryInfo>);
+	void checkTimeout(UdpRequest);
 	void onUdpReceive(udp::endpoint&, DataBuffer&);
 	void onUdpClose(UdpRequest);
 	UdpPacketCallback onUnhandledReceive;

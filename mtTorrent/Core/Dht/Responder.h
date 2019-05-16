@@ -13,15 +13,16 @@ namespace mtt
 		{
 		public:
 
-			Responder(Table&, DataListener&);
+			Responder(DataListener&);
 
 			void refresh();
 
 			bool handlePacket(udp::endpoint&, DataBuffer&);
 
+			std::shared_ptr<Table> table;
+
 		private:
 
-			Table& table;
 			DataListener& listener;
 
 			bool writeNodes(const char* hash, udp::endpoint& e, const mtt::BencodeParser::Object* requestData, PacketBuilder& out);

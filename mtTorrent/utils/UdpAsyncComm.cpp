@@ -4,10 +4,10 @@
 
 #define UDP_LOG(x) WRITE_LOG(LogTypeUdpMgr, x)
 
+std::shared_ptr<UdpAsyncComm> ptr;
+
 std::shared_ptr<UdpAsyncComm> UdpAsyncComm::Get()
 {
-	static std::shared_ptr<UdpAsyncComm> ptr;
-
 	if (!ptr)
 	{
 		ptr = std::make_shared<UdpAsyncComm>();
@@ -16,6 +16,15 @@ std::shared_ptr<UdpAsyncComm> UdpAsyncComm::Get()
 	}
 
 	return ptr;
+}
+
+void UdpAsyncComm::Deinit()
+{
+	if (ptr)
+	{
+		ptr->clearPendingResponses();
+		ptr->pool.stop();
+	}
 }
 
 void UdpAsyncComm::setBindPort(uint16_t port)
@@ -29,6 +38,13 @@ void UdpAsyncComm::listen(UdpPacketCallback receive)
 		startListening();
 
 	onUnhandledReceive = receive;
+}
+
+void UdpAsyncComm::removeListener()
+{
+	std::lock_guard<std::mutex> guard(respondingMutex);
+
+	onUnhandledReceive = nullptr;
 }
 
 UdpRequest UdpAsyncComm::create(std::string& host, std::string& port)
@@ -86,7 +102,6 @@ void UdpAsyncComm::sendMessage(DataBuffer& data, udp::endpoint& endpoint)
 
 void UdpAsyncComm::removeCallback(UdpRequest target)
 {
-	std::lock_guard<std::mutex> guard(respondingMutex);
 	std::lock_guard<std::mutex> guard2(responsesMutex);
 
 	for(auto it = pendingResponses.begin(); it != pendingResponses.end(); it++)
@@ -99,6 +114,18 @@ void UdpAsyncComm::removeCallback(UdpRequest target)
 	}
 }
 
+void UdpAsyncComm::clearPendingResponses()
+{
+	std::lock_guard<std::mutex> guard(responsesMutex);
+
+	for (auto r : pendingResponses)
+	{
+		r->reset();
+	}
+
+	pendingResponses.clear();
+}
+
 void UdpAsyncComm::addPendingResponse(DataBuffer& data, UdpRequest c, UdpResponseCallback response, uint32_t timeout)
 {
 	if (!listener)
@@ -109,7 +136,7 @@ void UdpAsyncComm::addPendingResponse(DataBuffer& data, UdpRequest c, UdpRespons
 	info->defaultTimeout = timeout;
 	info->timeoutTimer = std::make_shared<boost::asio::deadline_timer>(pool.io);
 	info->timeoutTimer->expires_from_now(boost::posix_time::seconds(timeout));
-	info->timeoutTimer->async_wait(std::bind(&UdpAsyncComm::checkTimeout, this, info));
+	info->timeoutTimer->async_wait(std::bind(&UdpAsyncComm::checkTimeout, this, c));
 	info->onResponse = response;
 
 	c->onCloseCallback = std::bind(&UdpAsyncComm::onUdpClose, this, std::placeholders::_1);
@@ -217,12 +244,26 @@ void UdpAsyncComm::startListening()
 	listener->listen();
 }
 
-void UdpAsyncComm::checkTimeout(std::shared_ptr<ResponseRetryInfo> info)
+void UdpAsyncComm::checkTimeout(UdpRequest client)
 {
-	UDP_LOG("checking timer for " << info->client->getName());
+	std::shared_ptr<ResponseRetryInfo> info;
+	{
+		std::lock_guard<std::mutex> guard(responsesMutex);
 
-	if (info->retries == 255)
+		for (auto r : pendingResponses)
+		{
+			if (r->client == client)
+			{
+				info = r;
+				break;
+			}
+		}
+	}
+
+	if (!info || info->retries == 255)
 		return;
+
+	UDP_LOG("checking timer for " << info->client->getName());
 
 	if (info->timeoutTimer->expires_at() <= boost::asio::deadline_timer::traits_type::now())
 	{
@@ -241,11 +282,12 @@ void UdpAsyncComm::checkTimeout(std::shared_ptr<ResponseRetryInfo> info)
 		}
 	}
 
-	info->timeoutTimer->async_wait(std::bind(&UdpAsyncComm::checkTimeout, this, info));
+	info->timeoutTimer->async_wait(std::bind(&UdpAsyncComm::checkTimeout, this, client));
 }
 
 void UdpAsyncComm::ResponseRetryInfo::reset()
 {
+	client.reset();
 	retries = 255;
 	timeoutTimer->cancel();
 }

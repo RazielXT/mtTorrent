@@ -239,6 +239,8 @@ void mtt::TrackerManager::stopAll()
 {
 	for (auto& tracker : trackers)
 	{
+		if(tracker.comm)
+			tracker.comm->deinit();
 		tracker.comm = nullptr;
 		if(tracker.timer)
 			tracker.timer->disable();

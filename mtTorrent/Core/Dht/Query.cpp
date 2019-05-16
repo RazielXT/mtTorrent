@@ -84,10 +84,9 @@ mtt::dht::Query::DhtQuery::DhtQuery()
 
 mtt::dht::Query::DhtQuery::~DhtQuery()
 {
-	stop();
 }
 
-void mtt::dht::Query::DhtQuery::start(uint8_t* hash, Table* t, DataListener* dhtListener)
+void mtt::dht::Query::DhtQuery::start(uint8_t* hash, std::shared_ptr<Table> t, DataListener* dhtListener)
 {
 	table = t;
 	listener = dhtListener;
@@ -118,6 +117,10 @@ void mtt::dht::Query::DhtQuery::stop()
 {
 	std::lock_guard<std::mutex> guard(requestsMutex);
 
+	for (auto r : requests)
+	{
+		listener->stopMessage(r);
+	}
 	requests.clear();
 	MaxSimultaneousRequests = 0;
 }
@@ -329,7 +332,7 @@ DataBuffer mtt::dht::Query::GetPeers::createRequest(uint8_t* hash, bool bothProt
 	return packet.getBuffer();
 }
 
-void mtt::dht::Query::FindNode::startOne(uint8_t* hash, Addr& addr, Table* t, DataListener* dhtListener)
+void mtt::dht::Query::FindNode::startOne(uint8_t* hash, Addr& addr, std::shared_ptr<Table> t, DataListener* dhtListener)
 {
 	table = t;
 	listener = dhtListener;
@@ -526,7 +529,7 @@ mtt::dht::Query::PingNodes::~PingNodes()
 	stop();
 }
 
-void mtt::dht::Query::PingNodes::start(std::vector<NodeInfo>& nodes,Table* t, DataListener* dhtListener)
+void mtt::dht::Query::PingNodes::start(std::vector<NodeInfo>& nodes, std::shared_ptr<Table> t, DataListener* dhtListener)
 {
 	uint32_t startQueriesCount = std::min(MaxSimultaneousRequests, (uint32_t)nodes.size());
 
@@ -543,7 +546,7 @@ void mtt::dht::Query::PingNodes::start(std::vector<NodeInfo>& nodes,Table* t, Da
 	}
 }
 
-void mtt::dht::Query::PingNodes::start(Addr& addr, Table* t, DataListener* dhtListener)
+void mtt::dht::Query::PingNodes::start(Addr& addr, std::shared_ptr<Table> t, DataListener* dhtListener)
 {
 	table = t;
 	listener = dhtListener;
