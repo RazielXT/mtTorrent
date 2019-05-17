@@ -1,6 +1,6 @@
 #include "Storage.h"
 #include <fstream>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <iostream>
 #include "utils/ServiceThreadpool.h"
 #include "utils/SHA.h"
@@ -187,12 +187,12 @@ uint32_t mtt::Storage::getLastModifiedTime()
 	for (auto& f : files)
 	{
 		auto path = getFullpath(f);
-		boost::system::error_code ec;
+		std::error_code ec;
 
-		auto tm = boost::filesystem::last_write_time(path, ec);
+		auto tm = std::filesystem::last_write_time(path, ec);
 		if (!ec)
 		{
-			time = std::max(time, (uint32_t)tm);
+			time = std::max(time, (uint32_t)tm.time_since_epoch().count());
 		}
 	}
 
@@ -225,9 +225,9 @@ void mtt::Storage::flush(File& file)
 	auto path = getFullpath(file);
 	createPath(path);
 
-	boost::filesystem::path dir(path);
-	bool fileExists = boost::filesystem::exists(dir);
-	size_t existingSize = fileExists ? boost::filesystem::file_size(dir) : 0;
+	std::filesystem::path dir(path);
+	bool fileExists = std::filesystem::exists(dir);
+	size_t existingSize = fileExists ? std::filesystem::file_size(dir) : 0;
 
 	if (fileExists && existingSize == file.size)
 	{
@@ -293,15 +293,15 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 	while (currentPieceIdx < piecesInfo.size())
 	{
 		auto fullpath = getFullpath(*currentFile);
-		boost::filesystem::path dir(fullpath);
+		std::filesystem::path dir(fullpath);
 
-		if (boost::filesystem::exists(dir))
+		if (std::filesystem::exists(dir))
 		{
 			fileIn.open(fullpath, std::ios_base::binary);
 
 			if (fileIn)
 			{
-				size_t existingSize = boost::filesystem::file_size(dir);
+				size_t existingSize = std::filesystem::file_size(dir);
 
 				if (existingSize == currentFile->size)
 				{
@@ -383,10 +383,10 @@ mtt::Status mtt::Storage::preallocate(File& file)
 {
 	auto fullpath = getFullpath(file);
 	createPath(fullpath);
-	boost::filesystem::path dir(fullpath);
-	if (!boost::filesystem::exists(dir) || boost::filesystem::file_size(dir) != file.size)
+	std::filesystem::path dir(fullpath);
+	if (!std::filesystem::exists(dir) || std::filesystem::file_size(dir) != file.size)
 	{
-		auto spaceInfo = boost::filesystem::space(path);
+		auto spaceInfo = std::filesystem::space(path);
 		if (spaceInfo.available < file.size)
 			return Status::E_NotEnoughSpace;
 
@@ -423,11 +423,11 @@ void mtt::Storage::createPath(std::string& path)
 	if (i != std::string::npos)
 	{
 		std::string dirPath = path.substr(0, i);
-		boost::filesystem::path dir(dirPath);
-		if (!boost::filesystem::exists(dir))
+		std::filesystem::path dir(dirPath);
+		if (!std::filesystem::exists(dir))
 		{
-			boost::system::error_code ec;
-			if (!boost::filesystem::create_directory(dir, ec))
+			std::error_code ec;
+			if (!std::filesystem::create_directory(dir, ec))
 				return;
 		}
 	}

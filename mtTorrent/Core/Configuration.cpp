@@ -1,7 +1,8 @@
 #include "Configuration.h"
 #include <map>
 #include <mutex>
-#include <boost/filesystem.hpp>
+#include <filesystem>
+#include <fstream>
 #include "utils/BencodeWriter.h"
 #include "utils/BencodeParser.h"
 
@@ -95,13 +96,13 @@ namespace mtt
 			internal_.programFolderPath = ".\\data\\";
 			internal_.stateFolder = "state";
 
-			boost::filesystem::path dir(internal_.programFolderPath + internal_.stateFolder);
-			if (!boost::filesystem::exists(dir))
+			std::filesystem::path dir(internal_.programFolderPath + internal_.stateFolder);
+			if (!std::filesystem::exists(dir))
 			{
-				boost::system::error_code ec;
+				std::error_code ec;
 
-				boost::filesystem::create_directory(internal_.programFolderPath, ec);
-				boost::filesystem::create_directory(dir, ec);
+				std::filesystem::create_directory(internal_.programFolderPath, ec);
+				std::filesystem::create_directory(dir, ec);
 			}
 
 			srand(0);

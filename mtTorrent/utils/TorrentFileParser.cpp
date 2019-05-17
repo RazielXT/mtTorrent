@@ -1,6 +1,6 @@
 #include "TorrentFileParser.h"
 #include <iostream>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include "SHA.h"
 
 #define TPARSER_LOG(x) WRITE_LOG(LogTypeFileParser, x)
@@ -30,9 +30,9 @@ TorrentFileInfo TorrentFileParser::parseFile(const char* filename)
 	TorrentFileInfo out;
 
 	size_t maxSize = 10 * 1024 * 1024;
-	boost::filesystem::path dir(filename);
+	std::filesystem::path dir(filename);
 
-	if (!boost::filesystem::exists(dir) || boost::filesystem::file_size(dir) > maxSize)
+	if (!std::filesystem::exists(dir) || std::filesystem::file_size(dir) > maxSize)
 	{
 		TPARSER_LOG("Invalid torrent file " << filename);
 		return out;

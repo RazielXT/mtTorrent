@@ -1,7 +1,6 @@
 #include "State.h"
 #include <fstream>
 #include "Configuration.h"
-#include <boost/filesystem.hpp>
 #include "utils/BencodeWriter.h"
 #include "utils/BencodeParser.h"
 
