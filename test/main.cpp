@@ -133,22 +133,36 @@ bool createDump(DWORD process, std::string path, const char* name)
 
 	return false;
 }
-void closeTestApp(std::string path, const char* dumpPath)
+
+bool closeTestApp(std::string path, const char* dumpPath)
 {
 	DWORD process = GetProcessByName(path);
 
 	if (process)
 	{
-		createDump(process, dumpPath, "test");
-
 		auto hwnd = find_main_window(process);
 
 		if (hwnd)
 			SendMessage(hwnd, WM_CLOSE, 0, 0);
 
+		DWORD waitTime = 0;
 		while (GetProcessByName(path) == process)
+		{
+			waitTime += 200;
+
+			if (waitTime > 5000)
+			{
+				createDump(process, dumpPath, "waiting");
+				return false;
+			}
+
 			std::this_thread::sleep_for(std::chrono::milliseconds(200));
+		}
+
+		return true;
 	}
+
+	return false;
 }
 
 bool runTest(std::string path, const char* appExecutable, int id, const char* dumpPath)
@@ -165,9 +179,43 @@ bool runTest(std::string path, const char* appExecutable, int id, const char* du
 
 	std::this_thread::sleep_for(std::chrono::seconds(runTimeSeconds));
 
-	closeTestApp(appExecutable, dumpPath);
+	return closeTestApp(appExecutable, dumpPath);
+}
 
-	return true;
+void registerDumpCreate(const char* dumpPath, const char* appExecutable)
+{
+	HKEY hKey;
+	LPCTSTR sk = TEXT("SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting");
+
+	LONG openRes = RegOpenKeyEx(HKEY_LOCAL_MACHINE, sk, 0, KEY_ALL_ACCESS, &hKey);
+
+	if (openRes == ERROR_SUCCESS)
+	{
+		HKEY lhKey;
+		RegCreateKey(hKey, "LocalDumps", &lhKey);
+		HKEY elhKey;
+		RegCreateKey(lhKey, appExecutable, &elhKey);
+
+		openRes = RegSetValueExA(elhKey, "DumpFolder", 0, REG_SZ, (const BYTE*)dumpPath, (DWORD)strlen(dumpPath) + 1);
+
+		RegCloseKey(elhKey);
+		RegCloseKey(lhKey);
+		RegCloseKey(hKey);
+	}
+}
+
+void unregisterDumpCreate(const char* appExecutable)
+{
+	HKEY hKey;
+	LPCTSTR sk = TEXT("SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps");
+
+	LONG openRes = RegOpenKeyEx(HKEY_LOCAL_MACHINE, sk, 0, KEY_ALL_ACCESS, &hKey);
+
+	if (openRes == ERROR_SUCCESS)
+	{
+		auto r = RegDeleteKeyEx(hKey, appExecutable, KEY_WOW64_64KEY, 0);
+		RegCloseKey(hKey);
+	}
 }
 
 int main()
@@ -175,16 +223,21 @@ int main()
 	int testCount = 1;
 	const char* testPath = "D:/test/";
 	const char* dumpPath = "D:/test/";
-	const char* appFolder = "ultralight";
-	const char* appExecutable = "ultralightTest.exe";
+	const char* appFolder = "mtt";
+	const char* appExecutable = "mtTorrent.exe";
 
 	cleanTestFolder(testPath);
 	copyTestFolder(testPath, appFolder, testCount);
 
+	registerDumpCreate(dumpPath, appExecutable);
+
 	for (int i = 0; i < testCount; i++)
 	{
-		runTest(testPath, appExecutable, i, dumpPath);
+		if(!runTest(testPath, appExecutable, i, dumpPath))
+			break;
 	}
+
+	unregisterDumpCreate(appExecutable);
 
 	return 0;
 }
