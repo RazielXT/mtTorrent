@@ -24,6 +24,9 @@
     <ClCompile Include="..\mtTorrent\Public\BinaryInterface.cpp">
       <Filter>Source Files\mtt</Filter>
     </ClCompile>
+    <ClCompile Include="utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\mtTorrent\Public\BinaryInterface.h">
@@ -36,6 +39,9 @@
       <Filter>Source Files\mtt</Filter>
     </ClInclude>
     <ClInclude Include="mttLoader.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

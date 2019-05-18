@@ -120,12 +120,14 @@
   <ItemGroup>
     <ClCompile Include="..\mtTorrent\Public\BinaryInterface.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\mtTorrent\Public\BinaryInterface.h" />
     <ClInclude Include="..\mtTorrent\Public\ModuleAllocator.h" />
     <ClInclude Include="..\mtTorrent\Public\Status.h" />
     <ClInclude Include="mttLoader.h" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
