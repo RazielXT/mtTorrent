@@ -22,6 +22,7 @@ namespace mtt
 
 		void save(const std::string& name);
 		bool load(const std::string& name);
+		static void remove(const std::string& name);
 	};
 
 	struct TorrentsList

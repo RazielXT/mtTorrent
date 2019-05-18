@@ -74,6 +74,12 @@ bool mtt::TorrentState::load(const std::string& name)
 	return true;
 }
 
+void mtt::TorrentState::remove(const std::string& name)
+{
+	auto fullName = mtt::config::getInternal().programFolderPath + mtt::config::getInternal().stateFolder + "\\" + name + ".state";
+	std::remove(fullName.data());
+}
+
 void mtt::TorrentsList::save()
 {
 	auto folderPath = mtt::config::getInternal().programFolderPath + mtt::config::getInternal().stateFolder + "\\list";
