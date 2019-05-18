@@ -276,10 +276,15 @@ void UpnpPortMapping::checkPendingMapping(const std::string& gateway)
 void UpnpPortMapping::waitForRequests()
 {
 	int i = 0;
-	while (++i < 30)	//3 sec timeout
+	while (i < 3000)	//3 sec timeout
 	{
 		if (!state->pendingRequests.empty())
-			Sleep(50);
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+			i += 50;
+		}
+		else
+			break;
 	}
 }
 

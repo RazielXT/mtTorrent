@@ -93,7 +93,7 @@ void mtt::dht::Query::DhtQuery::start(uint8_t* hash, std::shared_ptr<Table> t, D
 	targetId.copy((char*)hash);
 
 	if (t->empty())
-		Sleep(500);
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
 	auto nodes = t->getClosestNodes(hash);
 

@@ -17,8 +17,8 @@
 
 using namespace mtt;
 
-#define WAITFOR(x) { while (!(x)) Sleep(50); }
-#define WAITFOR2(x, y) { while (!(x)) { y; Sleep(50);} }
+#define WAITFOR(x) { while (!(x)) std::this_thread::sleep_for(std::chrono::milliseconds(50)); }
+#define WAITFOR2(x, y) { while (!(x)) { y; std::this_thread::sleep_for(std::chrono::milliseconds(50));} }
 
 #define TEST_LOG(x) WRITE_LOG(LogTypeTest, x)
 
@@ -637,7 +637,7 @@ void idealGeneralTest()
 	{
 		TEST_LOG(torrent->currentProgress() << "%\n");
 		TEST_LOG("Connected: " << torrent->peers->connectedCount() << ", all: " << torrent->peers->receivedCount() << "\n");
-		Sleep(1000);
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	}
 }
 
@@ -733,7 +733,7 @@ void idealLocalTest()
 	while (!torrent->finished())
 	{
 		TEST_LOG("Progress: " << torrent->currentProgress() << "(" << torrent->downloaded()/(1024.f*1024) << "MB) (" << torrent->downloadSpeed()/(1024.f * 1024) << " MBps)");
-		Sleep(1000);
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	}
 
 	TEST_LOG("Finished");
