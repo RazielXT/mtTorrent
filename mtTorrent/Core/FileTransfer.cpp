@@ -291,7 +291,7 @@ void mtt::FileTransfer::evalCurrentPeers()
 			return;
 
 		const uint32_t minPeersTimeChance = 10;
-		uint32_t currentTime = (uint32_t)std::time(0);
+		uint32_t currentTime = (uint32_t)::time(0);
 		auto minTimeToEval = currentTime - minPeersTimeChance;
 
 		const uint32_t minPeersPiecesTimeChance = 20;

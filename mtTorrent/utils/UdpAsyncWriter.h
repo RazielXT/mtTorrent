@@ -18,7 +18,7 @@ class UdpAsyncWriter : public std::enable_shared_from_this<UdpAsyncWriter>
 
 public:
 
-	UdpAsyncWriter(boost::asio::io_service& io_service);
+	UdpAsyncWriter(asio::io_service& io_service);
 	~UdpAsyncWriter();
 
 	void setAddress(Addr& addr);
@@ -41,10 +41,10 @@ protected:
 	std::mutex stateMutex;
 	enum { Clear, Initialized, Connected } state = Clear;
 
-	void postFail(std::string place, const boost::system::error_code& error);
+	void postFail(std::string place, const std::error_code& error);
 
-	void handle_resolve(const boost::system::error_code& error, udp::resolver::iterator iterator, std::shared_ptr<udp::resolver> resolver);
-	void handle_connect(const boost::system::error_code& err);
+	void handle_resolve(const std::error_code& error, udp::resolver::iterator iterator, std::shared_ptr<udp::resolver> resolver);
+	void handle_connect(const std::error_code& err);
 	
 	void do_write(DataBuffer data);
 	void do_rewrite();
@@ -53,12 +53,12 @@ protected:
 	DataBuffer messageBuffer;
 
 	void send_message();
-	void handle_write(const boost::system::error_code& error, size_t sz);
+	void handle_write(const std::error_code& error, size_t sz);
 
 	uint16_t bindPort = 0;
 
 	udp::endpoint target_endpoint;
 	udp::socket socket;
-	boost::asio::io_service& io_service;
+	asio::io_service& io_service;
 
 };

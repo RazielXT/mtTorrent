@@ -19,7 +19,7 @@ ServiceThreadpool::~ServiceThreadpool()
 void ServiceThreadpool::start(uint32_t startWorkers, bool finishAfterWork)
 {
 	if(!finishAfterWork && !work)
-		work = std::make_shared<boost::asio::io_service::work>(io);
+		work = std::make_shared<asio::io_service::work>(io);
 
 	if (workers >= startWorkers)
 		return;

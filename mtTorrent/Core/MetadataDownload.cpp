@@ -9,7 +9,7 @@ mtt::MetadataDownload::MetadataDownload(Peers& p) : peers(p)
 {
 }
 
-void mtt::MetadataDownload::start(std::function<void(Status, MetadataDownloadState&)> f, boost::asio::io_service& io)
+void mtt::MetadataDownload::start(std::function<void(Status, MetadataDownloadState&)> f, asio::io_service& io)
 {
 	onUpdate = f;
 	active = true;

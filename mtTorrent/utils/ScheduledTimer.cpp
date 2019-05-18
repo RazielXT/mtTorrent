@@ -1,8 +1,8 @@
 #include "ScheduledTimer.h"
 
-ScheduledTimer::ScheduledTimer(boost::asio::io_service& io, std::function<void()> callback) : func(callback)
+ScheduledTimer::ScheduledTimer(asio::io_service& io, std::function<void()> callback) : func(callback)
 {
-	timer = std::make_unique<boost::asio::deadline_timer>(io);
+	timer = std::make_unique<asio::steady_timer>(io);
 }
 
 ScheduledTimer::~ScheduledTimer()
@@ -16,8 +16,8 @@ void ScheduledTimer::schedule(uint32_t secondsOffset)
 
 	if (timer)
 	{
-		timer->expires_from_now(boost::posix_time::seconds(secondsOffset));
-		timer->async_wait(std::bind(&ScheduledTimer::checkTimer, shared_from_this()));
+		timer->expires_from_now(std::chrono::seconds(secondsOffset));
+		timer->async_wait(std::bind(&ScheduledTimer::checkTimer, shared_from_this(), std::placeholders::_1));
 	}
 }
 
@@ -27,7 +27,7 @@ void ScheduledTimer::disable()
 
 	if (timer)
 	{
-		boost::system::error_code ec;
+		std::error_code ec;
 		timer->cancel(ec);
 		timer.reset();
 	}
@@ -37,34 +37,31 @@ void ScheduledTimer::disable()
 
 uint32_t ScheduledTimer::getSecondsTillNextUpdate()
 {
-	if (!timer || timer->expires_at().is_infinity())
-		return 0;
-	else if (timer->expires_at() <= boost::asio::deadline_timer::traits_type::now())
+	if (!timer)
 		return 0;
 	else
 	{
-		auto time = timer->expires_at() - boost::asio::deadline_timer::traits_type::now();
-		return (uint32_t)time.total_seconds();
+		auto now = std::chrono::steady_clock::now();
+		auto expTime = timer->expires_at();
+
+		if (expTime < now)
+			return 0;
+		else
+
+			return std::chrono::duration_cast<std::chrono::duration<uint32_t>>(expTime - now).count();
 	}
 }
 
-void ScheduledTimer::checkTimer()
+void ScheduledTimer::checkTimer(const asio::error_code& error)
 {
 	std::function<void()> runFunc;
 
 	{
 		std::lock_guard<std::mutex> guard(mtx);
 
-		if (timer)
+		if (!error && timer)
 		{
-			if (timer->expires_at() <= boost::asio::deadline_timer::traits_type::now())
-			{
-				timer->expires_at(boost::posix_time::pos_infin);
-
-				runFunc = func;
-			}
-			else
-				timer->async_wait(std::bind(&ScheduledTimer::checkTimer, shared_from_this()));
+			runFunc = func;
 		}
 	}
 
@@ -72,7 +69,7 @@ void ScheduledTimer::checkTimer()
 		runFunc();
 }
 
-std::shared_ptr<ScheduledTimer> ScheduledTimer::create(boost::asio::io_service& io, std::function<void()> callback)
+std::shared_ptr<ScheduledTimer> ScheduledTimer::create(asio::io_service& io, std::function<void()> callback)
 {
 	return std::make_shared<ScheduledTimer>(io, callback);
 }

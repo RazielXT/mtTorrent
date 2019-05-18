@@ -107,6 +107,7 @@ void UdpAsyncComm::sendMessage(DataBuffer& data, udp::endpoint& endpoint)
 
 void UdpAsyncComm::removeCallback(UdpRequest target)
 {
+	std::lock_guard<std::mutex> guard(respondingMutex);
 	std::lock_guard<std::mutex> guard2(responsesMutex);
 
 	for(auto it = pendingResponses.begin(); it != pendingResponses.end(); it++)
@@ -127,9 +128,9 @@ void UdpAsyncComm::addPendingResponse(DataBuffer& data, UdpRequest c, UdpRespons
 	auto info = std::make_shared<ResponseRetryInfo>();
 	info->client = c;
 	info->defaultTimeout = timeout;
-	info->timeoutTimer = std::make_shared<boost::asio::deadline_timer>(pool.io);
-	info->timeoutTimer->expires_from_now(boost::posix_time::seconds(timeout));
-	info->timeoutTimer->async_wait(std::bind(&UdpAsyncComm::checkTimeout, this, c));
+	info->timeoutTimer = std::make_shared<asio::steady_timer>(pool.io);
+	info->timeoutTimer->expires_from_now(std::chrono::seconds(timeout));
+	info->timeoutTimer->async_wait(std::bind(&UdpAsyncComm::checkTimeout, this, c, std::placeholders::_1));
 	info->onResponse = response;
 
 	c->onCloseCallback = std::bind(&UdpAsyncComm::onUdpClose, this, std::placeholders::_1);
@@ -237,8 +238,11 @@ void UdpAsyncComm::startListening()
 	listener->listen();
 }
 
-void UdpAsyncComm::checkTimeout(UdpRequest client)
+void UdpAsyncComm::checkTimeout(UdpRequest client, const asio::error_code& error)
 {
+	if (error)
+		return;
+
 	std::shared_ptr<ResponseRetryInfo> info;
 	{
 		std::lock_guard<std::mutex> guard(responsesMutex);
@@ -258,24 +262,19 @@ void UdpAsyncComm::checkTimeout(UdpRequest client)
 
 	UDP_LOG("checking timer for " << info->client->getName());
 
-	if (info->timeoutTimer->expires_at() <= boost::asio::deadline_timer::traits_type::now())
+	if (info->retries > 0)
 	{
-		if (info->retries > 0)
-		{
-			UDP_LOG(info->client->getName() << " response timeout");
-			info->timeoutTimer->expires_at(boost::posix_time::pos_infin);
-			onUdpClose(info->client);
-		}
-		else
-		{
-			UDP_LOG(info->client->getName() << " request retry");
-			info->retries++;
-			info->timeoutTimer->expires_from_now(boost::posix_time::seconds(info->retries + info->defaultTimeout));
-			info->client->write();
-		}
+		UDP_LOG(info->client->getName() << " response timeout");
+		onUdpClose(info->client);
 	}
-
-	info->timeoutTimer->async_wait(std::bind(&UdpAsyncComm::checkTimeout, this, client));
+	else
+	{
+		UDP_LOG(info->client->getName() << " request retry");
+		info->retries++;
+		info->client->write();
+		info->timeoutTimer->expires_from_now(std::chrono::seconds(info->retries + info->defaultTimeout));
+		info->timeoutTimer->async_wait(std::bind(&UdpAsyncComm::checkTimeout, this, client, std::placeholders::_1));
+	}
 }
 
 void UdpAsyncComm::ResponseRetryInfo::reset()

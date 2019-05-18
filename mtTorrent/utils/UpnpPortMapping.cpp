@@ -3,7 +3,7 @@
 #include "NetAdaptersList.h"
 #include "HttpHeader.h"
 
-UpnpPortMapping::UpnpPortMapping(boost::asio::io_service& io_service) : io(io_service)
+UpnpPortMapping::UpnpPortMapping(asio::io_service& io_service) : io(io_service)
 {
 	state = std::make_shared<UpnpMappingState>();
 }

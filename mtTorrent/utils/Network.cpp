@@ -25,14 +25,14 @@ Addr::Addr(uint8_t* buffer, bool v6)
 	parse(buffer, v6);
 }
 
-Addr::Addr(const boost::asio::ip::address& addr, uint16_t port_num)
+Addr::Addr(const asio::ip::address& addr, uint16_t port_num)
 {
 	set(addr, port_num);
 }
 
 Addr::Addr(const char* str)
 {
-	auto a = boost::asio::ip::address::from_string(str);
+	auto a = asio::ip::address::from_string(str);
 
 	size_t portStart = strlen(str);
 	while (portStart > 0)
@@ -67,7 +67,7 @@ void Addr::set(DataBuffer ip, uint16_t p)
 	ipv6 = ip.size() > 4;
 }
 
-void Addr::set(const boost::asio::ip::address& addr, uint16_t port_num)
+void Addr::set(const asio::ip::address& addr, uint16_t port_num)
 {
 	port = port_num;
 	ipv6 = addr.is_v6();
@@ -94,11 +94,11 @@ int Addr::parse(uint8_t* buffer, bool v6)
 	return 2 + addrSize;
 }
 
-boost::asio::ip::udp::endpoint Addr::toUdpEndpoint()
+asio::ip::udp::endpoint Addr::toUdpEndpoint()
 {
 	return ipv6 ?
-		udp::endpoint(boost::asio::ip::address_v6(*reinterpret_cast<boost::asio::ip::address_v6::bytes_type*>(addrBytes)), port) :
-		udp::endpoint(boost::asio::ip::address_v4(*reinterpret_cast<boost::asio::ip::address_v4::bytes_type*>(addrBytes)), port);
+		udp::endpoint(asio::ip::address_v6(*reinterpret_cast<asio::ip::address_v6::bytes_type*>(addrBytes)), port) :
+		udp::endpoint(asio::ip::address_v4(*reinterpret_cast<asio::ip::address_v4::bytes_type*>(addrBytes)), port);
 }
 
 std::string Addr::toString()

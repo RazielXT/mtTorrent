@@ -6,7 +6,7 @@ class UdpAsyncReceiver
 {
 public:
 
-	UdpAsyncReceiver(boost::asio::io_service& io_service, uint16_t port, bool ipv6);
+	UdpAsyncReceiver(asio::io_service& io_service, uint16_t port, bool ipv6);
 
 	void listen();
 	void stop();
@@ -15,7 +15,7 @@ public:
 
 private:
 
-	void handle_receive(const boost::system::error_code& error, std::size_t bytes_transferred);
+	void handle_receive(const std::error_code& error, std::size_t bytes_transferred);
 
 	bool active = false;
 	udp::socket socket_;

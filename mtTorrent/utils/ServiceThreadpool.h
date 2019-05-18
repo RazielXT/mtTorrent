@@ -1,6 +1,6 @@
 #pragma once
 
-#include <boost/asio.hpp>
+#include <asio.hpp>
 #include <memory>
 #include <thread>
 
@@ -12,7 +12,7 @@ public:
 	ServiceThreadpool(uint32_t startWorkers);
 	~ServiceThreadpool();
 
-	boost::asio::io_service io;
+	asio::io_service io;
 
 	void start(uint32_t startWorkers, bool finishAfterWork = false);
 	void stop();
@@ -21,7 +21,7 @@ public:
 
 private:
 
-	std::shared_ptr<boost::asio::io_service::work> work;
+	std::shared_ptr<asio::io_service::work> work;
 
 	std::thread myThreads[20];
 	uint32_t workers = 0;

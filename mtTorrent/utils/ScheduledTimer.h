@@ -1,12 +1,12 @@
 #pragma once
-#include <boost/asio.hpp>
+#include <asio.hpp>
 #include <functional>
 
 struct ScheduledTimer : public std::enable_shared_from_this<ScheduledTimer>
 {
-	static std::shared_ptr<ScheduledTimer> create(boost::asio::io_service& io, std::function<void()> callback);
+	static std::shared_ptr<ScheduledTimer> create(asio::io_service& io, std::function<void()> callback);
 
-	ScheduledTimer(boost::asio::io_service& io, std::function<void()> callback);
+	ScheduledTimer(asio::io_service& io, std::function<void()> callback);
 	~ScheduledTimer();
 
 	void schedule(uint32_t secondsOffset);
@@ -15,8 +15,8 @@ struct ScheduledTimer : public std::enable_shared_from_this<ScheduledTimer>
 
 private:
 
-	void checkTimer();
+	void checkTimer(const asio::error_code& error);
 	std::function<void()> func;
-	std::unique_ptr<boost::asio::deadline_timer> timer;
+	std::unique_ptr<asio::steady_timer> timer;
 	std::mutex mtx;
 };

@@ -34,18 +34,25 @@ void mtt::HttpTrackerComm::init(std::string host, std::string p, TorrentPtr t)
 	port = p;
 	torrent = t;
 
+	initializeStream();
+
+	info.state = TrackerState::Initialized;
+}
+
+void mtt::HttpTrackerComm::initializeStream()
+{
 	tcpComm = std::make_shared<TcpAsyncStream>(torrent->service.io);
 	tcpComm->onConnectCallback = std::bind(&HttpTrackerComm::onTcpConnected, this);
 	tcpComm->onCloseCallback = [this](int code) {onTcpClosed(code); };
 	tcpComm->onReceiveCallback = std::bind(&HttpTrackerComm::onTcpReceived, this);
 
-	info.state = TrackerState::Initialized;
-
-	tcpComm->init(host, port);
+	tcpComm->init(info.hostname, port);
 }
 
 void mtt::HttpTrackerComm::fail()
 {
+	tcpComm.reset();
+
 	if (info.state == TrackerState::Announcing || info.state == TrackerState::Reannouncing)
 	{
 		if (info.state == TrackerState::Reannouncing)
@@ -183,6 +190,9 @@ uint32_t mtt::HttpTrackerComm::readAnnounceResponse(DataBuffer& buffer, Announce
 void mtt::HttpTrackerComm::announce()
 {
 	HTTP_TRACKER_LOG("announcing");
+
+	if (!tcpComm)
+		initializeStream();
 
 	if (info.state == TrackerState::Announced)
 		info.state = TrackerState::Reannouncing;

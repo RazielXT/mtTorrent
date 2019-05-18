@@ -20,7 +20,7 @@ LOG_TYPE(UdpListener);
 LOG_TYPE(UdpMgr);
 LOG_TYPE(Download);
 
-#ifdef STANDALONE
+#ifdef MTT_TEST_STANDALONE
 #define WRITE_LOG(type, x) {std::stringstream ss; ss << x; WriteLogImplementation(type, ss);}
 #else
 #define WRITE_LOG(type, x) {}

@@ -16,7 +16,7 @@ class TcpAsyncStream : public std::enable_shared_from_this<TcpAsyncStream>
 
 public:
 
-	TcpAsyncStream(boost::asio::io_service& io_service);
+	TcpAsyncStream(asio::io_service& io_service);
 	~TcpAsyncStream();
 
 	void init(const std::string& hostname, const std::string& port);
@@ -46,21 +46,21 @@ protected:
 	void connectEndpoint();
 	void setAsConnected();
 
-	void postFail(std::string place, const boost::system::error_code& error);
+	void postFail(std::string place, const std::error_code& error);
 
 	enum { Disconnected, Connecting, Connected } state = Disconnected;
-	void handle_resolve(const boost::system::error_code& error, tcp::resolver::iterator iterator, std::shared_ptr<tcp::resolver> resolver);
-	void handle_resolver_connect(const boost::system::error_code& err, tcp::resolver::iterator endpoint_iterator, std::shared_ptr<tcp::resolver> resolver);
-	void handle_connect(const boost::system::error_code& err);
+	void handle_resolve(const std::error_code& error, tcp::resolver::iterator iterator, std::shared_ptr<tcp::resolver> resolver);
+	void handle_resolver_connect(const std::error_code& err, tcp::resolver::iterator endpoint_iterator, std::shared_ptr<tcp::resolver> resolver);
+	void handle_connect(const std::error_code& err);
 	void do_close();
 
 	void do_write(DataBuffer data);
 	std::mutex write_msgs_mutex;
 	std::deque<DataBuffer> write_msgs;
-	void handle_write(const boost::system::error_code& error);
+	void handle_write(const std::error_code& error);
 
 	std::array<char, 10*1024> recv_buffer;
-	void handle_receive(const boost::system::error_code& error, std::size_t bytes_transferred);
+	void handle_receive(const std::error_code& error, std::size_t bytes_transferred);
 	void appendData(char* data, size_t size);
 	std::mutex receiveBuffer_mutex;
 	DataBuffer receiveBuffer;
@@ -68,10 +68,10 @@ protected:
 	std::mutex socket_mutex;
 	tcp::socket socket;
 
-	void checkTimeout();
-	boost::asio::deadline_timer timeoutTimer;
+	void checkTimeout(const asio::error_code& error);
+	asio::steady_timer  timeoutTimer;
 
-	boost::asio::io_service& io_service;
+	asio::io_service& io_service;
 
 	struct  
 	{

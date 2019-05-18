@@ -2,10 +2,9 @@
 #include <istream>
 #include <ostream>
 #include <string>
-//#include <RiotRestApi.h>
 #include <Test.h>
 
-#ifndef STANDALONE
+#ifndef MTT_TEST_STANDALONE
 
 int __stdcall Main(HINSTANCE h, ULONG ulReason, PVOID pvReserved) {
 

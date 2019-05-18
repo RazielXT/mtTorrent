@@ -36,7 +36,7 @@ private:
 		UdpRequest client;
 		uint8_t retries = 0;
 		UdpResponseCallback onResponse;
-		std::shared_ptr<boost::asio::deadline_timer> timeoutTimer;
+		std::shared_ptr<asio::steady_timer> timeoutTimer;
 		uint32_t defaultTimeout = 1;
 		void reset();
 	};
@@ -47,7 +47,7 @@ private:
 	void addPendingResponse(DataBuffer& data, UdpRequest target, UdpResponseCallback response, uint32_t timeout = 1);
 	UdpRequest findPendingConnection(UdpRequest);
 
-	void checkTimeout(UdpRequest);
+	void checkTimeout(UdpRequest, const asio::error_code& error);
 	void onUdpReceive(udp::endpoint&, DataBuffer&);
 	void onUdpClose(UdpRequest);
 	UdpPacketCallback onUnhandledReceive;

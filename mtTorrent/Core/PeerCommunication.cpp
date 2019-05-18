@@ -117,7 +117,7 @@ PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l) : torrent
 {
 }
 
-PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, boost::asio::io_service& io_service) : torrent(t), listener(l)
+PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, asio::io_service& io_service) : torrent(t), listener(l)
 {
 	stream = std::make_shared<TcpAsyncStream>(io_service);
 

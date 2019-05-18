@@ -173,7 +173,7 @@ void mtt::dht::Communication::sendMessage(udp::endpoint& endpoint, DataBuffer& d
 void mtt::dht::Communication::loadDefaultRoots()
 {
 	auto resolveFunc = [this]
-	(const boost::system::error_code& error, udp::resolver::iterator iterator, std::shared_ptr<udp::resolver> resolver)
+	(const std::error_code& error, udp::resolver::iterator iterator, std::shared_ptr<udp::resolver> resolver)
 	{
 		if (!error)
 		{

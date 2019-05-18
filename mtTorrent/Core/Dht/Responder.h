@@ -4,6 +4,7 @@
 #include "utils/ScheduledTimer.h"
 #include "utils/BencodeParser.h"
 #include "utils/PacketHelper.h"
+#include <map>
 
 namespace mtt
 {

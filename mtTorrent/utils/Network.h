@@ -3,10 +3,10 @@
 #define _WIN32_WINDOWS 0x0603
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
-#include <boost/asio.hpp>
+#include <asio.hpp>
 
-using boost::asio::ip::tcp;
-using boost::asio::ip::udp;
+using asio::ip::tcp;
+using asio::ip::udp;
 
 using DataBuffer = std::vector<uint8_t>;
 
@@ -17,7 +17,7 @@ struct Addr
 	Addr(uint8_t* ip, uint16_t port, bool isIpv6);
 	Addr(uint32_t ip, uint16_t port);
 	Addr(DataBuffer ip, uint16_t port);
-	Addr(const boost::asio::ip::address& addr, uint16_t port_num);
+	Addr(const asio::ip::address& addr, uint16_t port_num);
 	Addr(const char* str);
 
 	uint8_t addrBytes[16];
@@ -27,10 +27,10 @@ struct Addr
 	void set(uint8_t* ip, uint16_t port, bool isIpv6);
 	void set(DataBuffer ip, uint16_t port);
 	void set(uint32_t ip, uint16_t port);
-	void set(const boost::asio::ip::address& addr, uint16_t port_num);
+	void set(const asio::ip::address& addr, uint16_t port_num);
 
 	int parse(uint8_t* buffer, bool v6);
-	boost::asio::ip::udp::endpoint toUdpEndpoint();
+	asio::ip::udp::endpoint toUdpEndpoint();
 	std::string toString();
 
 	bool operator==(const Addr& r);

@@ -83,7 +83,7 @@ void mtt::IncomingPeersListener::createListener()
 	{
 		listener = std::make_shared<TcpAsyncServer>(pool.io, mtt::config::getExternal().connection.tcpPort, false);
 	}
-	catch (const boost::system::system_error&)
+	catch (const std::system_error&)
 	{
 		listener = nullptr;
 		return;

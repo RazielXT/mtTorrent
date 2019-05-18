@@ -3,7 +3,7 @@
 
 #define UDP_LOG(x) WRITE_LOG(LogTypeUdp, x)
 
-UdpAsyncWriter::UdpAsyncWriter(boost::asio::io_service& io) : io_service(io), socket(io)
+UdpAsyncWriter::UdpAsyncWriter(asio::io_service& io) : io_service(io), socket(io)
 {
 }
 
@@ -63,7 +63,7 @@ void UdpAsyncWriter::write()
 	io_service.post(std::bind(&UdpAsyncWriter::do_rewrite, shared_from_this()));
 }
 
-void UdpAsyncWriter::handle_resolve(const boost::system::error_code& error, udp::resolver::iterator iterator, std::shared_ptr<udp::resolver> resolver)
+void UdpAsyncWriter::handle_resolve(const std::error_code& error, udp::resolver::iterator iterator, std::shared_ptr<udp::resolver> resolver)
 {
 	std::lock_guard<std::mutex> guard(stateMutex);
 
@@ -81,7 +81,7 @@ void UdpAsyncWriter::handle_resolve(const boost::system::error_code& error, udp:
 	}
 }
 
-void UdpAsyncWriter::postFail(std::string place, const boost::system::error_code& error)
+void UdpAsyncWriter::postFail(std::string place, const std::error_code& error)
 {
 	if(error)
 		UDP_LOG(place << "-" << error.message())
@@ -93,7 +93,7 @@ void UdpAsyncWriter::postFail(std::string place, const boost::system::error_code
 		onCloseCallback(shared_from_this());
 }
 
-void UdpAsyncWriter::handle_connect(const boost::system::error_code& error)
+void UdpAsyncWriter::handle_connect(const std::error_code& error)
 {
 	std::lock_guard<std::mutex> guard(stateMutex);
 
@@ -117,11 +117,11 @@ void UdpAsyncWriter::do_close()
 	if (state == Connected)
 		state = Initialized;
 
-	boost::system::error_code error;
+	std::error_code error;
 
 	if (socket.is_open())
 	{
-		socket.shutdown(boost::asio::socket_base::shutdown_both);
+		socket.shutdown(asio::socket_base::shutdown_both);
 		socket.close(error);
 	}	
 }
@@ -150,10 +150,10 @@ void UdpAsyncWriter::send_message()
 	{
 		if (bindPort && !socket.is_open())
 		{
-			boost::system::error_code ec;
+			std::error_code ec;
 
 			socket.open(target_endpoint.protocol(), ec);
-			socket.set_option(boost::asio::socket_base::reuse_address(true),ec);
+			socket.set_option(asio::socket_base::reuse_address(true),ec);
 			socket.bind(udp::endpoint(target_endpoint.protocol(), bindPort), ec);
 
 			if (ec)
@@ -170,13 +170,13 @@ void UdpAsyncWriter::send_message()
 		{
 			UDP_LOG("writing " << messageBuffer.size() << " bytes");
 
-			socket.async_send_to(boost::asio::buffer(messageBuffer.data(), messageBuffer.size()), target_endpoint,
+			socket.async_send_to(asio::buffer(messageBuffer.data(), messageBuffer.size()), target_endpoint,
 				std::bind(&UdpAsyncWriter::handle_write, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 		}
 	}
 }
 
-void UdpAsyncWriter::handle_write(const boost::system::error_code& error, size_t sz)
+void UdpAsyncWriter::handle_write(const std::error_code& error, size_t sz)
 {
 	std::lock_guard<std::mutex> guard(stateMutex);
 

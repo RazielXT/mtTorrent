@@ -7,7 +7,7 @@ class UpnpPortMapping
 {
 public:
 
-	UpnpPortMapping(boost::asio::io_service& io_service);
+	UpnpPortMapping(asio::io_service& io_service);
 	~UpnpPortMapping();
 
 	enum class PortType { Tcp, Udp };
@@ -26,7 +26,7 @@ private:
 
 	std::string createUpnpHttpHeader(const std::string& hostAddress, size_t contentLength, const std::string& soapAction);
 
-	boost::asio::io_service& io;
+	asio::io_service& io;
 
 	struct UpnpMappingState
 	{

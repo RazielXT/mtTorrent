@@ -55,7 +55,7 @@ bool mtt::TorrentState::load(const std::string& name)
 	if (auto root = parser.getRoot())
 	{
 		downloadPath = root->getTxt("downloadPath");
-		lastStateTime = (uint32_t)root->getBigInt("lastStateTime");
+		lastStateTime = (int64_t)root->getBigInt("lastStateTime");
 		started = root->getInt("started");
 		if (auto pItem = root->getTxtItem("pieces"))
 		{

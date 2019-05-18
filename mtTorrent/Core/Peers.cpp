@@ -62,8 +62,7 @@ void mtt::Peers::stop()
 		peersListener->setTarget(nullptr);
 		peersListener->setParent(nullptr);
 
-		std::lock_guard<std::mutex> guard(peersListener->mtx);
-		std::lock_guard<std::mutex> guard2(peersMutex);
+		std::lock_guard<std::mutex> guard(peersMutex);
 
 		int i = 0;
 		for (auto c : activeConnections)
@@ -72,8 +71,6 @@ void mtt::Peers::stop()
 				c.comm->stop();
 			i++;
 		}
-
-		//activeConnections.clear();
 	}
 
 	updateCallback = nullptr;
@@ -85,7 +82,7 @@ void mtt::Peers::connectNext(uint32_t count)
 	std::lock_guard<std::mutex> guard(peersMutex);
 	count = std::min(count, mtt::config::getExternal().connection.maxTorrentConnections - (uint32_t)activeConnections.size());
 
-	auto currentTime = (uint32_t)std::time(0);
+	auto currentTime = (uint32_t)::time(0);
 	uint32_t leastConnectionAttempts = 0;
 
 	for (size_t i = 0; i < knownPeers.size(); i++)
@@ -452,7 +449,7 @@ uint32_t mtt::Peers::DhtSource::dhtFoundPeers(uint8_t* hash, std::vector<Addr>& 
 
 void mtt::Peers::DhtSource::dhtFindingPeersFinished(uint8_t* hash, uint32_t count)
 {
-	uint32_t currentTime = (uint32_t)std::time(0);
+	uint32_t currentTime = (uint32_t)::time(0);
 	info.lastAnnounce = currentTime;
 	info.nextAnnounce = currentTime + info.announceInterval;
 	info.state = TrackerState::Connected;
@@ -536,7 +533,5 @@ void mtt::Peers::PeersListener::setTarget(mtt::IPeerListener* t)
 
 void mtt::Peers::PeersListener::setParent(Peers* p)
 {
-	std::lock_guard<std::mutex> guard(mtx);
-
 	peers = p;
 }

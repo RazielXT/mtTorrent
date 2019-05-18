@@ -1,6 +1,7 @@
 #pragma once
 #include "utils/BencodeParser.h"
 #include "utils/TcpAsyncStream.h"
+#include <map>
 
 namespace mtt
 {

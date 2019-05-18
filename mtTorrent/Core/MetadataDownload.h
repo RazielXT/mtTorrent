@@ -16,7 +16,7 @@ namespace mtt
 
 		MetadataDownload(Peers&);
 
-		void start(std::function<void(Status, MetadataDownloadState&)> onUpdate, boost::asio::io_service& io);
+		void start(std::function<void(Status, MetadataDownloadState&)> onUpdate, asio::io_service& io);
 		void stop();
 
 		MetadataDownloadState state;
