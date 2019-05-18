@@ -55,7 +55,7 @@ void mtt::dht::Communication::stop()
 		refreshTimer->disable();
 	refreshTimer = nullptr;
 
-	udp->removeListener();
+	udp->removeListeners();
 	service.stop();
 
 	save();

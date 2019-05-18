@@ -22,7 +22,7 @@ void UdpAsyncComm::Deinit()
 {
 	if (ptr)
 	{
-		ptr->clearPendingResponses();
+		ptr->removeListeners();
 		ptr->pool.stop();
 	}
 }
@@ -40,9 +40,14 @@ void UdpAsyncComm::listen(UdpPacketCallback receive)
 	onUnhandledReceive = receive;
 }
 
-void UdpAsyncComm::removeListener()
+void UdpAsyncComm::removeListeners()
 {
 	std::lock_guard<std::mutex> guard(respondingMutex);
+
+	{
+		std::lock_guard<std::mutex> guard(responsesMutex);
+		pendingResponses.clear();
+	}
 
 	onUnhandledReceive = nullptr;
 }
@@ -112,18 +117,6 @@ void UdpAsyncComm::removeCallback(UdpRequest target)
 			break;
 		}
 	}
-}
-
-void UdpAsyncComm::clearPendingResponses()
-{
-	std::lock_guard<std::mutex> guard(responsesMutex);
-
-	for (auto r : pendingResponses)
-	{
-		r->reset();
-	}
-
-	pendingResponses.clear();
 }
 
 void UdpAsyncComm::addPendingResponse(DataBuffer& data, UdpRequest c, UdpResponseCallback response, uint32_t timeout)
