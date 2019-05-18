@@ -23,7 +23,7 @@
     <ProjectGuid>{08F6658C-96BE-43CD-AF5D-090AD85673CC}</ProjectGuid>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <Keyword>ManagedCProj</Keyword>
-    <RootNamespace>GuiLite</RootNamespace>
+    <RootNamespace>mtTorrentGuiLite</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>mtTorrentGuiLite</ProjectName>
   </PropertyGroup>

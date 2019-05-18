@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.28307.645
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mtTorrent", "mtTorrent\mtTorrent.vcxproj", "{7A7123CF-1E7A-408F-8281-6A0ADB328253}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mtTorrentGuiLite", "GuiLite\GuiLite.vcxproj", "{08F6658C-96BE-43CD-AF5D-090AD85673CC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mtTorrentGuiLite", "mtTorrentGuiLite\mtTorrentGuiLite.vcxproj", "{08F6658C-96BE-43CD-AF5D-090AD85673CC}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "countryIpListParser", "countryIpListParser\countryIpListParser.vcxproj", "{841FA89C-34F1-4180-BECC-193231E68E8F}"
 EndProject
