@@ -13,10 +13,30 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\mtt">
+      <UniqueIdentifier>{a874a707-dff1-4390-8e30-48bfe4fe5a2b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\mtTorrent\Public\BinaryInterface.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\mtTorrent\Public\BinaryInterface.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Public\ModuleAllocator.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Public\Status.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="mttLoader.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

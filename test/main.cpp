@@ -5,6 +5,7 @@
 #include <windows.h>
 #include <DbgHelp.h>
 #include <TlHelp32.h>
+#include "mttLoader.h"
 
 #pragma comment (lib, "dbghelp.lib")
 
@@ -165,7 +166,7 @@ bool closeTestApp(std::string path, const char* dumpPath)
 	return false;
 }
 
-bool runTest(std::string path, const char* appExecutable, int id, const char* dumpPath)
+bool runApplicationTest(std::string path, const char* appExecutable, const char* arguments, int id, const char* dumpPath)
 {
 	int runTimeSeconds = 5;
 
@@ -175,31 +176,52 @@ bool runTest(std::string path, const char* appExecutable, int id, const char* du
 
 	fullPath += appExecutable;
 
-	HINSTANCE result = ShellExecute(0, "open", fullPath.data(), 0, 0, SW_SHOWNORMAL);
+	HINSTANCE result = ShellExecute(0, "open", fullPath.data(), arguments, 0, SW_SHOWNORMAL);
 
 	std::this_thread::sleep_for(std::chrono::seconds(runTimeSeconds));
 
 	return closeTestApp(appExecutable, dumpPath);
 }
 
+bool basicLoadTest(std::string path, const char* libFile, int id, const char* dumpPath)
+{
+	int runTimeSeconds = 5;
+
+	std::string fullPath = path + std::to_string(id) + "/";
+
+	SetCurrentDirectory(fullPath.data());
+
+	if (!mtt::load())
+		return false;
+
+	uint8_t hash[20];
+	mtt::IoctlFunc(mtBI::MessageId::AddFromMetadata, "6QBN6XVGKV7CWOT5QXKDYWF3LIMUVK4I", hash);
+
+	std::this_thread::sleep_for(std::chrono::seconds(runTimeSeconds));
+
+	mtt::unload();
+
+	return true;
+}
+
 void registerDumpCreate(const char* dumpPath, const char* appExecutable)
 {
 	HKEY hKey;
-	LPCTSTR sk = TEXT("SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting");
+	LPCTSTR sk = TEXT("SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps");
 
 	LONG openRes = RegOpenKeyEx(HKEY_LOCAL_MACHINE, sk, 0, KEY_ALL_ACCESS, &hKey);
 
 	if (openRes == ERROR_SUCCESS)
 	{
-		HKEY lhKey;
-		RegCreateKey(hKey, "LocalDumps", &lhKey);
 		HKEY elhKey;
-		RegCreateKey(lhKey, appExecutable, &elhKey);
-
+		RegCreateKey(hKey, appExecutable, &elhKey);
 		openRes = RegSetValueExA(elhKey, "DumpFolder", 0, REG_SZ, (const BYTE*)dumpPath, (DWORD)strlen(dumpPath) + 1);
-
 		RegCloseKey(elhKey);
-		RegCloseKey(lhKey);
+
+		RegCreateKey(hKey, "mtTorrentTest.exe", &elhKey);
+		openRes = RegSetValueExA(elhKey, "DumpFolder", 0, REG_SZ, (const BYTE*)dumpPath, (DWORD)strlen(dumpPath) + 1);
+		RegCloseKey(elhKey);
+
 		RegCloseKey(hKey);
 	}
 }
@@ -213,18 +235,49 @@ void unregisterDumpCreate(const char* appExecutable)
 
 	if (openRes == ERROR_SUCCESS)
 	{
-		auto r = RegDeleteKeyEx(hKey, appExecutable, KEY_WOW64_64KEY, 0);
+		RegDeleteKeyEx(hKey, appExecutable, KEY_WOW64_64KEY, 0);
+		RegDeleteKeyEx(hKey, "mtTorrentTest.exe", KEY_WOW64_64KEY, 0);
 		RegCloseKey(hKey);
 	}
 }
 
-int main()
+int main(int argc, char** argv)
 {
-	int testCount = 1;
-	const char* testPath = "D:/test/";
-	const char* dumpPath = "D:/test/";
-	const char* appFolder = "mtt";
+	std::string testCase;
+	int testCount = 5;
+	std::string testPath = "E:/tests/";
+
+	if (argc > 1)
+	{
+		for (int i = 1; i < argc; ++i)
+		{
+			if (i + 1 < argc)
+			{
+				if (strcmp(argv[i], "case") == 0)
+				{
+					testCase = argv[i + 1];
+				}
+				else if (strcmp(argv[i], "count") == 0)
+				{
+					testCount = std::stoi(argv[i + 1]);
+				}
+				else if (strcmp(argv[i], "path") == 0)
+				{
+					testPath = argv[i + 1];
+				}
+				else
+					continue;
+
+				i++;
+			}
+		}
+	}
+
+	const char* dumpPath = testPath.data();
+	const char* appFolder = "mtTorrent";
+	const char* libFile = "mtTorrent.dll";
 	const char* appExecutable = "mtTorrent.exe";
+	const char* appArguments = nullptr;
 
 	cleanTestFolder(testPath);
 	copyTestFolder(testPath, appFolder, testCount);
@@ -233,8 +286,17 @@ int main()
 
 	for (int i = 0; i < testCount; i++)
 	{
-		if(!runTest(testPath, appExecutable, i, dumpPath))
-			break;
+		if (testCase.empty() || testCase == "basicLoad")
+		{
+			if (!basicLoadTest(testPath, libFile, i, dumpPath))
+				break;
+		}
+
+		if (testCase.empty() || testCase == "app")
+		{
+			if (!runApplicationTest(testPath, appExecutable, appArguments, i, dumpPath))
+				break;
+		}
 	}
 
 	unregisterDumpCreate(appExecutable);
