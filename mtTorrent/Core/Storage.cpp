@@ -178,9 +178,9 @@ mtt::Status mtt::Storage::deleteAll()
 	return Status::Success;
 }
 
-uint32_t mtt::Storage::getLastModifiedTime()
+int64_t mtt::Storage::getLastModifiedTime()
 {
-	uint32_t time = 0;
+	int64_t time = 0;
 
 	std::lock_guard<std::mutex> guard(storageMutex);
 
@@ -188,11 +188,11 @@ uint32_t mtt::Storage::getLastModifiedTime()
 	{
 		auto path = getFullpath(f);
 		std::error_code ec;
-
 		auto tm = std::filesystem::last_write_time(path, ec);
+
 		if (!ec)
 		{
-			time = std::max(time, (uint32_t)tm.time_since_epoch().count());
+			time = std::max(time, tm.time_since_epoch().count());
 		}
 	}
 
@@ -364,7 +364,7 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 	}
 }
 
-std::shared_ptr<mtt::PiecesCheck> mtt::Storage::checkStoredPiecesAsync(std::vector<PieceInfo>& piecesInfo, boost::asio::io_service& io, std::function<void(std::shared_ptr<PiecesCheck>)> onFinish)
+std::shared_ptr<mtt::PiecesCheck> mtt::Storage::checkStoredPiecesAsync(std::vector<PieceInfo>& piecesInfo, asio::io_service& io, std::function<void(std::shared_ptr<PiecesCheck>)> onFinish)
 {
 	auto request = std::make_shared<mtt::PiecesCheck>();
 	request->piecesCount = (uint32_t)piecesInfo.size();

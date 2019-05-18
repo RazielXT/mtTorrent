@@ -21,11 +21,11 @@ namespace mtt
 
 		Status preallocateSelection(DownloadSelection& files);
 		DataBuffer checkStoredPieces(std::vector<PieceInfo>& piecesInfo);
-		std::shared_ptr<PiecesCheck> checkStoredPiecesAsync(std::vector<PieceInfo>& piecesInfo, boost::asio::io_service& io, std::function<void(std::shared_ptr<PiecesCheck>)> onFinish);
+		std::shared_ptr<PiecesCheck> checkStoredPiecesAsync(std::vector<PieceInfo>& piecesInfo, asio::io_service& io, std::function<void(std::shared_ptr<PiecesCheck>)> onFinish);
 		void flush();
 
 		Status deleteAll();
-		uint32_t getLastModifiedTime();
+		int64_t getLastModifiedTime();
 
 	private:
 

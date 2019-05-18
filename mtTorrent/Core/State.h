@@ -17,7 +17,7 @@ namespace mtt
 		std::vector<File> files;
 
 		std::vector<uint8_t>& pieces;
-		uint32_t lastStateTime = 0;
+		int64_t lastStateTime = 0;
 		bool started = false;
 
 		void save(const std::string& name);

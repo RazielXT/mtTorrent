@@ -61,7 +61,6 @@ void mtt::Core::deinit()
 	for (auto& t : torrents)
 	{
 		list.torrents.push_back({ t->hashString() });
-		t->save();
 		t->stop();
 	}
 

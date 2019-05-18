@@ -77,7 +77,7 @@ void mtt::Torrent::save()
 {
 	TorrentState saveState(files.progress.pieces);
 	saveState.downloadPath = mtt::config::getExternal().files.defaultDirectory;
-	saveState.lastStateTime = checked ? (uint32_t)::time(0) : 0;
+	saveState.lastStateTime = checked ? files.storage.getLastModifiedTime() : 0;
 	saveState.started = state == State::Started;
 
 	for (auto& f : files.selection.files)
