@@ -1,17 +1,17 @@
-#include "BinaryInterface.h"
+#include "ModuleString.h"
 #include "ModuleAllocator.h"
 
-mtBI::string::string() : allocator(&mtBI::module_allocator<>::m_allocator)
+mtt::string::string() : allocator(&mtt::module_allocator<>::m_allocator)
 {
 }
 
-mtBI::string::~string()
+mtt::string::~string()
 {
 	if (data)
 		allocator->deallocate(data);
 }
 
-void mtBI::string::assign(const char* str, size_t length)
+void mtt::string::assign(const char* str, size_t length)
 {
 	if (data)
 		allocator->deallocate(data);
@@ -20,14 +20,14 @@ void mtBI::string::assign(const char* str, size_t length)
 	memcpy(data, str, length + 1);
 }
 
-mtBI::string& mtBI::string::operator=(const char* str)
+mtt::string & mtt::string::operator=(const char* str)
 {
 	assign(str, strlen(str));
 
 	return *this;
 }
 
-mtBI::string& mtBI::string::operator=(const std::string& str)
+mtt::string& mtt::string::operator=(const std::string & str)
 {
 	assign(str.data(), str.length());
 

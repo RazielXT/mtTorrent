@@ -1,29 +1,11 @@
 #pragma once
 
-#include <vector>
-#include <string>
 #include "Status.h"
+#include "ModuleString.h"
+#include <vector>
 
 namespace mtBI
 {
-	class allocator;
-
-	struct string
-	{
-		string();
-		~string();
-
-		char* data = nullptr;
-
-		string& operator=(const std::string& str);
-		string& operator=(const char* str);
-
-		void assign(const char* str, size_t length);
-
-	private:
-		const allocator * const allocator;
-	};
-
 	enum class MessageId
 	{
 		Init,
@@ -52,7 +34,7 @@ namespace mtBI
 	struct SourceId
 	{
 		uint8_t hash[20];
-		string name;
+		mtt::string name;
 	};
 
 	struct SettingsInfo
@@ -60,7 +42,7 @@ namespace mtBI
 		uint32_t udpPort;
 		uint32_t tcpPort;
 		bool dhtEnabled;
-		string directory;
+		mtt::string directory;
 		uint32_t maxConnections;
 		bool upnpEnabled;
 	};
@@ -86,7 +68,7 @@ namespace mtBI
 	{
 		uint32_t count;
 		uint32_t start;
-		std::vector<string> logs;
+		std::vector<mtt::string> logs;
 	};
 
 	struct RemoveTorrentRequest
@@ -97,7 +79,7 @@ namespace mtBI
 
 	struct FileSelection
 	{
-		string name;
+		mtt::string name;
 		bool selected;
 		size_t size;
 		uint32_t pieceStart;
@@ -118,7 +100,7 @@ namespace mtBI
 	struct AddPeerRequest
 	{
 		uint8_t hash[20];
-		string addr;
+		mtt::string addr;
 	};
 
 	struct TorrentFilesSelectionRequest
@@ -142,15 +124,15 @@ namespace mtBI
 	struct TorrentInfo
 	{
 		uint32_t filesCount;
-		std::vector<string> filenames;
+		std::vector<mtt::string> filenames;
 		std::vector<size_t> filesizes;
 		size_t fullsize;
-		string name;
+		mtt::string name;
 	};
 
 	struct TorrentStateInfo
 	{
-		string name;
+		mtt::string name;
 		float progress;
 		float selectionProgress;
 		size_t downloaded;
@@ -171,9 +153,9 @@ namespace mtBI
 		float progress;
 		size_t dlSpeed;
 		size_t upSpeed;
-		string addr;
-		string client;
-		string country;
+		mtt::string addr;
+		mtt::string client;
+		mtt::string country;
 	};
 
 	struct TorrentPeersInfo
@@ -184,7 +166,7 @@ namespace mtBI
 
 	struct SourceInfo
 	{
-		string name;
+		mtt::string name;
 		uint32_t peers;
 		uint32_t seeds;
 		uint32_t leechers;

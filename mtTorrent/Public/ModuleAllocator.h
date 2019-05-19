@@ -1,6 +1,6 @@
 #pragma once
 
-namespace mtBI
+namespace mtt
 {
 	typedef void* (__cdecl allocate_type)(size_t size);
 	typedef void(__cdecl deallocate_type)(void* ptr);

@@ -7,6 +7,9 @@
 #include "utils/TcpAsyncServer.h"
 #include "IncomingPeersListener.h"
 #include "State.h"
+#include "utils/HexEncoding.h"
+
+mtt::Core core;
 
 void mtt::Core::init()
 {
@@ -128,6 +131,14 @@ mtt::TorrentPtr mtt::Core::getTorrent(const uint8_t* hash)
 	return nullptr;
 }
 
+mtt::TorrentPtr mtt::Core::getTorrent(const char* hash)
+{
+	uint8_t hexa[20];
+	decodeHexa(hash, hexa);
+
+	return getTorrent(hexa);
+}
+
 mtt::Status mtt::Core::removeTorrent(const uint8_t* hash, bool deleteFiles)
 {
 	for (auto it = torrents.begin(); it != torrents.end(); it++)
@@ -151,4 +162,12 @@ mtt::Status mtt::Core::removeTorrent(const uint8_t* hash, bool deleteFiles)
 	}
 
 	return Status::E_InvalidInput;
+}
+
+mtt::Status mtt::Core::removeTorrent(const char* hash, bool deleteFiles)
+{
+	uint8_t hexa[20];
+	decodeHexa(hash, hexa);
+
+	return removeTorrent(hexa, deleteFiles);
 }

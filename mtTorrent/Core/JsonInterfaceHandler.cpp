@@ -3,100 +3,211 @@
 #include "MetadataDownload.h"
 #include "Dht/Communication.h"
 #include "Configuration.h"
-#include "Public/BinaryInterface.h"
+#include "Public/JsonInterface.h"
 #include "FileTransfer.h"
 #include "utils/HexEncoding.h"
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
 
 extern mtt::Core core;
 
+namespace js = rapidjson;
+
 extern "C"
 {
-	__declspec(dllexport) mtt::Status __cdecl Ioctl(mtBI::MessageId id, const void* request, void* output)
+	__declspec(dllexport) mtt::Status __cdecl JsonIoctl(mttJson::MessageId id, const char* request, mtt::string* output)
 	{
-		if (id == mtBI::MessageId::Init)
+		js::Document requestJs;
+
+		if(request)
+			requestJs.Parse(request);
+
+		if (id == mttJson::MessageId::Init)
 			core.init();
-		else if (id == mtBI::MessageId::Deinit)
+		else if (id == mttJson::MessageId::Deinit)
 			core.deinit();
-		else if (id == mtBI::MessageId::AddFromFile)
+		else if (id == mttJson::MessageId::Add)
 		{
-			auto t = core.addFile((const char*)request);
+			mtt::TorrentPtr t;
+
+			if(requestJs.HasMember("filepath"))
+				t = core.addFile(requestJs["filepath"].GetString());
+			else if (requestJs.HasMember("magnet"))
+				t = core.addMagnet(requestJs["magnet"].GetString());
 
 			if (!t)
 				return mtt::Status::E_InvalidInput;
 
-			memcpy(output, t->hash(), 20);
+			if (output)
+			{
+				auto response = "{ \"hash\" : \"" + t->hashString() + "\" }";
+				*output = response;
+			}
 		}
-		else if (id == mtBI::MessageId::AddFromMetadata)
+		else if (id == mttJson::MessageId::Start)
 		{
-			auto t = core.addMagnet((const char*)request);
+			mtt::TorrentPtr t;
 
-			if (!t)
-				return mtt::Status::E_InvalidInput;
-
-			memcpy(output, t->hash(), 20);
-		}
-		else if (id == mtBI::MessageId::Start)
-		{
-			auto t = core.getTorrent((const uint8_t*)request);
+			if (requestJs.HasMember("hash"))
+				t = core.getTorrent(requestJs["hash"].GetString());
 
 			if (!t)
 				return mtt::Status::E_InvalidInput;
 
 			t->start();
 		}
-		else if (id == mtBI::MessageId::Stop)
+		else if (id == mttJson::MessageId::Stop)
 		{
-			auto t = core.getTorrent((const uint8_t*)request);
+			mtt::TorrentPtr t;
+
+			if (requestJs.HasMember("hash"))
+				t = core.getTorrent(requestJs["hash"].GetString());
 
 			if (!t)
 				return mtt::Status::E_InvalidInput;
 
 			t->stop();
 		}
-		else if (id == mtBI::MessageId::Remove)
+		else if (id == mttJson::MessageId::Remove)
 		{
-			auto info = (mtBI::RemoveTorrentRequest*) request;
-			auto s = core.removeTorrent(info->hash, info->deleteFiles);
+			mtt::Status status = mtt::Status::E_InvalidInput;
+			bool removeFiles = requestJs.HasMember("removeFiles") ? requestJs["removeFiles"].IsTrue() : false;
 
-			if (s != mtt::Status::Success)
-				return s;
+			if (requestJs.HasMember("hash"))
+				status = core.removeTorrent(requestJs["hash"].GetString(), removeFiles);
+
+			if (status != mtt::Status::Success)
+				return status;
 		}
-		else if (id == mtBI::MessageId::GetTorrents)
+		else if (id == mttJson::MessageId::GetTorrents)
 		{
-			auto resp = (mtBI::TorrentsList*) output;
-			resp->count = (uint32_t)core.torrents.size();
-			if (resp->count == resp->list.size())
+			js::StringBuffer s;
+			js::Writer<js::StringBuffer> writer(s);
+
+			writer.StartObject();
+			writer.Key("list");
+			writer.StartArray();
+			for (size_t i = 0; i < core.torrents.size(); i++)
 			{
-				for (size_t i = 0; i < resp->count; i++)
-				{
-					auto t = core.torrents[i];
-					memcpy(resp->list[i].hash, t->hash(), 20);
-					resp->list[i].active = (t->state != mtt::Torrent::State::Stopped);
-				}
+				writer.StartObject();
+
+				auto t = core.torrents[i];
+				writer.Key("hash");
+				writer.String(t->hashString().data());
+				writer.Key("active");
+				writer.Bool((t->state != mtt::Torrent::State::Stopped));
+
+				writer.EndObject();
+			}
+			writer.EndArray();
+			writer.EndObject();
+
+			if (output)
+			{
+				output->assign(s.GetString(), s.GetLength());
 			}
 		}
-		else if (id == mtBI::MessageId::GetTorrentStateInfo)
+		else if (id == mttJson::MessageId::GetTorrentInfo)
 		{
-			auto torrent = core.getTorrent((const uint8_t*)request);
-			if (!torrent)
+			mtt::TorrentPtr t;
+
+			if (requestJs.HasMember("hash"))
+				t = core.getTorrent(requestJs["hash"].GetString());
+
+			if (!t)
 				return mtt::Status::E_InvalidInput;
-			auto resp = (mtBI::TorrentStateInfo*) output;
-			resp->name = torrent->name();
-			resp->connectedPeers = torrent->peers->connectedCount();
-			resp->checking = torrent->checking;
-			if (resp->checking)
-				resp->checkingProgress = torrent->checkingProgress();
-			resp->foundPeers = torrent->peers->receivedCount();
-			resp->downloaded = torrent->downloaded();
-			resp->downloadSpeed = torrent->downloadSpeed();
-			resp->uploaded = torrent->uploaded();
-			resp->uploadSpeed = torrent->uploadSpeed();
-			resp->progress = torrent->currentProgress();
-			resp->selectionProgress = torrent->currentSelectionProgress();
-			resp->activeStatus = torrent->lastError;
-			resp->utmActive = torrent->utmDl && !torrent->utmDl->state.finished;
+
+			js::StringBuffer s;
+			js::Writer<js::StringBuffer> writer(s);
+
+			writer.StartObject();
+			writer.Key("name");
+			writer.String(t->infoFile.info.name.data(), (uint32_t)t->infoFile.info.name.length());
+			writer.Key("size");
+			writer.Int64((int64_t)t->infoFile.info.fullSize);
+
+			writer.Key("files");
+			writer.StartArray();
+			for (auto& f : t->infoFile.info.files)
+			{
+				writer.StartObject();
+				writer.Key("path");
+				writer.StartArray();
+				for (auto& p : f.path)
+					writer.String(p.data(), (uint32_t)p.length());
+				writer.EndArray();
+
+				writer.Key("size");
+				writer.Int64((int64_t)f.size);
+				writer.EndObject();
+			}
+			writer.EndArray();
+
+			writer.EndObject();
+
+			if (output)
+			{
+				output->assign(s.GetString(), s.GetLength());
+			}
 		}
-		else if (id == mtBI::MessageId::GetPeersInfo)
+		else if (id == mttJson::MessageId::GetTorrentStateInfo)
+		{
+			mtt::TorrentPtr t;
+
+			if (requestJs.HasMember("hash"))
+				t = core.getTorrent(requestJs["hash"].GetString());
+
+			if (!t)
+				return mtt::Status::E_InvalidInput;
+
+			js::StringBuffer s;
+			js::Writer<js::StringBuffer> writer(s);
+
+			writer.StartObject();
+			writer.Key("name");
+			writer.String(t->infoFile.info.name.data(), (uint32_t)t->infoFile.info.name.length());
+			writer.Key("connectedPeers");
+			writer.Uint(t->peers->connectedCount());
+			writer.Key("foundPeers");
+			writer.Uint(t->peers->receivedCount());
+
+			writer.Key("downloaded");
+			writer.Uint64(t->downloaded());
+			writer.Key("uploaded");
+			writer.Uint64(t->uploaded());
+			writer.Key("downloadSpeed");
+			writer.Uint64(t->downloadSpeed());
+			writer.Key("uploadSpeed");
+			writer.Uint64(t->uploadSpeed());
+
+			writer.Key("progress");
+			writer.Double(t->currentProgress());
+			writer.Key("selectionProgress");
+			writer.Double(t->currentSelectionProgress());
+
+			writer.Key("status");
+			writer.Uint((uint32_t)t->lastError);
+
+			if (t->utmDl && !t->utmDl->state.finished)
+			{
+				writer.Key("utmActive");
+				writer.Bool(true);
+			}
+
+			if (t->checking)
+			{
+				writer.Key("checkProgress");
+				writer.Double(t->checkingProgress());
+			}
+
+			writer.EndObject();
+
+			if (output)
+			{
+				output->assign(s.GetString(), s.GetLength());
+			}
+		}
+		/*else if (id == mttJson::MessageId::GetPeersInfo)
 		{
 			auto torrent = core.getTorrent((const uint8_t*)request);
 			if (!torrent)
@@ -116,26 +227,7 @@ extern "C"
 				out.country = peers[i].country;
 			}
 		}
-		else if (id == mtBI::MessageId::GetTorrentInfo)
-		{
-			auto torrent = core.getTorrent((const uint8_t*)request);
-			if (!torrent)
-				return mtt::Status::E_InvalidInput;
-			auto resp = (mtBI::TorrentInfo*) output;
-			resp->name = torrent->infoFile.info.name;
-			resp->fullsize = torrent->infoFile.info.fullSize;
-			resp->filesCount = (uint32_t)torrent->infoFile.info.files.size();
-
-			if (resp->filenames.size() == resp->filesCount)
-			{
-				for (size_t i = 0; i < resp->filenames.size(); i++)
-				{
-					resp->filenames[i] = torrent->infoFile.info.files[i].path.back();
-					resp->filesizes[i] = torrent->infoFile.info.files[i].size;
-				}
-			}
-		}
-		else if (id == mtBI::MessageId::GetSourcesInfo)
+		else if (id == mttJson::MessageId::GetSourcesInfo)
 		{
 			auto torrent = core.getTorrent((const uint8_t*)request);
 			if (!torrent)
@@ -178,18 +270,18 @@ extern "C"
 				}
 			}
 		}
-		else if (id == mtBI::MessageId::GetPiecesInfo)
+		else if (id == mttJson::MessageId::GetPiecesInfo)
 		{
 			auto torrent = core.getTorrent((const uint8_t*)request);
 			if (!torrent)
-				return mtt::Status::E_InvalidInput;	
+				return mtt::Status::E_InvalidInput;
 
 			auto resp = (mtBI::PiecesInfo*) output;
 			resp->piecesCount = (uint32_t)torrent->files.progress.pieces.size();
 			resp->bitfieldSize = (uint32_t)torrent->files.progress.getBitfieldSize();
 			resp->requestSize = (uint32_t)(torrent->fileTransfer ? torrent->fileTransfer->getCurrentRequestsCount() : 0);
 
-			if(resp->bitfield.size() == resp->bitfieldSize)
+			if (resp->bitfield.size() == resp->bitfieldSize)
 				torrent->files.progress.toBitfield(resp->bitfield);
 
 			if (!resp->requests.empty())
@@ -206,7 +298,7 @@ extern "C"
 				resp->requestSize = (uint32_t)resp->requests.size();
 			}
 		}
-		else if (id == mtBI::MessageId::GetMagnetLinkProgress)
+		else if (id == mttJson::MessageId::GetMagnetLinkProgress)
 		{
 			auto torrent = core.getTorrent((const uint8_t*)request);
 			if (!torrent || !torrent->utmDl)
@@ -216,7 +308,7 @@ extern "C"
 			resp->finished = torrent->utmDl->state.finished;
 			resp->progress = torrent->utmDl->state.partsCount == 0 ? 0 : torrent->utmDl->state.receivedParts / (float)torrent->utmDl->state.partsCount;
 		}
-		else if (id == mtBI::MessageId::GetMagnetLinkProgressLogs)
+		else if (id == mttJson::MessageId::GetMagnetLinkProgressLogs)
 		{
 			auto torrent = core.getTorrent((const uint8_t*)request);
 			if (!torrent || !torrent->utmDl)
@@ -249,7 +341,7 @@ extern "C"
 					}
 			}
 		}
-		else if (id == mtBI::MessageId::GetSettings)
+		else if (id == mttJson::MessageId::GetSettings)
 		{
 			auto resp = (mtBI::SettingsInfo*) output;
 			auto& settings = mtt::config::getExternal();
@@ -260,7 +352,7 @@ extern "C"
 			resp->udpPort = settings.connection.udpPort;
 			resp->upnpEnabled = settings.connection.upnpPortMapping;
 		}
-		else if (id == mtBI::MessageId::SetSettings)
+		else if (id == mttJson::MessageId::SetSettings)
 		{
 			auto info = (mtBI::SettingsInfo*) request;
 			auto settings = mtt::config::getExternal();
@@ -276,13 +368,13 @@ extern "C"
 			mtt::config::setValues(settings.connection);
 			mtt::config::setValues(settings.files);
 		}
-		else if (id == mtBI::MessageId::GetTorrentFilesSelection)
+		else if (id == mttJson::MessageId::GetTorrentFilesSelection)
 		{
 			auto torrent = core.getTorrent((const uint8_t*)request);
 			if (!torrent)
 				return mtt::Status::E_InvalidInput;
 
-			auto & files = torrent->files.selection.files;
+			auto& files = torrent->files.selection.files;
 
 			auto resp = (mtBI::TorrentFilesSelection*) output;
 			if (resp->count == 0)
@@ -300,7 +392,7 @@ extern "C"
 				}
 			}
 		}
-		else if (id == mtBI::MessageId::SetTorrentFilesSelection)
+		else if (id == mttJson::MessageId::SetTorrentFilesSelection)
 		{
 			auto selection = (mtBI::TorrentFilesSelectionRequest*)request;
 			auto torrent = core.getTorrent(selection->hash);
@@ -319,7 +411,7 @@ extern "C"
 			if (!torrent->selectFiles(dlSelect))
 				return mtt::Status::E_InvalidInput;
 		}
-		else if (id == mtBI::MessageId::RefreshSource)
+		else if (id == mttJson::MessageId::RefreshSource)
 		{
 			auto info = (mtBI::SourceId*) request;
 
@@ -329,7 +421,7 @@ extern "C"
 
 			torrent->peers->refreshSource(info->name.data);
 		}
-		else if (id == mtBI::MessageId::AddPeer)
+		else if (id == mttJson::MessageId::AddPeer)
 		{
 			auto info = (mtBI::AddPeerRequest*) request;
 
@@ -338,7 +430,7 @@ extern "C"
 				return mtt::Status::E_InvalidInput;
 
 			torrent->peers->connect(Addr(info->addr.data));
-		}
+		}*/
 		else
 			return mtt::Status::E_InvalidInput;
 

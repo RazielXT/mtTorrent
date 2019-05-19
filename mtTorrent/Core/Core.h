@@ -29,7 +29,9 @@ namespace mtt
 		TorrentPtr addMagnet(const char* magnet);
 
 		TorrentPtr getTorrent(const uint8_t* hash);
+		TorrentPtr getTorrent(const char* hash);
 
 		Status removeTorrent(const uint8_t* hash, bool deleteFiles);
+		Status removeTorrent(const char* hash, bool deleteFiles);
 	};
 }
