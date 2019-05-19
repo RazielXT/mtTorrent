@@ -145,7 +145,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\asio-1.12.2\include;$(ProjectDir);$(ProjectDir)\Core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\pugixml-1.9\src;$(ProjectDir)..\..\rapidjson-master\include;$(ProjectDir)..\..\asio-1.12.2\include;$(ProjectDir);$(ProjectDir)\Core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0601;ASIO_STANDALONE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -247,6 +247,7 @@
     <ClCompile Include="Core\Files.cpp" />
     <ClCompile Include="Core\FileTransfer.cpp" />
     <ClCompile Include="Core\IncomingPeersListener.cpp" />
+    <ClCompile Include="Core\JsonInterfaceHandler.cpp" />
     <ClCompile Include="Core\LogFile.cpp" />
     <ClCompile Include="Core\Torrent.cpp" />
     <ClCompile Include="Core\MetadataDownload.cpp" />
@@ -273,7 +274,7 @@
     <ClCompile Include="Core\TrackerManager.cpp" />
     <ClCompile Include="Core\UdpTrackerComm.cpp" />
     <ClCompile Include="Core\Uploader.cpp" />
-    <ClCompile Include="Public\BinaryInterface.cpp" />
+    <ClCompile Include="Public\ModuleString.cpp" />
     <ClCompile Include="utils\Base32.cpp" />
     <ClCompile Include="utils\BencodeWriter.cpp" />
     <ClCompile Include="utils\FastIpToCountry.cpp" />
@@ -291,6 +292,7 @@
     <ClCompile Include="utils\UdpAsyncWriter.cpp" />
     <ClCompile Include="utils\UdpAsyncComm.cpp" />
     <ClCompile Include="utils\UdpAsyncReceiver.cpp" />
+    <ClCompile Include="utils\UpnpDiscovery.cpp" />
     <ClCompile Include="utils\UpnpPortMapping.cpp" />
     <ClCompile Include="utils\UrlEncoding.cpp" />
   </ItemGroup>
@@ -329,8 +331,10 @@
     <ClInclude Include="Core\UdpTrackerComm.h" />
     <ClInclude Include="Core\Uploader.h" />
     <ClInclude Include="Public\BinaryInterface.h" />
+    <ClInclude Include="Public\JsonInterface.h" />
     <ClInclude Include="Public\ModuleAllocator.h" />
     <ClInclude Include="Public\Status.h" />
+    <ClInclude Include="Public\ModuleString.h" />
     <ClInclude Include="utils\Base32.h" />
     <ClInclude Include="utils\BencodeWriter.h" />
     <ClInclude Include="utils\FastIpToCountry.h" />
@@ -348,6 +352,7 @@
     <ClInclude Include="utils\UdpAsyncWriter.h" />
     <ClInclude Include="utils\UdpAsyncComm.h" />
     <ClInclude Include="utils\UdpAsyncReceiver.h" />
+    <ClInclude Include="utils\UpnpDiscovery.h" />
     <ClInclude Include="utils\UpnpPortMapping.h" />
     <ClInclude Include="utils\UrlEncoding.h" />
   </ItemGroup>

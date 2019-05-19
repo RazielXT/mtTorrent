@@ -32,10 +32,10 @@
     <ClCompile Include="AddPeerForm.cpp">
       <Filter>Resource Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\mtTorrent\Public\BinaryInterface.cpp">
+    <ClCompile Include="..\mtTorrent\utils\HexEncoding.cpp">
       <Filter>Source Files\Library</Filter>
     </ClCompile>
-    <ClCompile Include="..\mtTorrent\utils\HexEncoding.cpp">
+    <ClCompile Include="..\mtTorrent\Public\ModuleString.cpp">
       <Filter>Source Files\Library</Filter>
     </ClCompile>
   </ItemGroup>

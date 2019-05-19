@@ -23,9 +23,9 @@
     <ProjectGuid>{08F6658C-96BE-43CD-AF5D-090AD85673CC}</ProjectGuid>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <Keyword>ManagedCProj</Keyword>
-    <RootNamespace>mtTorrentGuiLite</RootNamespace>
+    <RootNamespace>mtTorrentLiteGui</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>mtTorrentGuiLite</ProjectName>
+    <ProjectName>mtTorrentLiteGui</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -140,7 +140,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\mtTorrent\Public\BinaryInterface.cpp" />
+    <ClCompile Include="..\mtTorrent\Public\ModuleString.cpp" />
     <ClCompile Include="..\mtTorrent\utils\HexEncoding.cpp" />
     <ClCompile Include="AddPeerForm.cpp" />
     <ClCompile Include="FileSelectionForm.cpp" />
