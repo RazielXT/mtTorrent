@@ -89,6 +89,11 @@ void TcpAsyncStream::consumeData(size_t size)
 	receiveBuffer.erase(receiveBuffer.begin(), receiveBuffer.begin() + size);
 }
 
+uint16_t TcpAsyncStream::getPort()
+{
+	return info.port;
+}
+
 std::string& TcpAsyncStream::getHostname()
 {
 	return info.host;

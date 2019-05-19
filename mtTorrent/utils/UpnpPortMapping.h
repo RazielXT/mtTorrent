@@ -1,5 +1,6 @@
 #pragma once
 #include "utils/ServiceThreadpool.h"
+#include "UpnpDiscovery.h"
 
 class TcpAsyncStream;
 
@@ -20,11 +21,13 @@ public:
 
 private:
 
+	std::string getMappingServiceControlUrl(const std::string& gateway);
+
 	void checkPendingMapping(const std::string& gateway);
 
 	void waitForRequests();
 
-	std::string createUpnpHttpHeader(const std::string& hostAddress, size_t contentLength, const std::string& soapAction);
+	std::string createUpnpHttpHeader(const std::string& hostAddress, const std::string& port, size_t contentLength, const std::string& soapAction);
 
 	asio::io_service& io;
 
@@ -52,4 +55,12 @@ private:
 		std::vector<std::shared_ptr<TcpAsyncStream>> pendingRequests;
 	};
 	std::shared_ptr<UpnpMappingState> state;
+
+	std::string upnpMappingServiceName;
+
+	bool discoveryStarted = false;
+	bool discoveryFinished = false;
+	std::mutex discoveryMutex;
+	std::vector<std::pair<uint16_t, PortType>> activeMappingPending;
+	UpnpDiscovery discovery;
 };

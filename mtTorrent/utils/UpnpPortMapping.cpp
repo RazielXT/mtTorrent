@@ -3,9 +3,10 @@
 #include "NetAdaptersList.h"
 #include "HttpHeader.h"
 
-UpnpPortMapping::UpnpPortMapping(asio::io_service& io_service) : io(io_service)
+UpnpPortMapping::UpnpPortMapping(asio::io_service& io_service) : io(io_service), discovery(io_service)
 {
 	state = std::make_shared<UpnpMappingState>();
+	upnpMappingServiceName = "urn:schemas-upnp-org:service:WANIPConnection:1";
 }
 
 UpnpPortMapping::~UpnpPortMapping()
@@ -17,19 +18,41 @@ UpnpPortMapping::~UpnpPortMapping()
 
 void UpnpPortMapping::mapActiveAdapters(uint16_t port, PortType type)
 {
-	auto adapters = NetAdapters::getActiveNetAdapters();
+	std::lock_guard<std::mutex> guard(discoveryMutex);
 
-	for (auto& a : adapters)
+	if (!discoveryFinished)
+		activeMappingPending.push_back({ port, type });
+	else
 	{
-		if (!a.gateway.empty())
+		for (auto& device : discovery.devices)
 		{
-			mapPort(a.gateway, a.clientIp, port, type, true);
+			mapPort(device.gateway, device.clientIp, port, type, true);
 		}
 	}
+
+	if (!discoveryStarted)
+		discovery.start([this]()
+		{
+				std::lock_guard<std::mutex> guard(discoveryMutex);
+				for (auto mapping : activeMappingPending)
+				{
+					for (auto& device : discovery.devices)
+					{
+						mapPort(device.gateway, device.clientIp, mapping.first, mapping.second, true);
+					}
+				}
+
+				activeMappingPending.clear();
+				discoveryFinished = true;
+		});
+	
+	discoveryStarted = true;
 }
 
 void UpnpPortMapping::unmapMappedAdapters(uint16_t port, PortType type, bool waitForFinish)
 {
+	discovery.stop();
+
 	if(waitForFinish)
 		waitForRequests();
 
@@ -76,7 +99,7 @@ void UpnpPortMapping::mapPort(const std::string& gateway, const std::string& cli
 	auto request = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
 		"<s:Envelope xmlns:s =\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">\n"
 		"<s:Body>\n"
-		"<u:AddPortMapping xmlns:u=\"urn:schemas-upnp-org:service:WANIPConnection:1\">\n"
+		"<u:AddPortMapping xmlns:u=\"" + upnpMappingServiceName + "\">\n"
 		"<NewRemoteHost></NewRemoteHost>\n"
 		"<NewExternalPort>" + portStr + "</NewExternalPort>\n"
 		"<NewProtocol>" + portType + "</NewProtocol>\n"
@@ -89,7 +112,7 @@ void UpnpPortMapping::mapPort(const std::string& gateway, const std::string& cli
 		"</s:Body>\n"
 		"</s:Envelope>\r\n";
 
-	auto httpHeader = createUpnpHttpHeader(gateway + ":1900", request.length(), "urn:schemas-upnp-org:service:WANIPConnection:1#AddPortMapping");
+	auto httpHeader = createUpnpHttpHeader(gateway, "5000", request.length(), upnpMappingServiceName + "#AddPortMapping");
 
 	auto stream = std::make_shared<TcpAsyncStream>(io);
 	state->pendingRequests.push_back(stream);
@@ -144,7 +167,7 @@ void UpnpPortMapping::mapPort(const std::string& gateway, const std::string& cli
 		}
 	};
 
-	stream->connect(gateway, 1900);
+	stream->connect(gateway, 5000);
 }
 
 void UpnpPortMapping::unmapPort(const std::string& gateway, uint16_t port, PortType type)
@@ -171,7 +194,7 @@ void UpnpPortMapping::unmapPort(const std::string& gateway, uint16_t port, PortT
 	auto request = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
 		"<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">\n"
 		"<s:Body>\n"
-		"<u:DeletePortMapping xmlns:u=\"urn:schemas-upnp-org:service:WANIPConnection:1\">\n"
+		"<u:DeletePortMapping xmlns:u=\"" + upnpMappingServiceName + "\">\n"
 		"<NewRemoteHost></NewRemoteHost>\n"
 		"<NewProtocol>" + portType + "</NewProtocol>\n"
 		"<NewExternalPort>" + portStr + "</NewExternalPort>\n"
@@ -179,7 +202,7 @@ void UpnpPortMapping::unmapPort(const std::string& gateway, uint16_t port, PortT
 		"</s:Body>\n"
 		"</s:Envelope>\r\n";
 
-	auto httpHeader = createUpnpHttpHeader(gateway + ":1900", request.length(), "urn:schemas-upnp-org:service:WANIPConnection:1#DeletePortMapping");
+	auto httpHeader = createUpnpHttpHeader(gateway, "5000", request.length(), upnpMappingServiceName + "#DeletePortMapping");
 
 	auto stream = std::make_shared<TcpAsyncStream>(io);
 	auto streamPtr = stream.get();
@@ -241,7 +264,18 @@ void UpnpPortMapping::unmapPort(const std::string& gateway, uint16_t port, PortT
 		}
 	};
 
-	stream->connect(gateway, 1900);
+	stream->connect(gateway, 5000);
+}
+
+std::string UpnpPortMapping::getMappingServiceControlUrl(const std::string& gateway)
+{
+	for (auto& d : discovery.devices)
+	{
+		if (d.gateway == gateway)
+			return d.services[upnpMappingServiceName];
+	}
+
+	return "";
 }
 
 void UpnpPortMapping::checkPendingMapping(const std::string& gateway)
@@ -288,13 +322,17 @@ void UpnpPortMapping::waitForRequests()
 	}
 }
 
-std::string UpnpPortMapping::createUpnpHttpHeader(const std::string& hostAddress, size_t contentLength, const std::string& soapAction)
+std::string UpnpPortMapping::createUpnpHttpHeader(const std::string& hostAddress, const std::string& port, size_t contentLength, const std::string& soapAction)
 {
-	auto request = "POST /ipc HTTP/1.1\r\n"
+	std::string controlUrl = getMappingServiceControlUrl(hostAddress);
+	if (controlUrl.empty())
+		controlUrl = "/ipc";//"/ctl/IPConn";//"/ipc";
+
+	auto request = "POST " + controlUrl + " HTTP/1.1\r\n"
 		"SOAPAction: \"" + soapAction + "\"\r\n"
 		"Content-Type: text/xml; charset=\"utf-8\"\r\n"
 		"User-Agent: mtTorrent (UPnP/1.0)\r\n"
-		"Host: " + hostAddress + "\r\n"
+		"Host: " + hostAddress + ":" + port + "\r\n"
 		"Accept: text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2\r\n"
 		"Connection: keep-alive\r\n"
 		"Content-Length: " + std::to_string(contentLength) + "\r\n"

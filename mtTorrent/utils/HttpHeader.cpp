@@ -24,9 +24,9 @@ HttpHeaderInfo HttpHeaderInfo::readFromBuffer(DataBuffer& buffer)
 			}
 		}
 
-		if (line.find_first_of(':') != std::string::npos)
+		auto vpos = line.find_first_of(':');
+		if (vpos != std::string::npos && line.length() > vpos + 1)
 		{
-			auto vpos = line.find_first_of(':');
 			info.headerParameters.push_back({ line.substr(0, vpos),line.substr(vpos + 2) });
 		}
 		else

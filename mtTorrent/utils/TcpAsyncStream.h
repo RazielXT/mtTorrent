@@ -37,6 +37,7 @@ public:
 	std::function<void()> onReceiveCallback;
 	std::function<void(int)> onCloseCallback;
 
+	uint16_t getPort();
 	std::string& getHostname();
 	tcp::endpoint& getEndpoint();
 
