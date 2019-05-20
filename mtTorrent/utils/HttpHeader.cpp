@@ -45,7 +45,7 @@ HttpHeaderInfo HttpHeaderInfo::readFromBuffer(DataBuffer& buffer)
 			info.dataSize = std::stoul(p.second);
 	}
 
-	if (info.dataStart && !info.dataSize)
+	if (info.dataStart && !(info.dataSize || buffer.size() == info.dataStart))
 		info.valid = false;
 
 	if (!info.headerParameters.empty() && info.headerParameters[0].first.find("200 OK") != std::string::npos)
