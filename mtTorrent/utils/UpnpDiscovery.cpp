@@ -57,15 +57,8 @@ struct UrlParser
 	}
 };
 
-void UpnpDiscovery::start(std::function<void()> onFinishCb)
+void UpnpDiscovery::start(std::function<void(DeviceInfo&)> onNewDeviceCb)
 {
-	{
-		std::lock_guard<std::mutex> guard(mtx);
-
-		if (!upnpLocationQueue.empty())
-			return;
-	}
-
 	if (search.active())
 		return;
 
@@ -83,6 +76,8 @@ void UpnpDiscovery::start(std::function<void()> onFinishCb)
 
 						for (auto& a : adapters)
 						{
+							std::lock_guard<std::mutex> guard(mtx);
+
 							if (a.gateway == url.address)
 								upnpLocationQueue.push_back({ a , url.port, url.path });
 						}
@@ -93,7 +88,7 @@ void UpnpDiscovery::start(std::function<void()> onFinishCb)
 			queryNext();
 		});
 
-	onFinish = onFinishCb;
+	onNewDevice = onNewDeviceCb;
 }
 
 void UpnpDiscovery::stop()
@@ -103,7 +98,7 @@ void UpnpDiscovery::stop()
 	std::lock_guard<std::mutex> guard(mtx);
 
 	upnpLocationQueue.clear();
-	onFinish = nullptr;
+	onNewDevice = nullptr;
 
 	if (stream)
 	{
@@ -117,14 +112,10 @@ void UpnpDiscovery::queryNext()
 	std::lock_guard<std::mutex> guard(mtx);
 
 	if (upnpLocationQueue.empty())
-	{
-		if (onFinish)
-			onFinish();
-
 		return;
-	}
 
-	auto& upnpLocation = upnpLocationQueue.back();
+	auto upnpLocation = upnpLocationQueue.back();
+	upnpLocationQueue.pop_back();
 
 	std::string rootInfoRequest = "GET " + upnpLocation.rootXmlLocation + " HTTP/1.1\r\n"
 		"User-Agent: mtTorrent\r\n"
@@ -143,7 +134,12 @@ void UpnpDiscovery::queryNext()
 		streamPtr->write(buffer);
 	};
 
-	stream->onReceiveCallback = [streamPtr, this]()
+	DeviceInfo info;
+	info.gateway = upnpLocation.adapter.gateway;
+	info.clientIp = upnpLocation.adapter.clientIp;
+	info.port = upnpLocation.port;
+
+	stream->onReceiveCallback = [streamPtr, this, info]()
 	{
 		auto data = streamPtr->getReceivedData();
 		auto header = HttpHeaderInfo::readFromBuffer(data);
@@ -151,21 +147,14 @@ void UpnpDiscovery::queryNext()
 		if (header.valid && data.size() >= (header.dataStart + header.dataSize))
 		{
 			streamPtr->consumeData(header.dataStart + header.dataSize);
-			onRootXmlReceive((const char*)data.data() + header.dataStart, header.dataSize);
+			onRootXmlReceive((const char*)data.data() + header.dataStart, header.dataSize, info);
 		}
 	};
 
 	stream->onCloseCallback = [streamPtr, this](int code)
 	{
-		upnpLocationQueue.pop_back();
 		queryNext();
 	};
-
-	DeviceInfo info;
-	info.gateway = upnpLocation.adapter.gateway;
-	info.clientIp = upnpLocation.adapter.clientIp;
-	info.port = upnpLocation.port;
-	devices.push_back(info);
 
 	stream->connect(upnpLocation.adapter.gateway, upnpLocation.port);
 }
@@ -204,17 +193,17 @@ static void parseDevicesNode(pugi::xml_node node, std::string& name, std::map<st
 	}
 }
 
-void UpnpDiscovery::onRootXmlReceive(const char* xml, uint32_t size)
+void UpnpDiscovery::onRootXmlReceive(const char* xml, uint32_t size, DeviceInfo info)
 {
 	pugi::xml_document doc;
 	pugi::xml_parse_result result = doc.load_buffer(xml, size);
 
 	if (result.status == pugi::status_ok)
 	{
-		auto& info = devices.back();
-
 		for(auto child : doc.children())
 			parseDevicesNode(child, info.name, info.services);
+
+		onNewDevice(info);
 	}
 }
 

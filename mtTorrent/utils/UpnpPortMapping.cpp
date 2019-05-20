@@ -24,26 +24,32 @@ void UpnpPortMapping::mapActiveAdapters(uint16_t port, PortType type)
 		activeMappingPending.push_back({ port, type });
 	else
 	{
-		for (auto& device : discovery.devices)
+		for (auto& device : foundDevices)
 		{
 			mapPort(device.gateway, device.port, device.clientIp, port, type, true);
 		}
 	}
 
 	if (!discoveryStarted)
-		discovery.start([this]()
+		discovery.start([this](UpnpDiscovery::DeviceInfo& device)
 		{
+			{
 				std::lock_guard<std::mutex> guard(discoveryMutex);
+
+				foundDevices.push_back(device);
+
+				discoveryFinished = true;
+			}
+
+			if (foundDevices.empty())
+			{
 				for (auto mapping : activeMappingPending)
 				{
-					for (auto& device : discovery.devices)
-					{
-						mapPort(device.gateway, device.port, device.clientIp, mapping.first, mapping.second, true);
-					}
+					mapPort(device.gateway, device.port, device.clientIp, mapping.first, mapping.second, true);
 				}
 
 				activeMappingPending.clear();
-				discoveryFinished = true;
+			}
 		});
 	
 	discoveryStarted = true;
@@ -269,7 +275,9 @@ void UpnpPortMapping::unmapPort(const std::string& gateway, uint16_t gatewayPort
 
 std::string UpnpPortMapping::getMappingServiceControlUrl(const std::string& gateway)
 {
-	for (auto& d : discovery.devices)
+	std::lock_guard<std::mutex> guard(discoveryMutex);
+
+	for (auto& d : foundDevices)
 	{
 		if (d.gateway == gateway)
 			return d.services[upnpMappingServiceName];

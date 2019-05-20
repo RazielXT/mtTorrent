@@ -64,4 +64,5 @@ private:
 	std::mutex discoveryMutex;
 	std::vector<std::pair<uint16_t, PortType>> activeMappingPending;
 	UpnpDiscovery discovery;
+	std::vector<UpnpDiscovery::DeviceInfo> foundDevices;
 };

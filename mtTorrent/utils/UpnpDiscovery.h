@@ -13,9 +13,6 @@ public:
 
 	UpnpDiscovery(asio::io_service& io_service);
 
-	void start(std::function<void()> onFinish);
-	void stop();
-
 	struct DeviceInfo
 	{
 		std::string name;
@@ -26,15 +23,16 @@ public:
 		std::map<std::string, std::string> services;
 	};
 
-	std::vector<DeviceInfo> devices;
+	void start(std::function<void(DeviceInfo&)> onNewDevice);
+	void stop();
 
 private:
 
 	void queryNext();
-	void onRootXmlReceive(const char* xml, uint32_t size);
+	void onRootXmlReceive(const char* xml, uint32_t size, DeviceInfo info);
 
 	std::mutex mtx;
-	std::function<void()> onFinish;
+	std::function<void(DeviceInfo&)> onNewDevice;
 
 	struct UpnpLocation
 	{
