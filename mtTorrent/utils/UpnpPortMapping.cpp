@@ -26,7 +26,7 @@ void UpnpPortMapping::mapActiveAdapters(uint16_t port, PortType type)
 	{
 		for (auto& device : discovery.devices)
 		{
-			mapPort(device.gateway, device.clientIp, port, type, true);
+			mapPort(device.gateway, device.port, device.clientIp, port, type, true);
 		}
 	}
 
@@ -38,7 +38,7 @@ void UpnpPortMapping::mapActiveAdapters(uint16_t port, PortType type)
 				{
 					for (auto& device : discovery.devices)
 					{
-						mapPort(device.gateway, device.clientIp, mapping.first, mapping.second, true);
+						mapPort(device.gateway, device.port, device.clientIp, mapping.first, mapping.second, true);
 					}
 				}
 
@@ -60,7 +60,7 @@ void UpnpPortMapping::unmapMappedAdapters(uint16_t port, PortType type, bool wai
 		for (auto& map : state->mappedPorts)
 		{
 			if((port == 0 || map.port == port) && map.type == type)
-				unmapPort(map.gateway, map.port, map.type);
+				unmapPort(map.gateway, map.gatewayPort, map.port, map.type);
 		}
 	}
 
@@ -74,7 +74,7 @@ void UpnpPortMapping::unmapAllMappedAdapters(bool waitForFinish)
 	unmapMappedAdapters(0, PortType::Tcp, waitForFinish);
 }
 
-void UpnpPortMapping::mapPort(const std::string& gateway, const std::string& client, uint16_t port, PortType type, bool enable)
+void UpnpPortMapping::mapPort(const std::string& gateway, uint16_t gatewayPort, const std::string& client, uint16_t port, PortType type, bool enable)
 {
 	{
 		std::lock_guard<std::mutex> guard(state->stateMutex);
@@ -84,7 +84,7 @@ void UpnpPortMapping::mapPort(const std::string& gateway, const std::string& cli
 			if ((*it)->getHostname() == gateway)
 			{
 				UpnpMappingState::TodoMapping todo;
-				todo.mapping = { gateway, port, type };
+				todo.mapping = { gateway, gatewayPort, port, type };
 				todo.client = client;
 				todo.enable = enable;
 				state->waitingMapping.push_back(todo);
@@ -112,7 +112,7 @@ void UpnpPortMapping::mapPort(const std::string& gateway, const std::string& cli
 		"</s:Body>\n"
 		"</s:Envelope>\r\n";
 
-	auto httpHeader = createUpnpHttpHeader(gateway, "5000", request.length(), upnpMappingServiceName + "#AddPortMapping");
+	auto httpHeader = createUpnpHttpHeader(gateway, std::to_string(gatewayPort), request.length(), upnpMappingServiceName + "#AddPortMapping");
 
 	auto stream = std::make_shared<TcpAsyncStream>(io);
 	state->pendingRequests.push_back(stream);
@@ -128,7 +128,7 @@ void UpnpPortMapping::mapPort(const std::string& gateway, const std::string& cli
 		streamPtr->write(buffer);
 	};
 
-	stream->onReceiveCallback = [streamPtr, upnpState, gateway, port, type]()
+	stream->onReceiveCallback = [streamPtr, upnpState, gateway, gatewayPort, port, type]()
 	{
 		auto data = streamPtr->getReceivedData();
 		auto header = HttpHeaderInfo::readFromBuffer(data);
@@ -141,7 +141,7 @@ void UpnpPortMapping::mapPort(const std::string& gateway, const std::string& cli
 
 			if (header.success)
 			{
-				upnpState->mappedPorts.push_back({ gateway, port, type });
+				upnpState->mappedPorts.push_back({ gateway, gatewayPort, port, type });
 			}
 		}
 	};
@@ -167,10 +167,10 @@ void UpnpPortMapping::mapPort(const std::string& gateway, const std::string& cli
 		}
 	};
 
-	stream->connect(gateway, 5000);
+	stream->connect(gateway, gatewayPort);
 }
 
-void UpnpPortMapping::unmapPort(const std::string& gateway, uint16_t port, PortType type)
+void UpnpPortMapping::unmapPort(const std::string& gateway, uint16_t gatewayPort, uint16_t port, PortType type)
 {
 	{
 		std::lock_guard<std::mutex> guard(state->stateMutex);
@@ -180,7 +180,7 @@ void UpnpPortMapping::unmapPort(const std::string& gateway, uint16_t port, PortT
 			if ((*it)->getHostname() == gateway)
 			{
 				UpnpMappingState::TodoMapping todo;
-				todo.mapping = { gateway, port, type };
+				todo.mapping = { gateway, gatewayPort, port, type };
 				todo.unmap = true;
 				state->waitingMapping.push_back(todo);
 				return;
@@ -202,7 +202,7 @@ void UpnpPortMapping::unmapPort(const std::string& gateway, uint16_t port, PortT
 		"</s:Body>\n"
 		"</s:Envelope>\r\n";
 
-	auto httpHeader = createUpnpHttpHeader(gateway, "5000", request.length(), upnpMappingServiceName + "#DeletePortMapping");
+	auto httpHeader = createUpnpHttpHeader(gateway, std::to_string(gatewayPort), request.length(), upnpMappingServiceName + "#DeletePortMapping");
 
 	auto stream = std::make_shared<TcpAsyncStream>(io);
 	auto streamPtr = stream.get();
@@ -264,7 +264,7 @@ void UpnpPortMapping::unmapPort(const std::string& gateway, uint16_t port, PortT
 		}
 	};
 
-	stream->connect(gateway, 5000);
+	stream->connect(gateway, gatewayPort);
 }
 
 std::string UpnpPortMapping::getMappingServiceControlUrl(const std::string& gateway)
@@ -301,9 +301,9 @@ void UpnpPortMapping::checkPendingMapping(const std::string& gateway)
 	if (!todo.mapping.gateway.empty())
 	{
 		if (todo.unmap)
-			unmapPort(todo.mapping.gateway, todo.mapping.port, todo.mapping.type);
+			unmapPort(todo.mapping.gateway, todo.mapping.gatewayPort, todo.mapping.port, todo.mapping.type);
 		else
-			mapPort(todo.mapping.gateway, todo.client, todo.mapping.port, todo.mapping.type, todo.enable);
+			mapPort(todo.mapping.gateway, todo.mapping.gatewayPort, todo.client, todo.mapping.port, todo.mapping.type, todo.enable);
 	}
 }
 

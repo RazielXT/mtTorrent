@@ -4,6 +4,8 @@
 #include <map>
 #include "NetAdaptersList.h"
 #include "TcpAsyncStream.h"
+#include "UdpAsyncWriter.h"
+#include "HttpHeader.h"
 
 class UpnpDiscovery
 {
@@ -33,8 +35,26 @@ private:
 
 	std::mutex mtx;
 	std::function<void()> onFinish;
-	std::vector<NetAdapters::NetAdapter> adaptersQueue;
+
+	struct UpnpLocation
+	{
+		NetAdapters::NetAdapter adapter;
+		uint16_t port;
+		std::string rootXmlLocation;
+	};
+	std::vector<UpnpLocation> upnpLocationQueue;
 
 	std::shared_ptr<TcpAsyncStream> stream;
 	asio::io_service& io;
+
+	struct SsdpSearch
+	{
+		void start(std::function<void(HttpHeaderInfo*)> onResponse);
+		void stop();
+		bool active();
+
+		std::mutex mtx;
+		UdpRequest request;
+	}
+	search;
 };

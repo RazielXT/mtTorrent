@@ -16,8 +16,8 @@ public:
 	void unmapMappedAdapters(uint16_t port, PortType type, bool waitForFinish = true);
 	void unmapAllMappedAdapters(bool waitForFinish = true);
 
-	void mapPort(const std::string& gateway, const std::string& client, uint16_t port, PortType type, bool enable);
-	void unmapPort(const std::string& gateway, uint16_t port, PortType type);
+	void mapPort(const std::string& gateway, uint16_t gatewayPort, const std::string& client, uint16_t port, PortType type, bool enable);
+	void unmapPort(const std::string& gateway, uint16_t gatewayPort, uint16_t port, PortType type);
 
 private:
 
@@ -39,6 +39,7 @@ private:
 		struct MappedPort
 		{
 			std::string gateway;
+			uint16_t gatewayPort;
 			uint16_t port;
 			PortType type;
 		};

@@ -4,6 +4,12 @@ HttpHeaderInfo HttpHeaderInfo::readFromBuffer(DataBuffer& buffer)
 {
 	HttpHeaderInfo info;
 
+	if (buffer.size() < 4 || !(strncmp((const char*)buffer.data(), "HTTP", 4) == 0 || strncmp((const char*)buffer.data(), "http", 4) == 0))
+	{
+		info.valid = false;
+		return info;
+	}
+
 	size_t pos = 0;
 	while (pos + 1 < buffer.size())
 	{
