@@ -33,15 +33,25 @@ void UpnpPortMapping::mapActiveAdapters(uint16_t port, PortType type)
 	if (!discoveryStarted)
 		discovery.start([this](UpnpDiscovery::DeviceInfo& device)
 		{
+			bool found = false;
 			{
 				std::lock_guard<std::mutex> guard(discoveryMutex);
 
-				foundDevices.push_back(device);
+				for (auto& d : foundDevices)
+				{
+					if (d.clientIp == device.clientIp && d.gateway == device.gateway && d.port == device.port)
+					{
+						found = true;
+					}
+				}
+
+				if(!found)
+					foundDevices.push_back(device);
 
 				discoveryFinished = true;
 			}
 
-			if (foundDevices.empty())
+			if (!found)
 			{
 				for (auto mapping : activeMappingPending)
 				{
