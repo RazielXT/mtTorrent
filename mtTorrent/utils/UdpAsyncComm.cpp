@@ -52,7 +52,7 @@ void UdpAsyncComm::removeListeners()
 	onUnhandledReceive = nullptr;
 }
 
-UdpRequest UdpAsyncComm::create(std::string& host, std::string& port)
+UdpRequest UdpAsyncComm::create(const std::string& host, const std::string& port)
 {
 	UdpRequest c = std::make_shared<UdpAsyncWriter>(pool.io);
 	c->setAddress(host, port);
@@ -61,12 +61,12 @@ UdpRequest UdpAsyncComm::create(std::string& host, std::string& port)
 	return c;
 }
 
-UdpRequest UdpAsyncComm::sendMessage(DataBuffer& data, std::string& host, std::string& port, UdpResponseCallback response, bool ipv6)
+UdpRequest UdpAsyncComm::sendMessage(DataBuffer& data, const std::string& host, const std::string& port, UdpResponseCallback response, bool ipv6, uint32_t timeout, bool anySource)
 {
 	UdpRequest c = std::make_shared<UdpAsyncWriter>(pool.io);
 
 	if (response)
-		addPendingResponse(data, c, response);
+		addPendingResponse(data, c, response, timeout, anySource);
 
 	c->setAddress(host, port, ipv6);
 	c->setBindPort(bindPort);
@@ -120,7 +120,7 @@ void UdpAsyncComm::removeCallback(UdpRequest target)
 	}
 }
 
-void UdpAsyncComm::addPendingResponse(DataBuffer& data, UdpRequest c, UdpResponseCallback response, uint32_t timeout)
+void UdpAsyncComm::addPendingResponse(DataBuffer& data, UdpRequest c, UdpResponseCallback response, uint32_t timeout, bool anySource)
 {
 	if (!listener)
 		startListening();
@@ -131,6 +131,7 @@ void UdpAsyncComm::addPendingResponse(DataBuffer& data, UdpRequest c, UdpRespons
 	info->timeoutTimer = std::make_shared<asio::steady_timer>(pool.io);
 	info->timeoutTimer->expires_from_now(std::chrono::seconds(timeout));
 	info->timeoutTimer->async_wait(std::bind(&UdpAsyncComm::checkTimeout, this, c, std::placeholders::_1));
+	info->anySource = anySource;
 	info->onResponse = response;
 
 	c->onCloseCallback = std::bind(&UdpAsyncComm::onUdpClose, this, std::placeholders::_1);
@@ -166,7 +167,7 @@ void UdpAsyncComm::onUdpReceive(udp::endpoint& source, DataBuffer& data)
 		auto it = pendingResponses.begin();
 		while (it != pendingResponses.end())
 		{
-			if ((*it)->client->getEndpoint() == source)
+			if ((*it)->client->getEndpoint() == source || (*it)->anySource)
 			{
 				foundPendingResponses.push_back(*it);
 				it = pendingResponses.erase(it);

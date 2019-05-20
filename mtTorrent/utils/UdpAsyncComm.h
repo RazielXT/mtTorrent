@@ -21,8 +21,8 @@ public:
 	void listen(UdpPacketCallback received);
 	void removeListeners();
 
-	UdpRequest create(std::string& host, std::string& port);
-	UdpRequest sendMessage(DataBuffer& data, std::string& host, std::string& port, UdpResponseCallback response, bool ipv6 = false);
+	UdpRequest create(const std::string& host, const std::string& port);
+	UdpRequest sendMessage(DataBuffer& data, const std::string& host, const std::string& port, UdpResponseCallback response, bool ipv6 = false, uint32_t timeout = 1, bool anySource = false);
 	UdpRequest sendMessage(DataBuffer& data, Addr& addr, UdpResponseCallback response);
 	void sendMessage(DataBuffer& data, UdpRequest target, UdpResponseCallback response, uint32_t timeout = 1);
 	void sendMessage(DataBuffer& data, udp::endpoint& endpoint);
@@ -38,13 +38,14 @@ private:
 		UdpResponseCallback onResponse;
 		std::shared_ptr<asio::steady_timer> timeoutTimer;
 		uint32_t defaultTimeout = 1;
+		bool anySource;
 		void reset();
 	};
 
 	std::mutex respondingMutex;
 	std::mutex responsesMutex;
 	std::vector<std::shared_ptr<ResponseRetryInfo>> pendingResponses;
-	void addPendingResponse(DataBuffer& data, UdpRequest target, UdpResponseCallback response, uint32_t timeout = 1);
+	void addPendingResponse(DataBuffer& data, UdpRequest target, UdpResponseCallback response, uint32_t timeout = 1, bool anySource = false);
 	UdpRequest findPendingConnection(UdpRequest);
 
 	void checkTimeout(UdpRequest, const asio::error_code& error);
