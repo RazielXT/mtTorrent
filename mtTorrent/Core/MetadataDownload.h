@@ -27,6 +27,8 @@ namespace mtt
 			uint8_t sourceId[20];
 			enum Action { Connected, Disconnected, Request, Receive, Searching, End } action;
 			uint32_t index;
+
+			std::string toString();
 		};
 
 		std::vector<EventInfo> getEvents();

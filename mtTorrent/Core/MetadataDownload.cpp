@@ -2,6 +2,7 @@
 #include "MetadataReconstruction.h"
 #include "Torrent.h"
 #include "Configuration.h"
+#include "utils/HexEncoding.h"
 
 #define BT_UTM_LOG(x) WRITE_LOG(LogTypeBtUtm, x)
 
@@ -222,4 +223,22 @@ void mtt::MetadataDownload::addEventLog(uint8_t* id, EventInfo::Action action, u
 		memcpy(info.sourceId, id, 20);
 
 	eventLog.emplace_back(info);
+}
+
+std::string mtt::MetadataDownload::EventInfo::toString()
+{
+	if (action == mtt::MetadataDownload::EventInfo::Connected)
+		return hexToString(sourceId, 20) + " connected";
+	else if (action == mtt::MetadataDownload::EventInfo::Disconnected)
+		return hexToString(sourceId, 20) + " disconnected";
+	else if (action == mtt::MetadataDownload::EventInfo::End)
+		return "Finished";
+	else if (action == mtt::MetadataDownload::EventInfo::Searching)
+		return "Searching for peers, current count " + std::to_string(index);
+	else if (action == mtt::MetadataDownload::EventInfo::Request)
+		return hexToString(sourceId, 20) + " requesting " + std::to_string(index);
+	else if (action == mtt::MetadataDownload::EventInfo::Receive)
+		return hexToString(sourceId, 20) + " sent " + std::to_string(index);
+	else
+		return "";
 }

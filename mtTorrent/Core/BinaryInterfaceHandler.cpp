@@ -231,21 +231,7 @@ extern "C"
 				if (events.size() >= (resp->start + resp->count))
 					for (size_t i = resp->start; i < resp->start + resp->count; i++)
 					{
-						std::string txt;
-						if (events[i].action == mtt::MetadataDownload::EventInfo::Connected)
-							txt = hexToString(events[i].sourceId, 20) + " connected";
-						else if (events[i].action == mtt::MetadataDownload::EventInfo::Disconnected)
-							txt = hexToString(events[i].sourceId, 20) + " disconnected";
-						else if (events[i].action == mtt::MetadataDownload::EventInfo::End)
-							txt = "Finished";
-						else if (events[i].action == mtt::MetadataDownload::EventInfo::Searching)
-							txt = "Searching for peers, current count " + std::to_string(events[i].index);
-						else if (events[i].action == mtt::MetadataDownload::EventInfo::Request)
-							txt = hexToString(events[i].sourceId, 20) + " requesting " + std::to_string(events[i].index);
-						else if (events[i].action == mtt::MetadataDownload::EventInfo::Receive)
-							txt = hexToString(events[i].sourceId, 20) + " sent " + std::to_string(events[i].index);
-
-						resp->logs[i - resp->start] = txt;
+						resp->logs[i - resp->start] = events[i].toString();
 					}
 			}
 		}

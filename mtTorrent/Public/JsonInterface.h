@@ -107,16 +107,131 @@ namespace mttJson
 			}
 		*/
 		GetTorrentStateInfo,
+
+		/*
+			Request:
+			{
+				hash : *string*
+			}
+
+			Response:
+			{
+				peers: [
+				{
+					progress : *float*
+					downloadSpeed : *number*
+					uploadSpeed : *number*
+					address : *string*
+					client : *string*	//OPT
+					country : *string*	//OPT
+				},...
+				]
+			}
+		*/
 		GetPeersInfo,	//uint8_t[20], TorrentPeersInfo
+
+		/*
+			Request:
+			{
+				hash : *string*
+			}
+
+			Response:
+			{
+				sources: [
+				{
+					name : *string*
+					peers : *number*
+					seeds : *number*
+					leechers : *number*
+					nextCheck : *number*
+					interval : *number*
+					status : *string*	//Stopped, Ready, Offline, Connecting, Announcing, Announced
+				},...
+				]
+			}
+		*/
 		GetSourcesInfo,	//uint8_t[20], SourcesInfo
-		GetMagnetLinkProgress,	//uint8_t[20],MagnetLinkProgress
-		GetMagnetLinkProgressLogs,	//uint8_t[20],MagnetLinkProgressLogs
+		
+		/*
+			Request:
+			{
+				hash : *string*
+			}
+
+			Response:
+			{
+				count: *number*
+				pieces: *string*	//0 = miss, 1 = have, per piece
+				requests: [*number*]
+			}
+		*/
+		GetPiecesInfo,
+
+		/*
+			Request:
+			{
+				hash : *string*
+			}
+
+			Response:
+			{
+				finished: *bool*
+				receivedParts: *number*
+				totalParts: *number*
+			}
+		*/
+		GetMagnetLinkProgress,
+
+		/*
+			Request:
+			{
+				hash : *string*
+				start : *number*	//first log index
+			}
+
+			Response:
+			{
+				logs : [
+				*string*, ...
+				]
+			}
+		*/
+		GetMagnetLinkProgressLogs,
+
+		/*
+			Request:
+			{
+				hash : *string*
+			}
+
+			Response:
+			{
+				files : [
+					{
+						name : *string*
+						selected : *bool*
+						size : *number*
+						pieceStart : *number*
+						pieceEnd : *number*
+					},...
+				]
+			}
+		*/
+		GetTorrentFilesSelection,
+
+
+		/*
+			Request:
+			{
+				hash : *string*
+				selection : [ *bool*, ... ] 
+			}
+		*/
+		SetTorrentFilesSelection,
 		GetSettings, //null, SettingsInfo
 		SetSettings, //SettingsInfo, null
 		RefreshSource, //SourceId, null
-		GetTorrentFilesSelection, //SourceId, TorrentFilesSelection
-		SetTorrentFilesSelection, //TorrentFilesSelectionRequest, null
 		AddPeer,	//AddPeerRequest, null
-		GetPiecesInfo, //uint8_t[20], PiecesInfo
 	};
 };
