@@ -11,11 +11,12 @@ mtt::string::~string()
 		allocator->deallocate(data);
 }
 
-void mtt::string::assign(const char* str, size_t length)
+void mtt::string::assign(const char* str, size_t l)
 {
 	if (data)
 		allocator->deallocate(data);
 
+	length = l;
 	data = (char*)allocator->allocate(length + 1);
 	memcpy(data, str, length + 1);
 }

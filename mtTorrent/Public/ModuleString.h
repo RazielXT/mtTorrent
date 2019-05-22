@@ -11,6 +11,7 @@ namespace mtt
 		~string();
 
 		char* data = nullptr;
+		size_t length = 0;
 
 		string& operator=(const std::string& str);
 		string& operator=(const char* str);
