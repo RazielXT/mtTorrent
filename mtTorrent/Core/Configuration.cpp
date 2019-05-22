@@ -110,7 +110,8 @@ namespace mtt
 			rapidjson::Document doc;
 			doc.Parse(js);
 
-			fromJson(doc);
+			if(doc.IsObject())
+				fromJson(doc);
 
 			return doc.IsObject();
 		}
@@ -207,7 +208,9 @@ namespace mtt
 				rapidjson::Document doc;
 				doc.Parse(data.data(), data.length());
 
-				
+				if (!doc.IsObject())
+					return;
+
 				auto internalSettings = doc.FindMember("internal");
 				if (internalSettings != doc.MemberEnd())
 				{

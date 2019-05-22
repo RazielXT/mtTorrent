@@ -24,8 +24,13 @@ extern "C"
 	{
 		js::Document requestJs;
 
-		if(request)
+		if (request)
+		{
 			requestJs.Parse(request);
+
+			if (!requestJs.IsObject())
+				return mtt::Status::E_InvalidInput;
+		}
 
 		if (id == mttJson::MessageId::Init)
 		{
