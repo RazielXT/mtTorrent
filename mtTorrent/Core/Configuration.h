@@ -9,6 +9,8 @@ namespace mtt
 	{
 		struct External
 		{
+			External();
+
 			struct Connection
 			{
 				uint16_t tcpPort = 55125;
@@ -16,7 +18,7 @@ namespace mtt
 
 				uint32_t maxTorrentConnections = 50;
 
-				bool upnpPortMapping = true;
+				bool upnpPortMapping = false;
 			}
 			connection;
 
@@ -31,26 +33,33 @@ namespace mtt
 				std::string defaultDirectory;
 			}
 			files;
+
+			std::string toJson() const;
 		};
 
 		struct Internal
 		{
-			uint8_t hashId[20];
-			uint32_t trackerKey;
+			Internal();
 
+			uint8_t hashId[20];
+
+			uint32_t trackerKey;
 			uint32_t maxPeersPerTrackerRequest = 100;
-			std::vector<std::pair<std::string, std::string>> defaultRootHosts;
 
 			struct
 			{
+				std::vector<std::pair<std::string, std::string>> defaultRootHosts;
+				uint32_t peersCheckInterval = 60;
+
 				uint32_t maxStoredAnnouncedPeers = 32;
 				uint32_t maxPeerValuesResponse = 32;
 			}
 			dht;
 
-			uint32_t dhtPeersCheckInterval = 60;
 			std::string programFolderPath;
 			std::string stateFolder;
+
+			void fromJson(const char* js);
 		};
 
 		const External& getExternal();
@@ -60,6 +69,7 @@ namespace mtt
 		void setValues(const External::Connection& val);
 		void setValues(const External::Dht& val);
 		void setValues(const External::Files& val);
+		bool fromJson(const char* js);
 
 		int registerOnChangeCallback(ValueType, std::function<void()>);
 		void unregisterOnChangeCallback(int);
