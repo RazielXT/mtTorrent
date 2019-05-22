@@ -29,7 +29,7 @@ void testInit()
 		mtt::config::getInternal().hashId[i] = (uint8_t)rand();
 	}
 
-	mtt::config::getInternal().defaultRootHosts = { { "dht.transmissionbt.com", "6881" },{ "router.bittorrent.com" , "6881" } };
+	mtt::config::getInternal().dht.defaultRootHosts = { { "dht.transmissionbt.com", "6881" },{ "router.bittorrent.com" , "6881" } };
 
 	auto filesSettings = mtt::config::getExternal().files;
 	filesSettings.defaultDirectory = "E:\\";

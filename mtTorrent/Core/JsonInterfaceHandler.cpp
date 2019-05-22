@@ -13,6 +13,11 @@ extern mtt::Core core;
 
 namespace js = rapidjson;
 
+namespace mtt::config
+{
+	extern void fromInternalJson(rapidjson::Value& internalSettings);
+}
+
 extern "C"
 {
 	__declspec(dllexport) mtt::Status __cdecl JsonIoctl(mttJson::MessageId id, const char* request, mtt::string* output)
@@ -23,7 +28,12 @@ extern "C"
 			requestJs.Parse(request);
 
 		if (id == mttJson::MessageId::Init)
+		{
+			if (requestJs.IsObject())
+				mtt::config::fromInternalJson(requestJs);
+
 			core.init();
+		}
 		else if (id == mttJson::MessageId::Deinit)
 			core.deinit();
 		else if (id == mttJson::MessageId::Add)
@@ -430,33 +440,19 @@ extern "C"
 				output->assign(s.GetString(), s.GetLength());
 			}
 		}
-		/*else if (id == mttJson::MessageId::GetSettings)
+		else if (id == mttJson::MessageId::GetSettings)
 		{
-			auto resp = (mtBI::SettingsInfo*) output;
-			auto& settings = mtt::config::getExternal();
-			resp->dhtEnabled = settings.dht.enable;
-			resp->directory = settings.files.defaultDirectory;
-			resp->maxConnections = settings.connection.maxTorrentConnections;
-			resp->tcpPort = settings.connection.tcpPort;
-			resp->udpPort = settings.connection.udpPort;
-			resp->upnpEnabled = settings.connection.upnpPortMapping;
+			if (output)
+			{
+				auto settings = mtt::config::getExternal().toJson();
+				*output = settings;
+			}
 		}
 		else if (id == mttJson::MessageId::SetSettings)
 		{
-			auto info = (mtBI::SettingsInfo*) request;
-			auto settings = mtt::config::getExternal();
-
-			settings.dht.enable = info->dhtEnabled;
-			settings.files.defaultDirectory = info->directory.data;
-			settings.connection.maxTorrentConnections = info->maxConnections;
-			settings.connection.tcpPort = info->tcpPort;
-			settings.connection.udpPort = info->udpPort;
-			settings.connection.upnpPortMapping = info->upnpEnabled;
-
-			mtt::config::setValues(settings.dht);
-			mtt::config::setValues(settings.connection);
-			mtt::config::setValues(settings.files);
-		}*/
+			if(!mtt::config::fromJson(request))
+				return mtt::Status::E_InvalidInput;
+		}
 		else if (id == mttJson::MessageId::GetTorrentFilesSelection)
 		{
 			mtt::TorrentPtr t;
@@ -509,42 +505,43 @@ extern "C"
 				return mtt::Status::E_InvalidInput;
 
 			auto selection = requestJs["selection"].GetArray();
-			auto torrent = core.getTorrent(selection->hash);
-			if (!torrent)
-				return mtt::Status::E_InvalidInput;
-
-			if (torrent->files.selection.files.size() != selection->selection.size())
+	
+			if (t->files.selection.files.size() != selection.Size())
 				return mtt::Status::E_InvalidInput;
 
 			std::vector<bool> dlSelect;
-			for (auto& f : selection->selection)
+			for (auto& f : selection)
 			{
-				dlSelect.push_back(f.selected);
+				dlSelect.push_back(f.IsTrue());
 			}
 
-			if (!torrent->selectFiles(dlSelect))
+			if (!t->selectFiles(dlSelect))
 				return mtt::Status::E_InvalidInput;
 		}
-		/*else if (id == mttJson::MessageId::RefreshSource)
+		else if (id == mttJson::MessageId::RefreshSource)
 		{
-			auto info = (mtBI::SourceId*) request;
+			mtt::TorrentPtr t;
 
-			auto torrent = core.getTorrent(info->hash);
-			if (!torrent)
+			if (requestJs.HasMember("hash"))
+				t = core.getTorrent(requestJs["hash"].GetString());
+
+			if (!t || !requestJs.HasMember("name"))
 				return mtt::Status::E_InvalidInput;
 
-			torrent->peers->refreshSource(info->name.data);
+			t->peers->refreshSource(requestJs["name"].GetString());
 		}
 		else if (id == mttJson::MessageId::AddPeer)
 		{
-			auto info = (mtBI::AddPeerRequest*) request;
+			mtt::TorrentPtr t;
 
-			auto torrent = core.getTorrent(info->hash);
-			if (!torrent)
+			if (requestJs.HasMember("hash"))
+				t = core.getTorrent(requestJs["hash"].GetString());
+
+			if (!t || !requestJs.HasMember("address"))
 				return mtt::Status::E_InvalidInput;
 
-			torrent->peers->connect(Addr(info->addr.data));
-		}*/
+			t->peers->connect(Addr(requestJs["address"].GetString()));
+		}
 		else
 			return mtt::Status::E_InvalidInput;
 

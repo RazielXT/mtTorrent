@@ -384,7 +384,7 @@ bool mtt::Peers::KnownPeer::operator==(const Addr& r)
 mtt::Peers::DhtSource::DhtSource(Peers& p, TorrentPtr t) : peers(p), torrent(t)
 {
 	info.hostname = "DHT";
-	info.announceInterval = mtt::config::getInternal().dhtPeersCheckInterval;
+	info.announceInterval = mtt::config::getInternal().dht.peersCheckInterval;
 }
 
 void mtt::Peers::DhtSource::start()

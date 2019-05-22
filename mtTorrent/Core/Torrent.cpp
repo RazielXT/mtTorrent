@@ -37,7 +37,7 @@ mtt::TorrentPtr mtt::Torrent::fromMagnetLink(std::string link)
 
 mtt::TorrentPtr mtt::Torrent::fromSavedState(std::string name)
 {
-	if (auto ptr = fromFile(mtt::config::getInternal().programFolderPath + mtt::config::getInternal().stateFolder + "\\" + name + ".torrent"))
+	if (auto ptr = fromFile(mtt::config::getInternal().stateFolder + "\\" + name + ".torrent"))
 	{
 		TorrentState state(ptr->files.progress.pieces);
 		if (state.load(name))
@@ -88,7 +88,7 @@ void mtt::Torrent::save()
 
 void mtt::Torrent::saveTorrentFile()
 {
-	auto folderPath = mtt::config::getInternal().programFolderPath + mtt::config::getInternal().stateFolder + "\\" + hashString() + ".torrent";
+	auto folderPath = mtt::config::getInternal().stateFolder + "\\" + hashString() + ".torrent";
 
 	std::ofstream file(folderPath, std::ios::binary);
 
@@ -100,7 +100,7 @@ void mtt::Torrent::saveTorrentFile()
 
 void mtt::Torrent::removeMetaFiles()
 {
-	auto path = mtt::config::getInternal().programFolderPath + mtt::config::getInternal().stateFolder + "\\" + hashString();
+	auto path = mtt::config::getInternal().stateFolder + "\\" + hashString();
 	std::remove((path + ".torrent").data());
 	std::remove((path + ".state").data());
 }

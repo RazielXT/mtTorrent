@@ -41,9 +41,7 @@ Addr::Addr(const char* str)
 		else
 			portStart--;
 
-	auto p = std::atoi(str + portStart + 1);
-
-	set(a, p);
+	set(a, (uint16_t)strtoul(str + portStart + 1, 0, 10));
 }
 
 void Addr::set(uint8_t* ip, uint16_t p, bool isIpv6)

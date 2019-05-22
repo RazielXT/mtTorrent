@@ -28,7 +28,7 @@ void FastIpToCountry::fromFile(const std::string& folder)
 	size_t bucket = 0;
 	bool countriesLoaded = false;
 
-	std::ifstream file(folder + filename, std::ios::binary);
+	std::ifstream file(folder + "\\" + filename, std::ios::binary);
 	while (file.good() && !file.eof())
 	{
 		if (countriesLoaded)

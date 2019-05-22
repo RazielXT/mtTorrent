@@ -188,7 +188,7 @@ void mtt::dht::Communication::loadDefaultRoots()
 		}
 	};
 
-	for (auto& r : mtt::config::getInternal().defaultRootHosts)
+	for (auto& r : mtt::config::getInternal().dht.defaultRootHosts)
 	{
 		udp::resolver::query query(r.first, r.second);
 		auto resolver = std::make_shared<udp::resolver>(service.io);
@@ -214,14 +214,14 @@ void mtt::dht::Communication::save()
 	auto saveFile = table->save();
 
 	{
-		std::ofstream out(mtt::config::getInternal().programFolderPath + "dht", std::ios_base::binary);
+		std::ofstream out(mtt::config::getInternal().programFolderPath + "\\dht", std::ios_base::binary);
 		out << saveFile;
 	}
 }
 
 void mtt::dht::Communication::load()
 {
-	std::ifstream inFile(mtt::config::getInternal().programFolderPath + "dht", std::ios_base::binary | std::ios_base::in);
+	std::ifstream inFile(mtt::config::getInternal().programFolderPath + "\\dht", std::ios_base::binary | std::ios_base::in);
 
 	if (inFile)
 	{

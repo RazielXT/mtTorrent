@@ -8,7 +8,25 @@ namespace mttJson
 {
 	enum class MessageId
 	{
+		/*
+			Request:	//OPT
+			{
+				programFolderPath : *string*	//folder with library data
+				stateFolder : *string*			//folder with torrents state data
+				maxPeersPerTrackerRequest : *number*
+
+				dht : {
+					defaultRootHosts : [ *string*, ...]		//host:port
+					peersCheckInterval : *number*
+					maxStoredAnnouncedPeers : *number*
+					maxPeerValuesResponse : *number*
+				}
+			}
+		*/
 		Init,
+
+		/*
+		*/
 		Deinit,
 
 		/*
@@ -229,9 +247,39 @@ namespace mttJson
 			}
 		*/
 		SetTorrentFilesSelection,
-		GetSettings, //null, SettingsInfo
-		SetSettings, //SettingsInfo, null
-		RefreshSource, //SourceId, null
-		AddPeer,	//AddPeerRequest, null
+
+		/*
+			Response:
+			{
+				*string*	//json settings
+			}
+		*/
+		GetSettings,
+
+		/*
+			Request:
+			{
+				*string*	//json settings
+			}
+		*/
+		SetSettings,
+
+		/*
+			Request:
+			{
+				hash : *string*
+				name : *string*
+			}
+		*/
+		RefreshSource,
+
+		/*
+			Request:
+			{
+				hash : *string*
+				address : *string*
+			}
+		*/
+		AddPeer,
 	};
 };
