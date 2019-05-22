@@ -57,8 +57,11 @@ void mtt::Core::init()
 
 void mtt::Core::deinit()
 {
-	listener->stop();
-	listener.reset();
+	if (listener)
+	{
+		listener->stop();
+		listener.reset();
+	}
 
 	TorrentsList list;
 	for (auto& t : torrents)
@@ -70,8 +73,11 @@ void mtt::Core::deinit()
 	list.save();
 	torrents.clear();
 
-	mtt::dht::Communication::get().stop();
-	dht.reset();
+	if (dht)
+	{
+		dht->stop();
+		dht.reset();
+	}
 
 	UdpAsyncComm::Deinit();
 

@@ -15,6 +15,7 @@ mtt::dht::Communication::Communication() : responder(*this)
 
 mtt::dht::Communication::~Communication()
 {
+	udp.reset();
 }
 
 mtt::dht::Communication& mtt::dht::Communication::get()
