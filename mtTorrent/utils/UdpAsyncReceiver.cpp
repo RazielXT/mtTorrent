@@ -17,7 +17,7 @@ void UdpAsyncReceiver::listen()
 	active = true;
 	buffer.resize(BufferSize);
 	socket_.async_receive_from(asio::buffer(buffer.data(), buffer.size()), remote_endpoint_,	
-		std::bind(&UdpAsyncReceiver::handle_receive, this, std::placeholders::_1, std::placeholders::_2));
+		std::bind(&UdpAsyncReceiver::handle_receive, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 }
 
 void UdpAsyncReceiver::stop()
@@ -28,6 +28,9 @@ void UdpAsyncReceiver::stop()
 
 void UdpAsyncReceiver::handle_receive(const std::error_code& error, std::size_t bytes_transferred)
 {
+	if (!active)
+		return;
+
 	UDP_LOG(remote_endpoint_.address().to_string() << " sent bytes " << bytes_transferred);
 
 	//if (!bytes_transferred && error.value() != 10054)

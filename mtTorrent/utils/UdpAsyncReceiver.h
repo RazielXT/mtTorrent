@@ -2,7 +2,7 @@
 
 using UdpPacketCallback = std::function<void(udp::endpoint&, DataBuffer&)>;
 
-class UdpAsyncReceiver
+class UdpAsyncReceiver : public std::enable_shared_from_this<UdpAsyncReceiver>
 {
 public:
 
