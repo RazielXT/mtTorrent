@@ -157,19 +157,22 @@ uint32_t mtt::TrackerManager::getTrackersCount()
 
 void mtt::TrackerManager::onAnnounce(AnnounceResponse& resp, Tracker* t)
 {
-	std::lock_guard<std::mutex> guard(trackersMutex);
+	torrent->service.io.post([this, resp, t]()
+		{
+			std::lock_guard<std::mutex> guard(trackersMutex);
 
-	if(auto trackerInfo = findTrackerInfo(t))
-	{
-		trackerInfo->retryCount = 0;
-		trackerInfo->timer->schedule(resp.interval);
-		trackerInfo->comm->info.nextAnnounce = (uint32_t)time(0) + resp.interval;
-	}
+			if (auto trackerInfo = findTrackerInfo(t))
+			{
+				trackerInfo->retryCount = 0;
+				trackerInfo->timer->schedule(resp.interval);
+				trackerInfo->comm->info.nextAnnounce = (uint32_t)time(0) + resp.interval;
+			}
 
-	if(announceCallback)
-		announceCallback(Status::Success, &resp, t);
+			if (announceCallback)
+				announceCallback(Status::Success, &resp, t);
 
-	startNext();
+			startNext();
+		});
 }
 
 void mtt::TrackerManager::onTrackerFail(Tracker* t)

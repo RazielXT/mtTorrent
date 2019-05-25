@@ -206,7 +206,7 @@ std::vector<Addr> getPeersFromTrackers(mtt::TorrentFileInfo& parsedTorrent)
 	torrent->infoFile.info = parsedTorrent.info;
 
 	std::vector<Addr> peers;
-	auto trUpdate = [&peers](Status s, AnnounceResponse* r, Tracker* t)
+	auto trUpdate = [&peers](Status s, const AnnounceResponse* r, Tracker* t)
 	{
 		if (s == Status::Success && r && peers.empty() && !r->peers.empty())
 		{

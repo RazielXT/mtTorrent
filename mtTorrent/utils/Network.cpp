@@ -92,14 +92,14 @@ int Addr::parse(uint8_t* buffer, bool v6)
 	return 2 + addrSize;
 }
 
-asio::ip::udp::endpoint Addr::toUdpEndpoint()
+asio::ip::udp::endpoint Addr::toUdpEndpoint() const
 {
 	return ipv6 ?
-		udp::endpoint(asio::ip::address_v6(*reinterpret_cast<asio::ip::address_v6::bytes_type*>(addrBytes)), port) :
-		udp::endpoint(asio::ip::address_v4(*reinterpret_cast<asio::ip::address_v4::bytes_type*>(addrBytes)), port);
+		udp::endpoint(asio::ip::address_v6(*reinterpret_cast<const asio::ip::address_v6::bytes_type*>(addrBytes)), port) :
+		udp::endpoint(asio::ip::address_v4(*reinterpret_cast<const asio::ip::address_v4::bytes_type*>(addrBytes)), port);
 }
 
-std::string Addr::toString()
+std::string Addr::toString() const
 {
 	return toUdpEndpoint().address().to_string() + ":" + std::to_string(port);
 }

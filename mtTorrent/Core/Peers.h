@@ -75,7 +75,7 @@ namespace mtt
 			uint32_t connectionAttempts = 0;
 		};
 
-		uint32_t updateKnownPeers(std::vector<Addr>& peers, PeerSource source);
+		uint32_t updateKnownPeers(const std::vector<Addr>& peers, PeerSource source);
 		uint32_t updateKnownPeers(Addr& peers, PeerSource source);
 		std::vector<KnownPeer> knownPeers;
 		std::mutex peersMutex;

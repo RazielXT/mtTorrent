@@ -13,7 +13,7 @@ namespace mtt
 
 		TrackerManager(TorrentPtr t);
 
-		using AnnounceCallback = std::function<void(Status, AnnounceResponse*, Tracker*)>;
+		using AnnounceCallback = std::function<void(Status, const AnnounceResponse*, Tracker*)>;
 		void start(AnnounceCallback announceCallback);
 		void stop();
 

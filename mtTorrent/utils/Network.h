@@ -30,8 +30,8 @@ struct Addr
 	void set(const asio::ip::address& addr, uint16_t port_num);
 
 	int parse(uint8_t* buffer, bool v6);
-	asio::ip::udp::endpoint toUdpEndpoint();
-	std::string toString();
+	asio::ip::udp::endpoint toUdpEndpoint() const;
+	std::string toString() const;
 
 	bool operator==(const Addr& r);
 };
