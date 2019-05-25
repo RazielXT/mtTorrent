@@ -20,7 +20,7 @@ void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listen
 {
 	updateCallback = onPeersUpdated;
 	peersListener->setTarget(listener);
-	trackers.start([this](Status s, AnnounceResponse* r, Tracker* t)
+	trackers.start([this](Status s, const AnnounceResponse* r, Tracker* t)
 	{
 		if (r)
 		{
@@ -71,6 +71,8 @@ void mtt::Peers::stop()
 				c.comm->stop();
 			i++;
 		}
+
+		activeConnections.clear();
 	}
 
 	updateCallback = nullptr;
@@ -260,7 +262,7 @@ void mtt::Peers::reloadTorrentInfo()
 	}
 }
 
-uint32_t mtt::Peers::updateKnownPeers(std::vector<Addr>& peers, PeerSource source)
+uint32_t mtt::Peers::updateKnownPeers(const std::vector<Addr>& peers, PeerSource source)
 {
 	std::vector<uint32_t> accepted;
 	{
@@ -504,6 +506,7 @@ void mtt::Peers::PeersListener::extHandshakeFinished(mtt::PeerCommunication* p)
 void mtt::Peers::PeersListener::metadataPieceReceived(mtt::PeerCommunication* p, mtt::ext::UtMetadata::Message& m)
 {
 	std::lock_guard<std::mutex> guard(mtx);
+
 	if (target)
 		target->metadataPieceReceived(p, m);
 }

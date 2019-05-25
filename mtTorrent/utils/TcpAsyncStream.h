@@ -25,7 +25,7 @@ public:
 	void connect(const std::string& ip, uint16_t port);
 	void connect(const std::string& hostname, const std::string& port);
 
-	void close();
+	void close(bool immediate = true);
 
 	void write(const DataBuffer& data);
 

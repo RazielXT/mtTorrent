@@ -120,8 +120,6 @@ PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l) : torrent
 PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, asio::io_service& io_service) : torrent(t), listener(l)
 {
 	stream = std::make_shared<TcpAsyncStream>(io_service);
-
-	initializeCallbacks();
 }
 
 void mtt::PeerCommunication::setStream(std::shared_ptr<TcpAsyncStream> s)
@@ -137,9 +135,9 @@ void mtt::PeerCommunication::initializeCallbacks()
 {
 	{
 		std::lock_guard<std::mutex> guard(stream->callbackMutex);
-		stream->onConnectCallback = std::bind(&PeerCommunication::connectionOpened, this);
+		stream->onConnectCallback = std::bind(&PeerCommunication::connectionOpened, shared_from_this());
 		stream->onCloseCallback = [this](int code) {connectionClosed(code); };
-		stream->onReceiveCallback = std::bind(&PeerCommunication::dataReceived, this);
+		stream->onReceiveCallback = std::bind(&PeerCommunication::dataReceived, shared_from_this());
 	}
 
 	ext.stream = stream;
@@ -160,6 +158,7 @@ void PeerCommunication::sendHandshake(Addr& address)
 		resetState();
 
 	state.action = PeerCommunicationState::Connecting;
+	initializeCallbacks();
 	stream->connect(address.addrBytes, address.port, address.ipv6);
 }
 
@@ -178,6 +177,7 @@ void PeerCommunication::dataReceived()
 	std::lock_guard<std::mutex> guard(read_mutex);
 
 	auto message = readNextStreamMessage();
+	auto ptr = shared_from_this();
 
 	while (message.id != Invalid)
 	{
@@ -198,7 +198,7 @@ void mtt::PeerCommunication::stop()
 	if (state.action != PeerCommunicationState::Disconnected)
 	{
 		state.action = PeerCommunicationState::Disconnected;
-		stream->close();
+		stream->close(false);
 	}
 }
 

@@ -41,7 +41,7 @@ namespace mtt
 		bool supportsDht();
 	};
 
-	class PeerCommunication
+	class PeerCommunication : public std::enable_shared_from_this<PeerCommunication>
 	{
 	public:
 

@@ -58,11 +58,14 @@ void TcpAsyncStream::connect(const std::string& ip, uint16_t port)
 	connectEndpoint();
 }
 
-void TcpAsyncStream::close()
+void TcpAsyncStream::close(bool immediate)
 {
-	onConnectCallback = nullptr;
-	onReceiveCallback = nullptr;
-	onCloseCallback = nullptr;
+	if (immediate)
+	{
+		onConnectCallback = nullptr;
+		onReceiveCallback = nullptr;
+		onCloseCallback = nullptr;
+	}
 
 	if (state == Disconnected)
 		return;
