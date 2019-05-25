@@ -50,10 +50,8 @@ bool runApplicationTest(std::string path, const char* appExecutable, const char*
 	return closeTestApp(appExecutable, dumpPath);
 }
 
-bool basicLoadTest(std::string path, const char* libFile, int id, const char* dumpPath)
+bool basicLoadTest(std::string path, const char* libFile, int runTime, int id, const char* dumpPath)
 {
-	int runTimeSeconds = 5;
-
 	std::string fullPath = path + std::to_string(id) + "/";
 
 	SetCurrentDirectory(fullPath.data());
@@ -64,7 +62,7 @@ bool basicLoadTest(std::string path, const char* libFile, int id, const char* du
 	uint8_t hash[20];
 	mtt::IoctlFunc(mtBI::MessageId::AddFromMetadata, "6QBN6XVGKV7CWOT5QXKDYWF3LIMUVK4I", hash);
 
-	std::this_thread::sleep_for(std::chrono::seconds(runTimeSeconds));
+	std::this_thread::sleep_for(std::chrono::seconds(runTime));
 
 	mtt::unload();
 
@@ -161,6 +159,7 @@ int main(int argc, char** argv)
 	const char* appExecutable = "mtTorrent.exe";
 
 	std::cout << "Test case: " << testCase << "\n";
+	std::cout << "Test run time: " << runTime << "\n";
 	std::cout << "Tests count: " << testCount << "\n";
 	std::cout << "Same instance: " << sameInstance << "\n";
 
@@ -179,7 +178,7 @@ int main(int argc, char** argv)
 
 		if (testCase == "all" || testCase == "basicLoad")
 		{
-			if (!basicLoadTest(testPath, libFile, instanceId, dumpPath))
+			if (!basicLoadTest(testPath, libFile, runTime, instanceId, dumpPath))
 				break;
 		}
 
