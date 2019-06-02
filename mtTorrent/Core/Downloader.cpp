@@ -4,6 +4,7 @@
 #include "utils/HexEncoding.h"
 #include "Configuration.h"
 #include <numeric>
+#include <random>
 
 #define DL_LOG(x) WRITE_LOG(LogTypeDownload, x)
 
@@ -42,6 +43,21 @@ void mtt::Downloader::sortPriorityByAvailability(std::vector<uint32_t>& availabi
 
 	std::sort(piecesPriority.begin(), piecesPriority.end(),
 		[&availability](uint32_t i1, uint32_t i2) {return availability[i1] < availability[i2]; });
+
+	uint32_t lastIdx = 0;
+	auto rng = std::default_random_engine{};
+	for (uint32_t i = 1; i <= (uint32_t)piecesPriority.size(); i++)
+	{
+		if (i == (uint32_t)piecesPriority.size() || availability[piecesPriority[i]] != availability[piecesPriority[i - 1]])
+		{
+			if (lastIdx + 1 < i)
+			{
+				std::shuffle(piecesPriority.begin() + lastIdx, piecesPriority.begin() + i, rng);
+			}
+
+			lastIdx = i;
+		}
+	}
 }
 
 std::vector<uint32_t> mtt::Downloader::getCurrentRequests()
