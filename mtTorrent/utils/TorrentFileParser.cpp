@@ -96,6 +96,8 @@ void loadTorrentFileInfo(BencodeParser& parser, TorrentFileInfo& fileInfo)
 				announce = announce->getNextSibling();
 			}
 		}
+		else if (!fileInfo.announce.empty())
+			fileInfo.announceList.push_back(fileInfo.announce);
 
 		if (auto info = root->getDictItem("info"))
 		{
