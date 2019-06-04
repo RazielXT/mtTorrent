@@ -18,16 +18,22 @@ void UdpAsyncWriter::setAddress(Addr& addr)
 	state = Initialized;
 }
 
-void UdpAsyncWriter::setAddress(const std::string& hostname, const std::string& port)
+void UdpAsyncWriter::setAddress(const std::string& host, const std::string& p)
 {
+	hostname = host;
+	port = p;
+
 	udp::resolver::query query(hostname, port);
 
 	auto resolver = std::make_shared<udp::resolver>(io_service);
 	resolver->async_resolve(query, std::bind(&UdpAsyncWriter::handle_resolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2, resolver));
 }
 
-void UdpAsyncWriter::setAddress(const std::string& hostname, const std::string& port, bool ipv6)
+void UdpAsyncWriter::setAddress(const std::string& host, const std::string& p, bool ipv6)
 {
+	hostname = host;
+	port = p;
+
 	udp::resolver::query query(ipv6 ? udp::v6() : udp::v4(), hostname, port);
 
 	auto resolver = std::make_shared<udp::resolver>(io_service);
@@ -141,7 +147,13 @@ void UdpAsyncWriter::do_write(DataBuffer data)
 	messageBuffer = data;
 
 	if (state != Clear)
+	{
 		send_message();
+	}
+	else if (!hostname.empty())
+	{
+		setAddress(hostname, port);
+	}
 }
 
 void UdpAsyncWriter::send_message()

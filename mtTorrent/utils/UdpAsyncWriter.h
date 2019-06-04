@@ -61,4 +61,7 @@ protected:
 	udp::socket socket;
 	asio::io_service& io_service;
 
+	std::string hostname;
+	std::string port;
+
 };
