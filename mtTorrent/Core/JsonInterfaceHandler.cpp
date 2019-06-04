@@ -165,56 +165,70 @@ extern "C"
 				output->assign(s.GetString(), s.GetLength());
 			}
 		}
-		else if (id == mttJson::MessageId::GetTorrentStateInfo)
+		else if (id == mttJson::MessageId::GetTorrentsState)
 		{
-			mtt::TorrentPtr t;
+			auto hashArray = requestJs.FindMember("hash");
 
-			if (requestJs.HasMember("hash"))
-				t = core.getTorrent(requestJs["hash"].GetString());
-
-			if (!t)
+			if (hashArray == requestJs.MemberEnd() || !hashArray->value.IsArray())
 				return mtt::Status::E_InvalidInput;
 
 			js::StringBuffer s;
 			js::Writer<js::StringBuffer> writer(s);
 
 			writer.StartObject();
-			writer.Key("name");
-			writer.String(t->infoFile.info.name.data(), (uint32_t)t->infoFile.info.name.length());
-			writer.Key("connectedPeers");
-			writer.Uint(t->peers->connectedCount());
-			writer.Key("foundPeers");
-			writer.Uint(t->peers->receivedCount());
+			writer.Key("states");
+			writer.StartArray();
 
-			writer.Key("downloaded");
-			writer.Uint64(t->downloaded());
-			writer.Key("uploaded");
-			writer.Uint64(t->uploaded());
-			writer.Key("downloadSpeed");
-			writer.Uint64(t->downloadSpeed());
-			writer.Key("uploadSpeed");
-			writer.Uint64(t->uploadSpeed());
-
-			writer.Key("progress");
-			writer.Double(t->currentProgress());
-			writer.Key("selectionProgress");
-			writer.Double(t->currentSelectionProgress());
-
-			writer.Key("status");
-			writer.Uint((uint32_t)t->lastError);
-
-			if (t->utmDl && !t->utmDl->state.finished)
+			for (auto hashItem = hashArray->value.MemberBegin(); hashItem != hashArray->value.MemberEnd(); hashItem++)
 			{
-				writer.Key("utmActive");
-				writer.Bool(true);
+				mtt::TorrentPtr t = core.getTorrent(hashItem->name.GetString());
+
+				if(!t)
+					continue;
+
+				writer.StartObject();
+				writer.Key("hash");
+				writer.String(hashItem->name.GetString());
+				writer.Key("name");
+				writer.String(t->infoFile.info.name.data(), (uint32_t)t->infoFile.info.name.length());
+				writer.Key("connectedPeers");
+				writer.Uint(t->peers->connectedCount());
+				writer.Key("foundPeers");
+				writer.Uint(t->peers->receivedCount());
+
+				writer.Key("downloaded");
+				writer.Uint64(t->downloaded());
+				writer.Key("uploaded");
+				writer.Uint64(t->uploaded());
+				writer.Key("downloadSpeed");
+				writer.Uint64(t->downloadSpeed());
+				writer.Key("uploadSpeed");
+				writer.Uint64(t->uploadSpeed());
+
+				writer.Key("progress");
+				writer.Double(t->currentProgress());
+				writer.Key("selectionProgress");
+				writer.Double(t->currentSelectionProgress());
+
+				writer.Key("status");
+				writer.Uint((uint32_t)t->lastError);
+
+				if (t->utmDl && !t->utmDl->state.finished)
+				{
+					writer.Key("utmActive");
+					writer.Bool(true);
+				}
+
+				if (t->checking)
+				{
+					writer.Key("checkProgress");
+					writer.Double(t->checkingProgress());
+				}
+
+				writer.EndObject();
 			}
 
-			if (t->checking)
-			{
-				writer.Key("checkProgress");
-				writer.Double(t->checkingProgress());
-			}
-
+			writer.EndArray();
 			writer.EndObject();
 
 			if (output)

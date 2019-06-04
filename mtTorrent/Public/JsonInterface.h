@@ -104,27 +104,32 @@ namespace mttJson
 		/*
 			Request:
 			{
-				hash : *string*
+				hash : [*string*, ...]
 			}
 
 			Response:
 			{
-				name : *string*
-				connectedPeers : *number*
-				foundPeers : *number*
-				downloaded : *number*
-				uploaded : *number*
-				downloadSpeed : *number*
-				uploadSpeed : *number*
-				progress : *float*
-				selectionProgress : *float*
-				status : *number*	//mtt::Status last error
+				states : [
+					{
+						hash : *string*
+						name : *string*
+						connectedPeers : *number*
+						foundPeers : *number*
+						downloaded : *number*
+						uploaded : *number*
+						downloadSpeed : *number*
+						uploadSpeed : *number*
+						progress : *float*
+						selectionProgress : *float*
+						status : *number*	//mtt::Status last error
 
-				utmActive : *bool*			//OPT
-				checkProgress : *float*		//OPT
+						utmActive : *bool*			//OPT
+						checkProgress : *float*		//OPT
+					}
+				, ...]
 			}
 		*/
-		GetTorrentStateInfo,
+		GetTorrentsState,
 
 		/*
 			Request:
