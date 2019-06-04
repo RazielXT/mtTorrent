@@ -172,7 +172,7 @@ int main(int argc, char** argv)
 	int i = 0;
 	for (; i < testCount; i++)
 	{
-		std::cout << "Running test case " << i << "\n";
+		std::cout << "Running test " << i << "\n";
 
 		int instanceId = sameInstance ? 0 : i;
 
@@ -194,9 +194,7 @@ int main(int argc, char** argv)
 	if (i < testCount)
 		std::cout << "Testing finished prematurely\n";
 	else
-		std::cout << "Testing finished\n";
-
-	getchar();
+		std::cout << "Testing finished\n\n";
 
 	return 0;
 }

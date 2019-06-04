@@ -21,11 +21,11 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\mtTorrent\Public\BinaryInterface.cpp">
-      <Filter>Source Files\mtt</Filter>
-    </ClCompile>
     <ClCompile Include="utils.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Public\ModuleString.cpp">
+      <Filter>Source Files\mtt</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -43,6 +43,9 @@
     </ClInclude>
     <ClInclude Include="utils.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Public\ModuleString.h">
+      <Filter>Source Files\mtt</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
