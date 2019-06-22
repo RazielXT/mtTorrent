@@ -6,6 +6,7 @@
 #include "Configuration.h"
 #include "utils/ScheduledTimer.h"
 #include "utils/FastIpToCountry.h"
+#include <fstream>
 
 FastIpToCountry ipToCountry;
 bool ipToCountryLoaded = false;
@@ -49,6 +50,8 @@ void mtt::FileTransfer::start()
 
 void mtt::FileTransfer::stop()
 {
+	saveLogEvents();
+
 	torrent->peers->stop();
 	downloader.reset();
 	torrent->files.storage.flush();
@@ -268,6 +271,14 @@ void mtt::FileTransfer::removePeer(PeerCommunication * p)
 	evaluateCurrentPeers();
 }
 
+void mtt::FileTransfer::removePeers(std::vector<uint32_t> sortedIdx)
+{
+	for (auto it = sortedIdx.rbegin(); it != sortedIdx.rend(); it++)
+	{
+		activePeers.erase(activePeers.begin() + *it);
+	}
+}
+
 void mtt::FileTransfer::evaluateCurrentPeers()
 {
 	if (activePeers.size() < mtt::config::getExternal().connection.maxTorrentConnections && !torrent->selectionFinished())
@@ -283,70 +294,116 @@ void mtt::FileTransfer::evalCurrentPeers()
 
 	peersEvalCounter = peersEvalInterval;
 
-	std::vector<PeerCommunication*> removePeers;
+	std::vector<uint32_t> removedPeers;
 	{
 		std::lock_guard<std::mutex> guard(peersMutex);
 
+#ifdef PEER_DIAGNOSTICS
+		std::lock_guard<std::mutex> guardLog(logmtx);
+		logEvals.push_back({ clock(), (uint32_t)activePeers.size() });
+
+		size_t logStartIdx = logEvalPeers.size();
+
+		if (activePeers.size())
+		{
+			logEvalPeers.resize(logEvalPeers.size() + activePeers.size());
+
+			size_t idx = logStartIdx;
+			for (auto peer : activePeers)
+			{
+				logEvalPeers[idx].addr = peer.comm->getAddress();
+				logEvalPeers[idx].dl = peer.downloadSpeed;
+				logEvalPeers[idx].up = peer.uploadSpeed;
+				logEvalPeers[idx].activityTime = currentTime - peer.lastActivityTime;
+				idx++;
+			}
+		}
+#endif
+
+		uint32_t currentTime = (uint32_t)::time(0);
+
 		if ((uint32_t)activePeers.size() < mtt::config::getExternal().connection.maxTorrentConnections)
+		{
 			return;
+		}
 
 		const uint32_t minPeersTimeChance = 10;
-		uint32_t currentTime = (uint32_t)::time(0);
+		
 		auto minTimeToEval = currentTime - minPeersTimeChance;
 
 		const uint32_t minPeersPiecesTimeChance = 20;
 		auto minTimeToReceive = currentTime - minPeersPiecesTimeChance;
 
 		uint32_t slowestSpeed = -1;
-		PeerCommunication* slowestPeer;
+		uint32_t slowestPeer = -1;
 
 		uint32_t maxUploads = 5;
-		std::vector<ActivePeer*> currentUploads;
+		std::vector<uint32_t> currentUploads;
 
+		uint32_t idx = 0;
 		for (auto peer : activePeers)
 		{
 			if (peer.connectionTime > minTimeToEval)
-				continue;
-
-			if (peer.lastActivityTime < minTimeToReceive)
 			{
-				removePeers.push_back(peer.comm);
+#ifdef PEER_DIAGNOSTICS
+				peerLogs[logStartIdx + idx].action = LogEvalPeer::TooSoon;
+#endif
 				continue;
 			}
 
 			if (peer.comm->state.peerInterested)
 			{
-				currentUploads.push_back(&peer);
+				currentUploads.push_back(idx);
+			}
+
+			if (peer.lastActivityTime < minTimeToReceive)
+			{
+#ifdef PEER_DIAGNOSTICS
+				peerLogs[logStartIdx + idx].action = LogEvalPeer::NotResponding;
+#endif
+				removedPeers.push_back(idx);
+				continue;
 			}
 
 			if (peer.downloadSpeed < slowestSpeed)
 			{
 				slowestSpeed = peer.downloadSpeed;
-				slowestPeer = peer.comm;
+				slowestPeer = idx;
 			}
+
+			idx++;
 		}
 
-		if (removePeers.empty())
-			removePeers.push_back(slowestPeer);
+		if (removedPeers.empty() && slowestPeer != -1)
+		{
+#ifdef PEER_DIAGNOSTICS
+			peerLogs[logStartIdx + idx].action = LogEvalPeer::TooSlow;
+#endif
+			removedPeers.push_back(slowestPeer);
+		}
 
 		if (!currentUploads.empty())
 		{
-			std::sort(currentUploads.begin(), currentUploads.end(), [](const auto & l, const auto & r) { return l->uploadSpeed > r->uploadSpeed; });
+			std::sort(currentUploads.begin(), currentUploads.end(), [&](const auto & l, const auto & r) { return activePeers[l].uploadSpeed > activePeers[r].uploadSpeed; });
 			currentUploads.resize(std::min((uint32_t)currentUploads.size(), maxUploads));
 
-			for (auto p : currentUploads)
+			for (auto idx : currentUploads)
 			{
-				auto it = std::find(removePeers.begin(), removePeers.end(), p->comm);
-				if (it != removePeers.end())
-					removePeers.erase(it);
+				auto it = std::find(removedPeers.begin(), removedPeers.end(), idx);
+				if (it != removedPeers.end())
+					removedPeers.erase(it);
+
+#ifdef PEER_DIAGNOSTICS
+				peerLogs[logStartIdx + idx].action = LogEvalPeer::Upload;
+#endif
 			}
 		}
+
+		removePeers(removedPeers);
 	}
 
-	for (auto p : removePeers)
-	{
-		removePeer(p);
-	}
+	if (!removedPeers.empty())
+		evaluateCurrentPeers();
 }
 
 void mtt::FileTransfer::updateMeasures()
@@ -386,3 +443,32 @@ void mtt::FileTransfer::updateMeasures()
 	if (!torrent->selectionFinished())
 		downloader.sortPriorityByAvailability(piecesAvailability);
 }
+
+#ifdef PEER_DIAGNOSTICS
+extern std::string FormatLogTime(long);
+
+void mtt::FileTransfer::saveLogEvents()
+{
+	std::lock_guard<std::mutex> guard(logmtx);
+
+	std::ofstream file("logs\\downloader_" + torrent->name());
+
+	size_t logIndex = 0;
+
+	for (auto& eval : logEvals)
+	{
+		file << FormatLogTime(eval.time) << ": Count:" << eval.count << "\n";
+
+		for (size_t i = logIndex; i < logIndex + eval.count; i++)
+		{
+			auto& peerLog = logEvalPeers[i];
+
+			file << peerLog.addr.toString() << " Action:" << (int)peerLog.action << " dl:" << peerLog.dl/1024.f << " up:" << peerLog.up/ 1024.f << " dead:" << peerLog.activityTime << "\n";
+		}
+
+		logIndex += eval.count;
+	}
+
+	file << "\n\n";
+}
+#endif

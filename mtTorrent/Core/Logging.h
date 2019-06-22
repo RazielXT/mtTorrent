@@ -25,3 +25,7 @@ LOG_TYPE(Download);
 #else
 #define WRITE_LOG(type, x) {}
 #endif
+
+extern void WriteLogFileImplementation(const char* const, std::stringstream&);
+
+#define WRITE_LOG_FILE(type, x) {std::stringstream ss; ss << x; WriteLogFileImplementation(type, ss);}

@@ -104,6 +104,11 @@ std::string Addr::toString() const
 	return toUdpEndpoint().address().to_string() + ":" + std::to_string(port);
 }
 
+uint32_t Addr::toUint()
+{
+	return *reinterpret_cast<uint32_t*>(addrBytes);
+}
+
 bool Addr::operator==(const Addr& r)
 {
 	if (r.ipv6 && !ipv6)

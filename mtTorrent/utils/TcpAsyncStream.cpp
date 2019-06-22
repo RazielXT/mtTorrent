@@ -1,7 +1,7 @@
 #include "TcpAsyncStream.h"
 #include "Logging.h"
 
-#define TCP_LOG(x) WRITE_LOG(LogTypeTcp, x)
+#define TCP_LOG(x) WRITE_LOG(LogTypeTcp, getHostname() << " " << x)
 
 TcpAsyncStream::TcpAsyncStream(asio::io_service& io) : io_service(io), socket(io), timeoutTimer(io)
 {
@@ -38,8 +38,8 @@ void TcpAsyncStream::connect(const uint8_t* ip, uint16_t port, bool ipv6)
 	info.host = info.endpoint.address().to_string();
 	info.port = port;
 
+	timeoutTimer.expires_from_now(std::chrono::seconds(10));
 	timeoutTimer.async_wait(std::bind(&TcpAsyncStream::checkTimeout, shared_from_this(), std::placeholders::_1));
-	timeoutTimer.expires_from_now(std::chrono::seconds(5));
 
 	connectEndpoint();
 }
@@ -119,6 +119,8 @@ void TcpAsyncStream::connectByHostname()
 
 void TcpAsyncStream::connectEndpoint()
 {
+	TCP_LOG("connecting");
+
 	state = Connecting;
 
 	socket.async_connect(info.endpoint, std::bind(&TcpAsyncStream::handle_connect, shared_from_this(), std::placeholders::_1));
@@ -126,6 +128,8 @@ void TcpAsyncStream::connectEndpoint()
 
 void TcpAsyncStream::setAsConnected()
 {
+	TCP_LOG("connected");
+
 	state = Connected;
 	info.endpoint = socket.remote_endpoint();
 	info.endpointInitialized = true;

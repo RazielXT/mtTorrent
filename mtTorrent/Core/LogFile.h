@@ -19,7 +19,7 @@ public:
 };
 
 #ifdef BT_LOGFILE
-#define LOG_APPEND(x) {std::stringstream ss; ss << x; log.append(ss);}
+#define LOG_APPEND(x) {}//{std::stringstream ss; ss << x; log.append(ss);}
 #else
 #define LOG_APPEND(x) {}
 #endif

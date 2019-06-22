@@ -154,6 +154,8 @@ void mtt::PeerCommunication::initializeCallbacks()
 
 void PeerCommunication::sendHandshake(Addr& address)
 {
+	addLogEvent(Start, (uint16_t)state.action);
+
 	if (state.action != PeerCommunicationState::Disconnected)
 		resetState();
 
@@ -216,11 +218,8 @@ std::string mtt::PeerCommunication::getAddressName()
 
 void mtt::PeerCommunication::connectionClosed(int code)
 {
-	if (!logs.empty())
-	{
-		LOG_MGS("Closed code " << code);
-		SerializeLogs();
-	}
+	addLogEvent(End, (uint16_t)code);
+	saveLogEvents();
 
 	if (state.action != PeerCommunicationState::Disconnected)
 	{
@@ -256,6 +255,8 @@ void mtt::PeerCommunication::setInterested(bool enabled)
 		return;
 
 	LOG_MGS("Interested");
+	addLogEvent(Want, 0);
+
 	state.amInterested = enabled;
 	stream->write(mtt::bt::createStateMessage(enabled ? Interested : NotInterested));
 }
@@ -268,6 +269,7 @@ void mtt::PeerCommunication::setChoke(bool enabled)
 	if (state.amChoking == enabled)
 		return;
 
+	addLogEvent(Want, 1);
 	LOG_MGS("Choke");
 	state.amChoking = enabled;
 	stream->write(mtt::bt::createStateMessage(enabled ? Choke : Unchoke));
@@ -277,6 +279,8 @@ void mtt::PeerCommunication::requestPieceBlock(PieceBlockInfo& pieceInfo)
 {
 	if (!isEstablished())
 		return;
+
+	addLogEvent(Request, (uint16_t)pieceInfo.index, (char)(pieceInfo.begin / 16 * 1024.f));
 
 	LOG_MGS("Request");
 	stream->write(mtt::bt::createBlockRequest(pieceInfo));
@@ -329,31 +333,6 @@ void mtt::PeerCommunication::resetState()
 	info = PeerInfo();
 }
 
-void mtt::PeerCommunication::LogMsg(std::stringstream& s)
-{
-	std::lock_guard<std::mutex> guard(logMtx);
-
-	time_t rawtime;
-	struct tm timeinfo;
-	char buffer[80];
-
-	time(&rawtime);
-	localtime_s(&timeinfo, &rawtime);
-	strftime(buffer, 80, "%T: ", &timeinfo);
-
-	logs.push_back(buffer + s.str());
-}
-
-void mtt::PeerCommunication::SerializeLogs()
-{
-	std::lock_guard<std::mutex> guard(logMtx);
-	std::ofstream file(stream->getHostname());
-	for (auto& l : logs)
-	{
-		file << l << "\n";
-	}
-}
-
 void mtt::PeerCommunication::sendPort(uint16_t port)
 {
 	if (!isEstablished())
@@ -365,6 +344,11 @@ void mtt::PeerCommunication::sendPort(uint16_t port)
 
 void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 {
+	if(message.id == Piece)
+		addLogEvent(RespPiece, (uint16_t)message.piece.info.index, (char)(message.piece.info.begin / 16 * 1024));
+	else
+		addLogEvent(Msg, (uint16_t)message.id);
+
 	LOG_MGS("Received: " << message.id);
 
 	if (message.id != Piece)
@@ -444,3 +428,31 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 
 	listener.messageReceived(this, message);
 }
+
+#ifdef PEER_DIAGNOSTICS
+void mtt::PeerCommunication::addLogEvent(LogEvent e, uint16_t idx, char info /*= 0*/)
+{
+	std::lock_guard<std::mutex> guard(logmtx);
+	logevents.push_back({ e, info, idx, clock() });
+}
+
+extern std::string FormatLogTime(long);
+
+void mtt::PeerCommunication::saveLogEvents()
+{
+	std::lock_guard<std::mutex> guard(logmtx);
+
+	std::ofstream file("logs\\" + stream->getHostname(), std::ios::app);
+	for (auto& l : logevents)
+	{
+		if (l.e == Msg)
+			file << FormatLogTime(l.time) << (int)l.e << " Msg:" << l.idx << "\n";
+		else if (l.e == Request || l.e == RespPiece)
+			file << FormatLogTime(l.time) << (int)l.e << " Idx:" << l.idx << " Block:" << (int)l.info << "\n";
+		else
+			file << FormatLogTime(l.time) << (int)l.e << " Info:" << l.idx << "\n";
+	}
+
+	file << "\n\n\n";
+}
+#endif

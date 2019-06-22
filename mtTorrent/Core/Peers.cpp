@@ -5,21 +5,20 @@
 #include "Dht/Communication.h"
 #include "Uploader.h"
 #include "LogFile.h"
-
+#include <fstream>
 
 mtt::Peers::Peers(TorrentPtr t) : torrent(t), trackers(t), dht(*this, t)
 {
 	pexInfo.hostname = "PEX";
 	trackers.addTrackers(t->infoFile.announceList);
 	peersListener = std::make_shared<PeersListener>(this);
-
-	log.init("peers");
 }
 
 void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listener)
 {
 	updateCallback = onPeersUpdated;
 	peersListener->setTarget(listener);
+	peersListener->setParent(this);
 	trackers.start([this](Status s, const AnnounceResponse* r, Tracker* t)
 	{
 		if (r)
@@ -55,6 +54,8 @@ void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listen
 
 void mtt::Peers::stop()
 {
+	saveLogEvents();
+
 	trackers.stop();
 	dht.stop();
 
@@ -68,7 +69,15 @@ void mtt::Peers::stop()
 		for (auto c : activeConnections)
 		{	
 			if (c.comm)
+			{
+				auto& peer = knownPeers[c.idx];
+				peer.lastQuality = c.comm->isEstablished() ? Peers::PeerQuality::Closed : Peers::PeerQuality::Unknown;
+
+				addLogEvent(Remove, peer.address, (char)peer.lastQuality);
+
 				c.comm->stop();
+			}
+
 			i++;
 		}
 
@@ -87,6 +96,8 @@ void mtt::Peers::connectNext(uint32_t count)
 	auto currentTime = (uint32_t)::time(0);
 	uint32_t leastConnectionAttempts = 0;
 
+	uint32_t origCount = count;
+
 	for (size_t i = 0; i < knownPeers.size(); i++)
 	{
 		if(count == 0)
@@ -100,9 +111,18 @@ void mtt::Peers::connectNext(uint32_t count)
 			p.connectionAttempts++;
 			count--;
 		}
-		else if(p.lastQuality == PeerQuality::Offline)
+		else if(p.lastQuality < PeerQuality::Connecting)
 			leastConnectionAttempts = p.connectionAttempts;
 	}
+
+#ifdef PEER_DIAGNOSTICS
+	if (origCount > 0)
+	{
+		std::lock_guard<std::mutex> guard(logmtx);
+
+		logevents.push_back({ ConnectPeers, 0,  (uint16_t)count, origCount, clock() });
+	}
+#endif
 
 	if (count > 0)
 	{
@@ -112,7 +132,7 @@ void mtt::Peers::connectNext(uint32_t count)
 				break;
 
 			auto & p = knownPeers[i];
-			if (p.lastQuality == PeerQuality::Offline && p.connectionAttempts <= leastConnectionAttempts && p.lastConnectionTime + 30 < currentTime)
+			if (p.lastQuality < PeerQuality::Connecting && p.connectionAttempts <= leastConnectionAttempts && p.lastConnectionTime + 30 < currentTime)
 			{
 				connect((uint32_t)i);
 				p.lastConnectionTime = currentTime;
@@ -120,6 +140,15 @@ void mtt::Peers::connectNext(uint32_t count)
 				count--;
 			}
 		}
+
+#ifdef PEER_DIAGNOSTICS
+		if (origCount > 0)
+		{
+			std::lock_guard<std::mutex> guard(logmtx);
+
+			logevents.push_back({ ConnectPeers, 0,  (uint16_t)count, origCount, clock() });
+		}
+#endif
 	}
 }
 
@@ -166,6 +195,7 @@ void mtt::Peers::add(std::shared_ptr<TcpAsyncStream> stream)
 
 		peer.idx = (uint32_t)knownPeers.size() - 1;
 		activeConnections.push_back(peer);
+		addLogEvent(RemoteConnect, p.address, 0);
 	}
 
 	peer.comm->setStream(stream);
@@ -182,15 +212,16 @@ std::shared_ptr<mtt::PeerCommunication> mtt::Peers::disconnect(PeerCommunication
 			auto ptr = it->comm;
 			auto& peer = knownPeers[it->idx];
 
-			if (!p->isEstablished())
+			if (!p->state.finishedHandshake)
 				peer.lastQuality = Peers::PeerQuality::Offline;
 			else
 			{
 				p->stop();
-				peer.lastQuality = Peers::PeerQuality::Unwanted;
+				peer.lastQuality = Peers::PeerQuality::Closed;
 			}
 
 			activeConnections.erase(it);
+			addLogEvent(Remove, peer.address, (char)peer.lastQuality);
 
 			return ptr;
 		}
@@ -341,6 +372,7 @@ std::shared_ptr<mtt::PeerCommunication> mtt::Peers::connect(uint32_t idx)
 	peer.comm->sendHandshake(knownPeer.address);
 	peer.idx = idx;
 	activeConnections.push_back(peer);
+	addLogEvent(Connect, knownPeer.address, 0);
 
 	return peer.comm;
 }
@@ -538,3 +570,55 @@ void mtt::Peers::PeersListener::setParent(Peers* p)
 {
 	peers = p;
 }
+
+#ifdef PEER_DIAGNOSTICS
+void mtt::Peers::addLogEvent(LogEvent e, uint32_t info1, uint16_t info2)
+{
+	std::lock_guard<std::mutex> guard(logmtx);
+
+	logevents.push_back({ ConnectPeers, 0,  info2, info1, clock() });
+}
+
+void mtt::Peers::addLogEvent(LogEvent e, Addr& id, char info)
+{
+
+	std::lock_guard<std::mutex> guard(logmtx);
+
+	logevents.push_back({ e, info,  id.port, id.toUint(), clock() });
+}
+
+extern std::string FormatLogTime(long);
+
+void mtt::Peers::saveLogEvents()
+{
+	std::lock_guard<std::mutex> guard(logmtx);
+
+	std::ofstream file("logs\\peers_" + torrent->name());
+
+	for (auto& e : logevents)
+	{
+		if (e.e == ConnectPeers)
+			file << FormatLogTime(e.time) << ": Event:" << (int)e.e << " Want:" << e.id << " Remains:" << e.id2 << "\n";
+		else
+			file << FormatLogTime(e.time) << ": Event:" << (int)e.e << " Ip:" << Addr(e.id, e.id2).toString() << " I:" << (int)e.info << "\n";
+	}
+
+	file << "\n\n\n";
+
+	std::lock_guard<std::mutex> guard2(peersMutex);
+
+	file << "Active:\n";
+	for (auto& peer : activeConnections)
+	{
+		file << peer.comm->getAddressName() << " Idx:" << peer.idx << "\n";
+	}
+
+	file << "\n\n\n";
+	file << "Known:\n";
+	int i = 0;
+	for (auto& peer : knownPeers)
+	{
+		file << i++ << " " << peer.address.toString() << " Q:" << (int)peer.lastQuality << " Conns:" << peer.connectionAttempts << "\n";
+	}
+}
+#endif

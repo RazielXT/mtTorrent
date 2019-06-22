@@ -70,7 +70,5 @@ namespace mtt
 		TorrentPtr torrent;
 
 		void onFinish();
-
-		LogFile log;
 	};
 }

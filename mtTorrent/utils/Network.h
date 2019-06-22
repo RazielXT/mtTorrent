@@ -32,6 +32,7 @@ struct Addr
 	int parse(uint8_t* buffer, bool v6);
 	asio::ip::udp::endpoint toUdpEndpoint() const;
 	std::string toString() const;
+	uint32_t toUint();
 
 	bool operator==(const Addr& r);
 };

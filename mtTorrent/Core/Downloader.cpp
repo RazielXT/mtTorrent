@@ -16,8 +16,6 @@ const uint32_t MaxPendingPeerRequestsToSpeedRatio = (1024*1024);
 mtt::Downloader::Downloader(TorrentPtr t)
 {
 	torrent = t;
-
-	log.init("requests");
 }
 
 void mtt::Downloader::reset()
@@ -161,7 +159,7 @@ void mtt::Downloader::evaluateNextRequests(ActivePeer* peer)
 {
 	if (peer->comm->state.peerChoking)
 	{
-		if (!peer->comm->state.amInterested)
+		if (!peer->comm->info.pieces.empty() && !peer->comm->state.amInterested)
 			peer->comm->setInterested(true);
 
 		return;

@@ -6,7 +6,7 @@ const uint8_t UnselectedFlag = 8;
 
 bool mtt::PiecesProgress::empty()
 {
-	return pieces.empty();
+	return receivedPiecesCount == 0;
 }
 
 float mtt::PiecesProgress::getPercentage()

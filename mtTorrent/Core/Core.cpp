@@ -11,8 +11,12 @@
 
 mtt::Core core;
 
+extern void InitLogTime();
+
 void mtt::Core::init()
 {
+	InitLogTime();
+
 	mtt::config::load();
 
 	dht = std::make_shared<dht::Communication>();

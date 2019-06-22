@@ -79,6 +79,24 @@ namespace mtt
 
 	protected:
 
+		enum LogEvent : uint8_t { Msg, Start, End, Request, Want, RespPiece };
+#ifdef PEER_DIAGNOSTICS
+		struct LogEventParams
+		{
+			LogEvent e;
+			char info;
+			uint16_t idx;
+			long time;
+		};
+		std::vector<LogEventParams> logevents;
+		std::mutex logmtx;
+		void addLogEvent(LogEvent e, uint16_t idx, char info = 0);
+		void saveLogEvents();
+#else
+		void addLogEvent(LogEvent, uint16_t, char info = 0) {}
+		void saveLogEvents() {}
+#endif
+
 		IPeerListener& listener;
 
 		TorrentInfo& torrent;
@@ -95,11 +113,6 @@ namespace mtt
 
 		void initializeCallbacks();
 		void resetState();
-
-		std::mutex logMtx;
-		std::vector<std::string> logs;
-		void LogMsg(std::stringstream& s);
-		void SerializeLogs();
 	};
 
 }
