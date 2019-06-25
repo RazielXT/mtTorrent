@@ -298,6 +298,8 @@ void mtt::FileTransfer::evalCurrentPeers()
 	{
 		std::lock_guard<std::mutex> guard(peersMutex);
 
+		uint32_t currentTime = (uint32_t)::time(0);
+
 #ifdef PEER_DIAGNOSTICS
 		std::lock_guard<std::mutex> guardLog(logmtx);
 		logEvals.push_back({ clock(), (uint32_t)activePeers.size() });
@@ -319,8 +321,6 @@ void mtt::FileTransfer::evalCurrentPeers()
 			}
 		}
 #endif
-
-		uint32_t currentTime = (uint32_t)::time(0);
 
 		if ((uint32_t)activePeers.size() < mtt::config::getExternal().connection.maxTorrentConnections)
 		{
@@ -346,7 +346,7 @@ void mtt::FileTransfer::evalCurrentPeers()
 			if (peer.connectionTime > minTimeToEval)
 			{
 #ifdef PEER_DIAGNOSTICS
-				peerLogs[logStartIdx + idx].action = LogEvalPeer::TooSoon;
+				logEvalPeers[logStartIdx + idx].action = LogEvalPeer::TooSoon;
 #endif
 				continue;
 			}
@@ -359,7 +359,7 @@ void mtt::FileTransfer::evalCurrentPeers()
 			if (peer.lastActivityTime < minTimeToReceive)
 			{
 #ifdef PEER_DIAGNOSTICS
-				peerLogs[logStartIdx + idx].action = LogEvalPeer::NotResponding;
+				logEvalPeers[logStartIdx + idx].action = LogEvalPeer::NotResponding;
 #endif
 				removedPeers.push_back(idx);
 				continue;
@@ -377,7 +377,7 @@ void mtt::FileTransfer::evalCurrentPeers()
 		if (removedPeers.empty() && slowestPeer != -1)
 		{
 #ifdef PEER_DIAGNOSTICS
-			peerLogs[logStartIdx + idx].action = LogEvalPeer::TooSlow;
+			logEvalPeers[logStartIdx + idx].action = LogEvalPeer::TooSlow;
 #endif
 			removedPeers.push_back(slowestPeer);
 		}
@@ -394,7 +394,7 @@ void mtt::FileTransfer::evalCurrentPeers()
 					removedPeers.erase(it);
 
 #ifdef PEER_DIAGNOSTICS
-				peerLogs[logStartIdx + idx].action = LogEvalPeer::Upload;
+				logEvalPeers[logStartIdx + idx].action = LogEvalPeer::Upload;
 #endif
 			}
 		}

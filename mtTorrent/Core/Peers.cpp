@@ -572,16 +572,8 @@ void mtt::Peers::PeersListener::setParent(Peers* p)
 }
 
 #ifdef PEER_DIAGNOSTICS
-void mtt::Peers::addLogEvent(LogEvent e, uint32_t info1, uint16_t info2)
-{
-	std::lock_guard<std::mutex> guard(logmtx);
-
-	logevents.push_back({ ConnectPeers, 0,  info2, info1, clock() });
-}
-
 void mtt::Peers::addLogEvent(LogEvent e, Addr& id, char info)
 {
-
 	std::lock_guard<std::mutex> guard(logmtx);
 
 	logevents.push_back({ e, info,  id.port, id.toUint(), clock() });
