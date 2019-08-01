@@ -280,7 +280,7 @@ void mtt::PeerCommunication::requestPieceBlock(PieceBlockInfo& pieceInfo)
 	if (!isEstablished())
 		return;
 
-	addLogEvent(Request, (uint16_t)pieceInfo.index, (char)(pieceInfo.begin / 16 * 1024.f));
+	addLogEvent(Request, (uint16_t)pieceInfo.index, (char)((float)pieceInfo.begin / (16 * 1024.f)));
 
 	LOG_MGS("Request");
 	stream->write(mtt::bt::createBlockRequest(pieceInfo));
@@ -345,7 +345,7 @@ void mtt::PeerCommunication::sendPort(uint16_t port)
 void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 {
 	if(message.id == Piece)
-		addLogEvent(RespPiece, (uint16_t)message.piece.info.index, (char)(message.piece.info.begin / 16 * 1024));
+		addLogEvent(RespPiece, (uint16_t)message.piece.info.index, (char)(message.piece.info.begin / (16 * 1024.f)));
 	else
 		addLogEvent(Msg, (uint16_t)message.id);
 
@@ -442,7 +442,14 @@ void mtt::PeerCommunication::saveLogEvents()
 {
 	std::lock_guard<std::mutex> guard(logmtx);
 
-	std::ofstream file("logs\\" + stream->getHostname(), std::ios::app);
+	if (logevents.empty())
+		return;
+
+	std::ofstream file("logs\\" + torrent.name + "\\" + stream->getHostname() + ".log", std::ios::app);
+
+	if (!file)
+		return;
+
 	for (auto& l : logevents)
 	{
 		if (l.e == Msg)

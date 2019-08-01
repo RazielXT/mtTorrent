@@ -451,7 +451,13 @@ void mtt::FileTransfer::saveLogEvents()
 {
 	std::lock_guard<std::mutex> guard(logmtx);
 
-	std::ofstream file("logs\\downloader_" + torrent->name());
+	if (logEvals.empty())
+		return;
+
+	std::ofstream file("logs\\" + torrent->name() + "\\downloader.log");
+
+	if (!file)
+		return;
 
 	size_t logIndex = 0;
 

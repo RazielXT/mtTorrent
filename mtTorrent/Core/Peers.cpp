@@ -585,14 +585,20 @@ void mtt::Peers::saveLogEvents()
 {
 	std::lock_guard<std::mutex> guard(logmtx);
 
-	std::ofstream file("logs\\peers_" + torrent->name());
+	if (logevents.empty())
+		return;
+
+	std::ofstream file("logs\\" + torrent->name() + "\\peers.log");
+
+	if (!file)
+		return;
 
 	for (auto& e : logevents)
 	{
 		if (e.e == ConnectPeers)
 			file << FormatLogTime(e.time) << ": Event:" << (int)e.e << " Want:" << e.id << " Remains:" << e.id2 << "\n";
 		else
-			file << FormatLogTime(e.time) << ": Event:" << (int)e.e << " Ip:" << Addr(e.id, e.id2).toString() << " I:" << (int)e.info << "\n";
+			file << FormatLogTime(e.time) << ": Event:" << (int)e.e << " Ip:" << Addr(e.id, e.id2).toString() << " Quality:" << (int)e.info << "\n";
 	}
 
 	file << "\n\n\n";

@@ -6,6 +6,7 @@
 #include "FileTransfer.h"
 #include "State.h"
 #include "utils/HexEncoding.h"
+#include <filesystem>
 
 mtt::TorrentPtr mtt::Torrent::fromFile(std::string filepath)
 {
@@ -138,6 +139,15 @@ void mtt::Torrent::init()
 
 bool mtt::Torrent::start()
 {
+#ifdef PEER_DIAGNOSTICS
+	std::filesystem::path logDir(".\\logs\\" + name());
+	if (!std::filesystem::exists(logDir))
+	{
+		std::error_code ec;
+		std::filesystem::create_directory(logDir, ec);
+	}
+#endif
+
 	if (state == State::DownloadUtm)
 	{
 		state = State::Started;
