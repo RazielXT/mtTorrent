@@ -28,12 +28,7 @@ namespace GuiLite {
 			//
 			//TODO: Add the constructor code here
 			//
-
-			upnpToolTip->SetToolTip(upnpMapCheckBox, "hello");
-			updateTimer = gcnew System::Windows::Forms::Timer();
-			updateTimer->Tick += gcnew EventHandler(this, &SettingsForm::TimerUpdateFunc);
-			updateTimer->Interval = 100;
-			updateTimer->Start();
+			upnpToolTip->SetToolTip(upnpMapCheckBox, "");
 		}
 
 	protected:
@@ -48,30 +43,11 @@ namespace GuiLite {
 			}
 		}
 	private: System::Windows::Forms::ToolTip^ upnpToolTip;
-	protected:
-
-	protected:
-
-	protected:
-
-	protected:
-
-		static System::Windows::Forms::Timer^ updateTimer;
-		void TimerUpdateFunc(System::Object^ myObject, System::EventArgs^ myEventArgs)
-		{
-			if (upnpToolTip->Active)
-				upnpToolTip->SetToolTip(upnpMapCheckBox, getUpnpInfo());
-		}
-
 	public: System::Windows::Forms::CheckBox^  checkBoxDht;
-
 	public: System::Windows::Forms::NumericUpDown^  tcpPortNumeric;
-
 	public: System::Windows::Forms::NumericUpDown^  udpPortNumeric;
 	public: System::Windows::Forms::NumericUpDown^  maxConnectionsNumeric;
 	public: System::Windows::Forms::TextBox^  directoryTextBox;
-
-
 	private: System::Windows::Forms::Label^  label1;
 	private: System::Windows::Forms::Label^  label2;
 	private: System::Windows::Forms::Label^  label3;
@@ -80,7 +56,6 @@ namespace GuiLite {
 	private: System::Windows::Forms::Button^  buttonCancel;
 	public: System::Windows::Forms::CheckBox^ upnpMapCheckBox;
 	private: System::ComponentModel::IContainer^ components;
-	public:
 
 	private:
 		/// <summary>
@@ -191,6 +166,7 @@ namespace GuiLite {
 			this->upnpToolTip->AutoPopDelay = 10000;
 			this->upnpToolTip->InitialDelay = 100;
 			this->upnpToolTip->ReshowDelay = 20;
+			this->upnpToolTip->Popup += gcnew System::Windows::Forms::PopupEventHandler(this, &SettingsForm::UpnpToolTip_Popup);
 			this->AutoScaleDimensions = System::Drawing::SizeF(8, 16);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(331, 270);
@@ -217,14 +193,23 @@ namespace GuiLite {
 
 		}
 #pragma endregion
-	private: System::Void folderBrowserDialog1_HelpRequest(System::Object^  sender, System::EventArgs^  e) {
-	}
 private: System::Void buttonOk_Click(System::Object^  sender, System::EventArgs^  e) {
 	applySettings(this);
 	Close();
 }
 private: System::Void buttonCancel_Click(System::Object^  sender, System::EventArgs^  e) {
 	Close();
+}
+		private: bool requestTooltip = false;
+private: System::Void UpnpToolTip_Popup(System::Object^ sender, System::Windows::Forms::PopupEventArgs^ e) {
+
+	if (!requestTooltip)
+	{
+		requestTooltip = true;
+		upnpToolTip->SetToolTip(upnpMapCheckBox, getUpnpInfo());
+	}
+	else
+		requestTooltip = false;
 }
 };
 }
