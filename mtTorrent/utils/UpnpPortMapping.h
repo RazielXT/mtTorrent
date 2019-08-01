@@ -19,6 +19,8 @@ public:
 	void mapPort(const std::string& gateway, uint16_t gatewayPort, const std::string& client, uint16_t port, PortType type, bool enable);
 	void unmapPort(const std::string& gateway, uint16_t gatewayPort, uint16_t port, PortType type);
 
+	std::string getReadableInfo();
+
 private:
 
 	std::string getMappingServiceControlUrl(const std::string& gateway);

@@ -5,6 +5,7 @@ namespace GuiLite {
 }
 
 extern void applySettings(GuiLite::SettingsForm^ form);
+extern System::String^ getUpnpInfo();
 
 namespace GuiLite {
 
@@ -27,6 +28,12 @@ namespace GuiLite {
 			//
 			//TODO: Add the constructor code here
 			//
+
+			upnpToolTip->SetToolTip(upnpMapCheckBox, "hello");
+			updateTimer = gcnew System::Windows::Forms::Timer();
+			updateTimer->Tick += gcnew EventHandler(this, &SettingsForm::TimerUpdateFunc);
+			updateTimer->Interval = 100;
+			updateTimer->Start();
 		}
 
 	protected:
@@ -40,6 +47,22 @@ namespace GuiLite {
 				delete components;
 			}
 		}
+	private: System::Windows::Forms::ToolTip^ upnpToolTip;
+	protected:
+
+	protected:
+
+	protected:
+
+	protected:
+
+		static System::Windows::Forms::Timer^ updateTimer;
+		void TimerUpdateFunc(System::Object^ myObject, System::EventArgs^ myEventArgs)
+		{
+			if (upnpToolTip->Active)
+				upnpToolTip->SetToolTip(upnpMapCheckBox, getUpnpInfo());
+		}
+
 	public: System::Windows::Forms::CheckBox^  checkBoxDht;
 
 	public: System::Windows::Forms::NumericUpDown^  tcpPortNumeric;
@@ -56,12 +79,14 @@ namespace GuiLite {
 	private: System::Windows::Forms::Button^  buttonOk;
 	private: System::Windows::Forms::Button^  buttonCancel;
 	public: System::Windows::Forms::CheckBox^ upnpMapCheckBox;
+	private: System::ComponentModel::IContainer^ components;
+	public:
 
 	private:
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
-		System::ComponentModel::Container ^components;
+
 
 #pragma region Windows Form Designer generated code
 		/// <summary>
@@ -70,6 +95,7 @@ namespace GuiLite {
 		/// </summary>
 		void InitializeComponent(void)
 		{
+			this->components = (gcnew System::ComponentModel::Container());
 			this->checkBoxDht = (gcnew System::Windows::Forms::CheckBox());
 			this->tcpPortNumeric = (gcnew System::Windows::Forms::NumericUpDown());
 			this->udpPortNumeric = (gcnew System::Windows::Forms::NumericUpDown());
@@ -82,6 +108,7 @@ namespace GuiLite {
 			this->buttonOk = (gcnew System::Windows::Forms::Button());
 			this->buttonCancel = (gcnew System::Windows::Forms::Button());
 			this->upnpMapCheckBox = (gcnew System::Windows::Forms::CheckBox());
+			this->upnpToolTip = (gcnew System::Windows::Forms::ToolTip(this->components));
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->tcpPortNumeric))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->udpPortNumeric))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->maxConnectionsNumeric))->BeginInit();
@@ -160,6 +187,10 @@ namespace GuiLite {
 			this->upnpMapCheckBox->TabIndex = 11;
 			this->upnpMapCheckBox->Text = L"Upnp port mapping";
 			this->upnpMapCheckBox->UseVisualStyleBackColor = true;
+			this->upnpToolTip->AutomaticDelay = 100;
+			this->upnpToolTip->AutoPopDelay = 10000;
+			this->upnpToolTip->InitialDelay = 100;
+			this->upnpToolTip->ReshowDelay = 20;
 			this->AutoScaleDimensions = System::Drawing::SizeF(8, 16);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(331, 270);

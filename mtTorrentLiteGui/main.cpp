@@ -44,6 +44,15 @@ void applySettings(GuiLite::SettingsForm^ form)
 	IoctlFunc(mtBI::MessageId::SetSettings, &info, nullptr);
 }
 
+System::String^ getUpnpInfo()
+{
+	mtt::string info;
+
+	IoctlFunc(mtBI::MessageId::GetUpnpInfo, nullptr, &info);
+
+	return gcnew String(info.data ? info.data : "");
+}
+
 int chartTime = 0;
 
 void initSpeedChart()

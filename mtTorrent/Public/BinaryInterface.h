@@ -29,6 +29,7 @@ namespace mtBI
 		SetTorrentFilesSelection, //TorrentFilesSelectionRequest, null
 		AddPeer,	//AddPeerRequest, null
 		GetPiecesInfo, //uint8_t[20], PiecesInfo
+		GetUpnpInfo	//null, string
 	};
 
 	struct SourceId

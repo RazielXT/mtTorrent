@@ -283,6 +283,37 @@ void UpnpPortMapping::unmapPort(const std::string& gateway, uint16_t gatewayPort
 	stream->connect(gateway, gatewayPort);
 }
 
+std::string UpnpPortMapping::getReadableInfo()
+{
+	std::string info;
+
+	std::lock_guard<std::mutex> guard(state->stateMutex);
+	std::lock_guard<std::mutex> guard2(discoveryMutex);
+
+	for (auto& d : foundDevices)
+	{
+		info += d.name + " (" + d.clientIp + ":" + std::to_string(d.port) + ")\n";
+
+		for (auto& map : state->mappedPorts)
+		{
+			if (d.gateway == map.gateway)
+			{
+				info += (map.type == PortType::Tcp ? " Tcp " : " Udp ") + std::to_string(map.port) + "\n";
+			}
+		}
+
+		for (auto& request : state->pendingRequests)
+		{
+			if (request->getHostname() == d.gateway)
+			{
+				info += " Pending...\n";
+			}
+		}
+	}
+
+	return info;
+}
+
 std::string UpnpPortMapping::getMappingServiceControlUrl(const std::string& gateway)
 {
 	std::lock_guard<std::mutex> guard(discoveryMutex);

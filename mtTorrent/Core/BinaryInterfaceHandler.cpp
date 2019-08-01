@@ -6,6 +6,7 @@
 #include "Public/BinaryInterface.h"
 #include "FileTransfer.h"
 #include "utils/HexEncoding.h"
+#include "IncomingPeersListener.h"
 
 extern mtt::Core core;
 
@@ -324,6 +325,11 @@ extern "C"
 				return mtt::Status::E_InvalidInput;
 
 			torrent->peers->connect(Addr(info->addr.data));
+		}
+		else if (id == mtBI::MessageId::GetUpnpInfo)
+		{
+			auto info = (mtt::string*) output;
+			*info = core.listener->getUpnpReadableInfo();
 		}
 		else
 			return mtt::Status::E_InvalidInput;

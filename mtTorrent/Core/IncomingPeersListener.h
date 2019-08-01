@@ -14,6 +14,8 @@ namespace mtt
 
 		void stop();
 
+		std::string getUpnpReadableInfo();
+
 	private:
 
 		void createListener();
