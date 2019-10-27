@@ -16,6 +16,7 @@ namespace mtt
 		E_Unsupported,
 		E_NotEnoughSpace,
 		E_AllocationProblem,
+		E_NoData,
 
 		E_NetworkError = 2000,
 		E_ConnectionClosed

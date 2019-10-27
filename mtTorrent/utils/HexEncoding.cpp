@@ -37,7 +37,7 @@ bool decodeHexa(const std::string& from, uint8_t* to)
 
 char const hex_chars[] = "0123456789abcdef";
 
-std::string hexToString(uint8_t* in, size_t size)
+std::string hexToString(const uint8_t* in, size_t size)
 {
 	std::string out;
 	out.resize(size*2);

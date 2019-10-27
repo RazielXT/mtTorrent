@@ -203,7 +203,6 @@ void mtt::MetadataDownload::requestPiece(std::shared_ptr<PeerCommunication> peer
 	{
 		uint32_t mdPiece = metadata.getMissingPieceIndex();
 		peer->ext.requestMetadataPiece(mdPiece);
-		memcpy(state.source, peer->info.id, 20);
 		//BT_UTM_LOG("requesting piece idx " << mdPiece);
 		addEventLog(peer->info.id, EventInfo::Request, mdPiece);
 		onUpdate(Status::I_Requesting, state);

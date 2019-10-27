@@ -26,6 +26,7 @@ namespace mtt
 		bool selectedPiece(uint32_t index);
 		bool wantedPiece(uint32_t index);
 		uint32_t firstEmptyPiece();
+		size_t getReceivedPiecesCount();
 
 		std::vector<uint8_t> pieces;
 

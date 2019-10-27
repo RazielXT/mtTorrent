@@ -1,15 +1,13 @@
-#include "Core.h"
-#include "Peers.h"
-#include "MetadataDownload.h"
-#include "Dht/Communication.h"
+#include "Api/Core.h"
+
 #include "Configuration.h"
 #include "Public/JsonInterface.h"
-#include "FileTransfer.h"
 #include "utils/HexEncoding.h"
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
+#include <time.h>
 
-extern mtt::Core core;
+std::shared_ptr<mttApi::Core> core;
 
 namespace js = rapidjson;
 
@@ -37,34 +35,36 @@ extern "C"
 			if (requestJs.IsObject())
 				mtt::config::fromInternalJson(requestJs);
 
-			core.init();
+			core = mttApi::Core::create();
 		}
 		else if (id == mttJson::MessageId::Deinit)
-			core.deinit();
+		{
+			core.reset();
+		}
 		else if (id == mttJson::MessageId::Add)
 		{
-			mtt::TorrentPtr t;
+			mttApi::TorrentPtr t;
 
 			if(requestJs.HasMember("filepath"))
-				t = core.addFile(requestJs["filepath"].GetString());
+				t = core->addFile(requestJs["filepath"].GetString());
 			else if (requestJs.HasMember("magnet"))
-				t = core.addMagnet(requestJs["magnet"].GetString());
+				t = core->addMagnet(requestJs["magnet"].GetString());
 
 			if (!t)
 				return mtt::Status::E_InvalidInput;
 
 			if (output)
 			{
-				auto response = "{ \"hash\" : \"" + t->hashString() + "\" }";
+				auto response = "{ \"hash\" : \"" + hexToString(t->getFileInfo().info.hash, 20) + "\" }";
 				*output = response;
 			}
 		}
 		else if (id == mttJson::MessageId::Start)
 		{
-			mtt::TorrentPtr t;
+			mttApi::TorrentPtr t;
 
 			if (requestJs.HasMember("hash"))
-				t = core.getTorrent(requestJs["hash"].GetString());
+				t = core->getTorrent(requestJs["hash"].GetString());
 
 			if (!t)
 				return mtt::Status::E_InvalidInput;
@@ -73,10 +73,10 @@ extern "C"
 		}
 		else if (id == mttJson::MessageId::Stop)
 		{
-			mtt::TorrentPtr t;
+			mttApi::TorrentPtr t;
 
 			if (requestJs.HasMember("hash"))
-				t = core.getTorrent(requestJs["hash"].GetString());
+				t = core->getTorrent(requestJs["hash"].GetString());
 
 			if (!t)
 				return mtt::Status::E_InvalidInput;
@@ -89,7 +89,7 @@ extern "C"
 			bool removeFiles = requestJs.HasMember("removeFiles") ? requestJs["removeFiles"].IsTrue() : false;
 
 			if (requestJs.HasMember("hash"))
-				status = core.removeTorrent(requestJs["hash"].GetString(), removeFiles);
+				status = core->removeTorrent(requestJs["hash"].GetString(), removeFiles);
 
 			if (status != mtt::Status::Success)
 				return status;
@@ -102,15 +102,16 @@ extern "C"
 			writer.StartObject();
 			writer.Key("list");
 			writer.StartArray();
-			for (size_t i = 0; i < core.torrents.size(); i++)
+			auto torrents = core->getTorrents();
+			for (size_t i = 0; i < torrents.size(); i++)
 			{
 				writer.StartObject();
 
-				auto t = core.torrents[i];
+				auto t = torrents[i];
 				writer.Key("hash");
-				writer.String(t->hashString().data());
+				writer.String(hexToString(t->getFileInfo().info.hash, 20).data());
 				writer.Key("active");
-				writer.Bool((t->state != mtt::Torrent::State::Stopped));
+				writer.Bool((t->getStatus() != mttApi::Torrent::State::Stopped));
 
 				writer.EndObject();
 			}
@@ -124,10 +125,10 @@ extern "C"
 		}
 		else if (id == mttJson::MessageId::GetTorrentInfo)
 		{
-			mtt::TorrentPtr t;
+			mttApi::TorrentPtr t;
 
 			if (requestJs.HasMember("hash"))
-				t = core.getTorrent(requestJs["hash"].GetString());
+				t = core->getTorrent(requestJs["hash"].GetString());
 
 			if (!t)
 				return mtt::Status::E_InvalidInput;
@@ -135,15 +136,16 @@ extern "C"
 			js::StringBuffer s;
 			js::Writer<js::StringBuffer> writer(s);
 
+			auto& torrentFile = t->getFileInfo();
 			writer.StartObject();
 			writer.Key("name");
-			writer.String(t->infoFile.info.name.data(), (uint32_t)t->infoFile.info.name.length());
+			writer.String(torrentFile.info.name.data(), (uint32_t)torrentFile.info.name.length());
 			writer.Key("size");
-			writer.Uint64(t->infoFile.info.fullSize);
+			writer.Uint64(torrentFile.info.fullSize);
 
 			writer.Key("files");
 			writer.StartArray();
-			for (auto& f : t->infoFile.info.files)
+			for (auto& f : torrentFile.info.files)
 			{
 				writer.StartObject();
 				writer.Key("path");
@@ -181,29 +183,31 @@ extern "C"
 
 			for (auto hashItem = hashArray->value.MemberBegin(); hashItem != hashArray->value.MemberEnd(); hashItem++)
 			{
-				mtt::TorrentPtr t = core.getTorrent(hashItem->name.GetString());
+				mttApi::TorrentPtr t = core->getTorrent(hashItem->name.GetString());
 
 				if(!t)
 					continue;
+
+				auto& torrentFile = t->getFileInfo();
 
 				writer.StartObject();
 				writer.Key("hash");
 				writer.String(hashItem->name.GetString());
 				writer.Key("name");
-				writer.String(t->infoFile.info.name.data(), (uint32_t)t->infoFile.info.name.length());
+				writer.String(torrentFile.info.name.data(), (uint32_t)torrentFile.info.name.length());
 				writer.Key("connectedPeers");
-				writer.Uint(t->peers->connectedCount());
+				writer.Uint(t->getPeers()->connectedCount());
 				writer.Key("foundPeers");
-				writer.Uint(t->peers->receivedCount());
+				writer.Uint(t->getPeers()->receivedCount());
 
 				writer.Key("downloaded");
 				writer.Uint64(t->downloaded());
 				writer.Key("uploaded");
 				writer.Uint64(t->uploaded());
 				writer.Key("downloadSpeed");
-				writer.Uint64(t->downloadSpeed());
+				writer.Uint64(t->getFileTransfer()->getDownloadSpeed());
 				writer.Key("uploadSpeed");
-				writer.Uint64(t->uploadSpeed());
+				writer.Uint64(t->getFileTransfer()->getUploadSpeed());
 
 				writer.Key("progress");
 				writer.Double(t->currentProgress());
@@ -211,15 +215,15 @@ extern "C"
 				writer.Double(t->currentSelectionProgress());
 
 				writer.Key("status");
-				writer.Uint((uint32_t)t->lastError);
+				writer.Uint((uint32_t)t->getLastError());
 
-				if (t->utmDl && !t->utmDl->state.finished)
+			/*	if (t->utmDl && !t->utmDl->state.finished)
 				{
 					writer.Key("utmActive");
 					writer.Bool(true);
 				}
-
-				if (t->checking)
+				*/
+				//if (t->checking)
 				{
 					writer.Key("checkProgress");
 					writer.Double(t->checkingProgress());
@@ -238,10 +242,10 @@ extern "C"
 		}
 		else if (id == mttJson::MessageId::GetPeersInfo)
 		{
-			mtt::TorrentPtr t;
+			mttApi::TorrentPtr t;
 
 			if (requestJs.HasMember("hash"))
-				t = core.getTorrent(requestJs["hash"].GetString());
+				t = core->getTorrent(requestJs["hash"].GetString());
 
 			if (!t)
 				return mtt::Status::E_InvalidInput;
@@ -253,7 +257,7 @@ extern "C"
 			writer.Key("progress");
 			writer.StartArray();
 
-			auto peers = t->fileTransfer->getPeersInfo();
+			auto peers = t->getFileTransfer()->getPeersInfo();
 			for (auto& peer : peers)
 			{
 				writer.StartObject();
@@ -264,7 +268,7 @@ extern "C"
 				writer.Key("uploadSpeed");
 				writer.Uint64(peer.uploadSpeed);
 				writer.Key("address");
-				writer.String(peer.address.toString().data());
+				writer.String(peer.address.data());
 
 				if (!peer.client.empty())
 				{
@@ -290,10 +294,10 @@ extern "C"
 		}
 		else if (id == mttJson::MessageId::GetSourcesInfo)
 		{
-			mtt::TorrentPtr t;
+			mttApi::TorrentPtr t;
 
 			if (requestJs.HasMember("hash"))
-				t = core.getTorrent(requestJs["hash"].GetString());
+				t = core->getTorrent(requestJs["hash"].GetString());
 
 			if (!t)
 				return mtt::Status::E_InvalidInput;
@@ -305,8 +309,8 @@ extern "C"
 			writer.Key("sources");
 			writer.StartArray();
 
-			uint32_t currentTime = (uint32_t)time(0);
-			auto sources = t->peers->getSourcesInfo();
+			uint32_t currentTime = (uint32_t)::time(0);
+			auto sources = t->getPeers()->getSourcesInfo();
 			for (auto& source : sources)
 			{
 				writer.StartObject();
@@ -351,10 +355,10 @@ extern "C"
 		}
 		else if (id == mttJson::MessageId::GetPiecesInfo)
 		{
-			mtt::TorrentPtr t;
+			mttApi::TorrentPtr t;
 
 			if (requestJs.HasMember("hash"))
-				t = core.getTorrent(requestJs["hash"].GetString());
+				t = core->getTorrent(requestJs["hash"].GetString());
 
 			if (!t)
 				return mtt::Status::E_InvalidInput;
@@ -363,26 +367,27 @@ extern "C"
 			js::Writer<js::StringBuffer> writer(s);
 
 			writer.StartObject();
-
-			auto piecesCount = t->files.progress.pieces.size();
+			auto piecesCount = t->getFileInfo().info.pieces.size();
 			writer.Key("count");
 			writer.Uint64(piecesCount);
 
 			writer.Key("pieces");
-			std::string pieces;
+			std::string piecesStr(piecesCount, '0');
 			if (piecesCount > 0)
 			{
-				pieces.resize(piecesCount);
-				for (size_t i = 0; i < piecesCount; i++)
+				std::vector<uint32_t> piecesList;
+				t->getPiecesReceivedList(piecesList);
+
+				for (auto& idx : piecesList)
 				{
-					pieces[i] = t->files.progress.hasPiece((uint32_t)i) ? '1' : '0';
+					piecesStr[idx] = '1';
 				}
 			}
-			writer.String(pieces.data());
+			writer.String(piecesStr.data());
 
 
 			writer.Key("requests");
-			auto requests = t->fileTransfer->getCurrentRequests();
+			auto requests = t->getFileTransfer()->getCurrentRequests();
 			writer.StartArray();
 			for (auto r : requests)
 			{
@@ -399,13 +404,17 @@ extern "C"
 		}
 		else if (id == mttJson::MessageId::GetMagnetLinkProgress)
 		{
-			mtt::TorrentPtr t;
+			mttApi::TorrentPtr t;
 
 			if (requestJs.HasMember("hash"))
-				t = core.getTorrent(requestJs["hash"].GetString());
+				t = core->getTorrent(requestJs["hash"].GetString());
 
-			if (!t || !t->utmDl)
+			if (!t)
 				return mtt::Status::E_InvalidInput;
+
+			mtt::MetadataDownloadState state;
+			if (!t->getMetadataDownloadState(state))
+				return mtt::Status::E_NoData;
 
 			js::StringBuffer s;
 			js::Writer<js::StringBuffer> writer(s);
@@ -413,11 +422,11 @@ extern "C"
 			writer.StartObject();
 
 			writer.Key("finished");
-			writer.Bool(t->utmDl->state.finished);
+			writer.Bool(state.finished);
 			writer.Key("totalParts");
-			writer.Bool(t->utmDl->state.partsCount);
+			writer.Bool(state.partsCount);
 			writer.Key("receivedParts");
-			writer.Bool(t->utmDl->state.receivedParts);
+			writer.Bool(state.receivedParts);
 
 			writer.EndObject();
 
@@ -428,12 +437,12 @@ extern "C"
 		}
 		else if (id == mttJson::MessageId::GetMagnetLinkProgressLogs)
 		{
-			mtt::TorrentPtr t;
+			mttApi::TorrentPtr t;
 
 			if (requestJs.HasMember("hash"))
-				t = core.getTorrent(requestJs["hash"].GetString());
+				t = core->getTorrent(requestJs["hash"].GetString());
 
-			if (!t || !t->utmDl)
+			if (!t)
 				return mtt::Status::E_InvalidInput;
 
 			js::StringBuffer s;
@@ -441,14 +450,17 @@ extern "C"
 
 			uint32_t logStart = requestJs.HasMember("start") ? requestJs["start"].GetUint() : 0;
 
+			std::vector<std::string> logs;
+			if (!t->getMetadataDownloadLog(logs, logStart))
+				return mtt::Status::E_NoData;
+
 			writer.StartObject();
 
 			writer.Key("logs");
 			writer.StartArray();
-			auto events = t->utmDl->getEvents();
-			for (size_t i = logStart; i < logStart + events.size(); i++)
+			for (auto& l : logs)
 			{
-				writer.String(events[i].toString().data());
+				writer.String(l.data(),(uint32_t) l.length());
 			}
 			writer.EndArray();
 
@@ -474,10 +486,10 @@ extern "C"
 		}
 		else if (id == mttJson::MessageId::GetTorrentFilesSelection)
 		{
-			mtt::TorrentPtr t;
+			mttApi::TorrentPtr t;
 
 			if (requestJs.HasMember("hash"))
-				t = core.getTorrent(requestJs["hash"].GetString());
+				t = core->getTorrent(requestJs["hash"].GetString());
 
 			if (!t)
 				return mtt::Status::E_InvalidInput;
@@ -485,14 +497,12 @@ extern "C"
 			js::StringBuffer s;
 			js::Writer<js::StringBuffer> writer(s);
 
-			uint32_t logStart = requestJs.HasMember("start") ? requestJs["start"].GetUint() : 0;
-
 			writer.StartObject();
 
 			writer.Key("files");
 			writer.StartArray();
-			auto& files = t->files.selection.files;
-			for (auto& f : files)
+			auto selection = t->getFilesSelection();
+			for (auto& f : selection.files)
 			{
 				writer.StartObject();
 
@@ -515,17 +525,17 @@ extern "C"
 		}
 		else if (id == mttJson::MessageId::SetTorrentFilesSelection)
 		{
-			mtt::TorrentPtr t;
+			mttApi::TorrentPtr t;
 
 			if (requestJs.HasMember("hash"))
-				t = core.getTorrent(requestJs["hash"].GetString());
+				t = core->getTorrent(requestJs["hash"].GetString());
 
 			if (!t || !requestJs.HasMember("selection"))
 				return mtt::Status::E_InvalidInput;
 
 			auto selection = requestJs["selection"].GetArray();
 	
-			if (t->files.selection.files.size() != selection.Size())
+			if (t->getFileInfo().info.files.size() != selection.Size())
 				return mtt::Status::E_InvalidInput;
 
 			std::vector<bool> dlSelect;
@@ -539,27 +549,27 @@ extern "C"
 		}
 		else if (id == mttJson::MessageId::RefreshSource)
 		{
-			mtt::TorrentPtr t;
+			mttApi::TorrentPtr t;
 
 			if (requestJs.HasMember("hash"))
-				t = core.getTorrent(requestJs["hash"].GetString());
+				t = core->getTorrent(requestJs["hash"].GetString());
 
 			if (!t || !requestJs.HasMember("name"))
 				return mtt::Status::E_InvalidInput;
 
-			t->peers->refreshSource(requestJs["name"].GetString());
+			t->getPeers()->refreshSource(requestJs["name"].GetString());
 		}
 		else if (id == mttJson::MessageId::AddPeer)
 		{
-			mtt::TorrentPtr t;
+			mttApi::TorrentPtr t;
 
 			if (requestJs.HasMember("hash"))
-				t = core.getTorrent(requestJs["hash"].GetString());
+				t = core->getTorrent(requestJs["hash"].GetString());
 
 			if (!t || !requestJs.HasMember("address"))
 				return mtt::Status::E_InvalidInput;
 
-			t->peers->connect(Addr(requestJs["address"].GetString()));
+			t->getPeers()->connect(requestJs["address"].GetString());
 		}
 		else
 			return mtt::Status::E_InvalidInput;

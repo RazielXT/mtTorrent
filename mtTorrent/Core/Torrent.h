@@ -4,6 +4,7 @@
 #include "utils/ServiceThreadpool.h"
 #include "Files.h"
 #include <functional>
+#include "Api/Torrent.h"
 
 namespace mtt
 {
@@ -11,17 +12,11 @@ namespace mtt
 	class FileTransfer;
 	class Peers;
 
-	class Torrent
+	class Torrent : public mttApi::Torrent
 	{
 	public:
 
-		enum class State
-		{
-			Stopped,
-			Started,
-			DownloadUtm,
-		}
-		state = State::Stopped;
+		State state = State::Stopped;
 		bool checking = false;
 		Status lastError = Status::Success;
 

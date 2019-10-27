@@ -652,7 +652,7 @@ void TorrentTest::idealMagnetLinkTest()
 		if (state.finished)
 			finished = true;
 
-		TEST_LOG("UTM status " << (int)s << " from " << hexToString(state.source, 20) << ", parts: " << state.receivedParts << "/" << state.partsCount);
+		TEST_LOG("UTM status " << (int)s << ", parts: " << state.receivedParts << "/" << state.partsCount);
 	};
 
 	TorrentPtr torrent = Torrent::fromMagnetLink(tempLink);

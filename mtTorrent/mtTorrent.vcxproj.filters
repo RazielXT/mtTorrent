@@ -41,6 +41,12 @@
     <Filter Include="Source Files\Public">
       <UniqueIdentifier>{a3db1c69-72bb-43d8-b3c3-58deba75dabf}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Core\Api">
+      <UniqueIdentifier>{ce936252-3388-4661-a13f-2c284643a084}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Core\ApiImpl">
+      <UniqueIdentifier>{c7d683c2-1022-4487-ac0d-bd49c73b000f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\main.cpp">
@@ -201,6 +207,24 @@
     </ClCompile>
     <ClCompile Include="utils\UpnpDiscovery.cpp">
       <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Api\CoreImpl.cpp">
+      <Filter>Source Files\Core\ApiImpl</Filter>
+    </ClCompile>
+    <ClCompile Include="InterfaceImpl.cpp">
+      <Filter>Source Files\Core\ApiImpl</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Api\ListenerImpl.cpp">
+      <Filter>Source Files\Core\ApiImpl</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Api\PeersImpl.cpp">
+      <Filter>Source Files\Core\ApiImpl</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Api\TorrentImpl.cpp">
+      <Filter>Source Files\Core\ApiImpl</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Api\FileTransferImpl.cpp">
+      <Filter>Source Files\Core\ApiImpl</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -377,6 +401,27 @@
     </ClInclude>
     <ClInclude Include="utils\UpnpDiscovery.h">
       <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Api\Core.h">
+      <Filter>Source Files\Core\Api</Filter>
+    </ClInclude>
+    <ClInclude Include="Api\Torrent.h">
+      <Filter>Source Files\Core\Api</Filter>
+    </ClInclude>
+    <ClInclude Include="Api\Listener.h">
+      <Filter>Source Files\Core\Api</Filter>
+    </ClInclude>
+    <ClInclude Include="Api\Peers.h">
+      <Filter>Source Files\Core\Api</Filter>
+    </ClInclude>
+    <ClInclude Include="Api\Interface.h">
+      <Filter>Source Files\Core\Api</Filter>
+    </ClInclude>
+    <ClInclude Include="Api\FileTransfer.h">
+      <Filter>Source Files\Core\Api</Filter>
+    </ClInclude>
+    <ClInclude Include="Api\Configuration.h">
+      <Filter>Source Files\Core\Api</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,12 +1,13 @@
 #pragma once
 #include "utils/ServiceThreadpool.h"
 #include "utils/TcpAsyncStream.h"
+#include "Api/Listener.h"
 
 class UpnpPortMapping;
 
 namespace mtt
 {
-	class IncomingPeersListener
+	class IncomingPeersListener : public mttApi::Listener
 	{
 	public:
 
@@ -16,7 +17,7 @@ namespace mtt
 
 		std::string getUpnpReadableInfo();
 
-	private:
+	protected:
 
 		void createListener();
 

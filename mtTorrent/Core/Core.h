@@ -1,5 +1,7 @@
 #pragma once
+
 #include "Torrent.h"
+#include "Api/Core.h"
 
 class TcpAsyncServer;
 class ServiceThreadpool;
@@ -13,7 +15,7 @@ namespace mtt
 
 	class IncomingPeersListener;
 
-	class Core
+	class Core : public mttApi::Core
 	{
 	public:
 

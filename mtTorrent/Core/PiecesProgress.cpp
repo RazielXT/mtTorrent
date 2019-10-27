@@ -155,6 +155,11 @@ uint32_t mtt::PiecesProgress::firstEmptyPiece()
 	return -1;
 }
 
+size_t mtt::PiecesProgress::getReceivedPiecesCount()
+{
+	return receivedPiecesCount;
+}
+
 void mtt::PiecesProgress::fromBitfield(DataBuffer& bitfield)
 {
 	size_t maxPiecesCount = pieces.empty() ? bitfield.size() * 8 : pieces.size();

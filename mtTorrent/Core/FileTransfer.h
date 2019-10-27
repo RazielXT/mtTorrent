@@ -6,10 +6,11 @@
 #include "Uploader.h"
 #include "utils/ScheduledTimer.h"
 #include "LogFile.h"
+#include "Api/FileTransfer.h"
 
 namespace mtt
 {
-	class FileTransfer : public IPeerListener
+	class FileTransfer : public IPeerListener, public mttApi::FileTransfer
 	{
 	public:
 
@@ -32,15 +33,6 @@ namespace mtt
 		size_t getUploadSum();
 		size_t getUploadSpeed();
 
-		struct ActivePeerInfo
-		{
-			Addr address;
-			std::string client;
-			uint32_t uploadSpeed;
-			uint32_t downloadSpeed;
-			float percentage;
-			std::string country;
-		};
 		std::vector<ActivePeerInfo> getPeersInfo();
 
 		std::vector<uint32_t> getCurrentRequests();

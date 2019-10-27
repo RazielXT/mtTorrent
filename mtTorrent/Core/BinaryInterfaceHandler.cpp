@@ -109,7 +109,7 @@ extern "C"
 			{
 				auto& peer = peers[i];
 				auto& out = resp->peers[i];
-				out.addr = peer.address.toString();
+				out.addr = peer.address;
 				out.progress = peer.percentage;
 				out.dlSpeed = peer.downloadSpeed;
 				out.upSpeed = peer.uploadSpeed;

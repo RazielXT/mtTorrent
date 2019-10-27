@@ -1,7 +1,6 @@
 #pragma once
-#include <string>
-#include <vector>
-#include <atomic>
+
+#include "Api\Interface.h"
 #include "utils\Network.h"
 #include "Public\Status.h"
 #include "Logging.h"
@@ -16,73 +15,6 @@ namespace mtt
 {
 	class Torrent;
 	using TorrentPtr = std::shared_ptr<Torrent>;
-
-	struct File
-	{
-		std::vector<std::string> path;
-		size_t size;
-		uint32_t startPieceIndex;
-		uint32_t startPiecePos;
-		uint32_t endPieceIndex;
-		uint32_t endPiecePos;
-	};
-
-	struct PieceInfo
-	{
-		uint8_t hash[20];
-	};
-
-	struct PieceBlockInfo
-	{
-		uint32_t index;
-		uint32_t begin;
-		uint32_t length;
-	};
-
-	struct TorrentInfo
-	{
-		uint8_t hash[20];
-
-		std::vector<File> files;
-		std::string name;
-
-		std::vector<PieceInfo> pieces;
-		uint32_t pieceSize = 0;
-		size_t expectedBitfieldSize = 0;
-		size_t fullSize = 0;
-
-		std::vector<PieceBlockInfo> makePieceBlocksInfo(uint32_t idx);
-		PieceBlockInfo getPieceBlockInfo(uint32_t idx, uint32_t blockIdx);
-		uint32_t getPieceSize(uint32_t idx);
-		uint32_t getPieceBlocksCount(uint32_t idx);
-
-		uint32_t lastPieceIndex = 0;
-		uint32_t lastPieceSize = 0;
-		uint32_t lastPieceLastBlockIndex = 0;
-		uint32_t lastPieceLastBlockSize = 0;
-	};
-
-	struct TorrentFileInfo
-	{
-		std::string announce;
-		std::vector<std::string> announceList;
-
-		TorrentInfo info;
-
-		Status parseMagnetLink(std::string link);
-		std::string createTorrentFileData();
-	};
-
-	struct FileSelectionInfo
-	{
-		bool selected;
-		File info;
-	};
-
-	struct DownloadSelection
-	{
-		std::vector<FileSelectionInfo> files;
-	};
 
 	struct PieceBlock
 	{
@@ -117,46 +49,5 @@ namespace mtt
 		uint32_t seedCount = 0;
 
 		std::vector<Addr> peers;
-	};
-
-	enum class TrackerState { Clear, Initialized, Offline, Alive, Connecting, Connected, Announcing, Announced, Reannouncing };
-
-	struct TrackerInfo
-	{
-		std::string hostname;
-
-		uint32_t peers = 0;
-		uint32_t seeds = 0;
-		uint32_t leechers = 0;
-		uint32_t announceInterval = 0;
-		uint32_t lastAnnounce = 0;
-		uint32_t nextAnnounce = 0;
-
-		TrackerState state = TrackerState::Clear;
-	};
-
-	struct MetadataDownloadState
-	{
-		bool finished = false;
-		uint32_t receivedParts = 0;
-		uint32_t partsCount = 0;
-		uint8_t source[20];
-	};
-
-	struct PiecesCheck
-	{
-		uint32_t piecesCount = 0;
-		std::atomic<uint32_t> piecesChecked = 0;
-		bool rejected = false;
-		std::vector<uint8_t> pieces;
-	};
-
-	enum class PeerSource
-	{
-		Tracker,
-		Pex,
-		Dht,
-		Manual,
-		Remote
 	};
 }
