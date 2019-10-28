@@ -1,6 +1,5 @@
 #include "Api/Core.h"
-
-#include "Configuration.h"
+#include "Api/Configuration.h"
 #include "Public/JsonInterface.h"
 #include "utils/HexEncoding.h"
 #include "rapidjson/document.h"

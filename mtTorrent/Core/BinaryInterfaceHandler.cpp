@@ -1,44 +1,41 @@
-#include "Core.h"
-#include "Peers.h"
-#include "MetadataDownload.h"
-#include "Dht/Communication.h"
-#include "Configuration.h"
+#include "Api/Core.h"
+#include "Api/Configuration.h"
 #include "Public/BinaryInterface.h"
-#include "FileTransfer.h"
 #include "utils/HexEncoding.h"
-#include "IncomingPeersListener.h"
+#include <algorithm>
+#include <time.h>
 
-extern mtt::Core core;
+extern std::shared_ptr<mttApi::Core> core;
 
 extern "C"
 {
 	__declspec(dllexport) mtt::Status __cdecl Ioctl(mtBI::MessageId id, const void* request, void* output)
 	{
 		if (id == mtBI::MessageId::Init)
-			core.init();
+			core = mttApi::Core::create();
 		else if (id == mtBI::MessageId::Deinit)
-			core.deinit();
+			core.reset();
 		else if (id == mtBI::MessageId::AddFromFile)
 		{
-			auto t = core.addFile((const char*)request);
+			auto t = core->addFile((const char*)request);
 
 			if (!t)
 				return mtt::Status::E_InvalidInput;
 
-			memcpy(output, t->hash(), 20);
+			memcpy(output, t->getFileInfo().info.hash, 20);
 		}
 		else if (id == mtBI::MessageId::AddFromMetadata)
 		{
-			auto t = core.addMagnet((const char*)request);
+			auto t = core->addMagnet((const char*)request);
 
 			if (!t)
 				return mtt::Status::E_InvalidInput;
 
-			memcpy(output, t->hash(), 20);
+			memcpy(output, t->getFileInfo().info.hash, 20);
 		}
 		else if (id == mtBI::MessageId::Start)
 		{
-			auto t = core.getTorrent((const uint8_t*)request);
+			auto t = core->getTorrent((const uint8_t*)request);
 
 			if (!t)
 				return mtt::Status::E_InvalidInput;
@@ -47,7 +44,7 @@ extern "C"
 		}
 		else if (id == mtBI::MessageId::Stop)
 		{
-			auto t = core.getTorrent((const uint8_t*)request);
+			auto t = core->getTorrent((const uint8_t*)request);
 
 			if (!t)
 				return mtt::Status::E_InvalidInput;
@@ -57,7 +54,7 @@ extern "C"
 		else if (id == mtBI::MessageId::Remove)
 		{
 			auto info = (mtBI::RemoveTorrentRequest*) request;
-			auto s = core.removeTorrent(info->hash, info->deleteFiles);
+			auto s = core->removeTorrent(info->hash, info->deleteFiles);
 
 			if (s != mtt::Status::Success)
 				return s;
@@ -65,88 +62,95 @@ extern "C"
 		else if (id == mtBI::MessageId::GetTorrents)
 		{
 			auto resp = (mtBI::TorrentsList*) output;
-			resp->count = (uint32_t)core.torrents.size();
+			auto torrents = core->getTorrents();
+			resp->count = (uint32_t)torrents.size();
 			if (resp->count == resp->list.size())
 			{
 				for (size_t i = 0; i < resp->count; i++)
 				{
-					auto t = core.torrents[i];
-					memcpy(resp->list[i].hash, t->hash(), 20);
-					resp->list[i].active = (t->state != mtt::Torrent::State::Stopped);
+					auto t = torrents[i];
+					memcpy(resp->list[i].hash, t->getFileInfo().info.hash, 20);
+					resp->list[i].active = (t->getStatus() != mttApi::Torrent::State::Stopped);
 				}
 			}
 		}
 		else if (id == mtBI::MessageId::GetTorrentStateInfo)
 		{
-			auto torrent = core.getTorrent((const uint8_t*)request);
+			auto torrent = core->getTorrent((const uint8_t*)request);
 			if (!torrent)
 				return mtt::Status::E_InvalidInput;
 			auto resp = (mtBI::TorrentStateInfo*) output;
 			resp->name = torrent->name();
-			resp->connectedPeers = torrent->peers->connectedCount();
-			resp->checking = torrent->checking;
+			resp->connectedPeers = torrent->getPeers()->connectedCount();
+			resp->checking = torrent->checkingProgress() != 0;
 			if (resp->checking)
 				resp->checkingProgress = torrent->checkingProgress();
-			resp->foundPeers = torrent->peers->receivedCount();
+			resp->foundPeers = torrent->getPeers()->receivedCount();
 			resp->downloaded = torrent->downloaded();
-			resp->downloadSpeed = torrent->downloadSpeed();
 			resp->uploaded = torrent->uploaded();
-			resp->uploadSpeed = torrent->uploadSpeed();
+			resp->downloadSpeed = torrent->getFileTransfer() ? torrent->getFileTransfer()->getDownloadSpeed() : 0;
+			resp->uploadSpeed = torrent->getFileTransfer() ? torrent->getFileTransfer()->getUploadSpeed() : 0;
 			resp->progress = torrent->currentProgress();
 			resp->selectionProgress = torrent->currentSelectionProgress();
-			resp->activeStatus = torrent->lastError;
-			resp->utmActive = torrent->utmDl && !torrent->utmDl->state.finished;
+			resp->activeStatus = torrent->getLastError();
+
+			mtt::MetadataDownloadState utm;
+			resp->utmActive = torrent->getMetadataDownloadState(utm) && !utm.finished;
 		}
 		else if (id == mtBI::MessageId::GetPeersInfo)
 		{
-			auto torrent = core.getTorrent((const uint8_t*)request);
+			auto torrent = core->getTorrent((const uint8_t*)request);
 			if (!torrent)
 				return mtt::Status::E_InvalidInput;
 			auto resp = (mtBI::TorrentPeersInfo*) output;
-			auto peers = torrent->fileTransfer->getPeersInfo();
-			resp->count = (uint32_t)std::min(resp->peers.size(), peers.size());
-			for (size_t i = 0; i < resp->count; i++)
+
+			if (auto transfer = torrent->getFileTransfer())
 			{
-				auto& peer = peers[i];
-				auto& out = resp->peers[i];
-				out.addr = peer.address;
-				out.progress = peer.percentage;
-				out.dlSpeed = peer.downloadSpeed;
-				out.upSpeed = peer.uploadSpeed;
-				out.client = peers[i].client;
-				out.country = peers[i].country;
+				auto peers = transfer->getPeersInfo();
+				resp->count = (uint32_t)std::min(resp->peers.size(), peers.size());
+				for (size_t i = 0; i < resp->count; i++)
+				{
+					auto& peer = peers[i];
+					auto& out = resp->peers[i];
+					out.addr = peer.address;
+					out.progress = peer.percentage;
+					out.dlSpeed = peer.downloadSpeed;
+					out.upSpeed = peer.uploadSpeed;
+					out.client = peers[i].client;
+					out.country = peers[i].country;
+				}
 			}
 		}
 		else if (id == mtBI::MessageId::GetTorrentInfo)
 		{
-			auto torrent = core.getTorrent((const uint8_t*)request);
+			auto torrent = core->getTorrent((const uint8_t*)request);
 			if (!torrent)
 				return mtt::Status::E_InvalidInput;
 			auto resp = (mtBI::TorrentInfo*) output;
-			resp->name = torrent->infoFile.info.name;
-			resp->fullsize = torrent->infoFile.info.fullSize;
-			resp->filesCount = (uint32_t)torrent->infoFile.info.files.size();
+			resp->name = torrent->getFileInfo().info.name;
+			resp->fullsize = torrent->getFileInfo().info.fullSize;
+			resp->filesCount = (uint32_t)torrent->getFileInfo().info.files.size();
 
 			if (resp->filenames.size() == resp->filesCount)
 			{
 				for (size_t i = 0; i < resp->filenames.size(); i++)
 				{
-					resp->filenames[i] = torrent->infoFile.info.files[i].path.back();
-					resp->filesizes[i] = torrent->infoFile.info.files[i].size;
+					resp->filenames[i] = torrent->getFileInfo().info.files[i].path.back();
+					resp->filesizes[i] = torrent->getFileInfo().info.files[i].size;
 				}
 			}
 		}
 		else if (id == mtBI::MessageId::GetSourcesInfo)
 		{
-			auto torrent = core.getTorrent((const uint8_t*)request);
+			auto torrent = core->getTorrent((const uint8_t*)request);
 			if (!torrent)
 				return mtt::Status::E_InvalidInput;
 			auto resp = (mtBI::SourcesInfo*) output;
-			resp->count = torrent->peers->getSourcesCount();
+			resp->count = torrent->getPeers()->getSourcesCount();
 
 			if (resp->count == resp->sources.size())
 			{
-				auto sources = torrent->peers->getSourcesInfo();
+				auto sources = torrent->getPeers()->getSourcesInfo();
 				if (sources.size() < resp->count)
 					resp->count = (uint32_t)sources.size();
 
@@ -181,21 +185,21 @@ extern "C"
 		}
 		else if (id == mtBI::MessageId::GetPiecesInfo)
 		{
-			auto torrent = core.getTorrent((const uint8_t*)request);
+			auto torrent = core->getTorrent((const uint8_t*)request);
 			if (!torrent)
 				return mtt::Status::E_InvalidInput;	
 
 			auto resp = (mtBI::PiecesInfo*) output;
-			resp->piecesCount = (uint32_t)torrent->files.progress.pieces.size();
-			resp->bitfieldSize = (uint32_t)torrent->files.progress.getBitfieldSize();
-			resp->requestSize = (uint32_t)(torrent->fileTransfer ? torrent->fileTransfer->getCurrentRequestsCount() : 0);
+			resp->piecesCount = (uint32_t)torrent->getFileInfo().info.pieces.size();
+			resp->bitfieldSize = (uint32_t)torrent->getFileInfo().info.expectedBitfieldSize;
+			resp->requestSize = (uint32_t)(torrent->getFileTransfer() ? torrent->getFileTransfer()->getCurrentRequestsCount() : 0);
 
 			if(resp->bitfield.size() == resp->bitfieldSize)
-				torrent->files.progress.toBitfield(resp->bitfield);
+				torrent->getPiecesBitfield(resp->bitfield);
 
 			if (!resp->requests.empty())
 			{
-				auto requests = torrent->fileTransfer->getCurrentRequests();
+				auto requests = torrent->getFileTransfer()->getCurrentRequests();
 				if (resp->requests.size() > requests.size())
 					resp->requests.resize(requests.size());
 
@@ -209,30 +213,38 @@ extern "C"
 		}
 		else if (id == mtBI::MessageId::GetMagnetLinkProgress)
 		{
-			auto torrent = core.getTorrent((const uint8_t*)request);
-			if (!torrent || !torrent->utmDl)
+			auto torrent = core->getTorrent((const uint8_t*)request);
+			if (!torrent)
 				return mtt::Status::E_InvalidInput;
 
+			mtt::MetadataDownloadState utm;
+			if (!torrent->getMetadataDownloadState(utm))
+				return mtt::Status::E_NoData;
+
 			auto resp = (mtBI::MagnetLinkProgress*) output;
-			resp->finished = torrent->utmDl->state.finished;
-			resp->progress = torrent->utmDl->state.partsCount == 0 ? 0 : torrent->utmDl->state.receivedParts / (float)torrent->utmDl->state.partsCount;
+			resp->finished = utm.finished;
+			resp->progress = utm.partsCount == 0 ? 0 : utm.receivedParts / (float)utm.partsCount;
 		}
 		else if (id == mtBI::MessageId::GetMagnetLinkProgressLogs)
 		{
-			auto torrent = core.getTorrent((const uint8_t*)request);
-			if (!torrent || !torrent->utmDl)
+			auto torrent = core->getTorrent((const uint8_t*)request);
+			if (!torrent)
 				return mtt::Status::E_InvalidInput;
 
 			auto resp = (mtBI::MagnetLinkProgressLogs*) output;
+
+			std::vector<std::string> logs;
+			if (!torrent->getMetadataDownloadLog(logs, resp->start))
+				return mtt::Status::E_NoData;
+
 			if (resp->count == 0)
-				resp->count = torrent->utmDl->getEventsCount();
+				resp->count = (uint32_t)logs.size();
 			else
 			{
-				auto events = torrent->utmDl->getEvents();
-				if (events.size() >= (resp->start + resp->count))
+				if (logs.size() >= (resp->start + resp->count))
 					for (size_t i = resp->start; i < resp->start + resp->count; i++)
 					{
-						resp->logs[i - resp->start] = events[i].toString();
+						resp->logs[i - resp->start] = logs[i];
 					}
 			}
 		}
@@ -265,11 +277,11 @@ extern "C"
 		}
 		else if (id == mtBI::MessageId::GetTorrentFilesSelection)
 		{
-			auto torrent = core.getTorrent((const uint8_t*)request);
+			auto torrent = core->getTorrent((const uint8_t*)request);
 			if (!torrent)
 				return mtt::Status::E_InvalidInput;
 
-			auto & files = torrent->files.selection.files;
+			auto files = torrent->getFilesSelection().files;
 
 			auto resp = (mtBI::TorrentFilesSelection*) output;
 			if (resp->count == 0)
@@ -290,11 +302,8 @@ extern "C"
 		else if (id == mtBI::MessageId::SetTorrentFilesSelection)
 		{
 			auto selection = (mtBI::TorrentFilesSelectionRequest*)request;
-			auto torrent = core.getTorrent(selection->hash);
+			auto torrent = core->getTorrent(selection->hash);
 			if (!torrent)
-				return mtt::Status::E_InvalidInput;
-
-			if (torrent->files.selection.files.size() != selection->selection.size())
 				return mtt::Status::E_InvalidInput;
 
 			std::vector<bool> dlSelect;
@@ -310,26 +319,26 @@ extern "C"
 		{
 			auto info = (mtBI::SourceId*) request;
 
-			auto torrent = core.getTorrent(info->hash);
+			auto torrent = core->getTorrent(info->hash);
 			if (!torrent)
 				return mtt::Status::E_InvalidInput;
 
-			torrent->peers->refreshSource(info->name.data);
+			torrent->getPeers()->refreshSource(info->name.data);
 		}
 		else if (id == mtBI::MessageId::AddPeer)
 		{
 			auto info = (mtBI::AddPeerRequest*) request;
 
-			auto torrent = core.getTorrent(info->hash);
+			auto torrent = core->getTorrent(info->hash);
 			if (!torrent)
 				return mtt::Status::E_InvalidInput;
 
-			torrent->peers->connect(Addr(info->addr.data));
+			torrent->getPeers()->connect(info->addr.data);
 		}
 		else if (id == mtBI::MessageId::GetUpnpInfo)
 		{
 			auto info = (mtt::string*) output;
-			*info = core.listener->getUpnpReadableInfo();
+			*info = core->getListener()->getUpnpReadableInfo();
 		}
 		else
 			return mtt::Status::E_InvalidInput;
