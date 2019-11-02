@@ -15,6 +15,7 @@ namespace mtt
 
 		void init(TorrentInfo& info);
 		void setPath(std::string path);
+		std::string getPath();
 
 		void storePiece(DownloadedPiece& piece);
 		PieceBlock getPieceBlock(PieceBlockInfo& piece);

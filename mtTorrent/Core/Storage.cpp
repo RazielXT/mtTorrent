@@ -38,6 +38,11 @@ void mtt::Storage::setPath(std::string p)
 		path += '\\';
 }
 
+std::string mtt::Storage::getPath()
+{
+	return path;
+}
+
 void mtt::Storage::storePiece(DownloadedPiece& piece)
 {
 	std::lock_guard<std::mutex> guard(storageMutex);

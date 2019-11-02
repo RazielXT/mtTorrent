@@ -1,5 +1,6 @@
 #include "Torrent.h"
 #include "Peers.h"
+#include "FileTransfer.h"
 #include "MetadataDownload.h"
 
 bool mttApi::Torrent::start()
@@ -35,6 +36,11 @@ bool mttApi::Torrent::selectFiles(std::vector<bool>& s)
 mtt::DownloadSelection mttApi::Torrent::getFilesSelection()
 {
 	return static_cast<mtt::Torrent*>(this)->files.selection;
+}
+
+std::string mttApi::Torrent::getLocationPath()
+{
+	return static_cast<mtt::Torrent*>(this)->files.storage.getPath();
 }
 
 std::string mttApi::Torrent::name()
@@ -87,9 +93,9 @@ std::shared_ptr<mttApi::Peers> mttApi::Torrent::getPeers()
 	return static_cast<mtt::Torrent*>(this)->peers;
 }
 
-mttApi::FileTransfer* mttApi::Torrent::getFileTransfer()
+std::shared_ptr<mttApi::FileTransfer> mttApi::Torrent::getFileTransfer()
 {
-	return (mttApi::FileTransfer*)static_cast<mtt::Torrent*>(this)->fileTransfer.get();
+	return std::static_pointer_cast<mttApi::FileTransfer>(static_cast<mtt::Torrent*>(this)->fileTransfer);
 }
 
 void mttApi::Torrent::getPiecesBitfield(std::vector<uint8_t>& bitfield)

@@ -10,7 +10,7 @@
 
 namespace mtt
 {
-	class FileTransfer : public IPeerListener, public mttApi::FileTransfer
+	class FileTransfer : public mttApi::FileTransfer, public IPeerListener
 	{
 	public:
 

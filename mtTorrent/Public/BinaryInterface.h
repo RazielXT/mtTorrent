@@ -129,6 +129,7 @@ namespace mtBI
 		std::vector<size_t> filesizes;
 		size_t fullsize;
 		mtt::string name;
+		mtt::string downloadLocation;
 	};
 
 	struct TorrentStateInfo

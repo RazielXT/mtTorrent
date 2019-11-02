@@ -29,7 +29,7 @@ std::vector<mttApi::TorrentPtr> mttApi::Core::getTorrents()
 	{
 		out.push_back(t);
 	}
-	out.push_back(nullptr);
+
 	return out;
 }
 

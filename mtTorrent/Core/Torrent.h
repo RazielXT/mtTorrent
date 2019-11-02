@@ -55,7 +55,7 @@ namespace mtt
 		ServiceThreadpool service;
 
 		std::shared_ptr<Peers> peers;
-		std::unique_ptr<FileTransfer> fileTransfer;
+		std::shared_ptr<FileTransfer> fileTransfer;
 		std::unique_ptr<MetadataDownload> utmDl;
 
 		void save();

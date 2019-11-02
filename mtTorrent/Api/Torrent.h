@@ -29,6 +29,7 @@ namespace mttApi
 
 		API_EXPORT mtt::DownloadSelection getFilesSelection();
 		API_EXPORT bool selectFiles(std::vector<bool>&);
+		API_EXPORT std::string getLocationPath();
 
 		API_EXPORT std::string name();
 		API_EXPORT float currentProgress();
@@ -41,7 +42,7 @@ namespace mttApi
 
 		API_EXPORT const mtt::TorrentFileInfo& getFileInfo();
 		API_EXPORT std::shared_ptr<Peers> getPeers();
-		API_EXPORT FileTransfer* getFileTransfer();
+		API_EXPORT std::shared_ptr<mttApi::FileTransfer> getFileTransfer();
 
 		API_EXPORT void getPiecesBitfield(std::vector<uint8_t>& bitfield);
 		API_EXPORT void getPiecesReceivedList(std::vector<uint32_t>& list);

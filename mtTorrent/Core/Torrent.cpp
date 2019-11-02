@@ -16,7 +16,7 @@ mtt::TorrentPtr mtt::Torrent::fromFile(std::string filepath)
 	if (!torrent->infoFile.info.name.empty())
 	{
 		torrent->peers = std::make_shared<Peers>(torrent);
-		torrent->fileTransfer = std::make_unique<FileTransfer>(torrent);
+		torrent->fileTransfer = std::make_shared<FileTransfer>(torrent);
 		torrent->init();
 		return torrent;
 	}
@@ -31,7 +31,7 @@ mtt::TorrentPtr mtt::Torrent::fromMagnetLink(std::string link)
 		return nullptr;
 
 	torrent->peers = std::make_shared<Peers>(torrent);
-	torrent->fileTransfer = std::make_unique<FileTransfer>(torrent);
+	torrent->fileTransfer = std::make_shared<FileTransfer>(torrent);
 
 	return torrent;
 }
@@ -235,10 +235,10 @@ std::shared_ptr<mtt::PiecesCheck> mtt::Torrent::checkFiles(std::function<void(st
 		{
 			files.progress.fromList(check->pieces);
 			checked = true;
-		}
 
-		if (state == State::Started)
-			start();
+			if (state == State::Started)
+				start();
+		}
 
 		onFinish(check);
 	};
@@ -266,7 +266,7 @@ float mtt::Torrent::checkingProgress()
 
 bool mtt::Torrent::filesChecked()
 {
-	return checked;
+	return checked || files.storage.getLastModifiedTime() == 0;
 }
 
 bool mtt::Torrent::selectFiles(std::vector<bool>& s)
