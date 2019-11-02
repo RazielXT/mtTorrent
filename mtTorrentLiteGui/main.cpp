@@ -719,7 +719,8 @@ void refreshUi()
 			}
 
 			mtBI::MagnetLinkProgress progress;
-			if (IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, hash, &progress) == mtt::Status::Success)
+			auto status = IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, hash, &progress);
+			if (status == mtt::Status::Success)
 			{
 				if (progress.progress > 1.0f)
 					progress.progress = 1.0f;
@@ -733,7 +734,7 @@ void refreshUi()
 				}
 			}
 			else
-				GuiLite::MagnetInputForm::instance->labelText->Text = "Error";
+				GuiLite::MagnetInputForm::instance->labelText->Text = status == mtt::Status::E_NoData ? "No magnet data" : "Error";
 		}
 	}
 
