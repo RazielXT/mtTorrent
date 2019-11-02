@@ -162,10 +162,12 @@ namespace GuiLite {
 			this->upnpMapCheckBox->TabIndex = 11;
 			this->upnpMapCheckBox->Text = L"Upnp port mapping";
 			this->upnpMapCheckBox->UseVisualStyleBackColor = true;
+			this->upnpMapCheckBox->CheckedChanged += gcnew System::EventHandler(this, &SettingsForm::upnpMapCheckBox_CheckedChanged);
 			this->upnpToolTip->AutomaticDelay = 100;
 			this->upnpToolTip->AutoPopDelay = 10000;
 			this->upnpToolTip->InitialDelay = 100;
 			this->upnpToolTip->ReshowDelay = 20;
+			this->upnpToolTip->ShowAlways = true;
 			this->upnpToolTip->Popup += gcnew System::Windows::Forms::PopupEventHandler(this, &SettingsForm::UpnpToolTip_Popup);
 			this->AutoScaleDimensions = System::Drawing::SizeF(8, 16);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
@@ -210,6 +212,9 @@ private: System::Void UpnpToolTip_Popup(System::Object^ sender, System::Windows:
 	}
 	else
 		requestTooltip = false;
+}
+private: System::Void upnpMapCheckBox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
+	upnpToolTip->Show("", upnpMapCheckBox);
 }
 };
 }

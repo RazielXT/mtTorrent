@@ -31,6 +31,8 @@ namespace GuiLite {
 			updateTimer->Start();
 		}
 
+		static System::Windows::Forms::Timer^ scheduleTimer;
+
 	private: System::Windows::Forms::DataGridView^  peersGridView;
 	public: System::Windows::Forms::TextBox^  torrentInfoLabel;
 	private: System::Windows::Forms::TabPage^  sourcesTab;
@@ -301,7 +303,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 				static_cast<System::Int32>(static_cast<System::Byte>(128)));
 			this->buttonRemove->Location = System::Drawing::Point(366, 12);
 			this->buttonRemove->Name = L"buttonRemove";
-			this->buttonRemove->Size = System::Drawing::Size(75, 23);
+			this->buttonRemove->Size = System::Drawing::Size(83, 28);
 			this->buttonRemove->TabIndex = 7;
 			this->buttonRemove->Text = L"Remove";
 			this->buttonRemove->UseVisualStyleBackColor = false;
@@ -309,9 +311,9 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			// 
 			// buttonSettings
 			// 
-			this->buttonSettings->Location = System::Drawing::Point(1252, 11);
+			this->buttonSettings->Location = System::Drawing::Point(1244, 11);
 			this->buttonSettings->Name = L"buttonSettings";
-			this->buttonSettings->Size = System::Drawing::Size(75, 23);
+			this->buttonSettings->Size = System::Drawing::Size(83, 29);
 			this->buttonSettings->TabIndex = 6;
 			this->buttonSettings->Text = L"Settings";
 			this->buttonSettings->UseVisualStyleBackColor = true;
@@ -319,9 +321,9 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			// 
 			// buttonAddMagnet
 			// 
-			this->buttonAddMagnet->Location = System::Drawing::Point(93, 12);
+			this->buttonAddMagnet->Location = System::Drawing::Point(102, 12);
 			this->buttonAddMagnet->Name = L"buttonAddMagnet";
-			this->buttonAddMagnet->Size = System::Drawing::Size(75, 23);
+			this->buttonAddMagnet->Size = System::Drawing::Size(87, 28);
 			this->buttonAddMagnet->TabIndex = 5;
 			this->buttonAddMagnet->Text = L"Magnet";
 			this->buttonAddMagnet->UseVisualStyleBackColor = true;
@@ -333,7 +335,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 				static_cast<System::Int32>(static_cast<System::Byte>(128)));
 			this->buttonStop->Location = System::Drawing::Point(285, 12);
 			this->buttonStop->Name = L"buttonStop";
-			this->buttonStop->Size = System::Drawing::Size(75, 23);
+			this->buttonStop->Size = System::Drawing::Size(75, 29);
 			this->buttonStop->TabIndex = 4;
 			this->buttonStop->Text = L"Stop";
 			this->buttonStop->UseVisualStyleBackColor = false;
@@ -345,7 +347,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 				static_cast<System::Int32>(static_cast<System::Byte>(0)));
 			this->buttonStart->Location = System::Drawing::Point(204, 12);
 			this->buttonStart->Name = L"buttonStart";
-			this->buttonStart->Size = System::Drawing::Size(75, 23);
+			this->buttonStart->Size = System::Drawing::Size(75, 28);
 			this->buttonStart->TabIndex = 3;
 			this->buttonStart->Text = L"Start";
 			this->buttonStart->UseVisualStyleBackColor = false;
@@ -355,7 +357,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			// 
 			this->buttonAddTorrent->Location = System::Drawing::Point(12, 12);
 			this->buttonAddTorrent->Name = L"buttonAddTorrent";
-			this->buttonAddTorrent->Size = System::Drawing::Size(75, 23);
+			this->buttonAddTorrent->Size = System::Drawing::Size(84, 29);
 			this->buttonAddTorrent->TabIndex = 2;
 			this->buttonAddTorrent->Text = L"File";
 			this->buttonAddTorrent->UseVisualStyleBackColor = true;
@@ -414,6 +416,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->torrentsGrid->TabIndex = 1;
 			this->torrentsGrid->CellClick += gcnew System::Windows::Forms::DataGridViewCellEventHandler(this, &MainForm::torrentsGrid_CellContentClick);
 			this->torrentsGrid->CellMouseDoubleClick += gcnew System::Windows::Forms::DataGridViewCellMouseEventHandler(this, &MainForm::TorrentsGrid_CellContentClick_1);
+			this->torrentsGrid->MouseClick += gcnew System::Windows::Forms::MouseEventHandler(this, &MainForm::torrentsGrid_MouseClick);
 			// 
 			// torrentId
 			// 
@@ -888,6 +891,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			chartArea2->AxisX->IntervalOffsetType = System::Windows::Forms::DataVisualization::Charting::DateTimeIntervalType::Number;
 			chartArea2->AxisX->IsMarginVisible = false;
 			chartArea2->AxisX->Minimum = 0;
+			chartArea2->AxisX->TitleAlignment = System::Drawing::StringAlignment::Far;
 			chartArea2->AxisY->Crossing = 1.7976931348623157E+308;
 			chartArea2->AxisY->Enabled = System::Windows::Forms::DataVisualization::Charting::AxisEnabled::False;
 			chartArea2->AxisY->Interval = 1;
@@ -895,6 +899,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			chartArea2->AxisY->Maximum = 1;
 			chartArea2->AxisY->MaximumAutoSize = 1;
 			chartArea2->AxisY->Minimum = 0;
+			chartArea2->AxisY->TitleAlignment = System::Drawing::StringAlignment::Far;
 			chartArea2->BackColor = System::Drawing::Color::Silver;
 			chartArea2->BorderWidth = 0;
 			chartArea2->IsSameFontSizeForAllAxes = true;
@@ -961,6 +966,42 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 private: System::Void torrentsGrid_CellContentClick(System::Object^  sender, System::Windows::Forms::DataGridViewCellEventArgs^  e) {
 	onButtonClick(ButtonId::TorrentGrid);
 }
+	private: System::Void torrentsGrid_MouseClick(System::Object^ sender, System::Windows::Forms::MouseEventArgs^ e) {
+		if (e->Button == System::Windows::Forms::MouseButtons::Right)
+		{
+			int currentMouseOverRow = torrentsGrid->HitTest(e->X, e->Y)->RowIndex;
+
+			if (currentMouseOverRow >= 0)
+			{
+				torrentsGrid->ClearSelection();
+				torrentsGrid->Rows[currentMouseOverRow]->Selected = true;
+				onButtonClick(ButtonId::TorrentGrid);
+
+				auto m = gcnew System::Windows::Forms::ContextMenu();
+				auto clickEvent = gcnew System::Windows::Forms::MenuItem("Open location");
+				clickEvent->Click += gcnew System::EventHandler(this, &MainForm::menuItem_Click);
+				m->MenuItems->Add(clickEvent);
+				clickEvent = gcnew System::Windows::Forms::MenuItem("Schedule");
+				clickEvent->Click += gcnew System::EventHandler(this, &MainForm::menuItem_Click);
+				m->MenuItems->Add(clickEvent);
+				clickEvent = gcnew System::Windows::Forms::MenuItem("Show logs");
+				clickEvent->Click += gcnew System::EventHandler(this, &MainForm::menuItem_Click);
+				m->MenuItems->Add(clickEvent);
+
+				m->Show(torrentsGrid, System::Drawing::Point(e->X, e->Y));
+			}
+		}
+	}
+	private: System::Void menuItem_Click(System::Object^ sender, System::EventArgs^ e) {
+		auto buttonText = ((System::Windows::Forms::MenuItem^)sender)->Text;
+
+		if(buttonText == "Open location")
+			onButtonClick(ButtonId::OpenLocation);
+		else if (buttonText == "Schedule")
+			onButtonClick(ButtonId::Schedule);
+		else if (buttonText == "Show logs")
+			onButtonClick(ButtonId::ShowLogs);
+	}
 	private: System::Void buttonStart_Click(System::Object^  sender, System::EventArgs^  e) {
 		onButtonClick(ButtonId::Start);
 	}

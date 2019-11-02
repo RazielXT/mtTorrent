@@ -19,7 +19,9 @@ enum class ButtonId
 	SelectionAll,
 	SelectionNone,
 	MagnetButton,
-
+	OpenLocation,
+	Schedule,
+	ShowLogs,
 };
 
 extern void onButtonClick(ButtonId id);

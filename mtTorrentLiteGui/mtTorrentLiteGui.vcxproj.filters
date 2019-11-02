@@ -38,6 +38,9 @@
     <ClCompile Include="..\mtTorrent\Public\ModuleString.cpp">
       <Filter>Source Files\Library</Filter>
     </ClCompile>
+    <ClCompile Include="ScheduleForm.cpp">
+      <Filter>Resource Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainForm.h">
@@ -57,6 +60,9 @@
     </ClInclude>
     <ClInclude Include="Buttons.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ScheduleForm.h">
+      <Filter>Resource Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

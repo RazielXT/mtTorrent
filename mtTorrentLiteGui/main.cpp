@@ -9,6 +9,7 @@
 #include "SettingsForm.h"
 #include <WinUser.h>
 #include "FileSelectionForm.h"
+#include "ScheduleForm.h"
 #include "AddPeerForm.h"
 
 #include <Shlwapi.h>
@@ -373,6 +374,73 @@ void refreshSelection()
 	}
 }
 
+struct ScheduledTorrent
+{
+	uint8_t hash[20];
+	bool start = true;
+	int countdown = 0;
+};
+std::vector<ScheduledTorrent> scheduledTorrents;
+
+void ScheduleTorrentUpdateFunc(System::Object^ myObject, System::EventArgs^ myEventArgs)
+{
+	for (auto it = scheduledTorrents.begin(); it != scheduledTorrents.end(); it++)
+	{
+		it->countdown--;
+
+		if (it->countdown <= 0)
+		{
+			IoctlFunc(mtBI::MessageId::Start, it->hash, nullptr);
+			scheduledTorrents.erase(it);
+			break;
+		}
+	}
+
+	if (scheduledTorrents.empty())
+		GuiLite::MainForm::instance->scheduleTimer->Stop();
+}
+
+void scheduleTorrent(int seconds)
+{
+	ScheduledTorrent t;
+	t.countdown = seconds;
+	memcpy(t.hash, hash, 20);
+
+	scheduledTorrents.push_back(t);
+
+	if (!GuiLite::MainForm::instance->scheduleTimer)
+	{
+		GuiLite::MainForm::instance->scheduleTimer = gcnew System::Windows::Forms::Timer();
+		GuiLite::MainForm::instance->scheduleTimer->Tick += gcnew EventHandler(ScheduleTorrentUpdateFunc);
+		GuiLite::MainForm::instance->scheduleTimer->Interval = 1000;
+	}
+
+	GuiLite::MainForm::instance->scheduleTimer->Start();
+}
+
+int getSchedule(uint8_t* hash)
+{
+	for (auto& t : scheduledTorrents)
+	{
+		if (memcmp(t.hash, hash, 20) == 0)
+			return t.countdown;
+	}
+
+	return 0;
+}
+
+void stopSchedule(uint8_t* hash)
+{
+	for (auto it = scheduledTorrents.begin(); it != scheduledTorrents.end(); it++)
+	{
+		if (memcmp(it->hash, hash, 20) == 0)
+		{
+			scheduledTorrents.erase(it);
+			break;
+		}
+	}
+}
+
 int magnetLinkSequence = 0;
 uint32_t lastMagnetLinkLogCount = 0;
 
@@ -394,7 +462,18 @@ void onButtonClick(ButtonId id, System::String^ param)
 
 		IoctlFunc(mtBI::MessageId::AddPeer, &request, nullptr);
 	}
-	else if (id == ButtonId::TorrentDoubleClick)
+	else if (id == ButtonId::OpenLocation)
+	{
+		mtBI::TorrentInfo info;
+		if (IoctlFunc(mtBI::MessageId::GetTorrentInfo, hash, &info) == mtt::Status::Success && info.downloadLocation.length > 0)
+			System::Diagnostics::Process::Start(gcnew String(info.downloadLocation.data));
+	}
+	else if (id == ButtonId::Schedule)
+	{
+		mtTorrentLiteGui::ScheduleForm form;
+		form.ShowDialog();
+	}
+	else if (id == ButtonId::ShowLogs)
 	{
 		if (!selected)
 			return;
@@ -454,6 +533,8 @@ void onButtonClick(ButtonId id, System::String^ param)
 		{
 			if (IoctlFunc(mtBI::MessageId::Start, hash, nullptr) == mtt::Status::Success)
 				selectionChanged = true;
+
+			stopSchedule(hash);
 		}
 	}
 	else if (id == ButtonId::Stop)
@@ -462,6 +543,8 @@ void onButtonClick(ButtonId id, System::String^ param)
 		{
 			if (IoctlFunc(mtBI::MessageId::Stop, hash, nullptr) == mtt::Status::Success)
 				selectionChanged = true;
+
+			stopSchedule(hash);
 		}
 	}
 	else if (id == ButtonId::AddTorrentMagnet)
@@ -700,7 +783,19 @@ void refreshUi()
 						activeStatus = "Problem " + int(info.activeStatus).ToString();
 				}
 				else if (!t.active)
-					activeStatus = "Stopped";
+				{
+					int schedule = getSchedule(t.hash);
+
+					if(schedule <= 0)
+						activeStatus = "Stopped";
+					else
+					{
+						activeStatus = "Scheduled (";
+						TimeSpan time = System::TimeSpan::FromSeconds((double)schedule);
+						activeStatus += time.ToString("d\\d\\ hh\\hmm\\mss\\s")->TrimStart(' ', 'd', 'h', 'm', 's', '0');
+						activeStatus += ")";
+					}
+				}
 				else
 					activeStatus = "Active";
 
