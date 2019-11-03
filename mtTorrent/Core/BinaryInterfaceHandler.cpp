@@ -93,6 +93,7 @@ extern "C"
 			resp->progress = torrent->currentProgress();
 			resp->selectionProgress = torrent->currentSelectionProgress();
 			resp->activeStatus = torrent->getLastError();
+			resp->started = torrent->getStatus() == mttApi::Torrent::State::Started;
 
 			mtt::MetadataDownloadState utm;
 			resp->utmActive = torrent->getMetadataDownloadState(utm) && !utm.finished;

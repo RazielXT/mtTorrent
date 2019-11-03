@@ -21,8 +21,15 @@ enum class ButtonId
 	MagnetButton,
 	OpenLocation,
 	Schedule,
-	ShowLogs,
+	MagnetLogs,
 };
 
 extern void onButtonClick(ButtonId id);
 extern void onButtonClick(ButtonId id, System::String^ param);
+
+struct TorrentCtxMenuInfo
+{
+	bool active;
+	bool utmLogs;
+};
+extern TorrentCtxMenuInfo getTorrentContexMenuInfo();

@@ -143,6 +143,7 @@ namespace mtBI
 		size_t uploadSpeed;
 		uint32_t foundPeers;
 		uint32_t connectedPeers;
+		bool started;
 		bool utmActive;
 		bool checking;
 		float checkingProgress;

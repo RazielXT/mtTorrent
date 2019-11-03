@@ -977,16 +977,26 @@ private: System::Void torrentsGrid_CellContentClick(System::Object^  sender, Sys
 				torrentsGrid->Rows[currentMouseOverRow]->Selected = true;
 				onButtonClick(ButtonId::TorrentGrid);
 
+				auto info = getTorrentContexMenuInfo();
+
 				auto m = gcnew System::Windows::Forms::ContextMenu();
 				auto clickEvent = gcnew System::Windows::Forms::MenuItem("Open location");
 				clickEvent->Click += gcnew System::EventHandler(this, &MainForm::menuItem_Click);
 				m->MenuItems->Add(clickEvent);
-				clickEvent = gcnew System::Windows::Forms::MenuItem("Schedule");
-				clickEvent->Click += gcnew System::EventHandler(this, &MainForm::menuItem_Click);
-				m->MenuItems->Add(clickEvent);
-				clickEvent = gcnew System::Windows::Forms::MenuItem("Show logs");
-				clickEvent->Click += gcnew System::EventHandler(this, &MainForm::menuItem_Click);
-				m->MenuItems->Add(clickEvent);
+
+				if (!info.active)
+				{
+					clickEvent = gcnew System::Windows::Forms::MenuItem("Schedule");
+					clickEvent->Click += gcnew System::EventHandler(this, &MainForm::menuItem_Click);
+					m->MenuItems->Add(clickEvent);
+				}
+
+				if (info.utmLogs)
+				{
+					clickEvent = gcnew System::Windows::Forms::MenuItem("Magnet logs");
+					clickEvent->Click += gcnew System::EventHandler(this, &MainForm::menuItem_Click);
+					m->MenuItems->Add(clickEvent);
+				}
 
 				m->Show(torrentsGrid, System::Drawing::Point(e->X, e->Y));
 			}
@@ -999,8 +1009,8 @@ private: System::Void torrentsGrid_CellContentClick(System::Object^  sender, Sys
 			onButtonClick(ButtonId::OpenLocation);
 		else if (buttonText == "Schedule")
 			onButtonClick(ButtonId::Schedule);
-		else if (buttonText == "Show logs")
-			onButtonClick(ButtonId::ShowLogs);
+		else if (buttonText == "Magnet logs")
+			onButtonClick(ButtonId::MagnetLogs);
 	}
 	private: System::Void buttonStart_Click(System::Object^  sender, System::EventArgs^  e) {
 		onButtonClick(ButtonId::Start);

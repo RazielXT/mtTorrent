@@ -81,6 +81,19 @@ void updateSpeedChart(float dlSpeed, float upSpeed)
 	GuiLite::MainForm::instance->dlSpeedChart->Series["UpSeries"]->Points->AddXY(chartTime, upSpeed);
 }
 
+TorrentCtxMenuInfo getTorrentContexMenuInfo()
+{
+	TorrentCtxMenuInfo info;
+
+	mtBI::TorrentStateInfo state;
+	info.active = IoctlFunc(mtBI::MessageId::GetTorrentStateInfo, hash, &state) == mtt::Status::Success && state.started;
+
+	mtBI::MagnetLinkProgressLogs logs{};
+	info.utmLogs = IoctlFunc(mtBI::MessageId::GetMagnetLinkProgressLogs, hash, &logs) == mtt::Status::Success && logs.count > 0;
+
+	return info;
+}
+
 std::vector<uint8_t> lastBitfield;
 
 void initPiecesChart(uint32_t bitfieldSize, uint32_t pieces)
@@ -473,7 +486,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 		mtTorrentLiteGui::ScheduleForm form;
 		form.ShowDialog();
 	}
-	else if (id == ButtonId::ShowLogs)
+	else if (id == ButtonId::MagnetLogs)
 	{
 		if (!selected)
 			return;
