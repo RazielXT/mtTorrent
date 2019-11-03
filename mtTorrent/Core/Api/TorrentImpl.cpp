@@ -40,7 +40,13 @@ mtt::DownloadSelection mttApi::Torrent::getFilesSelection()
 
 std::string mttApi::Torrent::getLocationPath()
 {
-	return static_cast<mtt::Torrent*>(this)->files.storage.getPath();
+	auto path = static_cast<mtt::Torrent*>(this)->files.storage.getPath();
+
+	auto& info = getFileInfo().info;
+	if (info.files.size() > 1)
+		path += info.name;
+
+	return path;
 }
 
 std::string mttApi::Torrent::name()
