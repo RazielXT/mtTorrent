@@ -111,16 +111,16 @@ namespace GuiLite {
 			// 
 			// progressBarMagnet
 			// 
-			this->progressBarMagnet->Location = System::Drawing::Point(114, 42);
+			this->progressBarMagnet->Location = System::Drawing::Point(125, 42);
 			this->progressBarMagnet->Name = L"progressBarMagnet";
-			this->progressBarMagnet->Size = System::Drawing::Size(356, 23);
+			this->progressBarMagnet->Size = System::Drawing::Size(345, 31);
 			this->progressBarMagnet->TabIndex = 6;
 			// 
 			// magnetFormButton
 			// 
 			this->magnetFormButton->Location = System::Drawing::Point(14, 42);
 			this->magnetFormButton->Name = L"magnetFormButton";
-			this->magnetFormButton->Size = System::Drawing::Size(94, 23);
+			this->magnetFormButton->Size = System::Drawing::Size(105, 31);
 			this->magnetFormButton->TabIndex = 7;
 			this->magnetFormButton->Text = L"Add";
 			this->magnetFormButton->UseVisualStyleBackColor = true;

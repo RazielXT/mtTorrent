@@ -240,7 +240,7 @@ void fillFilesSelectionForm()
 		auto row = gcnew cli::array<Object^>(4) {
 			int(i).ToString(),
 			f.selected,
-			gcnew String(f.name.data),
+			gcnew String(f.name.data, 0, (int)f.name.length, System::Text::Encoding::UTF8),
 			int(f.size / (1024ll * 1024ll)).ToString() + " MB"
 		};
 
@@ -270,7 +270,7 @@ void refreshTorrentInfo(uint8_t* hash)
 	GuiLite::MainForm::instance->torrentInfoLabel->Clear();
 	auto infoLines = GuiLite::MainForm::instance->torrentInfoLabel;
 
-	infoLines->AppendText(gcnew String(info.name.data));
+	infoLines->AppendText(gcnew String(info.name.data, 0, (int)info.name.length, System::Text::Encoding::UTF8));
 	infoLines->AppendText(Environment::NewLine);
 	infoLines->AppendText("Fullsize: ");
 	infoLines->AppendText(Environment::NewLine);
@@ -287,7 +287,7 @@ void refreshTorrentInfo(uint8_t* hash)
 
 		for (uint32_t i = 0; i < info.filesCount; i++)
 		{
-			files[i] = gcnew String(info.filenames[i].data) + " (" + int(info.filesizes[i] / (1024ll * 1024ll)).ToString() + " MB)";
+			files[i] = gcnew String(info.filenames[i].data, 0, (int)info.filenames[i].length, System::Text::Encoding::UTF8) + " (" + int(info.filesizes[i] / (1024ll * 1024ll)).ToString() + " MB)";
 		}
 		
 		Array::Sort(files);
@@ -832,7 +832,7 @@ void refreshUi()
 					speedInfo += ")";
 				}
 
-				String^ name = gcnew String(info.name.data);
+				String^ name = gcnew String(info.name.data, 0, (int)info.name.length, System::Text::Encoding::UTF8);
 				if (info.utmActive)
 				{
 					mtBI::MagnetLinkProgress magnetProgress;
@@ -864,6 +864,12 @@ void refreshUi()
 				};
 
 				torrentGrid->Rows[i]->SetValues(row);
+
+				if (torrentGrid->Rows[i]->Selected && !isSelected)
+				{
+					memcpy(hash, t.hash, 20);
+					selectionChanged = true;
+				}
 
 				if(isSelected)
 				{
@@ -899,7 +905,7 @@ void refreshUi()
 			auto peerRow = gcnew cli::array< System::String^  >(6) {
 				gcnew String(peerInfo.addr.data),
 					float(peerInfo.dlSpeed / (1024.f * 1024)).ToString("F"), float(peerInfo.upSpeed / (1024.f * 1024)).ToString("F"),
-					float(peerInfo.progress).ToString("P"),	gcnew String(peerInfo.client.data, 0, (int)strlen(peerInfo.client.data), System::Text::Encoding::UTF8),
+					float(peerInfo.progress).ToString("P"),	gcnew String(peerInfo.client.data, 0, (int)peerInfo.client.length, System::Text::Encoding::UTF8),
 					gcnew String(peerInfo.country.data)
 			};
 

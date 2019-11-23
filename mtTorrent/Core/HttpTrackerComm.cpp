@@ -89,8 +89,8 @@ void mtt::HttpTrackerComm::onTcpReceived()
 			return;
 		else if (msgSize == -1)
 		{
-			fail();
 			tcpComm->consumeData(respData.size());
+			fail();
 			return;
 		}
 		else
