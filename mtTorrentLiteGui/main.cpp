@@ -91,6 +91,9 @@ TorrentCtxMenuInfo getTorrentContexMenuInfo()
 	mtBI::MagnetLinkProgressLogs logs{};
 	info.utmLogs = IoctlFunc(mtBI::MessageId::GetMagnetLinkProgressLogs, hash, &logs) == mtt::Status::Success && logs.count > 0;
 
+	mtBI::MagnetLinkProgress magnetProgress{};
+	info.noInfo = IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, hash, &magnetProgress) == mtt::Status::Success && !magnetProgress.finished;
+
 	return info;
 }
 
@@ -299,8 +302,6 @@ void refreshTorrentInfo(uint8_t* hash)
 		}
 	}
 
-	GuiLite::MainForm::instance->selectButton->Visible = true;
-
 	initSpeedChart();
 }
 
@@ -359,7 +360,6 @@ void setSelected(bool v)
 		GuiLite::MainForm::instance->getGrid()->ClearSelection();
 
 		GuiLite::MainForm::instance->torrentInfoLabel->Clear();
-		GuiLite::MainForm::instance->selectButton->Visible = false;
 		GuiLite::MainForm::instance->dlSpeedChart->Visible = false;
 	}
 }
@@ -385,6 +385,25 @@ void refreshSelection()
 			selectionChanged = true;
 		}
 	}
+}
+
+System::String^ getSelectedTorrentName()
+{
+	mtBI::TorrentStateInfo info;
+
+	if (selected && IoctlFunc(mtBI::MessageId::GetTorrentStateInfo, hash, &info) == mtt::Status::Success)
+		return gcnew System::String(info.name.data);
+	else
+		return "";
+}
+
+void showFilesSelectionForm()
+{
+	GuiLite::FileSelectionForm form;
+	form.Text = getSelectedTorrentName();
+	form.ShowDialog();
+	lastSelection.selection.clear();
+	GuiLite::FileSelectionForm::instance = nullptr;
 }
 
 struct ScheduledTorrent
@@ -529,6 +548,8 @@ void onButtonClick(ButtonId id, System::String^ param)
 
 		memcpy(request.hash, hash, 20);
 		IoctlFunc(mtBI::MessageId::Remove, &request, nullptr);
+
+		refreshSelection();
 	}
 	else if (id == ButtonId::AddTorrentFile)
 	{
@@ -566,6 +587,10 @@ void onButtonClick(ButtonId id, System::String^ param)
 		GuiLite::MagnetInputForm form;
 		form.ShowDialog();
 		GuiLite::MagnetInputForm::instance = nullptr;
+
+		if (magnetLinkSequence == 4)
+			showFilesSelectionForm();
+
 		magnetLinkSequence = 0;
 		lastMagnetLinkLogCount = 0;
 	}
@@ -597,10 +622,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 	}
 	else if (id == ButtonId::SelectFiles)
 	{
-		GuiLite::FileSelectionForm form;
-		form.ShowDialog();
-		lastSelection.selection.clear();
-		GuiLite::FileSelectionForm::instance = nullptr;
+		showFilesSelectionForm();
 	}
 	else if (GuiLite::MagnetInputForm::instance)
 	{
@@ -702,7 +724,7 @@ void refreshUi()
 	if (!IoctlFunc || !initialized)
 		return;
 
-	if (magnetLinkSequence > 0)
+	if (GuiLite::MagnetInputForm::instance)
 	{
 		if (magnetLinkSequence >= 2)
 		{
@@ -865,14 +887,14 @@ void refreshUi()
 
 				torrentGrid->Rows[i]->SetValues(row);
 
-				if (torrentGrid->Rows[i]->Selected && !isSelected)
-				{
-					memcpy(hash, t.hash, 20);
-					selectionChanged = true;
-				}
-
 				if(isSelected)
 				{
+					if (!torrentGrid->Rows[i]->Selected)
+					{
+						torrentGrid->ClearSelection();
+						torrentGrid->Rows[i]->Selected = true;
+					}
+
 					if (lastInfoIncomplete && !info.utmActive)
 						selectionChanged = true;
 

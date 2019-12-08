@@ -31,5 +31,6 @@ struct TorrentCtxMenuInfo
 {
 	bool active;
 	bool utmLogs;
+	bool noInfo;
 };
 extern TorrentCtxMenuInfo getTorrentContexMenuInfo();
