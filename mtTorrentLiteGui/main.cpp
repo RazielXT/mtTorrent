@@ -900,6 +900,9 @@ void refreshUi()
 
 					lastInfoIncomplete = info.utmActive;
 				}
+
+				if (torrentGrid->SortedColumn)
+					torrentGrid->Sort(torrentGrid->SortedColumn, torrentGrid->SortOrder == SortOrder::Ascending ? System::ComponentModel::ListSortDirection::Ascending : System::ComponentModel::ListSortDirection::Descending);
 			}
 		}
 	}
