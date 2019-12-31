@@ -166,7 +166,7 @@ void updatePiecesChart()
 		chart->Visible = false;
 }
 
-mtBI::TorrentFilesSelection lastSelection;
+mtBI::TorrentInfo lastSelection;
 
 void updateSelectionFormFooter()
 {
@@ -174,7 +174,7 @@ void updateSelectionFormFooter()
 	size_t fullsize = 0;
 	uint32_t selectedCount = 0;
 
-	for (auto& f : lastSelection.selection)
+	for (auto& f : lastSelection.files)
 	{
 		if (f.selected)
 		{
@@ -188,7 +188,7 @@ void updateSelectionFormFooter()
 	String^ txt = gcnew String("Selected ");
 	txt += int(selectedCount).ToString();
 	txt += "/";
-	txt += int(lastSelection.count).ToString();
+	txt += int(lastSelection.filesCount).ToString();
 	txt += " (";
 	txt += int(selectedSize / (1024ll * 1024ll)).ToString();
 	txt += " MB/";
@@ -200,10 +200,10 @@ void updateSelectionFormFooter()
 
 void fileSelectionChanged(int id, bool selected)
 {
-	if (id >= lastSelection.selection.size())
+	if (id >= lastSelection.files.size())
 		return;
 
-	lastSelection.selection[id].selected = selected;
+	lastSelection.files[id].selected = selected;
 
 	updateSelectionFormFooter();
 }
@@ -214,7 +214,7 @@ void setAllFileSelection(bool selected)
 	auto rows = GuiLite::FileSelectionForm::instance->filesGridView->Rows;
 	int i = 0;
 
-	for (auto& s : lastSelection.selection)
+	for (auto& s : lastSelection.files)
 	{
 		s.selected = selected;
 		rows[i++]->Cells[1]->Value = selected;
@@ -225,20 +225,22 @@ void setAllFileSelection(bool selected)
 
 void fillFilesSelectionForm()
 {
-	mtBI::TorrentFilesSelection& info = lastSelection;
-	info.count = 0;
-	IoctlFunc(mtBI::MessageId::GetTorrentFilesSelection, hash, &info);
+	auto form = GuiLite::FileSelectionForm::instance;
+	auto& info = lastSelection;
+	info.filesCount = 0;
+	IoctlFunc(mtBI::MessageId::GetTorrentInfo, hash, &info);
 
-	if (info.count > 0)
-		info.selection.resize(info.count);
+	if (info.filesCount > 0)
+		info.files.resize(info.filesCount);
 
-	IoctlFunc(mtBI::MessageId::GetTorrentFilesSelection, hash, &info);
+	if (IoctlFunc(mtBI::MessageId::GetTorrentInfo, hash, &info) != mtt::Status::Success)
+		return;
 
-	auto panel = GuiLite::FileSelectionForm::instance->filesGridView;
-	panel->Rows->Add(info.count);
+	auto list = form->filesGridView;
+	list->Rows->Add(info.filesCount);
 
 	int i = 0;
-	for (auto& f : info.selection)
+	for (auto& f : info.files)
 	{
 		auto row = gcnew cli::array<Object^>(4) {
 			int(i).ToString(),
@@ -247,12 +249,18 @@ void fillFilesSelectionForm()
 			int(f.size / (1024ll * 1024ll)).ToString() + " MB"
 		};
 
-		panel->Rows[i]->SetValues(row);
+		list->Rows[i]->SetValues(row);
 		i++;
 	}
 
-	panel->Sort(panel->Columns[2], System::ComponentModel::ListSortDirection::Ascending);
+	list->Sort(list->Columns[2], System::ComponentModel::ListSortDirection::Ascending);
 	updateSelectionFormFooter();
+
+	form->Text = gcnew System::String(info.name.data);
+	form->textBoxPath->Text = gcnew System::String(info.downloadLocation.data);
+
+	form->labelError->Text = "";
+	form->checkBoxStart->Visible = false;
 }
 
 void refreshTorrentInfo(uint8_t* hash)
@@ -261,12 +269,12 @@ void refreshTorrentInfo(uint8_t* hash)
 		return;
 
 	mtBI::TorrentInfo info;
+	info.filesCount = 0;
 	IoctlFunc(mtBI::MessageId::GetTorrentInfo, hash, &info);
 
 	if (info.filesCount > 0)
 	{
-		info.filenames.resize(info.filesCount);
-		info.filesizes.resize(info.filesCount);
+		info.files.resize(info.filesCount);
 		IoctlFunc(mtBI::MessageId::GetTorrentInfo, hash, &info);
 	}
 
@@ -290,7 +298,7 @@ void refreshTorrentInfo(uint8_t* hash)
 
 		for (uint32_t i = 0; i < info.filesCount; i++)
 		{
-			files[i] = gcnew String(info.filenames[i].data, 0, (int)info.filenames[i].length, System::Text::Encoding::UTF8) + " (" + int(info.filesizes[i] / (1024ll * 1024ll)).ToString() + " MB)";
+			files[i] = gcnew String(info.files[i].name.data, 0, (int)info.files[i].name.length, System::Text::Encoding::UTF8) + " (" + int(info.files[i].size / (1024ll * 1024ll)).ToString() + " MB)";
 		}
 		
 		Array::Sort(files);
@@ -305,7 +313,7 @@ void refreshTorrentInfo(uint8_t* hash)
 	initSpeedChart();
 }
 
-void start()
+void init()
 {
 	wchar_t pathBuffer[256];
 	if (GetModuleFileName(NULL, pathBuffer, 256))
@@ -397,13 +405,19 @@ System::String^ getSelectedTorrentName()
 		return "";
 }
 
-void showFilesSelectionForm()
+void showFilesSelectionFormThread()
 {
 	GuiLite::FileSelectionForm form;
-	form.Text = getSelectedTorrentName();
 	form.ShowDialog();
-	lastSelection.selection.clear();
+	lastSelection.files.clear();
 	GuiLite::FileSelectionForm::instance = nullptr;
+}
+
+void showFilesSelectionForm()
+{
+	System::Threading::Thread^ newThread = gcnew System::Threading::Thread(gcnew System::Threading::ThreadStart(&showFilesSelectionFormThread));
+	newThread->SetApartmentState(System::Threading::ApartmentState::STA);
+	newThread->Start();
 }
 
 struct ScheduledTorrent
@@ -659,11 +673,26 @@ void onButtonClick(ButtonId id, System::String^ param)
 	{
 		if (id == ButtonId::SelectionOk)
 		{
-			if (!lastSelection.selection.empty())
+			auto form = GuiLite::FileSelectionForm::instance;
+
+			if (form->textBoxPath->Text->Length > 0)
+			{
+				mtBI::TorrentSetPathRequest path;
+				memcpy(path.hash, hash, 20);
+				path.path = getStringPtr(form->textBoxPath->Text);
+				if (IoctlFunc(mtBI::MessageId::SetTorrentPath, &path, nullptr) != mtt::Status::Success)
+				{
+					form->labelError->Text = "Error setting location path";
+					form->labelError->Visible = true;
+					return;
+				}
+			}
+
+			if (!lastSelection.files.empty())
 			{
 				mtBI::TorrentFilesSelectionRequest selection;
 				memcpy(selection.hash, hash, 20);
-				for (auto& s : lastSelection.selection)
+				for (auto& s : lastSelection.files)
 				{
 					mtBI::FileSelectionRequest f;
 					f.selected = s.selected;
@@ -672,6 +701,9 @@ void onButtonClick(ButtonId id, System::String^ param)
 
 				IoctlFunc(mtBI::MessageId::SetTorrentFilesSelection, &selection, nullptr);
 			}
+
+			if (form->checkBoxStart->Visible && form->checkBoxStart->Enabled)
+				IoctlFunc(mtBI::MessageId::Start, hash, nullptr);
 
 			GuiLite::FileSelectionForm::instance->Close();
 		}
@@ -1057,8 +1089,8 @@ void FormsMain(cli::array<System::String ^>^ args)
 	Application::EnableVisualStyles();
 	Application::SetCompatibleTextRenderingDefault(false);
 
+	init();
 	GuiLite::MainForm form;
-	start();
 
 	if (args->Length > 0)
 		ProcessProgramArgument(args[0]);

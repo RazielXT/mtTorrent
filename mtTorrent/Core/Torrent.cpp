@@ -43,6 +43,8 @@ mtt::TorrentPtr mtt::Torrent::fromSavedState(std::string name)
 		TorrentState state(ptr->files.progress.pieces);
 		if (state.load(name))
 		{
+			ptr->files.storage.init(ptr->infoFile.info, state.downloadPath);
+
 			if (ptr->files.selection.files.size() == state.files.size())
 			{
 				for (size_t i = 0; i < state.files.size(); i++)
@@ -77,7 +79,7 @@ mtt::TorrentPtr mtt::Torrent::fromSavedState(std::string name)
 void mtt::Torrent::save()
 {
 	TorrentState saveState(files.progress.pieces);
-	saveState.downloadPath = mtt::config::getExternal().files.defaultDirectory;
+	saveState.downloadPath = files.storage.getPath();
 	saveState.lastStateTime = checked ? files.storage.getLastModifiedTime() : 0;
 	saveState.started = state == State::Started;
 

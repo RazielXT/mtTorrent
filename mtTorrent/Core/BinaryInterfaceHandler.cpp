@@ -132,12 +132,15 @@ extern "C"
 			resp->fullsize = torrent->getFileInfo().info.fullSize;
 			resp->filesCount = (uint32_t)torrent->getFileInfo().info.files.size();
 
-			if (resp->filenames.size() == resp->filesCount)
+			if (resp->files.size() == resp->filesCount)
 			{
-				for (size_t i = 0; i < resp->filenames.size(); i++)
+				auto selection = torrent->getFilesSelection();
+
+				for (size_t i = 0; i < resp->files.size(); i++)
 				{
-					resp->filenames[i] = torrent->getFileInfo().info.files[i].path.back();
-					resp->filesizes[i] = torrent->getFileInfo().info.files[i].size;
+					resp->files[i].name = selection.files[i].info.path.back();
+					resp->files[i].size = selection.files[i].info.size;
+					resp->files[i].selected = selection.files[i].selected;
 				}
 			}
 
@@ -278,30 +281,6 @@ extern "C"
 			mtt::config::setValues(settings.connection);
 			mtt::config::setValues(settings.files);
 		}
-		else if (id == mtBI::MessageId::GetTorrentFilesSelection)
-		{
-			auto torrent = core->getTorrent((const uint8_t*)request);
-			if (!torrent)
-				return mtt::Status::E_InvalidInput;
-
-			auto files = torrent->getFilesSelection().files;
-
-			auto resp = (mtBI::TorrentFilesSelection*) output;
-			if (resp->count == 0)
-				resp->count = (uint32_t)files.size();
-			else if (resp->selection.size() == files.size())
-			{
-				for (size_t i = 0; i < resp->selection.size(); i++)
-				{
-					mtBI::FileSelection& f = resp->selection[i];
-					f.name = files[i].info.path.back();
-					f.selected = files[i].selected;
-					f.size = files[i].info.size;
-					f.pieceStart = files[i].info.startPieceIndex;
-					f.pieceEnd = files[i].info.endPieceIndex;
-				}
-			}
-		}
 		else if (id == mtBI::MessageId::SetTorrentFilesSelection)
 		{
 			auto selection = (mtBI::TorrentFilesSelectionRequest*)request;
@@ -342,6 +321,16 @@ extern "C"
 		{
 			auto info = (mtt::string*) output;
 			*info = core->getListener()->getUpnpReadableInfo();
+		}
+		else if (id == mtBI::MessageId::SetTorrentPath)
+		{
+			auto info = (mtBI::TorrentSetPathRequest*) request;
+
+			auto torrent = core->getTorrent(info->hash);
+			if (!torrent)
+				return mtt::Status::E_InvalidInput;
+
+			return torrent->setLocationPath(info->path.data);
 		}
 		else
 			return mtt::Status::E_InvalidInput;

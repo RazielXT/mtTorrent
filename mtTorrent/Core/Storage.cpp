@@ -7,8 +7,7 @@
 
 mtt::Storage::Storage(TorrentInfo& info)
 {
-	init(info);
-	path = ".//";
+	init(info, ".//");
 }
 
 mtt::Storage::~Storage()
@@ -16,26 +15,63 @@ mtt::Storage::~Storage()
 	flush();
 }
 
-void mtt::Storage::init(TorrentInfo& info)
+void mtt::Storage::init(TorrentInfo& info, const std::string& locationPath)
 {
 	pieceSize = info.pieceSize;
 	files = info.files;
-
-	DownloadSelection selection;
-	for (auto&f : info.files)
-	{
-		selection.files.push_back({ false, f });
-	}
-
-	preallocateSelection(selection);
+	path = locationPath;
 }
 
-void mtt::Storage::setPath(std::string p)
+mtt::Status mtt::Storage::setPath(std::string p)
 {
-	path = p;
+	if (!p.empty() && p.back() != '\\')
+		p += '\\';
 
-	if (!path.empty() && path.back() != '\\')
-		path += '\\';
+	if (path != p)
+	{
+		std::lock_guard<std::mutex> guard(storageMutex);
+
+		if (files.size() >= 1)
+		{
+			auto originalPath = path + files.back().path.front();
+			if (std::filesystem::exists(originalPath))
+			{
+				auto newPath = p + files.back().path.front();
+
+				for (auto& f : files)
+				{
+					auto originalPathF = originalPath;
+					auto newPathF = newPath;
+
+					for (size_t i = 1; i < f.path.size(); i++)
+					{
+						if (i + 1 == f.path.size())
+						{
+							std::error_code ec;
+							std::filesystem::create_directories(newPathF, ec);
+						}
+
+						originalPathF += '\\' + f.path[i];
+						newPathF += '\\' + f.path[i];
+					}
+
+					std::error_code ec;
+					std::filesystem::rename(originalPathF, newPathF, ec);
+
+					auto what = ec.message();
+					if (ec)
+						return mtt::Status::E_AllocationProblem;
+				}
+
+				if (files.size() > 1)
+					std::filesystem::remove(originalPath);
+			}
+
+			path = p;
+		}
+	}
+
+	return Status::Success;
 }
 
 std::string mtt::Storage::getPath()

@@ -41,6 +41,13 @@ namespace GuiLite {
 	public: System::Windows::Forms::Button^ selectAllButton;
 	private:
 	public: System::Windows::Forms::Button^ deselectAllButton;
+	private: System::Windows::Forms::Label^ label1;
+	public:
+	public: System::Windows::Forms::Button^ buttonBrowse;
+	private:
+	public: System::Windows::Forms::Label^ labelError;
+	public: System::Windows::Forms::TextBox^ textBoxPath;
+	public: System::Windows::Forms::CheckBox^ checkBoxStart;
 
 	public:  static FileSelectionForm^ instance;
 
@@ -84,13 +91,18 @@ namespace GuiLite {
 			this->infoLabel = (gcnew System::Windows::Forms::Label());
 			this->selectAllButton = (gcnew System::Windows::Forms::Button());
 			this->deselectAllButton = (gcnew System::Windows::Forms::Button());
+			this->label1 = (gcnew System::Windows::Forms::Label());
+			this->buttonBrowse = (gcnew System::Windows::Forms::Button());
+			this->labelError = (gcnew System::Windows::Forms::Label());
+			this->textBoxPath = (gcnew System::Windows::Forms::TextBox());
+			this->checkBoxStart = (gcnew System::Windows::Forms::CheckBox());
 			this->panel1->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->filesGridView))->BeginInit();
 			this->SuspendLayout();
 			// 
 			// cancelButton
 			// 
-			this->cancelButton->Location = System::Drawing::Point(630, 445);
+			this->cancelButton->Location = System::Drawing::Point(630, 560);
 			this->cancelButton->Name = L"cancelButton";
 			this->cancelButton->Size = System::Drawing::Size(103, 30);
 			this->cancelButton->TabIndex = 1;
@@ -100,11 +112,11 @@ namespace GuiLite {
 			// 
 			// okButton
 			// 
-			this->okButton->Location = System::Drawing::Point(521, 445);
+			this->okButton->Location = System::Drawing::Point(521, 560);
 			this->okButton->Name = L"okButton";
 			this->okButton->Size = System::Drawing::Size(103, 30);
 			this->okButton->TabIndex = 2;
-			this->okButton->Text = L"Ok";
+			this->okButton->Text = L"OK";
 			this->okButton->UseVisualStyleBackColor = true;
 			this->okButton->Click += gcnew System::EventHandler(this, &FileSelectionForm::Button1_Click);
 			// 
@@ -131,6 +143,7 @@ namespace GuiLite {
 			this->filesGridView->MultiSelect = false;
 			this->filesGridView->Name = L"filesGridView";
 			this->filesGridView->RowHeadersVisible = false;
+			this->filesGridView->RowHeadersWidth = 51;
 			this->filesGridView->RowTemplate->Height = 24;
 			this->filesGridView->SelectionMode = System::Windows::Forms::DataGridViewSelectionMode::FullRowSelect;
 			this->filesGridView->Size = System::Drawing::Size(720, 411);
@@ -142,12 +155,15 @@ namespace GuiLite {
 			// Id
 			// 
 			this->Id->HeaderText = L"Id";
+			this->Id->MinimumWidth = 6;
 			this->Id->Name = L"Id";
 			this->Id->Visible = false;
+			this->Id->Width = 125;
 			// 
 			// Selected
 			// 
 			this->Selected->HeaderText = L"";
+			this->Selected->MinimumWidth = 6;
 			this->Selected->Name = L"Selected";
 			this->Selected->SortMode = System::Windows::Forms::DataGridViewColumnSortMode::Automatic;
 			this->Selected->Width = 50;
@@ -156,19 +172,22 @@ namespace GuiLite {
 			// 
 			this->NameColumn->AutoSizeMode = System::Windows::Forms::DataGridViewAutoSizeColumnMode::Fill;
 			this->NameColumn->HeaderText = L"Name";
+			this->NameColumn->MinimumWidth = 6;
 			this->NameColumn->Name = L"NameColumn";
 			this->NameColumn->ReadOnly = true;
 			// 
 			// Size
 			// 
 			this->Size->HeaderText = L"Size";
+			this->Size->MinimumWidth = 6;
 			this->Size->Name = L"Size";
 			this->Size->ReadOnly = true;
+			this->Size->Width = 125;
 			// 
 			// infoLabel
 			// 
 			this->infoLabel->AutoSize = true;
-			this->infoLabel->Location = System::Drawing::Point(21, 458);
+			this->infoLabel->Location = System::Drawing::Point(21, 465);
 			this->infoLabel->Name = L"infoLabel";
 			this->infoLabel->Size = System::Drawing::Size(0, 17);
 			this->infoLabel->TabIndex = 4;
@@ -179,7 +198,7 @@ namespace GuiLite {
 			this->selectAllButton->Name = L"selectAllButton";
 			this->selectAllButton->Size = System::Drawing::Size(103, 25);
 			this->selectAllButton->TabIndex = 6;
-			this->selectAllButton->Text = L"Select all";
+			this->selectAllButton->Text = L"Select All";
 			this->selectAllButton->UseVisualStyleBackColor = true;
 			this->selectAllButton->Click += gcnew System::EventHandler(this, &FileSelectionForm::SelectAllButton_Click);
 			// 
@@ -189,15 +208,72 @@ namespace GuiLite {
 			this->deselectAllButton->Name = L"deselectAllButton";
 			this->deselectAllButton->Size = System::Drawing::Size(103, 25);
 			this->deselectAllButton->TabIndex = 5;
-			this->deselectAllButton->Text = L"Deselect all";
+			this->deselectAllButton->Text = L"Deselect All";
 			this->deselectAllButton->UseVisualStyleBackColor = true;
 			this->deselectAllButton->Click += gcnew System::EventHandler(this, &FileSelectionForm::DeselectAllButton_Click);
+			// 
+			// label1
+			// 
+			this->label1->AutoSize = true;
+			this->label1->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(134)));
+			this->label1->Location = System::Drawing::Point(12, 490);
+			this->label1->Name = L"label1";
+			this->label1->Size = System::Drawing::Size(116, 17);
+			this->label1->TabIndex = 7;
+			this->label1->Text = L"Save Location:";
+			// 
+			// buttonBrowse
+			// 
+			this->buttonBrowse->Location = System::Drawing::Point(13, 506);
+			this->buttonBrowse->Name = L"buttonBrowse";
+			this->buttonBrowse->Size = System::Drawing::Size(81, 30);
+			this->buttonBrowse->TabIndex = 9;
+			this->buttonBrowse->Text = L"Browse..";
+			this->buttonBrowse->UseVisualStyleBackColor = true;
+			this->buttonBrowse->Click += gcnew System::EventHandler(this, &FileSelectionForm::buttonBrowse_Click);
+			// 
+			// labelError
+			// 
+			this->labelError->AutoSize = true;
+			this->labelError->ForeColor = System::Drawing::Color::Red;
+			this->labelError->Location = System::Drawing::Point(132, 490);
+			this->labelError->Name = L"labelError";
+			this->labelError->Size = System::Drawing::Size(39, 17);
+			this->labelError->TabIndex = 10;
+			this->labelError->Text = L"error";
+			// 
+			// textBoxPath
+			// 
+			this->textBoxPath->Location = System::Drawing::Point(100, 510);
+			this->textBoxPath->Name = L"textBoxPath";
+			this->textBoxPath->ReadOnly = true;
+			this->textBoxPath->Size = System::Drawing::Size(633, 22);
+			this->textBoxPath->TabIndex = 11;
+			this->textBoxPath->Text = L"path";
+			// 
+			// checkBoxStart
+			// 
+			this->checkBoxStart->AutoSize = true;
+			this->checkBoxStart->Checked = true;
+			this->checkBoxStart->CheckState = System::Windows::Forms::CheckState::Checked;
+			this->checkBoxStart->Location = System::Drawing::Point(15, 560);
+			this->checkBoxStart->Name = L"checkBoxStart";
+			this->checkBoxStart->Size = System::Drawing::Size(60, 21);
+			this->checkBoxStart->TabIndex = 12;
+			this->checkBoxStart->Text = L"Start";
+			this->checkBoxStart->UseVisualStyleBackColor = true;
 			// 
 			// FileSelectionForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(8, 16);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(745, 487);
+			this->ClientSize = System::Drawing::Size(745, 600);
+			this->Controls->Add(this->checkBoxStart);
+			this->Controls->Add(this->textBoxPath);
+			this->Controls->Add(this->labelError);
+			this->Controls->Add(this->buttonBrowse);
+			this->Controls->Add(this->label1);
 			this->Controls->Add(this->selectAllButton);
 			this->Controls->Add(this->deselectAllButton);
 			this->Controls->Add(this->infoLabel);
@@ -241,6 +317,17 @@ private: System::Void SelectAllButton_Click(System::Object^ sender, System::Even
 }
 private: System::Void DeselectAllButton_Click(System::Object^ sender, System::EventArgs^ e) {
 	onButtonClick(ButtonId::SelectionNone);
+}
+private: System::Void buttonBrowse_Click(System::Object^ sender, System::EventArgs^ e) {
+
+	System::Windows::Forms::FolderBrowserDialog dialog;
+	auto result = dialog.ShowDialog(this);
+
+	if (result == System::Windows::Forms::DialogResult::OK && dialog.SelectedPath->Length > 0)
+	{
+		textBoxPath->Text = dialog.SelectedPath;
+		labelError->Visible = false;
+	}
 }
 };
 }

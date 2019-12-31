@@ -30,6 +30,7 @@ namespace mttApi
 		API_EXPORT mtt::DownloadSelection getFilesSelection();
 		API_EXPORT bool selectFiles(std::vector<bool>&);
 		API_EXPORT std::string getLocationPath();
+		API_EXPORT mtt::Status setLocationPath(const std::string path);
 
 		API_EXPORT std::string name();
 		API_EXPORT float currentProgress();

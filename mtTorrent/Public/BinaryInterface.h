@@ -25,8 +25,8 @@ namespace mtBI
 		GetSettings, //null, SettingsInfo
 		SetSettings, //SettingsInfo, null
 		RefreshSource, //SourceId, null
-		GetTorrentFilesSelection, //SourceId, TorrentFilesSelection
 		SetTorrentFilesSelection, //TorrentFilesSelectionRequest, null
+		SetTorrentPath, //TorrentSetPathRequest, null
 		AddPeer,	//AddPeerRequest, null
 		GetPiecesInfo, //uint8_t[20], PiecesInfo
 		GetUpnpInfo	//null, string
@@ -78,30 +78,15 @@ namespace mtBI
 		bool deleteFiles;
 	};
 
-	struct FileSelection
+	struct AddPeerRequest
 	{
-		mtt::string name;
-		bool selected;
-		size_t size;
-		uint32_t pieceStart;
-		uint32_t pieceEnd;
-	};
-
-	struct TorrentFilesSelection
-	{
-		uint32_t count;
-		std::vector<FileSelection> selection;
+		uint8_t hash[20];
+		mtt::string addr;
 	};
 
 	struct FileSelectionRequest
 	{
 		bool selected;
-	};
-
-	struct AddPeerRequest
-	{
-		uint8_t hash[20];
-		mtt::string addr;
 	};
 
 	struct TorrentFilesSelectionRequest
@@ -122,11 +107,17 @@ namespace mtBI
 		std::vector<TorrentBasicInfo> list;
 	};
 
+	struct TorrentFile
+	{
+		mtt::string name;
+		size_t size;
+		bool selected;
+	};
+
 	struct TorrentInfo
 	{
 		uint32_t filesCount;
-		std::vector<mtt::string> filenames;
-		std::vector<size_t> filesizes;
+		std::vector<TorrentFile> files;
 		size_t fullsize;
 		mtt::string name;
 		mtt::string downloadLocation;
@@ -182,5 +173,11 @@ namespace mtBI
 	{
 		uint32_t count;
 		std::vector<SourceInfo> sources;
+	};
+
+	struct TorrentSetPathRequest
+	{
+		uint8_t hash[20];
+		mtt::string path;
 	};
 };

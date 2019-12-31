@@ -993,7 +993,7 @@ private: System::Void torrentsGrid_CellContentClick(System::Object^  sender, Sys
 
 				if (!info.noInfo)
 				{
-					clickEvent = gcnew System::Windows::Forms::MenuItem("Select files");
+					clickEvent = gcnew System::Windows::Forms::MenuItem("Files");
 					clickEvent->Click += gcnew System::EventHandler(this, &MainForm::menuItem_Click);
 					m->MenuItems->Add(clickEvent);
 				}
@@ -1011,7 +1011,7 @@ private: System::Void torrentsGrid_CellContentClick(System::Object^  sender, Sys
 			onButtonClick(ButtonId::Schedule);
 		else if (buttonText == "Magnet logs")
 			onButtonClick(ButtonId::MagnetLogs);
-		else if (buttonText == "Select files")
+		else if (buttonText == "Files")
 			onButtonClick(ButtonId::SelectFiles);
 	}
 	private: System::Void buttonStart_Click(System::Object^  sender, System::EventArgs^  e) {
