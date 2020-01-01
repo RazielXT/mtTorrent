@@ -9,7 +9,6 @@ namespace mttApi
 	public:
 
 		API_EXPORT std::vector<mtt::TrackerInfo> getSourcesInfo();
-		API_EXPORT uint32_t getSourcesCount();
 		API_EXPORT void refreshSource(const std::string& name);
 
 		API_EXPORT uint32_t connectedCount();

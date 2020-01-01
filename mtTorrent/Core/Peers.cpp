@@ -259,11 +259,6 @@ std::vector<mtt::TrackerInfo> mtt::Peers::getSourcesInfo()
 	return out;
 }
 
-uint32_t mtt::Peers::getSourcesCount()
-{
-	return trackers.getTrackersCount() + (mtt::config::getExternal().dht.enable ? 2 : 1);
-}
-
 void mtt::Peers::refreshSource(const std::string& name)
 {
 	if (auto t = trackers.getTracker(name))

@@ -140,8 +140,18 @@ bool mttApi::Torrent::getMetadataDownloadLog(std::vector<std::string>& logs, siz
 			logs.push_back(events[i].toString());
 		}
 
-		return true;
+		return !logs.empty();
 	}
 
 	return false;
+}
+
+size_t mttApi::Torrent::getMetadataDownloadLogSize()
+{
+	if (auto utm = static_cast<mtt::Torrent*>(this)->utmDl.get())
+	{
+		return utm->getEvents().size();
+	}
+
+	return 0;
 }

@@ -5,11 +5,6 @@ std::vector<mtt::TrackerInfo> mttApi::Peers::getSourcesInfo()
 	return static_cast<mtt::Peers*>(this)->getSourcesInfo();
 }
 
-uint32_t mttApi::Peers::getSourcesCount()
-{
-	return static_cast<mtt::Peers*>(this)->getSourcesCount();
-}
-
 void mttApi::Peers::refreshSource(const std::string& name)
 {
 	return static_cast<mtt::Peers*>(this)->refreshSource(name);

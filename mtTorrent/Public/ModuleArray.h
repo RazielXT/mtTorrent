@@ -36,6 +36,12 @@ namespace mtt
 		void resize(size_t size)
 		{
 			reserve(size);
+
+			for (size_t i = 0; i < size; i++)
+			{
+				new (&data[i]) T();
+			}
+
 			this->size = size;
 		}
 
@@ -68,6 +74,20 @@ namespace mtt
 			size = 0;
 			allocatedSize = 0;
 		}
+
+		struct iterator {
+		public:
+			iterator(const T* ptr) : ptr(ptr) {}
+			iterator operator++() { ptr++; return *this; }
+			bool operator!=(const iterator& other) const { return ptr != other.ptr; }
+			const T& operator*() const { return *ptr; }
+			T& operator*() { return *const_cast<T*>(ptr); }
+		private:
+			const T* ptr;
+		};
+
+		iterator begin() const { return iterator(data); };
+		iterator end() const { return iterator(data + size); };
 
 	private:
 		const allocator* const allocator;

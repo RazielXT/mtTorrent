@@ -50,5 +50,6 @@ namespace mttApi
 
 		API_EXPORT bool getMetadataDownloadState(mtt::MetadataDownloadState& state);
 		API_EXPORT bool getMetadataDownloadLog(std::vector<std::string>& logs, size_t logStart = 0);
+		API_EXPORT size_t getMetadataDownloadLogSize();
 	};
 }

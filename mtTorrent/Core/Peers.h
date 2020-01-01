@@ -27,7 +27,6 @@ namespace mtt
 		bool active = false;
 
 		std::vector<TrackerInfo> getSourcesInfo();
-		uint32_t getSourcesCount();
 		void refreshSource(const std::string& name);
 
 		TrackerManager trackers;

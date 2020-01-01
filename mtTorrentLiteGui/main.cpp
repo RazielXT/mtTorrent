@@ -88,8 +88,11 @@ TorrentCtxMenuInfo getTorrentContexMenuInfo()
 	mtBI::TorrentStateInfo state;
 	info.active = IoctlFunc(mtBI::MessageId::GetTorrentStateInfo, hash, &state) == mtt::Status::Success && state.started;
 
-	mtBI::MagnetLinkProgressLogs logs{};
-	info.utmLogs = IoctlFunc(mtBI::MessageId::GetMagnetLinkProgressLogs, hash, &logs) == mtt::Status::Success && logs.count > 0;
+	mtBI::MagnetLinkProgressLogsRequest logsReq;
+	logsReq.start = -1;
+	memcpy(logsReq.hash, hash, 20);
+	mtBI::MagnetLinkProgressLogsResponse logsResp;
+	info.utmLogs = IoctlFunc(mtBI::MessageId::GetMagnetLinkProgressLogs, &logsReq, &logsResp) == mtt::Status::Success && logsResp.fullcount > 0;
 
 	mtBI::MagnetLinkProgress magnetProgress{};
 	info.noInfo = IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, hash, &magnetProgress) == mtt::Status::Success && !magnetProgress.finished;
@@ -195,7 +198,7 @@ void updateSelectionFormFooter()
 	String^ txt = gcnew String("Selected ");
 	txt += int(selectedCount).ToString();
 	txt += "/";
-	txt += int(fileSelection.info.filesCount).ToString();
+	txt += int(fileSelection.info.files.count()).ToString();
 	txt += " (";
 	txt += int(selectedSize / (1024ll * 1024ll)).ToString();
 	txt += " MB/";
@@ -207,7 +210,7 @@ void updateSelectionFormFooter()
 
 void fileSelectionChanged(int id, bool selected)
 {
-	if (id >= fileSelection.info.files.size())
+	if (id >= fileSelection.info.files.count())
 		return;
 
 	fileSelection.info.files[id].selected = selected;
@@ -234,17 +237,12 @@ void fillFilesSelectionForm()
 {
 	auto form = GuiLite::FileSelectionForm::instance;
 	auto& info = fileSelection.info;
-	info.filesCount = 0;
-	IoctlFunc(mtBI::MessageId::GetTorrentInfo, fileSelection.hash, &info);
-
-	if (info.filesCount > 0)
-		info.files.resize(info.filesCount);
 
 	if (IoctlFunc(mtBI::MessageId::GetTorrentInfo, fileSelection.hash, &info) != mtt::Status::Success)
 		return;
 
 	auto list = form->filesGridView;
-	list->Rows->Add(info.filesCount);
+	list->Rows->Add((int)info.files.count());
 
 	int i = 0;
 	for (auto& f : info.files)
@@ -276,14 +274,7 @@ void refreshTorrentInfo(uint8_t* hash)
 		return;
 
 	mtBI::TorrentInfo info;
-	info.filesCount = 0;
 	IoctlFunc(mtBI::MessageId::GetTorrentInfo, hash, &info);
-
-	if (info.filesCount > 0)
-	{
-		info.files.resize(info.filesCount);
-		IoctlFunc(mtBI::MessageId::GetTorrentInfo, hash, &info);
-	}
 
 	GuiLite::MainForm::instance->torrentInfoLabel->Clear();
 	auto infoLines = GuiLite::MainForm::instance->torrentInfoLabel;
@@ -299,18 +290,18 @@ void refreshTorrentInfo(uint8_t* hash)
 	infoLines->AppendText("Files: ");
 	infoLines->AppendText(Environment::NewLine);
 
-	if (info.filesCount)
+	if (info.files.count())
 	{
-		auto files = gcnew array<String^>(info.filesCount);
+		auto files = gcnew array<String^>((int)info.files.count());
 
-		for (uint32_t i = 0; i < info.filesCount; i++)
+		for (int i = 0; i < (int)info.files.count(); i++)
 		{
 			files[i] = gcnew String(info.files[i].name.data, 0, (int)info.files[i].name.length, System::Text::Encoding::UTF8) + " (" + int(info.files[i].size / (1024ll * 1024ll)).ToString() + " MB)";
 		}
 		
 		Array::Sort(files);
 
-		for (uint32_t i = 0; i < info.filesCount; i++)
+		for (int i = 0; i < (int)info.files.count(); i++)
 		{
 			infoLines->AppendText(files[i]);
 			infoLines->AppendText(Environment::NewLine);
@@ -529,7 +520,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 		if (IoctlFunc(mtBI::MessageId::GetTorrentInfo, hash, &info) == mtt::Status::Success && info.downloadLocation.length > 0)
 		{
 			auto path = gcnew String(info.downloadLocation.data);
-			if (info.filesCount > 1)
+			if (info.files.count() > 1)
 				path += gcnew String(info.name.data);
 			System::Diagnostics::Process::Start(path);
 		}
@@ -704,7 +695,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 				}
 			}
 
-			if (!fileSelection.info.files.empty())
+			if (fileSelection.info.files.count() > 0)
 			{
 				mtBI::TorrentFilesSelectionRequest selection;
 				memcpy(selection.hash, fileSelection.hash, 20);
@@ -770,10 +761,8 @@ void checkAlerts()
 	mtBI::AlertsList alertsRequest;
 	if (IoctlFunc(mtBI::MessageId::PopAlerts, nullptr, &alertsRequest) == mtt::Status::Success && alertsRequest.alerts.count() > 0)
 	{
-		for (size_t i = 0; i < alertsRequest.alerts.count(); i++)
+		for (auto& alert : alertsRequest.alerts)
 		{
-			auto& alert = alertsRequest.alerts[i];
-
 			if (alert.id == mtt::AlertId::TorrentAdded)
 			{
 				showFilesSelectionForm(alert.hash, true);
@@ -795,27 +784,21 @@ void refreshUi()
 		{
 			if (magnetLinkSequence == 3)
 			{
-				mtBI::MagnetLinkProgressLogs logs;
-				logs.count = 0;
-				if (IoctlFunc(mtBI::MessageId::GetMagnetLinkProgressLogs, hash, &logs) == mtt::Status::Success && logs.count > 0)
-				{
-					if (lastMagnetLinkLogCount < logs.count)
+					mtBI::MagnetLinkProgressLogsRequest logsRequest;
+					logsRequest.start = lastMagnetLinkLogCount;
+					memcpy(logsRequest.hash, hash, 20);
+					mtBI::MagnetLinkProgressLogsResponse logsResponse;
+
+					if (IoctlFunc(mtBI::MessageId::GetMagnetLinkProgressLogs, &logsRequest, &logsResponse) == mtt::Status::Success)
 					{
-						logs.count = logs.count - lastMagnetLinkLogCount;
-						logs.logs.resize(logs.count);
-						logs.start = lastMagnetLinkLogCount;
-
-						IoctlFunc(mtBI::MessageId::GetMagnetLinkProgressLogs, hash, &logs);
-
-						for (auto& l : logs.logs)
+						for (auto& l : logsResponse.logs)
 						{
 							GuiLite::MagnetInputForm::instance->logsTextBox->Text += gcnew String(l.data);
 							GuiLite::MagnetInputForm::instance->logsTextBox->Text += "\n";
 						}
 
-						lastMagnetLinkLogCount += logs.count;
+						lastMagnetLinkLogCount = (uint32_t)logsResponse.fullcount;
 					}
-				}
 			}
 
 			mtBI::MagnetLinkProgress progress;
@@ -979,21 +962,19 @@ void refreshUi()
 		refreshSelection();
 	}
 
-	mtBI::TorrentPeersInfo peers;
-	peers.count = 0;
-	peers.peers.resize(info.connectedPeers);
-	IoctlFunc(mtBI::MessageId::GetPeersInfo, hash, &peers);
-
 	{
+		mtBI::TorrentPeersInfo peersInfo;
+		IoctlFunc(mtBI::MessageId::GetPeersInfo, hash, &peersInfo);
+
 		auto peersGrid = GuiLite::MainForm::instance->getPeersGrid();
 		String^ selectedPeer;
 		if (peersGrid->SelectedRows->Count > 0)
 			selectedPeer = (String^)peersGrid->SelectedRows[0]->Cells[0]->Value;
-		adjustGridRowsCount(peersGrid, (int)peers.count);
+		adjustGridRowsCount(peersGrid, (int)peersInfo.peers.count());
 
-		for (uint32_t i = 0; i < peers.count; i++)
+		for (uint32_t i = 0; i < peersInfo.peers.count(); i++)
 		{
-			auto& peerInfo = peers.peers[i];
+			auto& peerInfo = peersInfo.peers[i];
 			auto peerRow = gcnew cli::array< System::String^  >(6) {
 				gcnew String(peerInfo.addr.data),
 					float(peerInfo.dlSpeed / (1024.f * 1024)).ToString("F"), float(peerInfo.upSpeed / (1024.f * 1024)).ToString("F"),
@@ -1010,7 +991,7 @@ void refreshUi()
 		if (peersGrid->RowCount > 0 && selectedPeer)
 		{
 			peersGrid->ClearSelection();
-			for (uint32_t i = 0; i < peers.count; i++)
+			for (uint32_t i = 0; i < peersInfo.peers.count(); i++)
 			{
 				if (selectedPeer == (String^)peersGrid->Rows[i]->Cells[0]->Value)
 					peersGrid->Rows[i]->Selected = true;
@@ -1018,23 +999,16 @@ void refreshUi()
 		}
 	}
 
-	mtBI::SourcesInfo sources;
-	sources.count = 0;
-	IoctlFunc(mtBI::MessageId::GetSourcesInfo, hash, &sources);
-
-	if (sources.count > 0)
 	{
-		sources.sources.resize(sources.count);
-		IoctlFunc(mtBI::MessageId::GetSourcesInfo, hash, &sources);
-	}
+		mtBI::SourcesInfo sourcesInfo;
+		IoctlFunc(mtBI::MessageId::GetSourcesInfo, hash, &sourcesInfo);
 
-	{
 		auto sourcesGrid = GuiLite::MainForm::instance->sourcesGrid;
-		adjustGridRowsCount(sourcesGrid, (int)sources.count);
+		adjustGridRowsCount(sourcesGrid, (int)sourcesInfo.sources.count());
 
-		for (uint32_t i = 0; i < sources.count; i++)
+		for (size_t i = 0; i < sourcesInfo.sources.count(); i++)
 		{
-			auto& source = sources.sources[i];
+			auto& source = sourcesInfo.sources[i];
 			auto nextCheck = (source.nextCheck == 0) ? gcnew String("") : TimeSpan::FromSeconds(source.nextCheck).ToString("T");
 			char status[11];
 

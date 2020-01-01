@@ -23,7 +23,7 @@ namespace mtBI
 		GetPeersInfo,	//uint8_t[20], TorrentPeersInfo
 		GetSourcesInfo,	//uint8_t[20], SourcesInfo
 		GetMagnetLinkProgress,	//uint8_t[20],MagnetLinkProgress
-		GetMagnetLinkProgressLogs,	//uint8_t[20],MagnetLinkProgressLogs
+		GetMagnetLinkProgressLogs,	//MagnetLinkProgressLogsRequest,MagnetLinkProgressLogsResponse
 		GetSettings, //null, SettingsInfo
 		SetSettings, //SettingsInfo, null
 		RefreshSource, //SourceId, null
@@ -69,11 +69,16 @@ namespace mtBI
 		bool finished;
 	};
 
-	struct MagnetLinkProgressLogs
+	struct MagnetLinkProgressLogsRequest
 	{
-		uint32_t count;
 		uint32_t start;
-		std::vector<mtt::string> logs;
+		uint8_t hash[20];
+	};
+
+	struct MagnetLinkProgressLogsResponse
+	{
+		uint32_t fullcount;
+		mtt::array<mtt::string> logs;
 	};
 
 	struct RemoveTorrentRequest
@@ -120,8 +125,7 @@ namespace mtBI
 
 	struct TorrentInfo
 	{
-		uint32_t filesCount;
-		std::vector<TorrentFile> files;
+		mtt::array<TorrentFile> files;
 		size_t fullsize;
 		mtt::string name;
 		mtt::string downloadLocation;
@@ -147,7 +151,6 @@ namespace mtBI
 
 	struct PeerInfo
 	{
-		uint8_t id[20];
 		float progress;
 		size_t dlSpeed;
 		size_t upSpeed;
@@ -158,8 +161,7 @@ namespace mtBI
 
 	struct TorrentPeersInfo
 	{
-		uint32_t count;
-		std::vector<PeerInfo> peers;
+		mtt::array<PeerInfo> peers;
 	};
 
 	struct SourceInfo
@@ -175,8 +177,7 @@ namespace mtBI
 
 	struct SourcesInfo
 	{
-		uint32_t count;
-		std::vector<SourceInfo> sources;
+		mtt::array<SourceInfo> sources;
 	};
 
 	struct TorrentSetPathRequest

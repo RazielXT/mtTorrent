@@ -108,8 +108,9 @@ extern "C"
 			if (auto transfer = torrent->getFileTransfer())
 			{
 				auto peers = transfer->getPeersInfo();
-				resp->count = (uint32_t)std::min(resp->peers.size(), peers.size());
-				for (size_t i = 0; i < resp->count; i++)
+				resp->peers.resize(peers.size());
+
+				for (size_t i = 0; i < peers.size(); i++)
 				{
 					auto& peer = peers[i];
 					auto& out = resp->peers[i];
@@ -117,8 +118,8 @@ extern "C"
 					out.progress = peer.percentage;
 					out.dlSpeed = peer.downloadSpeed;
 					out.upSpeed = peer.uploadSpeed;
-					out.client = peers[i].client;
-					out.country = peers[i].country;
+					out.client = peer.client;
+					out.country = peer.country;
 				}
 			}
 		}
@@ -130,18 +131,15 @@ extern "C"
 			auto resp = (mtBI::TorrentInfo*) output;
 			resp->name = torrent->getFileInfo().info.name;
 			resp->fullsize = torrent->getFileInfo().info.fullSize;
-			resp->filesCount = (uint32_t)torrent->getFileInfo().info.files.size();
 
-			if (resp->files.size() == resp->filesCount)
+			auto selection = torrent->getFilesSelection();
+			resp->files.resize(selection.files.size());
+
+			for (size_t i = 0; i < selection.files.size(); i++)
 			{
-				auto selection = torrent->getFilesSelection();
-
-				for (size_t i = 0; i < resp->files.size(); i++)
-				{
-					resp->files[i].name = selection.files[i].info.path.back();
-					resp->files[i].size = selection.files[i].info.size;
-					resp->files[i].selected = selection.files[i].selected;
-				}
+				resp->files[i].name = selection.files[i].info.path.back();
+				resp->files[i].size = selection.files[i].info.size;
+				resp->files[i].selected = selection.files[i].selected;
 			}
 
 			resp->downloadLocation = torrent->getLocationPath();
@@ -152,41 +150,34 @@ extern "C"
 			if (!torrent)
 				return mtt::Status::E_InvalidInput;
 			auto resp = (mtBI::SourcesInfo*) output;
-			resp->count = torrent->getPeers()->getSourcesCount();
+			auto sources = torrent->getPeers()->getSourcesInfo();
+			resp->sources.resize(sources.size());
+			uint32_t currentTime = (uint32_t)time(0);
 
-			if (resp->count == resp->sources.size())
+			for (size_t i = 0; i < sources.size(); i++)
 			{
-				auto sources = torrent->getPeers()->getSourcesInfo();
-				if (sources.size() < resp->count)
-					resp->count = (uint32_t)sources.size();
+				auto& to = resp->sources[i];
+				auto& from = sources[i];
 
-				uint32_t currentTime = (uint32_t)time(0);
+				to.name = from.hostname;
+				to.peers = from.peers;
+				to.seeds = from.seeds;
+				to.leechers = from.leechers;
+				to.interval = from.announceInterval;
+				to.nextCheck = from.nextAnnounce < currentTime ? 0 : from.nextAnnounce - currentTime;
 
-				for (uint32_t i = 0; i < resp->count; i++)
-				{
-					auto& to = resp->sources[i];
-					auto& from = sources[i];
-
-					to.name = from.hostname;
-					to.peers = from.peers;
-					to.seeds = from.seeds;
-					to.leechers = from.leechers;
-					to.interval = from.announceInterval;
-					to.nextCheck = from.nextAnnounce < currentTime ? 0 : from.nextAnnounce - currentTime;
-
-					if (from.state == mtt::TrackerState::Connected || from.state == mtt::TrackerState::Alive)
-						to.status = mtBI::SourceInfo::Ready;
-					else if (from.state == mtt::TrackerState::Connecting)
-						to.status = mtBI::SourceInfo::Connecting;
-					else if (from.state == mtt::TrackerState::Announcing || from.state == mtt::TrackerState::Reannouncing)
-						to.status = mtBI::SourceInfo::Announcing;
-					else if (from.state == mtt::TrackerState::Announced)
-						to.status = mtBI::SourceInfo::Announced;
-					else if (from.state == mtt::TrackerState::Offline)
-						to.status = mtBI::SourceInfo::Offline;
-					else
-						to.status = mtBI::SourceInfo::Stopped;
-				}
+				if (from.state == mtt::TrackerState::Connected || from.state == mtt::TrackerState::Alive)
+					to.status = mtBI::SourceInfo::Ready;
+				else if (from.state == mtt::TrackerState::Connecting)
+					to.status = mtBI::SourceInfo::Connecting;
+				else if (from.state == mtt::TrackerState::Announcing || from.state == mtt::TrackerState::Reannouncing)
+					to.status = mtBI::SourceInfo::Announcing;
+				else if (from.state == mtt::TrackerState::Announced)
+					to.status = mtBI::SourceInfo::Announced;
+				else if (from.state == mtt::TrackerState::Offline)
+					to.status = mtBI::SourceInfo::Offline;
+				else
+					to.status = mtBI::SourceInfo::Stopped;
 			}
 		}
 		else if (id == mtBI::MessageId::GetPiecesInfo)
@@ -233,25 +224,25 @@ extern "C"
 		}
 		else if (id == mtBI::MessageId::GetMagnetLinkProgressLogs)
 		{
-			auto torrent = core->getTorrent((const uint8_t*)request);
+			auto requestInfo = (mtBI::MagnetLinkProgressLogsRequest*)request;
+			auto torrent = core->getTorrent(requestInfo->hash);
 			if (!torrent)
 				return mtt::Status::E_InvalidInput;
 
-			auto resp = (mtBI::MagnetLinkProgressLogs*) output;
+			auto resp = (mtBI::MagnetLinkProgressLogsResponse*) output;
+			resp->fullcount = (uint32_t)torrent->getMetadataDownloadLogSize();
 
-			std::vector<std::string> logs;
-			if (!torrent->getMetadataDownloadLog(logs, resp->start))
-				return mtt::Status::E_NoData;
-
-			if (resp->count == 0)
-				resp->count = (uint32_t)logs.size();
-			else
+			if (resp->fullcount)
 			{
-				if (logs.size() >= (resp->start + resp->count))
-					for (size_t i = resp->start; i < resp->start + resp->count; i++)
-					{
-						resp->logs[i - resp->start] = logs[i];
-					}
+				std::vector<std::string> logs;
+				if (!torrent->getMetadataDownloadLog(logs, requestInfo->start))
+					return mtt::Status::E_NoData;
+
+				resp->logs.resize(logs.size());
+				for (size_t i = 0; i < logs.size(); i++)
+				{
+					resp->logs[i] = logs[i];
+				}
 			}
 		}
 		else if (id == mtBI::MessageId::GetSettings)
