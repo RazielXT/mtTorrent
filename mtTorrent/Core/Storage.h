@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Interface.h"
+#include <filesystem>
 #include <mutex>
 
 namespace mtt
@@ -32,8 +33,8 @@ namespace mtt
 
 		void checkStoredPieces(PiecesCheck& checkState, const std::vector<PieceInfo>& piecesInfo);
 
-		std::string getFullpath(File& file);
-		void createPath(std::string& path);
+		std::filesystem::path getFullpath(File& file);
+		void createPath(const std::filesystem::path& path);
 
 		void flushAllFiles();
 		void flush(File& file);

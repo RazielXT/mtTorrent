@@ -1,6 +1,5 @@
 #include "Storage.h"
 #include <fstream>
-#include <filesystem>
 #include <iostream>
 #include "utils/ServiceThreadpool.h"
 #include "utils/SHA.h"
@@ -211,9 +210,7 @@ mtt::Status mtt::Storage::deleteAll()
 
 	for (auto& f : files)
 	{
-		auto path = getFullpath(f);
-
-		std::remove(path.data());
+		std::filesystem::remove(getFullpath(f));
 	}
 
 	return Status::Success;
@@ -266,9 +263,8 @@ void mtt::Storage::flush(File& file)
 	auto path = getFullpath(file);
 	createPath(path);
 
-	std::filesystem::path dir(path);
-	bool fileExists = std::filesystem::exists(dir);
-	size_t existingSize = fileExists ? std::filesystem::file_size(dir) : 0;
+	bool fileExists = std::filesystem::exists(path);
+	size_t existingSize = fileExists ? std::filesystem::file_size(path) : 0;
 
 	if (fileExists && existingSize == file.size)
 	{
@@ -334,15 +330,14 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 	while (currentPieceIdx < piecesInfo.size())
 	{
 		auto fullpath = getFullpath(*currentFile);
-		std::filesystem::path dir(fullpath);
 
-		if (std::filesystem::exists(dir))
+		if (std::filesystem::exists(fullpath))
 		{
 			fileIn.open(fullpath, std::ios_base::binary);
 
 			if (fileIn)
 			{
-				size_t existingSize = std::filesystem::file_size(dir);
+				size_t existingSize = std::filesystem::file_size(fullpath);
 
 				if (existingSize == currentFile->size)
 				{
@@ -424,11 +419,11 @@ mtt::Status mtt::Storage::preallocate(File& file)
 {
 	auto fullpath = getFullpath(file);
 	createPath(fullpath);
-	std::filesystem::path dir(fullpath);
-	if (!std::filesystem::exists(dir) || std::filesystem::file_size(dir) != file.size)
+	if (!std::filesystem::exists(fullpath) || std::filesystem::file_size(fullpath) != file.size)
 	{
-		auto spaceInfo = std::filesystem::space(path);
-		if (spaceInfo.available < file.size)
+		std::error_code ec;
+		auto spaceInfo = std::filesystem::space(path, ec);
+		if (ec || spaceInfo.available < file.size)
 			return Status::E_NotEnoughSpace;
 
 		std::ofstream fileOut(fullpath, std::ios_base::binary);
@@ -442,7 +437,7 @@ mtt::Status mtt::Storage::preallocate(File& file)
 	return Status::Success;
 }
 
-std::string mtt::Storage::getFullpath(File& file)
+std::filesystem::path mtt::Storage::getFullpath(File& file)
 {
 	std::string filePath;
 
@@ -454,23 +449,18 @@ std::string mtt::Storage::getFullpath(File& file)
 		filePath += p;
 	}
 
-	return path + filePath;
+	return std::filesystem::u8path(path + filePath);
 }
 
-void mtt::Storage::createPath(std::string& path)
+void mtt::Storage::createPath(const std::filesystem::path& path)
 {
-	auto i = path.find_last_of('\\');
+	auto folder = path.parent_path();
 
-	if (i != std::string::npos)
+	if (!std::filesystem::exists(folder))
 	{
-		std::string dirPath = path.substr(0, i);
-		std::filesystem::path dir(dirPath);
-		if (!std::filesystem::exists(dir))
-		{
-			std::error_code ec;
-			if (!std::filesystem::create_directory(dir, ec))
-				return;
-		}
+		std::error_code ec;
+		if (!std::filesystem::create_directories(folder, ec))
+			return;
 	}
 }
 

@@ -13,8 +13,51 @@ mtt::Core core;
 
 extern void InitLogTime();
 
+
+#include <DbgHelp.h>
+#pragma comment (lib, "dbghelp.lib")
+
+LONG WINAPI OurCrashHandler(EXCEPTION_POINTERS* pException)
+{
+	MINIDUMP_EXCEPTION_INFORMATION  M;
+	M.ThreadId = GetCurrentThreadId();
+	M.ExceptionPointers = pException;
+	M.ClientPointers = 0;
+
+	CHAR    Dump_Path[MAX_PATH];
+	GetModuleFileName(NULL, Dump_Path, sizeof(Dump_Path));
+	lstrcpy(Dump_Path + lstrlen(Dump_Path) - 3, "dmp");
+
+	HANDLE hFile = CreateFile(Dump_Path, GENERIC_ALL, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+	if (!hFile)
+	{
+		//std::cerr << ("Failed to write dump: Invalid dump file");
+	}
+	else
+	{
+		const DWORD Flags = MiniDumpWithFullMemory |
+			MiniDumpWithFullMemoryInfo |
+			MiniDumpWithHandleData |
+			MiniDumpWithUnloadedModules |
+			MiniDumpWithThreadInfo;
+
+		BOOL Result = MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(),
+			hFile,
+			(MINIDUMP_TYPE)Flags,
+			&M,
+			nullptr,
+			nullptr);
+
+		CloseHandle(hFile);
+	}
+
+	return EXCEPTION_EXECUTE_HANDLER;
+}
+
 void mtt::Core::init()
 {
+	::SetUnhandledExceptionFilter(OurCrashHandler);
+
 	InitLogTime();
 
 	mtt::config::load();
