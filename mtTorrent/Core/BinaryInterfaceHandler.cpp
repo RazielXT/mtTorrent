@@ -332,6 +332,29 @@ extern "C"
 
 			return torrent->setLocationPath(info->path.data);
 		}
+		else if (id == mtBI::MessageId::RegisterAlerts)
+		{
+			auto info = (mtBI::RegisterAlertsRequest*) request;
+			core->registerAlerts(info->categoryMask);
+		}
+		else if (id == mtBI::MessageId::PopAlerts)
+		{
+			auto out = (mtBI::AlertsList*) output;
+			auto alerts = core->popAlerts();
+			
+			if (!alerts.empty())
+			{
+				out->alerts.resize(alerts.size());
+
+				for (size_t i = 0; i < alerts.size(); i++)
+				{
+					out->alerts[i].id = alerts[i]->id;
+
+					if (auto t = alerts[i]->getAs<mtt::TorrentAlert>())
+						memcpy(out->alerts[i].hash, t->hash, 20);
+				}
+			}
+		}
 		else
 			return mtt::Status::E_InvalidInput;
 

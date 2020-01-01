@@ -1,7 +1,9 @@
 #pragma once
 
 #include "Status.h"
+#include "Alerts.h"
 #include "ModuleString.h"
+#include "ModuleArray.h"
 #include <vector>
 
 namespace mtBI
@@ -29,7 +31,9 @@ namespace mtBI
 		SetTorrentPath, //TorrentSetPathRequest, null
 		AddPeer,	//AddPeerRequest, null
 		GetPiecesInfo, //uint8_t[20], PiecesInfo
-		GetUpnpInfo	//null, string
+		GetUpnpInfo,	//null, string
+		RegisterAlerts,	//RegisterAlertsRequest, null
+		PopAlerts,		//null, AlertsList
 	};
 
 	struct SourceId
@@ -179,5 +183,21 @@ namespace mtBI
 	{
 		uint8_t hash[20];
 		mtt::string path;
+	};
+
+	struct RegisterAlertsRequest
+	{
+		uint32_t categoryMask;
+	};
+
+	struct Alert
+	{
+		mtt::AlertId id;
+		uint8_t hash[20];
+	};
+
+	struct AlertsList
+	{
+		mtt::array<Alert> alerts;
 	};
 };

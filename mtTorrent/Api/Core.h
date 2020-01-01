@@ -25,5 +25,8 @@ namespace mttApi
 
 		API_EXPORT mtt::Status removeTorrent(const uint8_t* hash, bool deleteFiles);
 		API_EXPORT mtt::Status removeTorrent(const char* hash, bool deleteFiles);
+
+		API_EXPORT void registerAlerts(uint32_t alertMask);
+		API_EXPORT std::vector<std::unique_ptr<mtt::AlertMessage>> popAlerts();
 	};
 }

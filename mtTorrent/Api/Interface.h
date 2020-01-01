@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include "Public\Status.h"
+#include "Public\Alerts.h"
 #include <atomic>
 
 #ifdef ASIO_STANDALONE
@@ -127,5 +128,30 @@ namespace mtt
 		uint32_t downloadSpeed;
 		float percentage;
 		std::string country;
+	};
+
+	struct AlertMessage
+	{
+		AlertId id;
+
+		template <class T> T* getAs()
+		{
+			if ((int)id & (int)T::category) return static_cast<T*>(this);
+			return nullptr;
+		}
+	};
+
+	struct TorrentAlert : public AlertMessage
+	{
+		static const mtt::AlertCategory category = mtt::AlertCategory::Torrent;
+
+		uint8_t hash[20];
+	};
+
+	struct MetadataAlert : public TorrentAlert
+	{
+		static const mtt::AlertCategory category = mtt::AlertCategory::Metadata;
+
+		static const int alert_type = 1;
 	};
 }

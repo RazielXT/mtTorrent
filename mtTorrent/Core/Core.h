@@ -2,6 +2,7 @@
 
 #include "Torrent.h"
 #include "Api/Core.h"
+#include "AlertsManager.h"
 
 class TcpAsyncServer;
 class ServiceThreadpool;
@@ -35,5 +36,7 @@ namespace mtt
 
 		Status removeTorrent(const uint8_t* hash, bool deleteFiles);
 		Status removeTorrent(const char* hash, bool deleteFiles);
+
+		AlertsManager alerts;
 	};
 }
