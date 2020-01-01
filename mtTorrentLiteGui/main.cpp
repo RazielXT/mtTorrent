@@ -166,7 +166,14 @@ void updatePiecesChart()
 		chart->Visible = false;
 }
 
-mtBI::TorrentInfo lastSelection;
+struct
+{
+	mtBI::TorrentInfo info;
+	unsigned char hash[20];
+	bool added;
+}
+fileSelection;
+
 
 void updateSelectionFormFooter()
 {
@@ -174,7 +181,7 @@ void updateSelectionFormFooter()
 	size_t fullsize = 0;
 	uint32_t selectedCount = 0;
 
-	for (auto& f : lastSelection.files)
+	for (auto& f : fileSelection.info.files)
 	{
 		if (f.selected)
 		{
@@ -188,7 +195,7 @@ void updateSelectionFormFooter()
 	String^ txt = gcnew String("Selected ");
 	txt += int(selectedCount).ToString();
 	txt += "/";
-	txt += int(lastSelection.filesCount).ToString();
+	txt += int(fileSelection.info.filesCount).ToString();
 	txt += " (";
 	txt += int(selectedSize / (1024ll * 1024ll)).ToString();
 	txt += " MB/";
@@ -200,10 +207,10 @@ void updateSelectionFormFooter()
 
 void fileSelectionChanged(int id, bool selected)
 {
-	if (id >= lastSelection.files.size())
+	if (id >= fileSelection.info.files.size())
 		return;
 
-	lastSelection.files[id].selected = selected;
+	fileSelection.info.files[id].selected = selected;
 
 	updateSelectionFormFooter();
 }
@@ -214,7 +221,7 @@ void setAllFileSelection(bool selected)
 	auto rows = GuiLite::FileSelectionForm::instance->filesGridView->Rows;
 	int i = 0;
 
-	for (auto& s : lastSelection.files)
+	for (auto& s : fileSelection.info.files)
 	{
 		s.selected = selected;
 		rows[i++]->Cells[1]->Value = selected;
@@ -226,14 +233,14 @@ void setAllFileSelection(bool selected)
 void fillFilesSelectionForm()
 {
 	auto form = GuiLite::FileSelectionForm::instance;
-	auto& info = lastSelection;
+	auto& info = fileSelection.info;
 	info.filesCount = 0;
-	IoctlFunc(mtBI::MessageId::GetTorrentInfo, hash, &info);
+	IoctlFunc(mtBI::MessageId::GetTorrentInfo, fileSelection.hash, &info);
 
 	if (info.filesCount > 0)
 		info.files.resize(info.filesCount);
 
-	if (IoctlFunc(mtBI::MessageId::GetTorrentInfo, hash, &info) != mtt::Status::Success)
+	if (IoctlFunc(mtBI::MessageId::GetTorrentInfo, fileSelection.hash, &info) != mtt::Status::Success)
 		return;
 
 	auto list = form->filesGridView;
@@ -259,8 +266,8 @@ void fillFilesSelectionForm()
 	form->Text = gcnew System::String(info.name.data);
 	form->textBoxPath->Text = gcnew System::String(info.downloadLocation.data);
 
-	form->labelError->Text = "";
-	form->checkBoxStart->Visible = false;
+	form->labelError->Visible = false;
+	form->checkBoxStart->Visible = fileSelection.added;
 }
 
 void refreshTorrentInfo(uint8_t* hash)
@@ -328,6 +335,8 @@ void init()
 	{
 		IoctlFunc = (IOCTL_FUNC)GetProcAddress(lib, "Ioctl");
 		IoctlFunc(mtBI::MessageId::Init, nullptr, nullptr);
+		mtBI::RegisterAlertsRequest alertsRequest{ (uint32_t)mtt::AlertCategory::Torrent };
+		IoctlFunc(mtBI::MessageId::RegisterAlerts, &alertsRequest, nullptr);
 	}
 }
 
@@ -409,12 +418,18 @@ void showFilesSelectionFormThread()
 {
 	GuiLite::FileSelectionForm form;
 	form.ShowDialog();
-	lastSelection.files.clear();
+	fileSelection.info.files.clear();
 	GuiLite::FileSelectionForm::instance = nullptr;
 }
 
-void showFilesSelectionForm()
+void showFilesSelectionForm(const uint8_t* hash, bool added)
 {
+	if (GuiLite::FileSelectionForm::instance)
+		return;
+
+	memcpy(fileSelection.hash, hash, 20);
+	fileSelection.added = added;
+
 	System::Threading::Thread^ newThread = gcnew System::Threading::Thread(gcnew System::Threading::ThreadStart(&showFilesSelectionFormThread));
 	newThread->SetApartmentState(System::Threading::ApartmentState::STA);
 	newThread->Start();
@@ -512,7 +527,12 @@ void onButtonClick(ButtonId id, System::String^ param)
 	{
 		mtBI::TorrentInfo info;
 		if (IoctlFunc(mtBI::MessageId::GetTorrentInfo, hash, &info) == mtt::Status::Success && info.downloadLocation.length > 0)
-			System::Diagnostics::Process::Start(gcnew String(info.downloadLocation.data));
+		{
+			auto path = gcnew String(info.downloadLocation.data);
+			if (info.filesCount > 1)
+				path += gcnew String(info.name.data);
+			System::Diagnostics::Process::Start(path);
+		}
 	}
 	else if (id == ButtonId::Schedule)
 	{
@@ -601,10 +621,6 @@ void onButtonClick(ButtonId id, System::String^ param)
 		GuiLite::MagnetInputForm form;
 		form.ShowDialog();
 		GuiLite::MagnetInputForm::instance = nullptr;
-
-		if (magnetLinkSequence == 4)
-			showFilesSelectionForm();
-
 		magnetLinkSequence = 0;
 		lastMagnetLinkLogCount = 0;
 	}
@@ -636,7 +652,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 	}
 	else if (id == ButtonId::SelectFiles)
 	{
-		showFilesSelectionForm();
+		showFilesSelectionForm(hash, false);
 	}
 	else if (GuiLite::MagnetInputForm::instance)
 	{
@@ -678,7 +694,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 			if (form->textBoxPath->Text->Length > 0)
 			{
 				mtBI::TorrentSetPathRequest path;
-				memcpy(path.hash, hash, 20);
+				memcpy(path.hash, fileSelection.hash, 20);
 				path.path = getStringPtr(form->textBoxPath->Text);
 				if (IoctlFunc(mtBI::MessageId::SetTorrentPath, &path, nullptr) != mtt::Status::Success)
 				{
@@ -688,11 +704,11 @@ void onButtonClick(ButtonId id, System::String^ param)
 				}
 			}
 
-			if (!lastSelection.files.empty())
+			if (!fileSelection.info.files.empty())
 			{
 				mtBI::TorrentFilesSelectionRequest selection;
-				memcpy(selection.hash, hash, 20);
-				for (auto& s : lastSelection.files)
+				memcpy(selection.hash, fileSelection.hash, 20);
+				for (auto& s : fileSelection.info.files)
 				{
 					mtBI::FileSelectionRequest f;
 					f.selected = s.selected;
@@ -703,7 +719,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 			}
 
 			if (form->checkBoxStart->Visible && form->checkBoxStart->Enabled)
-				IoctlFunc(mtBI::MessageId::Start, hash, nullptr);
+				IoctlFunc(mtBI::MessageId::Start, fileSelection.hash, nullptr);
 
 			GuiLite::FileSelectionForm::instance->Close();
 		}
@@ -745,6 +761,23 @@ void adjustGridRowsCount(System::Windows::Forms::DataGridView^ grid, int count)
 		for (; currentCount < count; currentCount++)
 		{
 			grid->Rows->Add();
+		}
+	}
+}
+
+void checkAlerts()
+{
+	mtBI::AlertsList alertsRequest;
+	if (IoctlFunc(mtBI::MessageId::PopAlerts, nullptr, &alertsRequest) == mtt::Status::Success && alertsRequest.alerts.count() > 0)
+	{
+		for (size_t i = 0; i < alertsRequest.alerts.count(); i++)
+		{
+			auto& alert = alertsRequest.alerts[i];
+
+			if (alert.id == mtt::AlertId::TorrentAdded)
+			{
+				showFilesSelectionForm(alert.hash, true);
+			}
 		}
 	}
 }
@@ -810,6 +843,8 @@ void refreshUi()
 		return;
 
 	RefreshTimeCounter = 0;
+
+	checkAlerts();
 
 	if (selectionChanged)
 	{

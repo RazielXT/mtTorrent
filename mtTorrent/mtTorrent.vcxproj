@@ -209,7 +209,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\rapidjson-master\include;$(ProjectDir)..\..\pugixml-1.9\src;$(ProjectDir)..\..\asio-1.12.2\include;$(ProjectDir);$(ProjectDir)\Core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;ASIO_STANDALONE;PEER_DIAGNOSTICS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;ASIO_STANDALONE;PEER_DIAGNOSTICS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -242,6 +242,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AlertsManager.cpp" />
     <ClCompile Include="Core\Api\CoreImpl.cpp" />
     <ClCompile Include="Core\Api\FileTransferImpl.cpp" />
     <ClCompile Include="Core\Api\ListenerImpl.cpp" />
@@ -303,6 +304,8 @@
     <ClCompile Include="utils\UrlEncoding.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AlertsManager.h" />
+    <ClInclude Include="Api\AlertTypes.h" />
     <ClInclude Include="Api\Configuration.h" />
     <ClInclude Include="Api\Core.h" />
     <ClInclude Include="Api\FileTransfer.h" />
@@ -344,8 +347,10 @@
     <ClInclude Include="Core\UdpTrackerComm.h" />
     <ClInclude Include="Core\Uploader.h" />
     <ClInclude Include="Public\BinaryInterface.h" />
+    <ClInclude Include="Public\Alerts.h" />
     <ClInclude Include="Public\JsonInterface.h" />
     <ClInclude Include="Public\ModuleAllocator.h" />
+    <ClInclude Include="Public\ModuleArray.h" />
     <ClInclude Include="Public\Status.h" />
     <ClInclude Include="Public\ModuleString.h" />
     <ClInclude Include="utils\Base32.h" />

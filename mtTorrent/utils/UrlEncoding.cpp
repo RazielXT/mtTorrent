@@ -24,13 +24,13 @@ std::string UrlDecode(const std::string& str)
 	return ret;
 }
 
-std::string UrlEncode(uint8_t* data, uint32_t size)
+std::string UrlEncode(const uint8_t* data, uint32_t size)
 {
 	static const char lookup[] = "0123456789ABCDEF";
 	std::stringstream e;
 	for (size_t i = 0, ix = size; i < ix; i++)
 	{
-		uint8_t& c = data[i];
+		const uint8_t& c = data[i];
 		if ((48 <= c && c <= 57) ||//0-9
 			(65 <= c && c <= 90) ||//abc...xyz
 			(97 <= c && c <= 122) //ABC...XYZ
