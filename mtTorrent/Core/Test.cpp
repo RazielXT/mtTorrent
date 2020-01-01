@@ -585,7 +585,7 @@ void TorrentTest::testMetadataReceive()
 	}
 }
 
-uint32_t TorrentTest::dhtFoundPeers(uint8_t* hash, std::vector<Addr>& values)
+uint32_t TorrentTest::dhtFoundPeers(const uint8_t* hash, std::vector<Addr>& values)
 {
 	std::lock_guard<std::mutex> guard(dhtResult.resultMutex);
 
@@ -615,7 +615,7 @@ uint32_t TorrentTest::dhtFoundPeers(uint8_t* hash, std::vector<Addr>& values)
 		return count;
 }
 
-void TorrentTest::dhtFindingPeersFinished(uint8_t* hash, uint32_t count)
+void TorrentTest::dhtFindingPeersFinished(const uint8_t* hash, uint32_t count)
 {
 	TEST_LOG("DHT final values count :" << count)
 

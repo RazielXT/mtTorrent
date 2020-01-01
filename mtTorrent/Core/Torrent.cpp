@@ -7,6 +7,7 @@
 #include "State.h"
 #include "utils/HexEncoding.h"
 #include <filesystem>
+#include "AlertsManager.h"
 
 mtt::TorrentPtr mtt::Torrent::fromFile(std::string filepath)
 {
@@ -137,6 +138,7 @@ void mtt::Torrent::downloadMetadata(std::function<void(Status, MetadataDownloadS
 void mtt::Torrent::init()
 {
 	files.init(infoFile.info);
+	AlertsManager::Get().torrentAlert(AlertId::TorrentAdded, hash());
 }
 
 bool mtt::Torrent::start()
@@ -306,7 +308,7 @@ bool mtt::Torrent::selectionFinished()
 	return files.progress.getSelectedPercentage() == 1;
 }
 
-uint8_t* mtt::Torrent::hash()
+const uint8_t* mtt::Torrent::hash()
 {
 	return infoFile.info.hash;
 }

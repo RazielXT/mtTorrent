@@ -86,7 +86,7 @@ mtt::dht::Query::DhtQuery::~DhtQuery()
 {
 }
 
-void mtt::dht::Query::DhtQuery::start(uint8_t* hash, std::shared_ptr<Table> t, DataListener* dhtListener)
+void mtt::dht::Query::DhtQuery::start(const uint8_t* hash, std::shared_ptr<Table> t, DataListener* dhtListener)
 {
 	table = t;
 	listener = dhtListener;
@@ -312,7 +312,7 @@ bool mtt::dht::Query::GetPeers::onResponse(UdpRequest comm, DataBuffer* data, Re
 	return handled;
 }
 
-DataBuffer mtt::dht::Query::GetPeers::createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId)
+DataBuffer mtt::dht::Query::GetPeers::createRequest(const uint8_t* hash, bool bothProtocols, uint16_t transactionId)
 {
 	PacketBuilder packet(128);
 	packet.add("d1:ad2:id20:", 12);
@@ -332,7 +332,7 @@ DataBuffer mtt::dht::Query::GetPeers::createRequest(uint8_t* hash, bool bothProt
 	return packet.getBuffer();
 }
 
-void mtt::dht::Query::FindNode::startOne(uint8_t* hash, Addr& addr, std::shared_ptr<Table> t, DataListener* dhtListener)
+void mtt::dht::Query::FindNode::startOne(const uint8_t* hash, Addr& addr, std::shared_ptr<Table> t, DataListener* dhtListener)
 {
 	table = t;
 	listener = dhtListener;
@@ -347,7 +347,7 @@ void mtt::dht::Query::FindNode::startOne(uint8_t* hash, Addr& addr, std::shared_
 	sendRequest(addr, dataReq, r);
 }
 
-DataBuffer mtt::dht::Query::FindNode::createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId)
+DataBuffer mtt::dht::Query::FindNode::createRequest(const uint8_t* hash, bool bothProtocols, uint16_t transactionId)
 {
 	PacketBuilder packet(128);
 	packet.add("d1:ad2:id20:", 12);
@@ -668,7 +668,7 @@ void mtt::dht::Query::PingNodes::sendRequest(NodeInfo& node, bool unknown)
 	requests.push_back(req);
 }
 
-void mtt::dht::Query::AnnouncePeer(uint8_t* infohash, std::string& token, udp::endpoint& target, DataListener* dhtListener)
+void mtt::dht::Query::AnnouncePeer(const uint8_t* infohash, std::string& token, udp::endpoint& target, DataListener* dhtListener)
 {
 	PacketBuilder packet(64);
 	packet.add("d1:ad2:id20:", 12);

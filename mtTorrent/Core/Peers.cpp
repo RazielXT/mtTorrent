@@ -475,13 +475,13 @@ void mtt::Peers::DhtSource::findPeers()
 	}
 }
 
-uint32_t mtt::Peers::DhtSource::dhtFoundPeers(uint8_t* hash, std::vector<Addr>& values)
+uint32_t mtt::Peers::DhtSource::dhtFoundPeers(const uint8_t* hash, std::vector<Addr>& values)
 {
 	info.peers += peers.updateKnownPeers(values, PeerSource::Dht);
 	return info.peers;
 }
 
-void mtt::Peers::DhtSource::dhtFindingPeersFinished(uint8_t* hash, uint32_t count)
+void mtt::Peers::DhtSource::dhtFindingPeersFinished(const uint8_t* hash, uint32_t count)
 {
 	uint32_t currentTime = (uint32_t)::time(0);
 	info.lastAnnounce = currentTime;

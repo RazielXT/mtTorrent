@@ -127,8 +127,8 @@ namespace mtt
 			TrackerInfo info;
 
 		private:
-			virtual uint32_t dhtFoundPeers(uint8_t* hash, std::vector<Addr>& values) override;
-			virtual void dhtFindingPeersFinished(uint8_t* hash, uint32_t count) override;
+			virtual uint32_t dhtFoundPeers(const uint8_t* hash, std::vector<Addr>& values) override;
+			virtual void dhtFindingPeersFinished(const uint8_t* hash, uint32_t count) override;
 
 			std::shared_ptr<ScheduledTimer> dhtRefreshTimer;
 			std::mutex timerMtx;

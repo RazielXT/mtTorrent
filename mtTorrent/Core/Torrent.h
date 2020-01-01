@@ -47,7 +47,7 @@ namespace mtt
 		bool finished();
 		bool selectionFinished();
 
-		uint8_t* hash();
+		const uint8_t* hash();
 		std::string hashString();
 
 		Files files;

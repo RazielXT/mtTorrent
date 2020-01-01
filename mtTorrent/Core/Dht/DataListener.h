@@ -11,10 +11,10 @@ namespace mtt
 		{
 		public:
 
-			virtual void announceTokenReceived(uint8_t* hash, std::string& token, udp::endpoint& source) = 0;
+			virtual void announceTokenReceived(const uint8_t* hash, std::string& token, udp::endpoint& source) = 0;
 
-			virtual uint32_t onFoundPeers(uint8_t* hash, std::vector<Addr>& values) = 0;
-			virtual void findingPeersFinished(uint8_t* hash, uint32_t count) = 0;
+			virtual uint32_t onFoundPeers(const uint8_t* hash, std::vector<Addr>& values) = 0;
+			virtual void findingPeersFinished(const uint8_t* hash, uint32_t count) = 0;
 
 			virtual UdpRequest sendMessage(Addr&, DataBuffer&, UdpResponseCallback response) = 0;
 			virtual void stopMessage(UdpRequest r) = 0;

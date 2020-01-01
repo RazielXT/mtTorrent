@@ -57,7 +57,7 @@ namespace mtt
 				DhtQuery();
 				~DhtQuery();
 
-				void start(uint8_t* hash, std::shared_ptr<Table> table, DataListener* dhtListener);
+				void start(const uint8_t* hash, std::shared_ptr<Table> table, DataListener* dhtListener);
 				void stop();
 
 				bool finished();
@@ -77,7 +77,7 @@ namespace mtt
 				std::vector<NodeInfo> usedNodes;
 				NodeId minDistance;
 
-				virtual DataBuffer createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId) = 0;
+				virtual DataBuffer createRequest(const uint8_t* hash, bool bothProtocols, uint16_t transactionId) = 0;
 				virtual void sendRequest(Addr& addr, DataBuffer& data, RequestInfo& info) = 0;
 				virtual bool onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request) = 0;
 
@@ -92,7 +92,7 @@ namespace mtt
 				uint32_t MaxReturnedValues = 50;
 				uint32_t foundCount = 0;
 
-				virtual DataBuffer createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId) override;
+				virtual DataBuffer createRequest(const uint8_t* hash, bool bothProtocols, uint16_t transactionId) override;
 				virtual void sendRequest(Addr& addr, DataBuffer& data, RequestInfo& info);
 				virtual bool onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request) override;
 				GetPeersResponse parseGetPeersResponse(DataBuffer& message);		
@@ -100,7 +100,7 @@ namespace mtt
 
 			struct FindNode : public DhtQuery, public std::enable_shared_from_this<FindNode>
 			{
-				void startOne(uint8_t* hash, Addr& addr, std::shared_ptr<Table> table, DataListener* dhtListener);
+				void startOne(const uint8_t* hash, Addr& addr, std::shared_ptr<Table> table, DataListener* dhtListener);
 
 				uint32_t resultCount = 0;
 				
@@ -108,7 +108,7 @@ namespace mtt
 
 				bool findClosest = true;
 
-				virtual DataBuffer createRequest(uint8_t* hash, bool bothProtocols, uint16_t transactionId) override;
+				virtual DataBuffer createRequest(const uint8_t* hash, bool bothProtocols, uint16_t transactionId) override;
 				virtual void sendRequest(Addr& addr, DataBuffer& data, RequestInfo& info);
 				virtual bool onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request) override;
 				FindNodeResponse parseFindNodeResponse(DataBuffer& message);
@@ -146,7 +146,7 @@ namespace mtt
 				PingMessage parseResponse(DataBuffer& message);
 			};
 
-			void AnnouncePeer(uint8_t* infohash, std::string& token, udp::endpoint& target, DataListener* dhtListener);
+			void AnnouncePeer(const uint8_t* infohash, std::string& token, udp::endpoint& target, DataListener* dhtListener);
 		}
 	}
 }

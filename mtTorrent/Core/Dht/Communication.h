@@ -24,10 +24,10 @@ namespace mtt
 			void start();
 			void stop();
 
-			void findPeers(uint8_t* hash, ResultsListener* listener);
-			void stopFindingPeers(uint8_t* hash);
+			void findPeers(const uint8_t* hash, ResultsListener* listener);
+			void stopFindingPeers(const uint8_t* hash);
 
-			void findNode(uint8_t* hash);
+			void findNode(const uint8_t* hash);
 
 			void pingNode(Addr& addr);
 
@@ -41,14 +41,14 @@ namespace mtt
 			UdpCommPtr udp;
 			bool onUnknownUdpPacket(udp::endpoint&, DataBuffer&);
 
-			virtual uint32_t onFoundPeers(uint8_t* hash, std::vector<Addr>& values) override;
-			virtual void findingPeersFinished(uint8_t* hash, uint32_t count) override;
+			virtual uint32_t onFoundPeers(const uint8_t* hash, std::vector<Addr>& values) override;
+			virtual void findingPeersFinished(const uint8_t* hash, uint32_t count) override;
 
 			virtual UdpRequest sendMessage(Addr&, DataBuffer&, UdpResponseCallback response) override;
 			virtual void sendMessage(udp::endpoint&, DataBuffer&) override;
 			virtual void stopMessage(UdpRequest r) override;
 
-			virtual void announceTokenReceived(uint8_t* hash, std::string& token, udp::endpoint& source) override;	
+			virtual void announceTokenReceived(const uint8_t* hash, std::string& token, udp::endpoint& source) override;
 
 		private:
 

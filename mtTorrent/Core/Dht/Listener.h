@@ -10,8 +10,8 @@ namespace mtt
 		{
 		public:
 
-			virtual uint32_t dhtFoundPeers(uint8_t* hash, std::vector<Addr>& values) = 0;
-			virtual void dhtFindingPeersFinished(uint8_t* hash, uint32_t count) = 0;
+			virtual uint32_t dhtFoundPeers(const uint8_t* hash, std::vector<Addr>& values) = 0;
+			virtual void dhtFindingPeersFinished(const uint8_t* hash, uint32_t count) = 0;
 		};
 	}
 }

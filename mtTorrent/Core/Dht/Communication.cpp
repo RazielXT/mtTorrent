@@ -75,12 +75,12 @@ void mtt::dht::Communication::removeListener(ResultsListener* listener)
 	}
 }
 
-bool operator== (std::shared_ptr<mtt::dht::Query::DhtQuery> query, uint8_t* hash)
+bool operator== (std::shared_ptr<mtt::dht::Query::DhtQuery> query, const uint8_t* hash)
 {
 	return memcmp(query->targetId.data, hash, 20) == 0;
 }
 
-void mtt::dht::Communication::findPeers(uint8_t* hash, ResultsListener* listener)
+void mtt::dht::Communication::findPeers(const uint8_t* hash, ResultsListener* listener)
 {
 	{
 		std::lock_guard<std::mutex> guard(peersQueriesMutex);
@@ -101,7 +101,7 @@ void mtt::dht::Communication::findPeers(uint8_t* hash, ResultsListener* listener
 	info.q->start(hash, table, this);
 }
 
-void mtt::dht::Communication::stopFindingPeers(uint8_t* hash)
+void mtt::dht::Communication::stopFindingPeers(const uint8_t* hash)
 {
 	std::lock_guard<std::mutex> guard(peersQueriesMutex);
 
@@ -113,7 +113,7 @@ void mtt::dht::Communication::stopFindingPeers(uint8_t* hash)
 		}
 }
 
-void mtt::dht::Communication::findNode(uint8_t* hash)
+void mtt::dht::Communication::findNode(const uint8_t* hash)
 {
 	auto q = std::make_shared<Query::FindNode>();
 	q->start(hash, table, this);
@@ -125,7 +125,7 @@ void mtt::dht::Communication::pingNode(Addr& addr)
 	q->start(addr, table, this);
 }
 
-uint32_t mtt::dht::Communication::onFoundPeers(uint8_t* hash, std::vector<Addr>& values)
+uint32_t mtt::dht::Communication::onFoundPeers(const uint8_t* hash, std::vector<Addr>& values)
 {
 	std::lock_guard<std::mutex> guard(peersQueriesMutex);
 
@@ -141,7 +141,7 @@ uint32_t mtt::dht::Communication::onFoundPeers(uint8_t* hash, std::vector<Addr>&
 	return (uint32_t)values.size();
 }
 
-void mtt::dht::Communication::findingPeersFinished(uint8_t* hash, uint32_t count)
+void mtt::dht::Communication::findingPeersFinished(const uint8_t* hash, uint32_t count)
 {
 	std::lock_guard<std::mutex> guard(peersQueriesMutex);
 
@@ -231,7 +231,7 @@ void mtt::dht::Communication::load()
 	}
 }
 
-void mtt::dht::Communication::announceTokenReceived(uint8_t* hash, std::string& token, udp::endpoint& source)
+void mtt::dht::Communication::announceTokenReceived(const uint8_t* hash, std::string& token, udp::endpoint& source)
 {
 	//Query::AnnouncePeer(hash, token, source, this);
 }
