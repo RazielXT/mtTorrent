@@ -103,18 +103,18 @@ TorrentCtxMenuInfo getTorrentContexMenuInfo()
 mtBI::PiecesInfo progress;
 mtt::array<uint8_t> lastBitfield;
 
-void initPiecesChart(size_t bitfieldSize, uint32_t pieces)
+void initPiecesChart()
 {
-	if (lastBitfield.size() != bitfieldSize)
+	if (lastBitfield.size() != progress.bitfield.size())
 	{
-		lastBitfield.resize(bitfieldSize);
+		lastBitfield.assign((uint8_t)0, progress.bitfield.size());
 
 		auto chart = GuiLite::MainForm::instance->pieceChart;
 		chart->Visible = true;
 
 		chart->Series["HasSeries"]->Points->Clear();
 		chart->Series["Request"]->Points->Clear();
-		chart->ChartAreas[0]->AxisX->Interval = pieces;
+		chart->ChartAreas[0]->AxisX->Interval = progress.piecesCount;
 	}
 }
 
@@ -127,7 +127,7 @@ void updatePiecesChart()
 
 	if (IoctlFunc(mtBI::MessageId::GetPiecesInfo, &hash, &progress) == mtt::Status::Success && !progress.bitfield.empty())
 	{
-		initPiecesChart(progress.bitfield.size(), progress.piecesCount);
+		initPiecesChart();
 
 		for (uint32_t i = 0; i < progress.piecesCount; i++)
 		{

@@ -56,6 +56,16 @@ namespace mtt
 				memcpy(buffer, items, size * sizeof(T));
 		}
 
+		void assign(const T value, size_t count)
+		{
+			resize(count);
+
+			for (size_t i = 0; i < count; i++)
+			{
+				buffer[i] = value;
+			}
+		}
+
 		T& operator [](size_t idx)
 		{
 			return buffer[idx];
