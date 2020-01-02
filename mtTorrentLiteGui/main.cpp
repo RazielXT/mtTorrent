@@ -164,6 +164,33 @@ struct
 }
 fileSelection;
 
+String^ formatBytes(size_t bytes)
+{
+	const char* type = " MB";
+
+	auto sz = ((bytes / 1024.f) / 1024.f);
+	if (sz < 1)
+	{
+		sz = (float)(bytes / (1024ll));
+		type = " KB";
+
+		if (sz == 0)
+		{
+			sz = (float)bytes;
+			type = " B";
+		}
+	}
+
+	auto str = gcnew String(float(sz).ToString("F"));
+	str = str->TrimEnd('0')->TrimEnd('.');
+
+	return str + gcnew String(type);
+}
+
+String^ formatBytesSpeed(size_t bytes)
+{
+	return formatBytes(bytes) + "/s";
+}
 
 void updateSelectionFormFooter()
 {
@@ -187,10 +214,10 @@ void updateSelectionFormFooter()
 	txt += "/";
 	txt += int(fileSelection.info.files.size()).ToString();
 	txt += " (";
-	txt += int(selectedSize / (1024ll * 1024ll)).ToString();
-	txt += " MB/";
-	txt += int(fullsize / (1024ll * 1024ll)).ToString();
-	txt += " MB)";
+	txt += formatBytes(selectedSize);
+	txt += "/";
+	txt += formatBytes(fullsize);
+	txt += ")";
 
 	GuiLite::FileSelectionForm::instance->infoLabel->Text = txt;
 }
@@ -238,7 +265,7 @@ void fillFilesSelectionForm()
 			int(i).ToString(),
 			f.selected,
 			gcnew String(f.name.data, 0, (int)f.name.length, System::Text::Encoding::UTF8),
-			int(f.size / (1024ll * 1024ll)).ToString() + " MB"
+			formatBytes(f.size)
 		};
 
 		list->Rows[i]->SetValues(row);
@@ -270,8 +297,7 @@ void refreshTorrentInfo(uint8_t* hash)
 	infoLines->AppendText(Environment::NewLine);
 	infoLines->AppendText("Fullsize: ");
 	infoLines->AppendText(Environment::NewLine);
-	infoLines->AppendText(int(info.fullsize/(1024ll*1024ll)).ToString());
-	infoLines->AppendText(" MB");
+	infoLines->AppendText(formatBytes(info.fullsize));
 	infoLines->AppendText(Environment::NewLine);
 	infoLines->AppendText(Environment::NewLine);
 	infoLines->AppendText("Files: ");
@@ -283,7 +309,7 @@ void refreshTorrentInfo(uint8_t* hash)
 
 		for (int i = 0; i < (int)info.files.size(); i++)
 		{
-			files[i] = gcnew String(info.files[i].name.data, 0, (int)info.files[i].name.length, System::Text::Encoding::UTF8) + " (" + int(info.files[i].size / (1024ll * 1024ll)).ToString() + " MB)";
+			files[i] = gcnew String(info.files[i].name.data, 0, (int)info.files[i].name.length, System::Text::Encoding::UTF8) + " (" + formatBytes(info.files[i].size) + ")";
 		}
 		
 		Array::Sort(files);
@@ -875,9 +901,10 @@ void refreshUi()
 					updatePiecesChart();
 				}
 
-				String^ speedInfo = float((info.downloadSpeed / 1024.f) / 1024.f).ToString("F");
+				String^ speedInfo = "";
 				if (t.active && info.downloadSpeed > 0 && info.selectionProgress && info.selectionProgress < 1.0f && info.downloaded > 0)
 				{
+					speedInfo = formatBytesSpeed(info.downloadSpeed);
 					speedInfo += " (";
 					size_t leftBytes = ((size_t)(info.downloaded / info.selectionProgress)) - info.downloaded;
 					size_t leftSeconds = leftBytes / info.downloadSpeed;
@@ -912,9 +939,10 @@ void refreshUi()
 
 				auto row = gcnew cli::array< System::String^  >(10) {
 					gcnew String(hexToString(t.hash, 20).data()),
-						name, progress, activeStatus, speedInfo, float((info.uploadSpeed / 1024.f) / 1024.f).ToString("F"),
-						int(info.connectedPeers).ToString(), int(info.foundPeers).ToString(),
-						float((info.downloaded / 1024.f) / 1024.f).ToString("F"), float((info.uploaded / 1024.f) / 1024.f).ToString("F")
+						name, progress, activeStatus, speedInfo, t.active ? formatBytesSpeed(info.uploadSpeed) : "",
+						(t.active || info.connectedPeers) ? int(info.connectedPeers).ToString() : "",
+						(t.active || info.foundPeers) ? int(info.foundPeers).ToString() : "",
+						formatBytes(info.downloaded), formatBytes(info.uploaded)
 				};
 
 				torrentGrid->Rows[i]->SetValues(row);
@@ -959,7 +987,7 @@ void refreshUi()
 			auto& peerInfo = peersInfo.peers[i];
 			auto peerRow = gcnew cli::array< System::String^  >(6) {
 				gcnew String(peerInfo.addr.data),
-					float(peerInfo.dlSpeed / (1024.f * 1024)).ToString("F"), float(peerInfo.upSpeed / (1024.f * 1024)).ToString("F"),
+					formatBytesSpeed(peerInfo.dlSpeed), formatBytesSpeed(peerInfo.upSpeed),
 					float(peerInfo.progress).ToString("P"),	gcnew String(peerInfo.client.data, 0, (int)peerInfo.client.length, System::Text::Encoding::UTF8),
 					gcnew String(peerInfo.country.data)
 			};
