@@ -103,19 +103,28 @@ std::shared_ptr<mttApi::FileTransfer> mttApi::Torrent::getFileTransfer()
 	return std::static_pointer_cast<mttApi::FileTransfer>(static_cast<mtt::Torrent*>(this)->fileTransfer);
 }
 
-void mttApi::Torrent::getPiecesBitfield(std::vector<uint8_t>& bitfield)
+bool mttApi::Torrent::getPiecesBitfield(uint8_t* dataBitfield, size_t dataSize)
 {
-	static_cast<mtt::Torrent*>(this)->files.progress.toBitfield(bitfield);
+	return static_cast<mtt::Torrent*>(this)->files.progress.toBitfield(dataBitfield, dataSize);
 }
 
-void mttApi::Torrent::getPiecesReceivedList(std::vector<uint32_t>& list)
+bool mttApi::Torrent::getPiecesReceivedList(uint32_t* dataPieces, size_t& dataSize)
 {
 	auto& progress = static_cast<mtt::Torrent*>(this)->files.progress;
-	list.reserve(progress.getReceivedPiecesCount());
 
+	if (dataSize < progress.getReceivedPiecesCount())
+	{
+		dataSize = progress.getReceivedPiecesCount();
+		return false;
+	}
+
+	size_t idx = 0;
 	for (uint32_t i = 0; i < progress.pieces.size(); i++)
 		if (progress.hasPiece(i))
-			list.push_back(i);
+			dataPieces[idx++] = i;
+
+	dataSize = idx;
+	return true;
 }
 
 bool mttApi::Torrent::getMetadataDownloadState(mtt::MetadataDownloadState& state)

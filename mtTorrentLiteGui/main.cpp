@@ -100,13 +100,13 @@ TorrentCtxMenuInfo getTorrentContexMenuInfo()
 	return info;
 }
 
-std::vector<uint8_t> lastBitfield;
+mtBI::PiecesInfo progress;
+mtt::array<uint8_t> lastBitfield;
 
-void initPiecesChart(uint32_t bitfieldSize, uint32_t pieces)
+void initPiecesChart(size_t bitfieldSize, uint32_t pieces)
 {
 	if (lastBitfield.size() != bitfieldSize)
 	{
-		lastBitfield.clear();
 		lastBitfield.resize(bitfieldSize);
 
 		auto chart = GuiLite::MainForm::instance->pieceChart;
@@ -123,47 +123,34 @@ void updatePiecesChart()
 	if (!GuiLite::MainForm::instance->progressTabPage->Visible)
 		return;
 
-	static mtBI::PiecesInfo progress;
-	progress.requestSize = progress.bitfieldSize = 0;
-	progress.bitfield.clear();
-	progress.requests.clear();
-
 	auto chart = GuiLite::MainForm::instance->pieceChart;
 
-	if (IoctlFunc(mtBI::MessageId::GetPiecesInfo, &hash, &progress) == mtt::Status::Success && progress.bitfieldSize)
+	if (IoctlFunc(mtBI::MessageId::GetPiecesInfo, &hash, &progress) == mtt::Status::Success && !progress.bitfield.empty())
 	{
-		progress.bitfield.resize(progress.bitfieldSize);
+		initPiecesChart(progress.bitfield.size(), progress.piecesCount);
 
-		if (progress.requestSize)
-			progress.requests.resize(progress.requestSize);
-
-		if (IoctlFunc(mtBI::MessageId::GetPiecesInfo, &hash, &progress) == mtt::Status::Success)
+		for (uint32_t i = 0; i < progress.piecesCount; i++)
 		{
-			initPiecesChart(progress.bitfieldSize, progress.piecesCount);
+			size_t idx = static_cast<size_t>(i / 8.0f);
+			unsigned char bitmask = 128 >> i % 8;
 
-			for (uint32_t i = 0; i < progress.piecesCount; i++)
+			bool value = (progress.bitfield[idx] & bitmask) != 0;
+			bool lastValue = (lastBitfield[idx] & bitmask) != 0;
+
+			if (value && !lastValue)
 			{
-				size_t idx = static_cast<size_t>(i / 8.0f);
-				unsigned char bitmask = 128 >> i % 8;
-
-				bool value = (progress.bitfield[idx] & bitmask) != 0;
-				bool lastValue = (lastBitfield[idx] & bitmask) != 0;
-
-				if (value && !lastValue)
-				{
-					chart->Series["HasSeries"]->Points->AddXY(i, 0);
-				}
+				chart->Series["HasSeries"]->Points->AddXY(i, 0);
 			}
-
-			chart->Series["Request"]->Points->Clear();
-
-			for (uint32_t i = 0; i < progress.requestSize; i++)
-			{
-				chart->Series["Request"]->Points->AddXY(progress.requests[i], 0);
-			}
-
-			std::swap(progress.bitfield, lastBitfield);
 		}
+
+		chart->Series["Request"]->Points->Clear();
+
+		for (size_t i = 0; i < progress.requests.size(); i++)
+		{
+			chart->Series["Request"]->Points->AddXY(progress.requests[i], 0);
+		}
+
+		std::swap(progress.bitfield, lastBitfield);
 	}
 	else
 		chart->Visible = false;
@@ -198,7 +185,7 @@ void updateSelectionFormFooter()
 	String^ txt = gcnew String("Selected ");
 	txt += int(selectedCount).ToString();
 	txt += "/";
-	txt += int(fileSelection.info.files.count()).ToString();
+	txt += int(fileSelection.info.files.size()).ToString();
 	txt += " (";
 	txt += int(selectedSize / (1024ll * 1024ll)).ToString();
 	txt += " MB/";
@@ -210,7 +197,7 @@ void updateSelectionFormFooter()
 
 void fileSelectionChanged(int id, bool selected)
 {
-	if (id >= fileSelection.info.files.count())
+	if (id >= fileSelection.info.files.size())
 		return;
 
 	fileSelection.info.files[id].selected = selected;
@@ -242,7 +229,7 @@ void fillFilesSelectionForm()
 		return;
 
 	auto list = form->filesGridView;
-	list->Rows->Add((int)info.files.count());
+	list->Rows->Add((int)info.files.size());
 
 	int i = 0;
 	for (auto& f : info.files)
@@ -290,18 +277,18 @@ void refreshTorrentInfo(uint8_t* hash)
 	infoLines->AppendText("Files: ");
 	infoLines->AppendText(Environment::NewLine);
 
-	if (info.files.count())
+	if (info.files.size())
 	{
-		auto files = gcnew array<String^>((int)info.files.count());
+		auto files = gcnew array<String^>((int)info.files.size());
 
-		for (int i = 0; i < (int)info.files.count(); i++)
+		for (int i = 0; i < (int)info.files.size(); i++)
 		{
 			files[i] = gcnew String(info.files[i].name.data, 0, (int)info.files[i].name.length, System::Text::Encoding::UTF8) + " (" + int(info.files[i].size / (1024ll * 1024ll)).ToString() + " MB)";
 		}
 		
 		Array::Sort(files);
 
-		for (int i = 0; i < (int)info.files.count(); i++)
+		for (int i = 0; i < (int)info.files.size(); i++)
 		{
 			infoLines->AppendText(files[i]);
 			infoLines->AppendText(Environment::NewLine);
@@ -520,7 +507,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 		if (IoctlFunc(mtBI::MessageId::GetTorrentInfo, hash, &info) == mtt::Status::Success && info.downloadLocation.length > 0)
 		{
 			auto path = gcnew String(info.downloadLocation.data);
-			if (info.files.count() > 1)
+			if (info.files.size() > 1)
 				path += gcnew String(info.name.data);
 			System::Diagnostics::Process::Start(path);
 		}
@@ -695,15 +682,17 @@ void onButtonClick(ButtonId id, System::String^ param)
 				}
 			}
 
-			if (fileSelection.info.files.count() > 0)
+			if (!fileSelection.info.files.empty())
 			{
 				mtBI::TorrentFilesSelectionRequest selection;
 				memcpy(selection.hash, fileSelection.hash, 20);
+				selection.selection.reserve(fileSelection.info.files.size());
+
 				for (auto& s : fileSelection.info.files)
 				{
 					mtBI::FileSelectionRequest f;
 					f.selected = s.selected;
-					selection.selection.push_back(f);
+					selection.selection.add(f);
 				}
 
 				IoctlFunc(mtBI::MessageId::SetTorrentFilesSelection, &selection, nullptr);
@@ -759,7 +748,7 @@ void adjustGridRowsCount(System::Windows::Forms::DataGridView^ grid, int count)
 void checkAlerts()
 {
 	mtBI::AlertsList alertsRequest;
-	if (IoctlFunc(mtBI::MessageId::PopAlerts, nullptr, &alertsRequest) == mtt::Status::Success && alertsRequest.alerts.count() > 0)
+	if (IoctlFunc(mtBI::MessageId::PopAlerts, nullptr, &alertsRequest) == mtt::Status::Success && !alertsRequest.alerts.empty())
 	{
 		for (auto& alert : alertsRequest.alerts)
 		{
@@ -836,23 +825,16 @@ void refreshUi()
 	}
 
 	mtBI::TorrentsList torrents;
-	torrents.count = 0;
 	if (IoctlFunc(mtBI::MessageId::GetTorrents, nullptr, &torrents) != mtt::Status::Success)
 		return;
-
-	if (torrents.count > 0)
-	{
-		torrents.list.resize(torrents.count);
-		IoctlFunc(mtBI::MessageId::GetTorrents, nullptr, &torrents);
-	}
 
 	mtBI::TorrentStateInfo info;
 	info.connectedPeers = 0;
 	{
 		auto torrentGrid = GuiLite::MainForm::instance->getGrid();
-		adjustGridRowsCount(torrentGrid, torrents.count);
+		adjustGridRowsCount(torrentGrid, (int)torrents.list.size());
 
-		for (uint32_t i = 0; i < torrents.count; i++)
+		for (size_t i = 0; i < torrents.list.size(); i++)
 		{
 			auto& t = torrents.list[i];
 
@@ -957,7 +939,7 @@ void refreshUi()
 		}
 	}
 
-	if (torrents.count && !selected)
+	if (torrents.list.size() && !selected)
 	{
 		refreshSelection();
 	}
@@ -970,9 +952,9 @@ void refreshUi()
 		String^ selectedPeer;
 		if (peersGrid->SelectedRows->Count > 0)
 			selectedPeer = (String^)peersGrid->SelectedRows[0]->Cells[0]->Value;
-		adjustGridRowsCount(peersGrid, (int)peersInfo.peers.count());
+		adjustGridRowsCount(peersGrid, (int)peersInfo.peers.size());
 
-		for (uint32_t i = 0; i < peersInfo.peers.count(); i++)
+		for (uint32_t i = 0; i < peersInfo.peers.size(); i++)
 		{
 			auto& peerInfo = peersInfo.peers[i];
 			auto peerRow = gcnew cli::array< System::String^  >(6) {
@@ -991,7 +973,7 @@ void refreshUi()
 		if (peersGrid->RowCount > 0 && selectedPeer)
 		{
 			peersGrid->ClearSelection();
-			for (uint32_t i = 0; i < peersInfo.peers.count(); i++)
+			for (uint32_t i = 0; i < peersInfo.peers.size(); i++)
 			{
 				if (selectedPeer == (String^)peersGrid->Rows[i]->Cells[0]->Value)
 					peersGrid->Rows[i]->Selected = true;
@@ -1004,9 +986,9 @@ void refreshUi()
 		IoctlFunc(mtBI::MessageId::GetSourcesInfo, hash, &sourcesInfo);
 
 		auto sourcesGrid = GuiLite::MainForm::instance->sourcesGrid;
-		adjustGridRowsCount(sourcesGrid, (int)sourcesInfo.sources.count());
+		adjustGridRowsCount(sourcesGrid, (int)sourcesInfo.sources.size());
 
-		for (size_t i = 0; i < sourcesInfo.sources.count(); i++)
+		for (size_t i = 0; i < sourcesInfo.sources.size(); i++)
 		{
 			auto& source = sourcesInfo.sources[i];
 			auto nextCheck = (source.nextCheck == 0) ? gcnew String("") : TimeSpan::FromSeconds(source.nextCheck).ToString("T");
@@ -1060,6 +1042,17 @@ void ProcessProgramArgument(System::String^ arg)
 	addTorrentFromMetadata(magnetPtr);
 }
 
+void deinit()
+{
+	initialized = false;
+
+	if (IoctlFunc)
+		IoctlFunc(mtBI::MessageId::Deinit, nullptr, nullptr);
+
+	if (lib)
+		FreeLibrary(lib);
+}
+
 const int WM_MTT_ARGUMENT = WM_USER + 100;
 const int MTT_ARGUMENT_START = 1;
 const int MTT_ARGUMENT_END = 2;
@@ -1109,13 +1102,7 @@ void FormsMain(cli::array<System::String ^>^ args)
 
 	Application::Run(%form);
 
-	initialized = false;
-
-	if(IoctlFunc)
-		IoctlFunc(mtBI::MessageId::Deinit, nullptr, nullptr);
-
-	if(lib)
-		FreeLibrary(lib);
+	deinit();
 }
 
 #pragma comment(lib, "user32.lib")

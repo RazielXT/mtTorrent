@@ -63,15 +63,13 @@ extern "C"
 		{
 			auto resp = (mtBI::TorrentsList*) output;
 			auto torrents = core->getTorrents();
-			resp->count = (uint32_t)torrents.size();
-			if (resp->count == resp->list.size())
+			resp->list.resize(torrents.size());
+
+			for (size_t i = 0; i < torrents.size(); i++)
 			{
-				for (size_t i = 0; i < resp->count; i++)
-				{
-					auto t = torrents[i];
-					memcpy(resp->list[i].hash, t->getFileInfo().info.hash, 20);
-					resp->list[i].active = (t->getStatus() != mttApi::Torrent::State::Stopped);
-				}
+				auto t = torrents[i];
+				memcpy(resp->list[i].hash, t->getFileInfo().info.hash, 20);
+				resp->list[i].active = (t->getStatus() != mttApi::Torrent::State::Stopped);
 			}
 		}
 		else if (id == mtBI::MessageId::GetTorrentStateInfo)
@@ -188,24 +186,14 @@ extern "C"
 
 			auto resp = (mtBI::PiecesInfo*) output;
 			resp->piecesCount = (uint32_t)torrent->getFileInfo().info.pieces.size();
-			resp->bitfieldSize = (uint32_t)torrent->getFileInfo().info.expectedBitfieldSize;
-			resp->requestSize = (uint32_t)(torrent->getFileTransfer() ? torrent->getFileTransfer()->getCurrentRequestsCount() : 0);
 
-			if(resp->bitfield.size() == resp->bitfieldSize)
-				torrent->getPiecesBitfield(resp->bitfield);
+			resp->bitfield.resize(torrent->getFileInfo().info.expectedBitfieldSize);
+			torrent->getPiecesBitfield(resp->bitfield.data(), resp->bitfield.size());
 
-			if (!resp->requests.empty())
+			if (torrent->getFileTransfer())
 			{
 				auto requests = torrent->getFileTransfer()->getCurrentRequests();
-				if (resp->requests.size() > requests.size())
-					resp->requests.resize(requests.size());
-
-				for (size_t i = 0; i < resp->requests.size(); i++)
-				{
-					resp->requests[i] = requests[i];
-				}
-
-				resp->requestSize = (uint32_t)resp->requests.size();
+				resp->requests.assign(requests.data(), requests.size());
 			}
 		}
 		else if (id == mtBI::MessageId::GetMagnetLinkProgress)

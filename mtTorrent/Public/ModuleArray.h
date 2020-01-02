@@ -20,12 +20,12 @@ namespace mtt
 			auto wantedSize = size * sizeof(T);
 			if (wantedSize > allocatedSize)
 			{
-				auto old = data;
-				data = (T*)allocator->allocate(wantedSize);
+				auto old = buffer;
+				buffer = (T*)allocator->allocate(wantedSize);
 
 				if (old)
 				{
-					memcpy(data, old, allocatedSize);
+					memcpy(buffer, old, allocatedSize);
 					allocator->deallocate(old);
 				}
 
@@ -35,43 +35,64 @@ namespace mtt
 
 		void resize(size_t size)
 		{
-			reserve(size);
-
-			for (size_t i = 0; i < size; i++)
+			if (size > currentSize)
 			{
-				new (&data[i]) T();
+				reserve(size);
+
+				for (size_t i = 0; i < size; i++)
+				{
+					new (&buffer[i]) T();
+				}
 			}
 
-			this->size = size;
+			this->currentSize = size;
+		}
+
+		void assign(const T* items, size_t size)
+		{
+			resize(size);
+
+			if(size > 0)
+				memcpy(buffer, items, size * sizeof(T));
 		}
 
 		T& operator [](size_t idx)
 		{
-			return data[idx];
+			return buffer[idx];
 		}
 
 		void add(T& item)
 		{
-			reserve(size + 1);
-			data[size] = item;
-			size++;
+			reserve(currentSize + 1);
+			buffer[currentSize] = item;
+			currentSize++;
 		}
 
-		size_t count()
+		size_t size()
 		{
-			return size;
+			return currentSize;
+		}
+
+		bool empty()
+		{
+			return currentSize == 0;
+		}
+
+		T* data()
+		{
+			return buffer;
 		}
 
 		void clear()
 		{
-			for(size_t i = 0; i < size; i++)
-				data[i].~T();
+			for(size_t i = 0; i < currentSize; i++)
+				buffer[i].~T();
 
-			if (data)
-				allocator->deallocate(data);
+			if (buffer)
+				allocator->deallocate(buffer);
 
-			data = nullptr;
-			size = 0;
+			buffer = nullptr;
+			currentSize = 0;
 			allocatedSize = 0;
 		}
 
@@ -86,14 +107,37 @@ namespace mtt
 			const T* ptr;
 		};
 
-		iterator begin() const { return iterator(data); };
-		iterator end() const { return iterator(data + size); };
+		iterator begin() const { return iterator(buffer); };
+		iterator end() const { return iterator(buffer + currentSize); };
+
+		// Move constructor
+		array(array&& other) noexcept : allocator(other.allocator)
+		{
+			buffer = other.buffer;
+			currentSize = other.currentSize;
+			allocatedSize = other.allocatedSize;
+			other.buffer = nullptr;
+			other.currentSize = 0;
+			other.allocatedSize = 0;
+		}
+
+		array& operator=(array&& rhs) noexcept {
+
+			buffer = rhs.buffer;
+			currentSize = rhs.currentSize;
+			allocatedSize = rhs.allocatedSize;
+			rhs.buffer = nullptr;
+			rhs.currentSize = 0;
+			rhs.allocatedSize = 0;
+
+			return *this;
+		}
 
 	private:
 		const allocator* const allocator;
 
-		T* data = nullptr;
-		size_t size = 0;
+		T* buffer = nullptr;
+		size_t currentSize = 0;
 		size_t allocatedSize = 0;
 	};
 }

@@ -15,6 +15,7 @@ namespace mtt
 		void fromList(std::vector<uint8_t>& pieces);
 		DataBuffer toBitfield();
 		void toBitfield(DataBuffer&);
+		bool toBitfield(uint8_t* dataBitfield, size_t dataSize);
 		size_t getBitfieldSize();
 
 		bool empty();

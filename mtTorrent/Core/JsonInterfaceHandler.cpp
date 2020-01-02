@@ -374,12 +374,19 @@ extern "C"
 			std::string piecesStr(piecesCount, '0');
 			if (piecesCount > 0)
 			{
-				std::vector<uint32_t> piecesList;
-				t->getPiecesReceivedList(piecesList);
+				size_t size = 0;
+				t->getPiecesReceivedList(nullptr, size);
 
-				for (auto& idx : piecesList)
+				if (size > 0)
 				{
-					piecesStr[idx] = '1';
+					std::vector<uint32_t> piecesList;
+					piecesList.resize(size);
+					t->getPiecesReceivedList(piecesList.data(), size);
+
+					for (auto& idx : piecesList)
+					{
+						piecesStr[idx] = '1';
+					}
 				}
 			}
 			writer.String(piecesStr.data());

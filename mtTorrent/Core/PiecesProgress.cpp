@@ -202,9 +202,10 @@ DataBuffer mtt::PiecesProgress::toBitfield()
 	return buffer;
 }
 
-void mtt::PiecesProgress::toBitfield(DataBuffer& buffer)
+bool mtt::PiecesProgress::toBitfield(uint8_t* dataBitfield, size_t dataSize)
 {
-	buffer.resize(getBitfieldSize());
+	if (dataSize < getBitfieldSize())
+		return false;
 
 	for (int i = 0; i < pieces.size(); i++)
 	{
@@ -213,8 +214,17 @@ void mtt::PiecesProgress::toBitfield(DataBuffer& buffer)
 
 		size_t idx = static_cast<size_t>(i / 8.0f);
 		unsigned char bitmask = 128 >> i % 8;
-		buffer[idx] |= bitmask;
+		dataBitfield[idx] |= bitmask;
 	}
+
+	return true;
+}
+
+void mtt::PiecesProgress::toBitfield(DataBuffer& buffer)
+{
+	buffer.resize(getBitfieldSize());
+
+	toBitfield(buffer.data(), buffer.size());
 }
 
 size_t mtt::PiecesProgress::getBitfieldSize()

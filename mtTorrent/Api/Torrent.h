@@ -45,8 +45,8 @@ namespace mttApi
 		API_EXPORT std::shared_ptr<Peers> getPeers();
 		API_EXPORT std::shared_ptr<mttApi::FileTransfer> getFileTransfer();
 
-		API_EXPORT void getPiecesBitfield(std::vector<uint8_t>& bitfield);
-		API_EXPORT void getPiecesReceivedList(std::vector<uint32_t>& list);
+		API_EXPORT bool getPiecesBitfield(uint8_t* dataBitfield, size_t dataSize);
+		API_EXPORT bool getPiecesReceivedList(uint32_t* dataPieces, size_t& dataSize);
 
 		API_EXPORT bool getMetadataDownloadState(mtt::MetadataDownloadState& state);
 		API_EXPORT bool getMetadataDownloadLog(std::vector<std::string>& logs, size_t logStart = 0);

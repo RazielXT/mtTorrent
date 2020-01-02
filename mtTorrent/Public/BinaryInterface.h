@@ -4,7 +4,6 @@
 #include "Alerts.h"
 #include "ModuleString.h"
 #include "ModuleArray.h"
-#include <vector>
 
 namespace mtBI
 {
@@ -56,11 +55,8 @@ namespace mtBI
 	{
 		uint32_t piecesCount;
 
-		uint32_t bitfieldSize;
-		std::vector<uint8_t> bitfield;
-
-		uint32_t requestSize;
-		std::vector<uint32_t> requests;
+		mtt::array<uint8_t> bitfield;
+		mtt::array<uint32_t> requests;
 	};
 
 	struct MagnetLinkProgress
@@ -101,19 +97,17 @@ namespace mtBI
 	struct TorrentFilesSelectionRequest
 	{
 		uint8_t hash[20];
-		std::vector<FileSelectionRequest> selection;
+		mtt::array<FileSelectionRequest> selection;
 	};
 
 	struct TorrentsList
 	{
-		uint32_t count;
-
 		struct TorrentBasicInfo
 		{
 			uint8_t hash[20];
 			bool active;
 		};
-		std::vector<TorrentBasicInfo> list;
+		mtt::array<TorrentBasicInfo> list;
 	};
 
 	struct TorrentFile
