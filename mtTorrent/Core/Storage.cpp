@@ -32,9 +32,13 @@ mtt::Status mtt::Storage::setPath(std::string p)
 
 		if (files.size() >= 1)
 		{
+			std::error_code ec;
 			auto originalPath = path + files.back().path.front();
-			if (std::filesystem::exists(originalPath))
+			if (std::filesystem::exists(originalPath, ec))
 			{
+				if (!std::filesystem::exists(p, ec))
+					return mtt::Status::E_InvalidPath;
+
 				auto newPath = p + files.back().path.front();
 
 				for (auto& f : files)
@@ -46,24 +50,22 @@ mtt::Status mtt::Storage::setPath(std::string p)
 					{
 						if (i + 1 == f.path.size())
 						{
-							std::error_code ec;
-							std::filesystem::create_directories(newPathF, ec);
+							if (!std::filesystem::create_directories(newPathF, ec))
+								return mtt::Status::E_AllocationProblem;
 						}
 
 						originalPathF += '\\' + f.path[i];
 						newPathF += '\\' + f.path[i];
 					}
 
-					std::error_code ec;
 					std::filesystem::rename(originalPathF, newPathF, ec);
 
-					auto what = ec.message();
 					if (ec)
 						return mtt::Status::E_AllocationProblem;
 				}
 
 				if (files.size() > 1)
-					std::filesystem::remove(originalPath);
+					std::filesystem::remove(originalPath, ec);
 			}
 
 			path = p;
@@ -423,7 +425,10 @@ mtt::Status mtt::Storage::preallocate(File& file)
 	{
 		std::error_code ec;
 		auto spaceInfo = std::filesystem::space(path, ec);
-		if (ec || spaceInfo.available < file.size)
+		if (ec)
+			return Status::E_InvalidPath;
+
+		if (spaceInfo.available < file.size)
 			return Status::E_NotEnoughSpace;
 
 		std::ofstream fileOut(fullpath, std::ios_base::binary);
