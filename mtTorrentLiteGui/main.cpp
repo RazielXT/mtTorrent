@@ -24,7 +24,7 @@ HMODULE lib = nullptr;
 
 bool initialized = true;
 bool selected = false;
-uint8_t hash[20];
+uint8_t firstSelectedHash[20];
 bool selectionChanged = false;
 
 const char* getStringPtr(System::String^ str)
@@ -86,16 +86,16 @@ TorrentCtxMenuInfo getTorrentContexMenuInfo()
 	TorrentCtxMenuInfo info;
 
 	mtBI::TorrentStateInfo state;
-	info.active = IoctlFunc(mtBI::MessageId::GetTorrentStateInfo, hash, &state) == mtt::Status::Success && state.started;
+	info.active = IoctlFunc(mtBI::MessageId::GetTorrentStateInfo, firstSelectedHash, &state) == mtt::Status::Success && state.started;
 
 	mtBI::MagnetLinkProgressLogsRequest logsReq;
 	logsReq.start = -1;
-	memcpy(logsReq.hash, hash, 20);
+	memcpy(logsReq.hash, firstSelectedHash, 20);
 	mtBI::MagnetLinkProgressLogsResponse logsResp;
 	info.utmLogs = IoctlFunc(mtBI::MessageId::GetMagnetLinkProgressLogs, &logsReq, &logsResp) == mtt::Status::Success && logsResp.fullcount > 0;
 
 	mtBI::MagnetLinkProgress magnetProgress{};
-	info.noInfo = IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, hash, &magnetProgress) == mtt::Status::Success && !magnetProgress.finished;
+	info.noInfo = IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, firstSelectedHash, &magnetProgress) == mtt::Status::Success && !magnetProgress.finished;
 
 	return info;
 }
@@ -120,12 +120,9 @@ void initPiecesChart()
 
 void updatePiecesChart()
 {
-	if (!GuiLite::MainForm::instance->progressTabPage->Visible)
-		return;
-
 	auto chart = GuiLite::MainForm::instance->pieceChart;
 
-	if (IoctlFunc(mtBI::MessageId::GetPiecesInfo, &hash, &progress) == mtt::Status::Success && !progress.bitfield.empty())
+	if (IoctlFunc(mtBI::MessageId::GetPiecesInfo, &firstSelectedHash, &progress) == mtt::Status::Success && !progress.bitfield.empty())
 	{
 		initPiecesChart();
 
@@ -352,7 +349,7 @@ void addTorrent()
 	{
 		auto filenamePtr = getStringPtr(openFileDialog->FileName);
 		
-		if (IoctlFunc(mtBI::MessageId::AddFromFile, filenamePtr, hash) == mtt::Status::Success)
+		if (IoctlFunc(mtBI::MessageId::AddFromFile, filenamePtr, firstSelectedHash) == mtt::Status::Success)
 		{
 			selected = true;
 			selectionChanged = true;
@@ -362,7 +359,7 @@ void addTorrent()
 
 bool addTorrentFromMetadata(const char* magnetPtr)
 {
-	if (IoctlFunc(mtBI::MessageId::AddFromMetadata, magnetPtr, hash) != mtt::Status::Success)
+	if (IoctlFunc(mtBI::MessageId::AddFromMetadata, magnetPtr, firstSelectedHash) != mtt::Status::Success)
 		return false;
 
 	selected = true;
@@ -385,6 +382,27 @@ void setSelected(bool v)
 	}
 }
 
+struct SelectedTorrent
+{
+	uint8_t hash[20];
+};
+std::vector<SelectedTorrent> getFullSelection()
+{
+	std::vector<SelectedTorrent> out;
+
+	for (int i = 0; i < GuiLite::MainForm::instance->getGrid()->SelectedRows->Count; i++)
+	{
+		auto idStr = (String^)GuiLite::MainForm::instance->getGrid()->SelectedRows[i]->Cells[0]->Value;
+		auto stdStr = msclr::interop::marshal_as<std::string>(idStr);
+		SelectedTorrent t;
+		decodeHexa(stdStr, t.hash);
+
+		out.push_back(t);
+	}
+	
+	return out;
+}
+
 void refreshSelection()
 {
 	if (GuiLite::MainForm::instance->getGrid()->SelectedRows->Count == 0)
@@ -400,9 +418,9 @@ void refreshSelection()
 		uint8_t selectedHash[20];
 		decodeHexa(stdStr, selectedHash);
 
-		if (memcmp(hash, selectedHash, 20) != 0)
+		if (memcmp(firstSelectedHash, selectedHash, 20) != 0)
 		{
-			memcpy(hash, selectedHash, 20);
+			memcpy(firstSelectedHash, selectedHash, 20);
 			selectionChanged = true;
 		}
 	}
@@ -412,7 +430,7 @@ System::String^ getSelectedTorrentName()
 {
 	mtBI::TorrentStateInfo info;
 
-	if (selected && IoctlFunc(mtBI::MessageId::GetTorrentStateInfo, hash, &info) == mtt::Status::Success)
+	if (selected && IoctlFunc(mtBI::MessageId::GetTorrentStateInfo, firstSelectedHash, &info) == mtt::Status::Success)
 		return gcnew System::String(info.name.data);
 	else
 		return "";
@@ -469,7 +487,7 @@ void scheduleTorrent(int seconds)
 {
 	ScheduledTorrent t;
 	t.countdown = seconds;
-	memcpy(t.hash, hash, 20);
+	memcpy(t.hash, firstSelectedHash, 20);
 
 	scheduledTorrents.push_back(t);
 
@@ -522,7 +540,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 	else if (id == ButtonId::AddPeer)
 	{
 		mtBI::AddPeerRequest request;
-		memcpy(request.hash, hash, 20);
+		memcpy(request.hash, firstSelectedHash, 20);
 		request.addr = getStringPtr(param);
 
 		IoctlFunc(mtBI::MessageId::AddPeer, &request, nullptr);
@@ -530,7 +548,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 	else if (id == ButtonId::OpenLocation)
 	{
 		mtBI::TorrentInfo info;
-		if (IoctlFunc(mtBI::MessageId::GetTorrentInfo, hash, &info) == mtt::Status::Success && info.downloadLocation.length > 0)
+		if (IoctlFunc(mtBI::MessageId::GetTorrentInfo, firstSelectedHash, &info) == mtt::Status::Success && info.downloadLocation.length > 0)
 		{
 			auto path = gcnew String(info.downloadLocation.data);
 			if (info.files.size() > 1)
@@ -549,12 +567,12 @@ void onButtonClick(ButtonId id, System::String^ param)
 			return;
 
 		mtBI::MagnetLinkProgress magnetProgress;
-		if (!GuiLite::MagnetInputForm::instance && IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, hash, &magnetProgress) == mtt::Status::Success)
+		if (!GuiLite::MagnetInputForm::instance && IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, firstSelectedHash, &magnetProgress) == mtt::Status::Success)
 		{
 			GuiLite::MagnetInputForm form;
 			form.labelText->Text = "Getting info...";
 			form.magnetFormButton->Text = "Logs";
-			form.textBoxMagnet->Text = gcnew String(hexToString(hash, 20).data());
+			form.textBoxMagnet->Text = gcnew String(hexToString(firstSelectedHash, 20).data());
 			magnetLinkSequence = 2;
 			form.ShowDialog();
 			GuiLite::MagnetInputForm::instance = nullptr;
@@ -584,8 +602,13 @@ void onButtonClick(ButtonId id, System::String^ param)
 			return;
 		}
 
-		memcpy(request.hash, hash, 20);
-		IoctlFunc(mtBI::MessageId::Remove, &request, nullptr);
+		auto selection = getFullSelection();
+
+		for (auto s : selection)
+		{
+			memcpy(request.hash, s.hash, 20);
+			IoctlFunc(mtBI::MessageId::Remove, &request, nullptr);
+		}
 
 		refreshSelection();
 	}
@@ -603,20 +626,30 @@ void onButtonClick(ButtonId id, System::String^ param)
 	{
 		if (selected)
 		{
-			if (IoctlFunc(mtBI::MessageId::Start, hash, nullptr) == mtt::Status::Success)
-				selectionChanged = true;
+			auto selection = getFullSelection();
 
-			stopSchedule(hash);
+			for (auto s : selection)
+			{
+				if (IoctlFunc(mtBI::MessageId::Start, s.hash, nullptr) == mtt::Status::Success)
+					selectionChanged = true;
+
+				stopSchedule(s.hash);
+			}
 		}
 	}
 	else if (id == ButtonId::Stop)
 	{
 		if (selected)
 		{
-			if (IoctlFunc(mtBI::MessageId::Stop, hash, nullptr) == mtt::Status::Success)
-				selectionChanged = true;
+			auto selection = getFullSelection();
 
-			stopSchedule(hash);
+			for (auto s : selection)
+			{
+				if (IoctlFunc(mtBI::MessageId::Stop, s.hash, nullptr) == mtt::Status::Success)
+					selectionChanged = true;
+
+				stopSchedule(s.hash);
+			}
 		}
 	}
 	else if (id == ButtonId::AddTorrentMagnet)
@@ -650,13 +683,13 @@ void onButtonClick(ButtonId id, System::String^ param)
 		{
 			mtBI::SourceId info;
 			info.name = getStringPtr(param);
-			memcpy(info.hash, hash, 20);
+			memcpy(info.hash, firstSelectedHash, 20);
 			IoctlFunc(mtBI::MessageId::RefreshSource, &info, nullptr);
 		}
 	}
 	else if (id == ButtonId::SelectFiles)
 	{
-		showFilesSelectionForm(hash, false);
+		showFilesSelectionForm(firstSelectedHash, false);
 	}
 	else if (GuiLite::MagnetInputForm::instance)
 	{
@@ -801,7 +834,7 @@ void refreshUi()
 			{
 					mtBI::MagnetLinkProgressLogsRequest logsRequest;
 					logsRequest.start = lastMagnetLinkLogCount;
-					memcpy(logsRequest.hash, hash, 20);
+					memcpy(logsRequest.hash, firstSelectedHash, 20);
 					mtBI::MagnetLinkProgressLogsResponse logsResponse;
 
 					if (IoctlFunc(mtBI::MessageId::GetMagnetLinkProgressLogs, &logsRequest, &logsResponse) == mtt::Status::Success)
@@ -817,7 +850,7 @@ void refreshUi()
 			}
 
 			mtBI::MagnetLinkProgress progress;
-			auto status = IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, hash, &progress);
+			auto status = IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, firstSelectedHash, &progress);
 			if (status == mtt::Status::Success)
 			{
 				if (progress.progress > 1.0f)
@@ -846,8 +879,7 @@ void refreshUi()
 
 	if (selectionChanged)
 	{
-		refreshTorrentInfo(hash);
-		selectionChanged = false;
+		refreshTorrentInfo(firstSelectedHash);
 	}
 
 	mtBI::TorrentsList torrents;
@@ -866,7 +898,7 @@ void refreshUi()
 
 			if (IoctlFunc(mtBI::MessageId::GetTorrentStateInfo, t.hash, &info) == mtt::Status::Success)
 			{
-				bool isSelected = (memcmp(t.hash, hash, 20) == 0);
+				bool isSelected = (memcmp(t.hash, firstSelectedHash, 20) == 0);
 
 				String^ activeStatus;
 				if (info.activeStatus != mtt::Status::Success)
@@ -897,8 +929,6 @@ void refreshUi()
 				{
 					if(t.active)
 						updateSpeedChart((info.downloadSpeed / 1024.f) / 1024.f, (info.uploadSpeed / 1024.f) / 1024.f);
-
-					updatePiecesChart();
 				}
 
 				String^ speedInfo = "";
@@ -972,9 +1002,12 @@ void refreshUi()
 		refreshSelection();
 	}
 
+	auto activeTab = GuiLite::MainForm::instance->getActiveTab();
+
+	if(selectionChanged || activeTab == GuiLite::MainForm::TabType::Peers)
 	{
 		mtBI::TorrentPeersInfo peersInfo;
-		IoctlFunc(mtBI::MessageId::GetPeersInfo, hash, &peersInfo);
+		IoctlFunc(mtBI::MessageId::GetPeersInfo, firstSelectedHash, &peersInfo);
 
 		auto peersGrid = GuiLite::MainForm::instance->getPeersGrid();
 		String^ selectedPeer;
@@ -1009,9 +1042,10 @@ void refreshUi()
 		}
 	}
 
+	if (selectionChanged || activeTab == GuiLite::MainForm::TabType::Sources)
 	{
 		mtBI::SourcesInfo sourcesInfo;
-		IoctlFunc(mtBI::MessageId::GetSourcesInfo, hash, &sourcesInfo);
+		IoctlFunc(mtBI::MessageId::GetSourcesInfo, firstSelectedHash, &sourcesInfo);
 
 		auto sourcesGrid = GuiLite::MainForm::instance->sourcesGrid;
 		adjustGridRowsCount(sourcesGrid, (int)sourcesInfo.sources.size());
@@ -1062,6 +1096,11 @@ void refreshUi()
 		if (sourcesGrid->SortedColumn)
 			sourcesGrid->Sort(sourcesGrid->SortedColumn, sourcesGrid->SortOrder == SortOrder::Ascending ? System::ComponentModel::ListSortDirection::Ascending : System::ComponentModel::ListSortDirection::Descending);
 	}
+
+	if(selectionChanged || activeTab == GuiLite::MainForm::TabType::Progress)
+		updatePiecesChart();
+
+	selectionChanged = false;
 }
 
 void ProcessProgramArgument(System::String^ arg)
