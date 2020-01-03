@@ -280,7 +280,10 @@ namespace GuiLite {
 			this->Controls->Add(this->panel1);
 			this->Controls->Add(this->okButton);
 			this->Controls->Add(this->cancelButton);
+			this->MaximizeBox = false;
+			this->MinimizeBox = false;
 			this->Name = L"FileSelectionForm";
+			this->ShowIcon = false;
 			this->StartPosition = System::Windows::Forms::FormStartPosition::CenterScreen;
 			this->Text = L"Select files";
 			this->panel1->ResumeLayout(false);

@@ -181,7 +181,7 @@ String^ formatBytes(size_t bytes)
 		}
 	}
 
-	auto str = gcnew String(float(sz).ToString("F"));
+	auto str = gcnew String(sz.ToString("F"));
 	str = str->TrimEnd('0')->TrimEnd('.');
 
 	return str + gcnew String(type);

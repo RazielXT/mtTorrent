@@ -159,8 +159,11 @@ namespace GuiLite {
 			this->Controls->Add(this->textBoxMagnet);
 			this->Controls->Add(this->progressBarMagnet);
 			this->Controls->Add(this->magnetFormButton);
+			this->MaximizeBox = false;
 			this->MaximumSize = System::Drawing::Size(500, 600);
+			this->MinimizeBox = false;
 			this->Name = L"MagnetInputForm";
+			this->ShowIcon = false;
 			this->StartPosition = System::Windows::Forms::FormStartPosition::CenterScreen;
 			this->Text = L"Magnet link";
 			this->panel1->ResumeLayout(false);

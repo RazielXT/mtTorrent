@@ -38,6 +38,7 @@ namespace GuiLite {
 	private: System::Windows::Forms::Button^ addPeerButton;
 	protected:
 	private: System::Windows::Forms::TextBox^ textBox1;
+	private: System::Windows::Forms::Label^ label1;
 
 	private:
 		/// <summary>
@@ -54,11 +55,12 @@ namespace GuiLite {
 		{
 			this->addPeerButton = (gcnew System::Windows::Forms::Button());
 			this->textBox1 = (gcnew System::Windows::Forms::TextBox());
+			this->label1 = (gcnew System::Windows::Forms::Label());
 			this->SuspendLayout();
 			// 
 			// addPeerButton
 			// 
-			this->addPeerButton->Location = System::Drawing::Point(265, 11);
+			this->addPeerButton->Location = System::Drawing::Point(266, 28);
 			this->addPeerButton->Name = L"addPeerButton";
 			this->addPeerButton->Size = System::Drawing::Size(75, 23);
 			this->addPeerButton->TabIndex = 0;
@@ -68,19 +70,32 @@ namespace GuiLite {
 			// 
 			// textBox1
 			// 
-			this->textBox1->Location = System::Drawing::Point(26, 12);
+			this->textBox1->Location = System::Drawing::Point(27, 29);
 			this->textBox1->Name = L"textBox1";
 			this->textBox1->Size = System::Drawing::Size(233, 22);
 			this->textBox1->TabIndex = 1;
+			// 
+			// label1
+			// 
+			this->label1->AutoSize = true;
+			this->label1->Location = System::Drawing::Point(24, 9);
+			this->label1->Name = L"label1";
+			this->label1->Size = System::Drawing::Size(50, 17);
+			this->label1->TabIndex = 2;
+			this->label1->Text = L"IP:Port";
 			// 
 			// AddPeerForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(8, 16);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(365, 46);
+			this->ClientSize = System::Drawing::Size(365, 66);
+			this->Controls->Add(this->label1);
 			this->Controls->Add(this->textBox1);
 			this->Controls->Add(this->addPeerButton);
+			this->MaximizeBox = false;
+			this->MinimizeBox = false;
 			this->Name = L"AddPeerForm";
+			this->ShowIcon = false;
 			this->StartPosition = System::Windows::Forms::FormStartPosition::CenterScreen;
 			this->Text = L"Add Peer";
 			this->ResumeLayout(false);

@@ -103,9 +103,12 @@ namespace mtTorrentLiteGui {
 			this->Controls->Add(this->button2);
 			this->Controls->Add(this->button1);
 			this->Controls->Add(this->timePicker);
+			this->MaximizeBox = false;
+			this->MinimizeBox = false;
 			this->Name = L"ScheduleForm";
+			this->ShowIcon = false;
 			this->StartPosition = System::Windows::Forms::FormStartPosition::CenterScreen;
-			this->Text = L"Schedule";
+			this->Text = L"Schedule start";
 			this->ResumeLayout(false);
 
 		}
