@@ -967,9 +967,10 @@ void refreshUi()
 						progress += " (" + float(info.progress).ToString("P") + ")";
 				}
 
-				auto row = gcnew cli::array< System::String^  >(10) {
+				auto row = gcnew cli::array< System::String^  >(12) {
 					gcnew String(hexToString(t.hash, 20).data()),
-						name, progress, activeStatus, speedInfo, t.active ? formatBytesSpeed(info.uploadSpeed) : "",
+						name, progress, activeStatus, speedInfo,
+						int(info.downloadSpeed).ToString(), t.active ? formatBytesSpeed(info.uploadSpeed) : "", int(info.uploadSpeed).ToString(),
 						(t.active || info.connectedPeers) ? int(info.connectedPeers).ToString() : "",
 						(t.active || info.foundPeers) ? int(info.foundPeers).ToString() : "",
 						formatBytes(info.downloaded), formatBytes(info.uploaded)
@@ -1018,9 +1019,9 @@ void refreshUi()
 		for (uint32_t i = 0; i < peersInfo.peers.size(); i++)
 		{
 			auto& peerInfo = peersInfo.peers[i];
-			auto peerRow = gcnew cli::array< System::String^  >(6) {
+			auto peerRow = gcnew cli::array< System::String^  >(8) {
 				gcnew String(peerInfo.addr.data),
-					formatBytesSpeed(peerInfo.dlSpeed), formatBytesSpeed(peerInfo.upSpeed),
+					formatBytesSpeed(peerInfo.dlSpeed), int(peerInfo.dlSpeed).ToString(), formatBytesSpeed(peerInfo.upSpeed), int(peerInfo.upSpeed).ToString(),
 					float(peerInfo.progress).ToString("P"),	gcnew String(peerInfo.client.data, 0, (int)peerInfo.client.length, System::Text::Encoding::UTF8),
 					gcnew String(peerInfo.country.data)
 			};

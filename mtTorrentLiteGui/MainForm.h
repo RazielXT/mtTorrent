@@ -22,7 +22,10 @@ namespace GuiLite {
 		MainForm(void)
 		{
 			InitializeComponent();
-			
+	
+			torrentsGrid->SortCompare += gcnew DataGridViewSortCompareEventHandler(this, &MainForm::torrentGridView_SortCompare);
+			peersGridView->SortCompare += gcnew DataGridViewSortCompareEventHandler(this, &MainForm::peersView_SortCompare);
+
 			instance = this;
 
 			updateTimer = gcnew System::Windows::Forms::Timer();
@@ -59,29 +62,29 @@ namespace GuiLite {
 	public: System::Windows::Forms::Button^  buttonStart;
 	public: System::Windows::Forms::Button^  buttonAddMagnet;
 	public: System::Windows::Forms::Button^  buttonSettings;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  torrentId;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentName;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentProgress;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  Column4;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentDownload;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  torrentUpload;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentConnected;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentFoundPeers;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  TorrentDownloaded;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^  Column3;
+
+
+
+
+
+
+
+
+
+
 
 	private: System::Windows::Forms::ContextMenuStrip^ peersContextMenuStrip;
 	private: System::Windows::Forms::ToolStripMenuItem^ toolStripMenuItem1;
 	private: System::Windows::Forms::TabPage^ tabPage3;
 	private: System::Windows::Forms::Panel^ panel1;
 	public: System::Windows::Forms::DataVisualization::Charting::Chart^ dlSpeedChart;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ gridPeerAddress;
+
 	public:
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ gridPeerSpeedDownload;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column2;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ gridPeerPercentage;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ peerSource;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ peerCountry;
+
+
+
+
+
 	public: System::Windows::Forms::Button^ buttonRemove;
 	public: System::Windows::Forms::TabPage^ progressTabPage;
 	public: System::Windows::Forms::DataVisualization::Charting::Chart^ pieceChart;
@@ -93,6 +96,44 @@ namespace GuiLite {
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column6;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column1;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn4;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ torrentId;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentName;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentProgress;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column4;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ DL;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ DlBytes;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ UP;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ UpBytes;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentConnected;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentFoundPeers;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentDownloaded;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column3;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ gridPeerAddress;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ DL2;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ DlBytes2;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ UP2;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ UpBytes2;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ gridPeerPercentage;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ peerSource;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ peerCountry;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	public:
 
@@ -221,8 +262,10 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->TorrentName = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->TorrentProgress = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->Column4 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->TorrentDownload = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->torrentUpload = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->DL = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->DlBytes = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->UP = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->UpBytes = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->TorrentConnected = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->TorrentFoundPeers = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->TorrentDownloaded = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
@@ -233,8 +276,10 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->tabPage2 = (gcnew System::Windows::Forms::TabPage());
 			this->peersGridView = (gcnew System::Windows::Forms::DataGridView());
 			this->gridPeerAddress = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->gridPeerSpeedDownload = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->Column2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->DL2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->DlBytes2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->UP2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->UpBytes2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->gridPeerPercentage = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->peerSource = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->peerCountry = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
@@ -331,6 +376,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->buttonRemove->Size = System::Drawing::Size(94, 29);
 			this->buttonRemove->TabIndex = 7;
 			this->buttonRemove->Text = L"✕ Remove";
+			this->buttonRemove->UseVisualStyleBackColor = false;
 			this->buttonRemove->Click += gcnew System::EventHandler(this, &MainForm::ButtonRemove_Click);
 			// 
 			// buttonSettings
@@ -424,9 +470,9 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			dataGridViewCellStyle1->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
 			this->torrentsGrid->ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
 			this->torrentsGrid->ColumnHeadersHeightSizeMode = System::Windows::Forms::DataGridViewColumnHeadersHeightSizeMode::AutoSize;
-			this->torrentsGrid->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(10) {
+			this->torrentsGrid->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(12) {
 				this->torrentId,
-					this->TorrentName, this->TorrentProgress, this->Column4, this->TorrentDownload, this->torrentUpload, this->TorrentConnected,
+					this->TorrentName, this->TorrentProgress, this->Column4, this->DL, this->DlBytes, this->UP, this->UpBytes, this->TorrentConnected,
 					this->TorrentFoundPeers, this->TorrentDownloaded, this->Column3
 			});
 			dataGridViewCellStyle9->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleLeft;
@@ -496,25 +542,43 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->Column4->ReadOnly = true;
 			this->Column4->Width = 125;
 			// 
-			// TorrentDownload
+			// DL
 			// 
 			dataGridViewCellStyle3->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->TorrentDownload->DefaultCellStyle = dataGridViewCellStyle3;
-			this->TorrentDownload->HeaderText = L"Download";
-			this->TorrentDownload->MinimumWidth = 6;
-			this->TorrentDownload->Name = L"TorrentDownload";
-			this->TorrentDownload->ReadOnly = true;
-			this->TorrentDownload->Width = 125;
+			this->DL->DefaultCellStyle = dataGridViewCellStyle3;
+			this->DL->HeaderText = L"Download";
+			this->DL->MinimumWidth = 6;
+			this->DL->Name = L"DL";
+			this->DL->ReadOnly = true;
+			this->DL->Width = 125;
 			// 
-			// torrentUpload
+			// DlBytes
+			// 
+			this->DlBytes->HeaderText = L"DlBytes";
+			this->DlBytes->MinimumWidth = 6;
+			this->DlBytes->Name = L"DlBytes";
+			this->DlBytes->ReadOnly = true;
+			this->DlBytes->Visible = false;
+			this->DlBytes->Width = 125;
+			// 
+			// UP
 			// 
 			dataGridViewCellStyle4->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->torrentUpload->DefaultCellStyle = dataGridViewCellStyle4;
-			this->torrentUpload->HeaderText = L"Upload";
-			this->torrentUpload->MinimumWidth = 6;
-			this->torrentUpload->Name = L"torrentUpload";
-			this->torrentUpload->ReadOnly = true;
-			this->torrentUpload->Width = 125;
+			this->UP->DefaultCellStyle = dataGridViewCellStyle4;
+			this->UP->HeaderText = L"Upload";
+			this->UP->MinimumWidth = 6;
+			this->UP->Name = L"UP";
+			this->UP->ReadOnly = true;
+			this->UP->Width = 125;
+			// 
+			// UpBytes
+			// 
+			this->UpBytes->HeaderText = L"UpBytes";
+			this->UpBytes->MinimumWidth = 6;
+			this->UpBytes->Name = L"UpBytes";
+			this->UpBytes->ReadOnly = true;
+			this->UpBytes->Visible = false;
+			this->UpBytes->Width = 125;
 			// 
 			// TorrentConnected
 			// 
@@ -623,9 +687,9 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			dataGridViewCellStyle11->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
 			this->peersGridView->ColumnHeadersDefaultCellStyle = dataGridViewCellStyle11;
 			this->peersGridView->ColumnHeadersHeightSizeMode = System::Windows::Forms::DataGridViewColumnHeadersHeightSizeMode::AutoSize;
-			this->peersGridView->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(6) {
+			this->peersGridView->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(8) {
 				this->gridPeerAddress,
-					this->gridPeerSpeedDownload, this->Column2, this->gridPeerPercentage, this->peerSource, this->peerCountry
+					this->DL2, this->DlBytes2, this->UP2, this->UpBytes2, this->gridPeerPercentage, this->peerSource, this->peerCountry
 			});
 			this->peersGridView->ContextMenuStrip = this->peersContextMenuStrip;
 			dataGridViewCellStyle15->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleLeft;
@@ -633,12 +697,13 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			dataGridViewCellStyle15->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
 				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(134)));
 			dataGridViewCellStyle15->ForeColor = System::Drawing::SystemColors::ControlText;
-			dataGridViewCellStyle15->SelectionBackColor = System::Drawing::SystemColors::Desktop;
+			dataGridViewCellStyle15->SelectionBackColor = System::Drawing::Color::SkyBlue;
 			dataGridViewCellStyle15->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
 			dataGridViewCellStyle15->WrapMode = System::Windows::Forms::DataGridViewTriState::False;
 			this->peersGridView->DefaultCellStyle = dataGridViewCellStyle15;
 			this->peersGridView->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->peersGridView->Location = System::Drawing::Point(3, 3);
+			this->peersGridView->MultiSelect = false;
 			this->peersGridView->Name = L"peersGridView";
 			this->peersGridView->ReadOnly = true;
 			dataGridViewCellStyle16->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
@@ -665,25 +730,43 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->gridPeerAddress->ReadOnly = true;
 			this->gridPeerAddress->Width = 200;
 			// 
-			// gridPeerSpeedDownload
+			// DL2
 			// 
 			dataGridViewCellStyle12->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->gridPeerSpeedDownload->DefaultCellStyle = dataGridViewCellStyle12;
-			this->gridPeerSpeedDownload->HeaderText = L"Download speed";
-			this->gridPeerSpeedDownload->MinimumWidth = 6;
-			this->gridPeerSpeedDownload->Name = L"gridPeerSpeedDownload";
-			this->gridPeerSpeedDownload->ReadOnly = true;
-			this->gridPeerSpeedDownload->Width = 150;
+			this->DL2->DefaultCellStyle = dataGridViewCellStyle12;
+			this->DL2->HeaderText = L"Download speed";
+			this->DL2->MinimumWidth = 6;
+			this->DL2->Name = L"DL2";
+			this->DL2->ReadOnly = true;
+			this->DL2->Width = 150;
 			// 
-			// Column2
+			// DlBytes2
+			// 
+			this->DlBytes2->HeaderText = L"DlBytes2";
+			this->DlBytes2->MinimumWidth = 6;
+			this->DlBytes2->Name = L"DlBytes2";
+			this->DlBytes2->ReadOnly = true;
+			this->DlBytes2->Visible = false;
+			this->DlBytes2->Width = 125;
+			// 
+			// UP2
 			// 
 			dataGridViewCellStyle13->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->Column2->DefaultCellStyle = dataGridViewCellStyle13;
-			this->Column2->HeaderText = L"Upload speed";
-			this->Column2->MinimumWidth = 6;
-			this->Column2->Name = L"Column2";
-			this->Column2->ReadOnly = true;
-			this->Column2->Width = 150;
+			this->UP2->DefaultCellStyle = dataGridViewCellStyle13;
+			this->UP2->HeaderText = L"Upload speed";
+			this->UP2->MinimumWidth = 6;
+			this->UP2->Name = L"UP2";
+			this->UP2->ReadOnly = true;
+			this->UP2->Width = 150;
+			// 
+			// UpBytes2
+			// 
+			this->UpBytes2->HeaderText = L"UpBytes2";
+			this->UpBytes2->MinimumWidth = 6;
+			this->UpBytes2->Name = L"UpBytes2";
+			this->UpBytes2->ReadOnly = true;
+			this->UpBytes2->Visible = false;
+			this->UpBytes2->Width = 125;
 			// 
 			// gridPeerPercentage
 			// 
@@ -763,7 +846,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			dataGridViewCellStyle22->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
 				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(134)));
 			dataGridViewCellStyle22->ForeColor = System::Drawing::SystemColors::ControlText;
-			dataGridViewCellStyle22->SelectionBackColor = System::Drawing::SystemColors::Desktop;
+			dataGridViewCellStyle22->SelectionBackColor = System::Drawing::Color::SkyBlue;
 			dataGridViewCellStyle22->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
 			dataGridViewCellStyle22->WrapMode = System::Windows::Forms::DataGridViewTriState::False;
 			this->sourcesGrid->DefaultCellStyle = dataGridViewCellStyle22;
@@ -1090,5 +1173,36 @@ private: System::Void TorrentsGrid_CellContentClick_1(System::Object^ sender, Sy
 private: System::Void ButtonRemove_Click(System::Object^ sender, System::EventArgs^ e) {
 	onButtonClick(ButtonId::Remove);
 }
+
+private: System::Void  torrentGridView_SortCompare(System::Object^ sender, DataGridViewSortCompareEventArgs^ e)
+{
+	if(e->Column->Name == "UP" || e->Column->Name == "DL")
+	{
+		auto bytesID = gcnew String(e->Column->Name == "DL" ? "DlBytes" : "UpBytes");
+		auto v1 = Int32::Parse(torrentsGrid->Rows[e->RowIndex1]->Cells[bytesID]->Value->ToString());
+		auto v2 = Int32::Parse(torrentsGrid->Rows[e->RowIndex2]->Cells[bytesID]->Value->ToString());
+		e->SortResult = v1 > v2 ? 1 : -1;
+	}
+	else
+		e->SortResult = System::String::Compare(e->CellValue1->ToString(), e->CellValue2->ToString());
+
+	e->Handled = true;
+}
+
+private: System::Void  peersView_SortCompare(System::Object^ sender, DataGridViewSortCompareEventArgs^ e)
+{
+	if (e->Column->Name == "UP2" || e->Column->Name == "DL2")
+	{
+		auto bytesID = gcnew String(e->Column->Name == "DL2" ? "DlBytes2" : "UpBytes2");
+		auto v1 = Int32::Parse(peersGridView->Rows[e->RowIndex1]->Cells[bytesID]->Value->ToString());
+		auto v2 = Int32::Parse(peersGridView->Rows[e->RowIndex2]->Cells[bytesID]->Value->ToString());
+		e->SortResult = v1 > v2 ? 1 : -1;
+	}
+	else
+		e->SortResult = System::String::Compare(e->CellValue1->ToString(), e->CellValue2->ToString());
+
+	e->Handled = true;
+}
+
 };
 }
