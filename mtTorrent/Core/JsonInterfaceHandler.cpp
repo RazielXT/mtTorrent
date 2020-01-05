@@ -45,9 +45,9 @@ extern "C"
 			mttApi::TorrentPtr t;
 
 			if(requestJs.HasMember("filepath"))
-				t = core->addFile(requestJs["filepath"].GetString());
+				t = core->addFile(requestJs["filepath"].GetString()).second;
 			else if (requestJs.HasMember("magnet"))
-				t = core->addMagnet(requestJs["magnet"].GetString());
+				t = core->addMagnet(requestJs["magnet"].GetString()).second;
 
 			if (!t)
 				return mtt::Status::E_InvalidInput;

@@ -429,9 +429,6 @@
     <ClInclude Include="Public\Alerts.h">
       <Filter>Source Files\Public</Filter>
     </ClInclude>
-    <ClInclude Include="Api\AlertTypes.h">
-      <Filter>Source Files\Core\Api</Filter>
-    </ClInclude>
     <ClInclude Include="AlertsManager.h">
       <Filter>Source Files\Core\General</Filter>
     </ClInclude>

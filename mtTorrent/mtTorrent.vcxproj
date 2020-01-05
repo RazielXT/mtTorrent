@@ -305,7 +305,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AlertsManager.h" />
-    <ClInclude Include="Api\AlertTypes.h" />
     <ClInclude Include="Api\Configuration.h" />
     <ClInclude Include="Api\Core.h" />
     <ClInclude Include="Api\FileTransfer.h" />

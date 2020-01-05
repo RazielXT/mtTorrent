@@ -14,8 +14,9 @@ namespace mttApi
 
 		static API_EXPORT std::shared_ptr<Core> create();
 
-		API_EXPORT TorrentPtr addFile(const char* filename);
-		API_EXPORT TorrentPtr addMagnet(const char* magnet);
+		API_EXPORT std::pair<mtt::Status, TorrentPtr> addFile(const char* filename);
+		API_EXPORT std::pair<mtt::Status, TorrentPtr> addFile(const uint8_t* data, size_t size);
+		API_EXPORT std::pair<mtt::Status, TorrentPtr> addMagnet(const char* magnet);
 
 		API_EXPORT TorrentPtr getTorrent(const uint8_t* hash);
 		API_EXPORT TorrentPtr getTorrent(const char* hash);

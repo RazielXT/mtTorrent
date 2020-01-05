@@ -33,12 +33,17 @@ std::vector<mttApi::TorrentPtr> mttApi::Core::getTorrents()
 	return out;
 }
 
-mttApi::TorrentPtr mttApi::Core::addFile(const char* filename)
+std::pair<mtt::Status, mttApi::TorrentPtr> mttApi::Core::addFile(const char* filename)
 {
 	return static_cast<mtt::Core*>(this)->addFile(filename);
 }
 
-mttApi::TorrentPtr mttApi::Core::addMagnet(const char* magnet)
+std::pair<mtt::Status, mttApi::TorrentPtr> mttApi::Core::addFile(const uint8_t* data, size_t size)
+{
+	return static_cast<mtt::Core*>(this)->addFile(data, size);
+}
+
+std::pair<mtt::Status, mttApi::TorrentPtr> mttApi::Core::addMagnet(const char* magnet)
 {
 	return static_cast<mtt::Core*>(this)->addMagnet(magnet);
 }

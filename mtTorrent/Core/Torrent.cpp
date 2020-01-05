@@ -25,6 +25,22 @@ mtt::TorrentPtr mtt::Torrent::fromFile(std::string filepath)
 		return nullptr;
 }
 
+mtt::TorrentPtr mtt::Torrent::fromFileData(const uint8_t* data, size_t dataSize)
+{
+	mtt::TorrentPtr torrent = std::make_shared<Torrent>();
+	torrent->infoFile = mtt::TorrentFileParser::parse(data, dataSize);
+
+	if (!torrent->infoFile.info.name.empty())
+	{
+		torrent->peers = std::make_shared<Peers>(torrent);
+		torrent->fileTransfer = std::make_shared<FileTransfer>(torrent);
+		torrent->init();
+		return torrent;
+	}
+	else
+		return nullptr;
+}
+
 mtt::TorrentPtr mtt::Torrent::fromMagnetLink(std::string link)
 {
 	mtt::TorrentPtr torrent = std::make_shared<Torrent>();
@@ -120,6 +136,8 @@ void mtt::Torrent::downloadMetadata(std::function<void(Status, MetadataDownloadS
 			infoFile.info = utmDl->metadata.getRecontructedInfo();
 			peers->reloadTorrentInfo();
 			init();
+
+			AlertsManager::Get().metadataAlert(AlertId::MetadataFinished, hash());
 		}
 
 		if (state.finished)

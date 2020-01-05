@@ -32,6 +32,11 @@ const char* getStringPtr(System::String^ str)
 	return (const char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(str).ToPointer();
 }
 
+const wchar_t* getWStringPtr(System::String^ str)
+{
+	return (const wchar_t*)System::Runtime::InteropServices::Marshal::StringToHGlobalUni(str).ToPointer();
+}
+
 void applySettings(GuiLite::SettingsForm^ form)
 {
 	mtBI::SettingsInfo info;
@@ -91,8 +96,8 @@ TorrentCtxMenuInfo getTorrentContexMenuInfo()
 	mtBI::MagnetLinkProgressLogsRequest logsReq;
 	logsReq.start = -1;
 	memcpy(logsReq.hash, firstSelectedHash, 20);
-	mtBI::MagnetLinkProgressLogsResponse logsResp;
-	info.utmLogs = IoctlFunc(mtBI::MessageId::GetMagnetLinkProgressLogs, &logsReq, &logsResp) == mtt::Status::Success && logsResp.fullcount > 0;
+	mtBI::MagnetLinkProgressLogsResponse logsResp{};
+	info.utmLogs = IoctlFunc(mtBI::MessageId::GetMagnetLinkProgressLogs, &logsReq, &logsResp) == mtt::Status::E_NoData && logsResp.fullcount > 0;
 
 	mtBI::MagnetLinkProgress magnetProgress{};
 	info.noInfo = IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, firstSelectedHash, &magnetProgress) == mtt::Status::Success && !magnetProgress.finished;
@@ -336,9 +341,19 @@ void init()
 	{
 		IoctlFunc = (IOCTL_FUNC)GetProcAddress(lib, "Ioctl");
 		IoctlFunc(mtBI::MessageId::Init, nullptr, nullptr);
-		mtBI::RegisterAlertsRequest alertsRequest{ (uint32_t)mtt::AlertCategory::Torrent };
+		mtBI::RegisterAlertsRequest alertsRequest{ (uint32_t)mtt::AlertCategory::Torrent | (uint32_t)mtt::AlertCategory::Metadata };
 		IoctlFunc(mtBI::MessageId::RegisterAlerts, &alertsRequest, nullptr);
 	}
+}
+
+System::String^ getSelectedTorrentName()
+{
+	mtBI::TorrentStateInfo info;
+
+	if (selected && IoctlFunc(mtBI::MessageId::GetTorrentStateInfo, firstSelectedHash, &info) == mtt::Status::Success)
+		return gcnew System::String(info.name.data);
+	else
+		return "";
 }
 
 void addTorrent()
@@ -348,8 +363,16 @@ void addTorrent()
 	if (openFileDialog->ShowDialog() == System::Windows::Forms::DialogResult::OK)
 	{
 		auto filenamePtr = getStringPtr(openFileDialog->FileName);
+	
+		auto status = IoctlFunc(mtBI::MessageId::AddFromFile, filenamePtr, firstSelectedHash);
+
+		if (status == mtt::Status::I_AlreadyExists)
+		{
+			auto name = getSelectedTorrentName();
+			::MessageBox(NULL, L"Torrent already added", getWStringPtr(name), MB_OK);
+		}
 		
-		if (IoctlFunc(mtBI::MessageId::AddFromFile, filenamePtr, firstSelectedHash) == mtt::Status::Success)
+		if (status == mtt::Status::Success || status == mtt::Status::I_AlreadyExists)
 		{
 			selected = true;
 			selectionChanged = true;
@@ -357,15 +380,22 @@ void addTorrent()
 	}
 }
 
-bool addTorrentFromMetadata(const char* magnetPtr)
+mtt::Status addTorrentFromMetadata(const char* magnetPtr)
 {
-	if (IoctlFunc(mtBI::MessageId::AddFromMetadata, magnetPtr, firstSelectedHash) != mtt::Status::Success)
-		return false;
+	auto status = IoctlFunc(mtBI::MessageId::AddFromMetadata, magnetPtr, firstSelectedHash);
+
+	if (status == mtt::Status::I_AlreadyExists)
+	{
+		auto name = getSelectedTorrentName();
+		::MessageBox(NULL, L"Torrent already added", getWStringPtr(name), MB_OK);
+	}
+	else if (status != mtt::Status::Success)
+		return status;
 
 	selected = true;
 	selectionChanged = true;
 
-	return true;
+	return status;
 }
 
 void setSelected(bool v)
@@ -424,16 +454,6 @@ void refreshSelection()
 			selectionChanged = true;
 		}
 	}
-}
-
-System::String^ getSelectedTorrentName()
-{
-	mtBI::TorrentStateInfo info;
-
-	if (selected && IoctlFunc(mtBI::MessageId::GetTorrentStateInfo, firstSelectedHash, &info) == mtt::Status::Success)
-		return gcnew System::String(info.name.data);
-	else
-		return "";
 }
 
 void showFilesSelectionFormThread()
@@ -572,8 +592,11 @@ void onButtonClick(ButtonId id, System::String^ param)
 			GuiLite::MagnetInputForm form;
 			form.labelText->Text = "Getting info...";
 			form.magnetFormButton->Text = "Logs";
+			form.magnetFormButton->Enabled = false;
+			form.logsTextBox->Visible = true;
 			form.textBoxMagnet->Text = gcnew String(hexToString(firstSelectedHash, 20).data());
-			magnetLinkSequence = 2;
+			form.textBoxMagnet->Enabled = true;
+			magnetLinkSequence = 3;
 			form.ShowDialog();
 			GuiLite::MagnetInputForm::instance = nullptr;
 			magnetLinkSequence = 0;
@@ -704,12 +727,19 @@ void onButtonClick(ButtonId id, System::String^ param)
 					return;
 
 				auto magnetPtr = getStringPtr(GuiLite::MagnetInputForm::instance->textBoxMagnet->Text);
-				if (addTorrentFromMetadata(magnetPtr))
+				auto status = addTorrentFromMetadata(magnetPtr);
+
+				if (status == mtt::Status::Success)
 				{
+					GuiLite::MagnetInputForm::instance->textBoxMagnet->ReadOnly = true;
 					GuiLite::MagnetInputForm::instance->labelText->Text = "Getting info...";
 					magnetLinkSequence = 2;
 
 					GuiLite::MagnetInputForm::instance->magnetFormButton->Text = "Logs";
+				}
+				else if (status == mtt::Status::I_AlreadyExists)
+				{
+					GuiLite::MagnetInputForm::instance->Close();
 				}
 				else
 					GuiLite::MagnetInputForm::instance->labelText->Text = "Invalid magnet link";
@@ -815,6 +845,11 @@ void checkAlerts()
 			{
 				showFilesSelectionForm(alert.hash, true);
 			}
+			else if (alert.id == mtt::AlertId::MetadataFinished)
+			{
+				if (memcmp(firstSelectedHash, alert.hash, 20) == 0)
+					selectionChanged = true;
+			}
 		}
 	}
 }
@@ -860,8 +895,12 @@ void refreshUi()
 
 				if (progress.finished)
 				{
-					magnetLinkSequence = 4;
 					GuiLite::MagnetInputForm::instance->labelText->Text = "Finished";
+		
+					if(magnetLinkSequence == 2)
+						GuiLite::MagnetInputForm::instance->Close();
+					else
+						magnetLinkSequence = 4;
 				}
 			}
 			else

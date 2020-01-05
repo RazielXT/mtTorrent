@@ -17,21 +17,21 @@ extern "C"
 			core.reset();
 		else if (id == mtBI::MessageId::AddFromFile)
 		{
-			auto t = core->addFile((const char*)request);
+			auto[status, t] = core->addFile((const char*)request);
 
-			if (!t)
-				return mtt::Status::E_InvalidInput;
+			if (t)
+				memcpy(output, t->getFileInfo().info.hash, 20);
 
-			memcpy(output, t->getFileInfo().info.hash, 20);
+			return status;
 		}
 		else if (id == mtBI::MessageId::AddFromMetadata)
 		{
-			auto t = core->addMagnet((const char*)request);
+			auto [status, t] = core->addMagnet((const char*)request);
 
-			if (!t)
-				return mtt::Status::E_InvalidInput;
+			if (t)
+				memcpy(output, t->getFileInfo().info.hash, 20);
 
-			memcpy(output, t->getFileInfo().info.hash, 20);
+			return status;
 		}
 		else if (id == mtBI::MessageId::Start)
 		{
@@ -330,6 +330,8 @@ extern "C"
 					out->alerts[i].id = alerts[i]->id;
 
 					if (auto t = alerts[i]->getAs<mtt::TorrentAlert>())
+						memcpy(out->alerts[i].hash, t->hash, 20);
+					if (auto t = alerts[i]->getAs<mtt::MetadataAlert>())
 						memcpy(out->alerts[i].hash, t->hash, 20);
 				}
 			}

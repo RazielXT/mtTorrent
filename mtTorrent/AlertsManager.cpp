@@ -16,14 +16,14 @@ void mtt::AlertsManager::torrentAlert(AlertId id, const uint8_t* hash)
 	alerts.push_back(std::move(alert));
 }
 
-void mtt::AlertsManager::metadataAlert(AlertId id, TorrentPtr t)
+void mtt::AlertsManager::metadataAlert(AlertId id, const uint8_t* hash)
 {
 	if (!isAlertRegistered(id))
 		return;
 
 	auto alert = std::make_unique<MetadataAlert>();
 	alert->id = id;
-	memcpy(alert->hash, t->hash(), 20);
+	memcpy(alert->hash, hash, 20);
 
 	std::lock_guard<std::mutex> guard(alertsMutex);
 	alerts.push_back(std::move(alert));

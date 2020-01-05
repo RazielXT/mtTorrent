@@ -131,32 +131,49 @@ void mtt::Core::deinit()
 	mtt::config::save();
 }
 
-mtt::TorrentPtr mtt::Core::addFile(const char* filename)
+std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addFile(const char* filename)
 {
 	auto torrent = Torrent::fromFile(filename);
 
 	if (!torrent)
-		return nullptr;
+		return { mtt::Status::E_InvalidInput, nullptr };
 
 	if (auto t = getTorrent(torrent->hash()))
-		return t;
+		return { mtt::Status::I_AlreadyExists, torrent };
 
 	torrents.push_back(torrent);
 	torrent->saveTorrentFile();
 	torrent->checkFiles();
 
-	return torrent;
+	return { mtt::Status::Success, torrent };
 }
 
-mtt::TorrentPtr mtt::Core::addMagnet(const char* magnet)
+std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addFile(const uint8_t* data, size_t size)
+{
+	auto torrent = Torrent::fromFileData(data, size);
+
+	if (!torrent)
+		return { mtt::Status::E_InvalidInput, nullptr };
+
+	if (auto t = getTorrent(torrent->hash()))
+		return { mtt::Status::I_AlreadyExists, torrent };
+
+	torrents.push_back(torrent);
+	torrent->saveTorrentFile();
+	torrent->checkFiles();
+
+	return { mtt::Status::Success, torrent };
+}
+
+std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addMagnet(const char* magnet)
 {
 	auto torrent = Torrent::fromMagnetLink(magnet);
 
 	if (!torrent)
-		return nullptr;
+		return { mtt::Status::E_InvalidInput, nullptr };
 
 	if (auto t = getTorrent(torrent->hash()))
-		return t;
+		return { mtt::Status::I_AlreadyExists, torrent };
 
 	auto onMetadataUpdate = [this, torrent](Status s, mtt::MetadataDownloadState& state)
 	{
@@ -170,7 +187,7 @@ mtt::TorrentPtr mtt::Core::addMagnet(const char* magnet)
 	torrent->downloadMetadata(onMetadataUpdate);
 	torrents.push_back(torrent);
 
-	return torrent;
+	return { mtt::Status::Success, torrent };
 }
 
 mtt::TorrentPtr mtt::Core::getTorrent(const uint8_t* hash)

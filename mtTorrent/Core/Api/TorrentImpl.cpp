@@ -144,6 +144,7 @@ bool mttApi::Torrent::getMetadataDownloadLog(std::vector<std::string>& logs, siz
 	if (auto utm = static_cast<mtt::Torrent*>(this)->utmDl.get())
 	{
 		auto& events = utm->getEvents();
+
 		for (size_t i = logStart; i < events.size(); i++)
 		{
 			logs.push_back(events[i].toString());
