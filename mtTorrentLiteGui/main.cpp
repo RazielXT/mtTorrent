@@ -928,6 +928,9 @@ void refreshUi()
 	mtBI::TorrentStateInfo info;
 	info.connectedPeers = 0;
 	{
+		bool selectionActive = false;
+		bool selectionStopped = false;
+
 		auto torrentGrid = GuiLite::MainForm::instance->getGrid();
 		adjustGridRowsCount(torrentGrid, (int)torrents.list.size());
 
@@ -1031,10 +1034,21 @@ void refreshUi()
 					lastInfoIncomplete = info.utmActive;
 				}
 
+				if (torrentGrid->Rows[i]->Selected)
+				{
+					if (t.active)
+						selectionActive = true;
+					else
+						selectionStopped = true;
+				}
+
 				if (torrentGrid->SortedColumn)
 					torrentGrid->Sort(torrentGrid->SortedColumn, torrentGrid->SortOrder == SortOrder::Ascending ? System::ComponentModel::ListSortDirection::Ascending : System::ComponentModel::ListSortDirection::Descending);
 			}
 		}
+
+		GuiLite::MainForm::instance->buttonStart->Enabled = selectionStopped;
+		GuiLite::MainForm::instance->buttonStop->Enabled = selectionActive;
 	}
 
 	if (torrents.list.size() && !selected)
