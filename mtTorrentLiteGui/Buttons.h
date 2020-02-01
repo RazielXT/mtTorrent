@@ -22,6 +22,7 @@ enum class ButtonId
 	OpenLocation,
 	Schedule,
 	MagnetLogs,
+	CheckFiles,
 };
 
 extern void onButtonClick(ButtonId id);
