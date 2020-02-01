@@ -113,11 +113,11 @@ bool mttApi::Torrent::getPiecesBitfield(uint8_t* dataBitfield, size_t dataSize)
 	return static_cast<mtt::Torrent*>(this)->files.progress.toBitfield(dataBitfield, dataSize);
 }
 
-bool mttApi::Torrent::getPiecesReceivedList(uint32_t* dataPieces, size_t& dataSize)
+bool mttApi::Torrent::getReceivedPieces(uint32_t* dataPieces, size_t& dataSize)
 {
 	auto& progress = static_cast<mtt::Torrent*>(this)->files.progress;
 
-	if (dataSize < progress.getReceivedPiecesCount())
+	if (dataSize < progress.getReceivedPiecesCount() || !dataPieces)
 	{
 		dataSize = progress.getReceivedPiecesCount();
 		return false;

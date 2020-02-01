@@ -154,7 +154,7 @@ void initPiecesChart()
 {
 	if (lastBitfield.size() != progress.bitfield.size())
 	{
-		lastBitfield.assign((uint8_t)0, progress.bitfield.size());
+		lastBitfield.clear(progress.bitfield.size());
 
 		auto chart = GuiLite::MainForm::instance->pieceChart;
 		chart->Visible = true;
@@ -168,10 +168,13 @@ void initPiecesChart()
 void updatePiecesChart()
 {
 	auto chart = GuiLite::MainForm::instance->pieceChart;
+	progress.bitfield.clear(progress.bitfield.size());
 
 	if (IoctlFunc(mtBI::MessageId::GetPiecesInfo, &firstSelectedHash, &progress) == mtt::Status::Success && !progress.bitfield.empty())
 	{
 		initPiecesChart();
+
+		chart->ChartAreas[0]->AxisX->Title = "Pieces: " + int(progress.receivedCount).ToString() + "/" + int(progress.piecesCount).ToString();
 
 		for (uint32_t i = 0; i < progress.piecesCount; i++)
 		{

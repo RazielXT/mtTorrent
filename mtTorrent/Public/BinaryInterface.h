@@ -55,7 +55,7 @@ namespace mtBI
 	struct PiecesInfo
 	{
 		uint32_t piecesCount;
-
+		uint32_t receivedCount;
 		mtt::array<uint8_t> bitfield;
 		mtt::array<uint32_t> requests;
 	};

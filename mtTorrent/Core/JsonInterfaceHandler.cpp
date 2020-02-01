@@ -375,13 +375,13 @@ extern "C"
 			if (piecesCount > 0)
 			{
 				size_t size = 0;
-				t->getPiecesReceivedList(nullptr, size);
+				t->getReceivedPieces(nullptr, size);
 
 				if (size > 0)
 				{
 					std::vector<uint32_t> piecesList;
 					piecesList.resize(size);
-					t->getPiecesReceivedList(piecesList.data(), size);
+					t->getReceivedPieces(piecesList.data(), size);
 
 					for (auto& idx : piecesList)
 					{

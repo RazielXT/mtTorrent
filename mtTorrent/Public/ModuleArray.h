@@ -106,6 +106,13 @@ namespace mtt
 			allocatedSize = 0;
 		}
 
+		void clear(size_t size)
+		{
+			reserve(size);
+			this->currentSize = size;
+			memset(buffer, 0, size * sizeof(T));
+		}
+
 		struct iterator {
 		public:
 			iterator(const T* ptr) : ptr(ptr) {}

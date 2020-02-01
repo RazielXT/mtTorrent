@@ -195,6 +195,9 @@ extern "C"
 
 			auto resp = (mtBI::PiecesInfo*) output;
 			resp->piecesCount = (uint32_t)torrent->getFileInfo().info.pieces.size();
+			size_t receivedCount = 0;
+			torrent->getReceivedPieces(nullptr, receivedCount);
+			resp->receivedCount = (uint32_t)receivedCount;
 
 			resp->bitfield.resize(torrent->getFileInfo().info.expectedBitfieldSize);
 			torrent->getPiecesBitfield(resp->bitfield.data(), resp->bitfield.size());
