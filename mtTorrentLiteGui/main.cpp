@@ -60,7 +60,7 @@ System::String^ getUpnpInfo()
 }
 
 int chartTime = 0;
-
+void updateSpeedChart(float dlSpeed, float upSpeed);
 void initSpeedChart()
 {
 	auto chart = GuiLite::MainForm::instance->dlSpeedChart;
@@ -82,6 +82,48 @@ void initSpeedChart()
 
 void updateSpeedChart(float dlSpeed, float upSpeed)
 {
+	const int MaxChartPointsPrecision = 1000;
+
+	int currentPointsCount = GuiLite::MainForm::instance->dlSpeedChart->Series["DlSeries"]->Points->Count;
+	if (currentPointsCount >= MaxChartPointsPrecision)
+	{
+		float dlspeedTemp = 0, upspeedTemp = 0, timeTemp = 0;
+		struct ChartSpeedVals
+		{
+			float time;
+			float dlSpeed;
+			float upspeed;
+		};
+		std::vector<ChartSpeedVals> speeds;
+		speeds.reserve(MaxChartPointsPrecision/2);
+
+		for (int i = 0; i < currentPointsCount; i++)
+		{
+			if (i % 2 == 0)
+			{
+				dlspeedTemp = (float)GuiLite::MainForm::instance->dlSpeedChart->Series["DlSeries"]->Points[i]->YValues[0];
+				upspeedTemp = (float)GuiLite::MainForm::instance->dlSpeedChart->Series["UpSeries"]->Points[i]->YValues[0];
+				timeTemp = (float)GuiLite::MainForm::instance->dlSpeedChart->Series["DlSeries"]->Points[i]->XValue;
+			}
+			else
+			{
+				dlspeedTemp = (dlspeedTemp + (float)GuiLite::MainForm::instance->dlSpeedChart->Series["DlSeries"]->Points[i]->YValues[0])/2;
+				upspeedTemp = (upspeedTemp + (float)GuiLite::MainForm::instance->dlSpeedChart->Series["UpSeries"]->Points[i]->YValues[0])/2;
+
+				speeds.push_back({ timeTemp, dlspeedTemp, upspeedTemp });
+			}
+		}
+
+		GuiLite::MainForm::instance->dlSpeedChart->Series["DlSeries"]->Points->Clear();
+		GuiLite::MainForm::instance->dlSpeedChart->Series["UpSeries"]->Points->Clear();
+
+		for (auto& speed : speeds)
+		{
+			GuiLite::MainForm::instance->dlSpeedChart->Series["DlSeries"]->Points->AddXY(speed.time, speed.dlSpeed);
+			GuiLite::MainForm::instance->dlSpeedChart->Series["UpSeries"]->Points->AddXY(speed.time, speed.upspeed);
+		}
+	}
+
 	GuiLite::MainForm::instance->dlSpeedChart->Series["DlSeries"]->Points->AddXY(++chartTime, dlSpeed);
 	GuiLite::MainForm::instance->dlSpeedChart->Series["UpSeries"]->Points->AddXY(chartTime, upSpeed);
 }
@@ -184,7 +226,7 @@ String^ formatBytes(size_t bytes)
 	}
 
 	auto str = gcnew String(sz.ToString("F"));
-	str = str->TrimEnd('0')->TrimEnd('.');
+	str = str->TrimEnd('0')->TrimEnd('.', ',');
 
 	return str + gcnew String(type);
 }
@@ -254,7 +296,7 @@ void fillFilesSelectionForm()
 	auto form = GuiLite::FileSelectionForm::instance;
 	auto& info = fileSelection.info;
 
-	if (IoctlFunc(mtBI::MessageId::GetTorrentInfo, fileSelection.hash, &info) != mtt::Status::Success)
+	if (IoctlFunc(mtBI::MessageId::GetTorrentInfo, fileSelection.hash, &info) != mtt::Status::Success || info.files.empty())
 		return;
 
 	auto list = form->filesGridView;
@@ -359,6 +401,7 @@ System::String^ getSelectedTorrentName()
 void addTorrent()
 {
 	OpenFileDialog^ openFileDialog = gcnew OpenFileDialog;
+	openFileDialog->Filter = "Torrent files (*.torrent)|*.torrent|All files (*.*)|*.*";
 
 	if (openFileDialog->ShowDialog() == System::Windows::Forms::DialogResult::OK)
 	{
@@ -576,6 +619,10 @@ void onButtonClick(ButtonId id, System::String^ param)
 			System::Diagnostics::Process::Start(path);
 		}
 	}
+	else if (id == ButtonId::CheckFiles)
+	{
+		IoctlFunc(mtBI::MessageId::CheckFiles, &firstSelectedHash, nullptr);
+	}
 	else if (id == ButtonId::Schedule)
 	{
 		mtTorrentLiteGui::ScheduleForm form;
@@ -633,7 +680,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 			IoctlFunc(mtBI::MessageId::Remove, &request, nullptr);
 		}
 
-		refreshSelection();
+		setSelected(false);
 	}
 	else if (id == ButtonId::AddTorrentFile)
 	{
@@ -787,7 +834,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 				IoctlFunc(mtBI::MessageId::SetTorrentFilesSelection, &selection, nullptr);
 			}
 
-			if (form->checkBoxStart->Visible && form->checkBoxStart->Enabled)
+			if (form->checkBoxStart->Visible && form->checkBoxStart->Checked)
 				IoctlFunc(mtBI::MessageId::Start, fileSelection.hash, nullptr);
 
 			GuiLite::FileSelectionForm::instance->Close();
@@ -1177,6 +1224,7 @@ void deinit()
 const int WM_MTT_ARGUMENT = WM_USER + 100;
 const int MTT_ARGUMENT_START = 1;
 const int MTT_ARGUMENT_END = 2;
+const int MTT_SHOW_WINDOW = 3;
 std::string argumentBuffer;
 
 public ref class MyMessageFilter : System::Windows::Forms::IMessageFilter
@@ -1189,7 +1237,12 @@ public ref class MyMessageFilter : System::Windows::Forms::IMessageFilter
 		{
 			if (objMessage.Msg == WM_MTT_ARGUMENT)
 			{
-				if (objMessage.LParam == (IntPtr)MTT_ARGUMENT_END)
+				if (objMessage.LParam == (IntPtr)MTT_SHOW_WINDOW)
+				{
+					GuiLite::MainForm::instance->Show();
+					GuiLite::MainForm::instance->WindowState = FormWindowState::Normal;
+				}
+				else if (objMessage.LParam == (IntPtr)MTT_ARGUMENT_END)
 					ProcessProgramArgument(gcnew System::String(argumentBuffer.data()));
 				else
 				{
@@ -1226,14 +1279,50 @@ void FormsMain(cli::array<System::String ^>^ args)
 	deinit();
 }
 
+HWND siblingWindowId;
+DWORD siblingProcessId;
+static BOOL CALLBACK enumWindowCallback(HWND hWnd, LPARAM lparam) {
+	int length = GetWindowTextLength(hWnd);
+	wchar_t* buffer = new wchar_t[length + 1];
+	GetWindowText(hWnd, buffer, length + 1);
+
+	if (length != 0 && !IsWindowVisible(hWnd) && wcsncmp(buffer, L"mtTorrent", length) == 0)
+	{
+		DWORD processId = 0;
+		GetWindowThreadProcessId(hWnd, &processId);
+
+		if(processId == siblingProcessId)
+			siblingWindowId = hWnd;
+	}
+	return TRUE;
+}
+
+HWND getHiddenWindowHandle(int parentProcessID)
+{
+	siblingProcessId = (DWORD)parentProcessID;
+	siblingWindowId = 0;
+	EnumWindows(enumWindowCallback, NULL);
+	return siblingWindowId;
+}
+
 #pragma comment(lib, "user32.lib")
 HWND GetExistingMainWindow()
 {
-	auto processes = System::Diagnostics::Process::GetProcessesByName("mtTorrent");
+	auto p = System::Diagnostics::Process::GetCurrentProcess();
+	auto location = System::Reflection::Assembly::GetExecutingAssembly()->Location;
+
+	auto processes = System::Diagnostics::Process::GetProcessesByName(p->ProcessName);
 	for (int i = 0; i < processes->Length; i++)
 	{
-		if (processes[i]->MainWindowTitle == "mtTorrent")
-			return (HWND)processes[i]->MainWindowHandle.ToInt64();
+		if (processes[i]->Id != p->Id && processes[i]->MainModule->FileName == location)
+		{
+			HWND window = (HWND)processes[i]->MainWindowHandle.ToInt64();
+
+			if (!window)
+				window = getHiddenWindowHandle(processes[i]->Id);
+
+			return window;
+		}
 	}
 
 	return 0;
@@ -1252,6 +1341,8 @@ void OnDuplicate(HWND hMainWindow, cli::array<System::String ^>^ args)
 
 		PostMessage(hMainWindow, WM_MTT_ARGUMENT, 0, MTT_ARGUMENT_END);
 	}
+
+	PostMessage(hMainWindow, WM_MTT_ARGUMENT, 0, MTT_SHOW_WINDOW);
 }
 
 int Main(cli::array<System::String ^>^ args)
