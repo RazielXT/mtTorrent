@@ -28,6 +28,11 @@ float mttApi::Torrent::checkingProgress()
 	return static_cast<mtt::Torrent*>(this)->checkingProgress();
 }
 
+void mttApi::Torrent::checkFiles()
+{
+	static_cast<mtt::Torrent*>(this)->checkFiles();
+}
+
 bool mttApi::Torrent::selectFiles(std::vector<bool>& s)
 {
 	return static_cast<mtt::Torrent*>(this)->selectFiles(s);

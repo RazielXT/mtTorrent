@@ -59,6 +59,15 @@ extern "C"
 			if (s != mtt::Status::Success)
 				return s;
 		}
+		else if (id == mtBI::MessageId::CheckFiles)
+		{
+			auto t = core->getTorrent((const uint8_t*)request);
+
+			if (!t)
+				return mtt::Status::E_InvalidInput;
+
+			t->checkFiles();
+		}
 		else if (id == mtBI::MessageId::GetTorrents)
 		{
 			auto resp = (mtBI::TorrentsList*) output;

@@ -33,6 +33,7 @@ namespace mtBI
 		GetUpnpInfo,	//null, string
 		RegisterAlerts,	//RegisterAlertsRequest, null
 		PopAlerts,		//null, AlertsList
+		CheckFiles,		//hash, null
 	};
 
 	struct SourceId

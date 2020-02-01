@@ -26,6 +26,7 @@ namespace mttApi
 		API_EXPORT State getStatus();
 		API_EXPORT mtt::Status getLastError();
 		API_EXPORT float checkingProgress();
+		API_EXPORT void checkFiles();
 
 		API_EXPORT mtt::DownloadSelection getFilesSelection();
 		API_EXPORT bool selectFiles(std::vector<bool>&);
