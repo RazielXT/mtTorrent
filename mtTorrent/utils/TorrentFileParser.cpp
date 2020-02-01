@@ -226,7 +226,7 @@ mtt::TorrentInfo parseTorrentInfo(const BencodeParser::Object* infoDictionary)
 		size_t size = infoDictionary->getBigInt("length");
 		auto endPos = size % info.pieceSize;
 		info.name = infoDictionary->getTxt("name");
-		info.files.push_back({ { info.name }, size, 0, 0, static_cast<uint32_t>(info.pieces.size() - 1), (uint32_t)endPos });
+		info.files.push_back({ { info.name }, size, 0, 0, static_cast<uint32_t>(info.pieces.size() - 1), (uint32_t)(endPos ? endPos : info.pieceSize) });
 
 		info.fullSize = size;
 	}
