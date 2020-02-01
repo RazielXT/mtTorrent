@@ -256,6 +256,7 @@ std::shared_ptr<mtt::PiecesCheck> mtt::Torrent::checkFiles(std::function<void(st
 		if (!check->rejected)
 		{
 			files.progress.fromList(check->pieces);
+			files.progress.select(files.selection);
 			checked = true;
 
 			if (state == State::Started)
