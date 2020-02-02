@@ -26,6 +26,7 @@ bool initialized = true;
 bool selected = false;
 uint8_t firstSelectedHash[20];
 bool selectionChanged = false;
+bool forceRefresh = false;
 
 const char* getStringPtr(System::String^ str)
 {
@@ -410,36 +411,34 @@ void addTorrent()
 	{
 		auto filenamePtr = getStringPtr(openFileDialog->FileName);
 	
-		auto status = IoctlFunc(mtBI::MessageId::AddFromFile, filenamePtr, firstSelectedHash);
+		uint8_t hash[20];
+		auto status = IoctlFunc(mtBI::MessageId::AddFromFile, filenamePtr, hash);
 
 		if (status == mtt::Status::I_AlreadyExists)
 		{
 			auto name = getSelectedTorrentName();
 			::MessageBox(NULL, L"Torrent already added", getWStringPtr(name), MB_OK);
 		}
-		
-		if (status == mtt::Status::Success || status == mtt::Status::I_AlreadyExists)
-		{
-			selected = true;
-			selectionChanged = true;
-		}
 	}
 }
 
+struct
+{
+	int magnetLinkSequence = 0;
+	uint32_t lastMagnetLinkLogCount = 0;
+	uint8_t hash[20];
+}
+magnet;
+
 mtt::Status addTorrentFromMetadata(const char* magnetPtr)
 {
-	auto status = IoctlFunc(mtBI::MessageId::AddFromMetadata, magnetPtr, firstSelectedHash);
+	auto status = IoctlFunc(mtBI::MessageId::AddFromMetadata, magnetPtr, magnet.hash);
 
 	if (status == mtt::Status::I_AlreadyExists)
 	{
 		auto name = getSelectedTorrentName();
 		::MessageBox(NULL, L"Torrent already added", getWStringPtr(name), MB_OK);
 	}
-	else if (status != mtt::Status::Success)
-		return status;
-
-	selected = true;
-	selectionChanged = true;
 
 	return status;
 }
@@ -590,9 +589,6 @@ void stopSchedule(uint8_t* hash)
 	}
 }
 
-int magnetLinkSequence = 0;
-uint32_t lastMagnetLinkLogCount = 0;
-
 void onButtonClick(ButtonId id, System::String^ param)
 {
 	if (id == ButtonId::AddPeerMenu)
@@ -637,20 +633,21 @@ void onButtonClick(ButtonId id, System::String^ param)
 			return;
 
 		mtBI::MagnetLinkProgress magnetProgress;
-		if (!GuiLite::MagnetInputForm::instance && IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, firstSelectedHash, &magnetProgress) == mtt::Status::Success)
+		memcpy(magnet.hash, firstSelectedHash, 20);
+		if (!GuiLite::MagnetInputForm::instance && IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, magnet.hash, &magnetProgress) == mtt::Status::Success)
 		{
 			GuiLite::MagnetInputForm form;
 			form.labelText->Text = "Getting info...";
 			form.magnetFormButton->Text = "Logs";
 			form.magnetFormButton->Enabled = false;
 			form.logsTextBox->Visible = true;
-			form.textBoxMagnet->Text = gcnew String(hexToString(firstSelectedHash, 20).data());
+			form.textBoxMagnet->Text = gcnew String(hexToString(magnet.hash, 20).data());
 			form.textBoxMagnet->Enabled = true;
-			magnetLinkSequence = 3;
+			magnet.magnetLinkSequence = 3;
 			form.ShowDialog();
 			GuiLite::MagnetInputForm::instance = nullptr;
-			magnetLinkSequence = 0;
-			lastMagnetLinkLogCount = 0;
+			magnet.magnetLinkSequence = 0;
+			magnet.lastMagnetLinkLogCount = 0;
 		}
 	}
 	else if (id == ButtonId::Remove)
@@ -704,7 +701,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 			for (auto s : selection)
 			{
 				if (IoctlFunc(mtBI::MessageId::Start, s.hash, nullptr) == mtt::Status::Success)
-					selectionChanged = true;
+					forceRefresh = true;
 
 				stopSchedule(s.hash);
 			}
@@ -719,7 +716,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 			for (auto s : selection)
 			{
 				if (IoctlFunc(mtBI::MessageId::Stop, s.hash, nullptr) == mtt::Status::Success)
-					selectionChanged = true;
+					forceRefresh = true;
 
 				stopSchedule(s.hash);
 			}
@@ -727,12 +724,12 @@ void onButtonClick(ButtonId id, System::String^ param)
 	}
 	else if (id == ButtonId::AddTorrentMagnet)
 	{
-		magnetLinkSequence = 1;
+		magnet.magnetLinkSequence = 1;
 		GuiLite::MagnetInputForm form;
 		form.ShowDialog();
 		GuiLite::MagnetInputForm::instance = nullptr;
-		magnetLinkSequence = 0;
-		lastMagnetLinkLogCount = 0;
+		magnet.magnetLinkSequence = 0;
+		magnet.lastMagnetLinkLogCount = 0;
 	}
 	else if (id == ButtonId::Settings)
 	{
@@ -773,7 +770,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 				if (GuiLite::MagnetInputForm::instance->textBoxMagnet->Text->Length == 0)
 					return;
 
-				if (magnetLinkSequence > 1)
+				if (magnet.magnetLinkSequence > 1)
 					return;
 
 				auto magnetPtr = getStringPtr(GuiLite::MagnetInputForm::instance->textBoxMagnet->Text);
@@ -783,7 +780,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 				{
 					GuiLite::MagnetInputForm::instance->textBoxMagnet->ReadOnly = true;
 					GuiLite::MagnetInputForm::instance->labelText->Text = "Getting info...";
-					magnetLinkSequence = 2;
+					magnet.magnetLinkSequence = 2;
 
 					GuiLite::MagnetInputForm::instance->magnetFormButton->Text = "Logs";
 				}
@@ -798,7 +795,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 			{
 				GuiLite::MagnetInputForm::instance->magnetFormButton->Enabled = false;
 				GuiLite::MagnetInputForm::instance->logsTextBox->Visible = true;
-				magnetLinkSequence = 3;
+				magnet.magnetLinkSequence = 3;
 			}
 		}
 	}
@@ -898,7 +895,7 @@ void checkAlerts()
 			else if (alert.id == mtt::AlertId::MetadataFinished)
 			{
 				if (memcmp(firstSelectedHash, alert.hash, 20) == 0)
-					selectionChanged = true;
+					forceRefresh = true;
 			}
 		}
 	}
@@ -913,13 +910,13 @@ void refreshUi()
 
 	if (GuiLite::MagnetInputForm::instance)
 	{
-		if (magnetLinkSequence >= 2)
+		if (magnet.magnetLinkSequence >= 2)
 		{
-			if (magnetLinkSequence == 3)
+			if (magnet.magnetLinkSequence == 3)
 			{
 					mtBI::MagnetLinkProgressLogsRequest logsRequest;
-					logsRequest.start = lastMagnetLinkLogCount;
-					memcpy(logsRequest.hash, firstSelectedHash, 20);
+					logsRequest.start = magnet.lastMagnetLinkLogCount;
+					memcpy(logsRequest.hash, magnet.hash, 20);
 					mtBI::MagnetLinkProgressLogsResponse logsResponse;
 
 					if (IoctlFunc(mtBI::MessageId::GetMagnetLinkProgressLogs, &logsRequest, &logsResponse) == mtt::Status::Success)
@@ -930,12 +927,12 @@ void refreshUi()
 							GuiLite::MagnetInputForm::instance->logsTextBox->Text += "\n";
 						}
 
-						lastMagnetLinkLogCount = (uint32_t)logsResponse.fullcount;
+						magnet.lastMagnetLinkLogCount = (uint32_t)logsResponse.fullcount;
 					}
 			}
 
 			mtBI::MagnetLinkProgress progress;
-			auto status = IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, firstSelectedHash, &progress);
+			auto status = IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, magnet.hash, &progress);
 			if (status == mtt::Status::Success)
 			{
 				if (progress.progress > 1.0f)
@@ -947,10 +944,10 @@ void refreshUi()
 				{
 					GuiLite::MagnetInputForm::instance->labelText->Text = "Finished";
 		
-					if(magnetLinkSequence == 2)
+					if(magnet.magnetLinkSequence == 2)
 						GuiLite::MagnetInputForm::instance->Close();
 					else
-						magnetLinkSequence = 4;
+						magnet.magnetLinkSequence = 4;
 				}
 			}
 			else
@@ -959,11 +956,13 @@ void refreshUi()
 	}
 
 	RefreshTimeCounter++;
-	if (RefreshTimeCounter < 10 && !selectionChanged)
+	if (RefreshTimeCounter < 10 && !selectionChanged && !forceRefresh)
 		return;
 
 	RefreshTimeCounter = 0;
+	forceRefresh = false;
 
+	refreshSelection();
 	checkAlerts();
 
 	if (selectionChanged)
@@ -1072,12 +1071,6 @@ void refreshUi()
 
 				if(isSelected)
 				{
-					if (!torrentGrid->Rows[i]->Selected)
-					{
-						torrentGrid->ClearSelection();
-						torrentGrid->Rows[i]->Selected = true;
-					}
-
 					if (lastInfoIncomplete && !info.utmActive)
 						selectionChanged = true;
 
@@ -1099,6 +1092,7 @@ void refreshUi()
 
 		GuiLite::MainForm::instance->buttonStart->Enabled = selectionStopped;
 		GuiLite::MainForm::instance->buttonStop->Enabled = selectionActive;
+		GuiLite::MainForm::instance->buttonRemove->Enabled = selected;
 	}
 
 	if (torrents.list.size() && !selected)
