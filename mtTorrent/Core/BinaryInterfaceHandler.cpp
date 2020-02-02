@@ -138,6 +138,8 @@ extern "C"
 			auto resp = (mtBI::TorrentInfo*) output;
 			resp->name = torrent->getFileInfo().info.name;
 			resp->fullsize = torrent->getFileInfo().info.fullSize;
+			resp->createdBy = torrent->getFileInfo().about.createdBy;
+			resp->creationDate = torrent->getFileInfo().about.creationDate;
 
 			auto selection = torrent->getFilesSelection();
 			resp->files.resize(selection.files.size());

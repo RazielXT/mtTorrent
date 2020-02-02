@@ -150,6 +150,11 @@ std::string mtt::TorrentFileInfo::createTorrentFileData()
 		writer.endArray();
 	}
 
+	if(!about.createdBy.empty())
+		writer.addRawItem("10:created by", about.createdBy);
+	if (about.creationDate != 0)
+		writer.addRawItem("13:creation date", about.creationDate);
+
 	writer.startRawMapItem("4:info");
 
 	if (info.files.size() > 1)

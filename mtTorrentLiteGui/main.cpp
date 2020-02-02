@@ -26,7 +26,7 @@ bool initialized = true;
 bool selected = false;
 uint8_t firstSelectedHash[20];
 bool selectionChanged = false;
-bool forceRefresh = false;
+bool forceRefresh = true;
 
 const char* getStringPtr(System::String^ str)
 {
@@ -343,30 +343,41 @@ void refreshTorrentInfo(uint8_t* hash)
 
 	infoLines->AppendText(gcnew String(info.name.data, 0, (int)info.name.length, System::Text::Encoding::UTF8));
 	infoLines->AppendText(Environment::NewLine);
-	infoLines->AppendText("Fullsize: ");
 	infoLines->AppendText(Environment::NewLine);
+	infoLines->AppendText("Total size: ");
 	infoLines->AppendText(formatBytes(info.fullsize));
 	infoLines->AppendText(Environment::NewLine);
 	infoLines->AppendText(Environment::NewLine);
-	infoLines->AppendText("Files: ");
+	infoLines->AppendText("Save in: \t");
+	info.downloadLocation.append(info.name);
+	infoLines->AppendText(gcnew String(info.downloadLocation.data, 0, (int)info.downloadLocation.length, System::Text::Encoding::UTF8));
 	infoLines->AppendText(Environment::NewLine);
+	infoLines->AppendText(Environment::NewLine);
+	infoLines->AppendText("Hash: \t");
+	auto hashStr = hexToString(hash, 20);
+	for (int i = 0; i < 4; i++)
+		hashStr.insert(8 + i * 8, 1, ' ');
+	infoLines->AppendText(gcnew String(hashStr.data()));
 
-	if (info.files.size())
+	String^ creationStr = "";
+	if (info.creationDate != 0)
 	{
-		auto files = gcnew array<String^>((int)info.files.size());
+		creationStr = DateTimeOffset::FromUnixTimeSeconds(info.creationDate).ToString("MM/dd/yyyy");
+		creationStr += " ";
+	}
 
-		for (int i = 0; i < (int)info.files.size(); i++)
-		{
-			files[i] = gcnew String(info.files[i].name.data, 0, (int)info.files[i].name.length, System::Text::Encoding::UTF8) + " (" + formatBytes(info.files[i].size) + ")";
-		}
-		
-		Array::Sort(files);
+	if (info.createdBy.length != 0)
+	{
+		creationStr += "by ";
+		creationStr += gcnew String(info.createdBy.data);
+	}
 
-		for (int i = 0; i < (int)info.files.size(); i++)
-		{
-			infoLines->AppendText(files[i]);
-			infoLines->AppendText(Environment::NewLine);
-		}
+	if (creationStr->Length > 0)
+	{
+		infoLines->AppendText(Environment::NewLine);
+		infoLines->AppendText(Environment::NewLine);
+		infoLines->AppendText("Created: \t");
+		infoLines->AppendText(creationStr);
 	}
 
 	initSpeedChart();
@@ -680,7 +691,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 			IoctlFunc(mtBI::MessageId::Remove, &request, nullptr);
 		}
 
-		setSelected(false);
+		forceRefresh = true;
 	}
 	else if (id == ButtonId::AddTorrentFile)
 	{
@@ -960,15 +971,9 @@ void refreshUi()
 		return;
 
 	RefreshTimeCounter = 0;
-	forceRefresh = false;
 
 	refreshSelection();
 	checkAlerts();
-
-	if (selectionChanged)
-	{
-		refreshTorrentInfo(firstSelectedHash);
-	}
 
 	mtBI::TorrentsList torrents;
 	if (IoctlFunc(mtBI::MessageId::GetTorrents, nullptr, &torrents) != mtt::Status::Success)
@@ -1095,10 +1100,11 @@ void refreshUi()
 		GuiLite::MainForm::instance->buttonRemove->Enabled = selected;
 	}
 
-	if (torrents.list.size() && !selected)
-	{
+	if (forceRefresh)
 		refreshSelection();
-	}
+
+	if (selectionChanged)
+		refreshTorrentInfo(firstSelectedHash);
 
 	auto activeTab = GuiLite::MainForm::instance->getActiveTab();
 
@@ -1199,6 +1205,7 @@ void refreshUi()
 		updatePiecesChart();
 
 	selectionChanged = false;
+	forceRefresh = false;
 }
 
 void ProcessProgramArgument(System::String^ arg)

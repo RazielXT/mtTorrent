@@ -102,7 +102,10 @@ void loadTorrentFileInfo(BencodeParser& parser, TorrentFileInfo& fileInfo)
 		if (auto info = root->getDictItem("info"))
 		{
 			fileInfo.info = parseTorrentInfo(info);
-		}		
+		}
+
+		fileInfo.about.createdBy = root->getTxt("created by");
+		fileInfo.about.creationDate = root->getInt("creation date");
 	}
 }
 

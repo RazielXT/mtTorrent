@@ -124,6 +124,8 @@ namespace mtBI
 		size_t fullsize;
 		mtt::string name;
 		mtt::string downloadLocation;
+		mtt::string createdBy;
+		size_t creationDate;
 	};
 
 	struct TorrentStateInfo

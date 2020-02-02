@@ -17,6 +17,7 @@ namespace mtt
 		string& operator=(const char* str);
 
 		void assign(const char* str, size_t length);
+		void append(const string& str);
 
 	private:
 		const allocator* const allocator;

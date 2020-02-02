@@ -21,6 +21,21 @@ void mtt::string::assign(const char* str, size_t l)
 	memcpy(data, str, length + 1);
 }
 
+void mtt::string::append(const string& str)
+{
+	auto newData = (char*)allocator->allocate(length + str.length + 1);
+
+	if (data)
+	{
+		memcpy(newData, data, length);
+		allocator->deallocate(data);
+	}
+
+	data = newData;
+	memcpy(data + length, str.data, str.length + 1);
+	length += str.length;
+}
+
 mtt::string & mtt::string::operator=(const char* str)
 {
 	assign(str, strlen(str));

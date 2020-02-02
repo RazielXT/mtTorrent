@@ -65,6 +65,13 @@ namespace mtt
 
 		TorrentInfo info;
 
+		struct
+		{
+			std::string createdBy;
+			int creationDate = 0;
+		}
+		about;
+
 		API_EXPORT Status parseMagnetLink(std::string link);
 		API_EXPORT std::string createTorrentFileData();
 	};
