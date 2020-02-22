@@ -153,7 +153,7 @@ mtt::array<uint8_t> lastBitfield;
 
 void initPiecesChart()
 {
-	if (lastBitfield.size() != progress.bitfield.size())
+	if (lastBitfield.size() != progress.bitfield.size() || selectionChanged)
 	{
 		lastBitfield.clear(progress.bitfield.size());
 
@@ -413,6 +413,20 @@ System::String^ getSelectedTorrentName()
 		return "";
 }
 
+mtt::Status addTorrentFromFile(const char* filepath)
+{
+	uint8_t hash[20];
+	auto status = IoctlFunc(mtBI::MessageId::AddFromFile, filepath, hash);
+
+	if (status == mtt::Status::I_AlreadyExists)
+	{
+		auto name = getSelectedTorrentName();
+		::MessageBox(NULL, L"Torrent already added", getWStringPtr(name), MB_OK);
+	}
+
+	return status;
+}
+
 void addTorrent()
 {
 	OpenFileDialog^ openFileDialog = gcnew OpenFileDialog;
@@ -422,14 +436,7 @@ void addTorrent()
 	{
 		auto filenamePtr = getStringPtr(openFileDialog->FileName);
 	
-		uint8_t hash[20];
-		auto status = IoctlFunc(mtBI::MessageId::AddFromFile, filenamePtr, hash);
-
-		if (status == mtt::Status::I_AlreadyExists)
-		{
-			auto name = getSelectedTorrentName();
-			::MessageBox(NULL, L"Torrent already added", getWStringPtr(name), MB_OK);
-		}
+		addTorrentFromFile(filenamePtr);
 	}
 }
 
@@ -1210,8 +1217,17 @@ void refreshUi()
 
 void ProcessProgramArgument(System::String^ arg)
 {
-	auto magnetPtr = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(arg).ToPointer();
-	addTorrentFromMetadata(magnetPtr);
+	auto inputPtr = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(arg).ToPointer();
+	if (addTorrentFromMetadata(inputPtr) != mtt::Status::E_InvalidInput)
+		return;
+
+	if (addTorrentFromFile(inputPtr) != mtt::Status::E_InvalidInput)
+		return;
+
+	std::wstring str = L"Couldnt process input: ";
+	str += (wchar_t*)System::Runtime::InteropServices::Marshal::StringToHGlobalUni(arg).ToPointer();
+
+	::MessageBox(NULL, str.data(), L"Invalid input", MB_OK);
 }
 
 void deinit()

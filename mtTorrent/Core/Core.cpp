@@ -8,6 +8,7 @@
 #include "IncomingPeersListener.h"
 #include "State.h"
 #include "utils/HexEncoding.h"
+#include "utils/TorrentFileParser.h"
 
 mtt::Core core;
 
@@ -102,6 +103,17 @@ void mtt::Core::init()
 		});
 }
 
+static void saveTorrentList(const std::vector<mtt::TorrentPtr>& torrents)
+{
+	mtt::TorrentsList list;
+	for (auto& t : torrents)
+	{
+		list.torrents.push_back({ t->hashString() });
+	}
+
+	list.save();
+}
+
 void mtt::Core::deinit()
 {
 	if (listener)
@@ -110,14 +122,11 @@ void mtt::Core::deinit()
 		listener.reset();
 	}
 
-	TorrentsList list;
-	for (auto& t : torrents)
-	{
-		list.torrents.push_back({ t->hashString() });
-		t->stop();
-	}
+	saveTorrentList(torrents);
 
-	list.save();
+	for (auto& t : torrents)
+		t->stop();
+
 	torrents.clear();
 
 	if (dht)
@@ -133,34 +142,40 @@ void mtt::Core::deinit()
 
 std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addFile(const char* filename)
 {
-	auto torrent = Torrent::fromFile(filename);
+	auto infofile = mtt::TorrentFileParser::parseFile(filename);
+
+	if (auto t = getTorrent(infofile.info.hash))
+		return { mtt::Status::I_AlreadyExists, t };
+
+	auto torrent = Torrent::fromFile(infofile);
 
 	if (!torrent)
 		return { mtt::Status::E_InvalidInput, nullptr };
 
-	if (auto t = getTorrent(torrent->hash()))
-		return { mtt::Status::I_AlreadyExists, torrent };
-
 	torrents.push_back(torrent);
 	torrent->saveTorrentFile();
 	torrent->checkFiles();
+	saveTorrentList(torrents);
 
 	return { mtt::Status::Success, torrent };
 }
 
 std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addFile(const uint8_t* data, size_t size)
 {
-	auto torrent = Torrent::fromFileData(data, size);
+	auto infofile = mtt::TorrentFileParser::parse(data, size);
+
+	if (auto t = getTorrent(infofile.info.hash))
+		return { mtt::Status::I_AlreadyExists, t };
+
+	auto torrent = Torrent::fromFile(infofile);
 
 	if (!torrent)
 		return { mtt::Status::E_InvalidInput, nullptr };
 
-	if (auto t = getTorrent(torrent->hash()))
-		return { mtt::Status::I_AlreadyExists, torrent };
-
 	torrents.push_back(torrent);
 	torrent->saveTorrentFile();
 	torrent->checkFiles();
+	saveTorrentList(torrents);
 
 	return { mtt::Status::Success, torrent };
 }
@@ -186,6 +201,7 @@ std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addMagnet(const char* magnet)
 
 	torrent->downloadMetadata(onMetadataUpdate);
 	torrents.push_back(torrent);
+	saveTorrentList(torrents);
 
 	return { mtt::Status::Success, torrent };
 }
@@ -226,6 +242,8 @@ mtt::Status mtt::Core::removeTorrent(const uint8_t* hash, bool deleteFiles)
 			{
 				t->files.storage.deleteAll();
 			}
+
+			saveTorrentList(torrents);
 
 			return Status::Success;
 		}

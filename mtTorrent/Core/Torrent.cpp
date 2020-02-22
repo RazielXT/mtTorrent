@@ -9,10 +9,10 @@
 #include <filesystem>
 #include "AlertsManager.h"
 
-mtt::TorrentPtr mtt::Torrent::fromFile(std::string filepath)
+mtt::TorrentPtr mtt::Torrent::fromFile(mtt::TorrentFileInfo& fileInfo)
 {
 	mtt::TorrentPtr torrent = std::make_shared<Torrent>();
-	torrent->infoFile = mtt::TorrentFileParser::parseFile(filepath.data());
+	torrent->infoFile = std::move(fileInfo);
 
 	if (!torrent->infoFile.info.name.empty())
 	{
@@ -25,10 +25,10 @@ mtt::TorrentPtr mtt::Torrent::fromFile(std::string filepath)
 		return nullptr;
 }
 
-mtt::TorrentPtr mtt::Torrent::fromFileData(const uint8_t* data, size_t dataSize)
+mtt::TorrentPtr mtt::Torrent::fromFile(std::string filepath)
 {
 	mtt::TorrentPtr torrent = std::make_shared<Torrent>();
-	torrent->infoFile = mtt::TorrentFileParser::parse(data, dataSize);
+	torrent->infoFile = mtt::TorrentFileParser::parseFile(filepath.data());
 
 	if (!torrent->infoFile.info.name.empty())
 	{

@@ -20,8 +20,8 @@ namespace mtt
 		bool checking = false;
 		Status lastError = Status::Success;
 
+		static TorrentPtr fromFile(mtt::TorrentFileInfo& fileInfo);
 		static TorrentPtr fromFile(std::string filepath);
-		static TorrentPtr fromFileData(const uint8_t* data, size_t dataSize);
 		static TorrentPtr fromMagnetLink(std::string link);
 		static TorrentPtr fromSavedState(std::string name);
 		void downloadMetadata(std::function<void(Status, MetadataDownloadState&)> callback);
