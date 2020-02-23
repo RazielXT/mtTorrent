@@ -69,12 +69,12 @@ void initSpeedChart()
 	chart->Series["DlSeries"]->XValueMember = "Time";
 	chart->Series["DlSeries"]->YValueMembers = "Speed";
 	chart->Series["DlSeries"]->ChartType = DataVisualization::Charting::SeriesChartType::Line;
-	chart->Series["DlSeries"]->IsVisibleInLegend = false;
+	//chart->Series["DlSeries"]->IsVisibleInLegend = false;
 	chart->Series["DlSeries"]->Points->Clear();
 	chart->Series["UpSeries"]->XValueMember = "Time";
 	chart->Series["UpSeries"]->YValueMembers = "Speed";
 	chart->Series["UpSeries"]->ChartType = DataVisualization::Charting::SeriesChartType::Line;
-	chart->Series["UpSeries"]->IsVisibleInLegend = false;
+	//chart->Series["UpSeries"]->IsVisibleInLegend = false;
 	chart->Series["UpSeries"]->Points->Clear();
 	chart->ChartAreas[0]->AxisX->MajorGrid->Enabled = false;
 	chart->ChartAreas[0]->AxisY->MajorGrid->LineColor = Drawing::Color::LightGray;
@@ -175,7 +175,7 @@ void updatePiecesChart()
 	{
 		initPiecesChart();
 
-		chart->ChartAreas[0]->AxisX->Title = "Pieces: " + int(progress.receivedCount).ToString() + "/" + int(progress.piecesCount).ToString();
+		chart->Titles[0]->Text = "Pieces: " + int(progress.receivedCount).ToString() + "/" + int(progress.piecesCount).ToString();
 
 		for (uint32_t i = 0; i < progress.piecesCount; i++)
 		{
