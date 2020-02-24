@@ -40,6 +40,7 @@ namespace mtt
 		PieceStatus pieceBlockReceived(PieceBlock& block);
 		void removeBlockRequests(std::vector<ActivePeer>& peers, PieceBlock& block, PieceStatus status, PeerCommunication* source);
 		void evaluateNextRequests(ActivePeer*);
+		void unchokePeer(ActivePeer*);
 
 		void reset();
 		void sortPriorityByAvailability(std::vector<uint32_t>& availability);

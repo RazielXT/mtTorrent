@@ -155,6 +155,19 @@ void mtt::Downloader::removeBlockRequests(std::vector<mtt::ActivePeer>& peers, P
 	}
 }
 
+void mtt::Downloader::unchokePeer(ActivePeer* peer)
+{
+	if ((uint32_t)time(0) - peer->lastActivityTime > 5)
+	{
+		for (auto& p : peer->requestedPieces)
+		{
+			p.blocks.clear();
+		}
+	}
+
+	evaluateNextRequests(peer);
+}
+
 void mtt::Downloader::evaluateNextRequests(ActivePeer* peer)
 {
 	if (peer->comm->state.peerChoking)
@@ -271,7 +284,7 @@ void mtt::Downloader::sendPieceRequests(ActivePeer* p)
 
 			if (!request)
 			{
-				//DL_LOG("Request add " << currentPiece.idx);
+				DL_LOG("Request add " << currentPiece.idx);
 				requests.push_back(RequestInfo());
 				request = &requests.back();
 				request->pieceIdx = currentPiece.idx;
@@ -298,7 +311,7 @@ uint32_t mtt::Downloader::sendPieceRequests(ActivePeer* peer, ActivePeer::Reques
 			if (std::find(request->blocks.begin(), request->blocks.end(), nextBlock*BlockRequestMaxSize) == request->blocks.end())
 			{
 				auto info = torrent->infoFile.info.getPieceBlockInfo(request->idx, nextBlock);
-				//DL_LOG("Send block request " << info.index << "-" << info.begin);
+				DL_LOG("Send block request " << info.index << "-" << info.begin);
 				request->blocks.push_back(info.begin);
 				peer->comm->requestPieceBlock(info);
 				count++;
@@ -330,7 +343,7 @@ bool mtt::Downloader::pieceFinished(RequestInfo* r)
 	{
 		if (it->pieceIdx == r->pieceIdx)
 		{
-			//DL_LOG("Request rem " << r->pieceIdx);
+			DL_LOG("Request rem " << r->pieceIdx);
 			requests.erase(it);
 			break;
 		}
