@@ -13,7 +13,7 @@ namespace mtt
 
 		DataBuffer buffer;
 		uint32_t pieces = 0;
-		uint32_t remainingPiecesFlag = 0;
+		uint64_t remainingPiecesFlag = 0;
 
 	private:
 		uint32_t nextRequestedIndex = 0;

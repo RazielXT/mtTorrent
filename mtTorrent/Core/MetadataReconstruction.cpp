@@ -8,7 +8,7 @@ void mtt::MetadataReconstruction::init(uint32_t sz)
 	buffer.resize(sz);
 
 	remainingPiecesFlag = pieces = 0;
-	uint32_t flagPos = 1;
+	uint64_t flagPos = 1;
 	while (sz > 0)
 	{
 		remainingPiecesFlag |= flagPos;
@@ -21,7 +21,7 @@ void mtt::MetadataReconstruction::init(uint32_t sz)
 
 void mtt::MetadataReconstruction::addPiece(DataBuffer& data, uint32_t index)
 {
-	uint32_t flagPos = (uint32_t)(1 << index);
+	uint64_t flagPos = (uint64_t)1 << index;
 	if (remainingPiecesFlag & flagPos)
 	{
 		remainingPiecesFlag ^= flagPos;
@@ -40,7 +40,7 @@ uint32_t mtt::MetadataReconstruction::getMissingPieceIndex()
 	if ((remainingPiecesFlag >> nextRequestedIndex) == 0)
 		nextRequestedIndex = 0;
 
-	uint32_t flag = 1 << nextRequestedIndex;
+	uint64_t flag = (uint64_t)1 << nextRequestedIndex;
 	for(uint32_t i = nextRequestedIndex; i < pieces; i++)
 	{
 		if (remainingPiecesFlag & flag)

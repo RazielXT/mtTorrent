@@ -19,6 +19,12 @@ static bool parseTorrentHash(std::string& from, uint8_t* to)
 			return true;
 		}
 	}
+
+	if (from.length() == 44)
+	{
+		from.erase(std::remove_if(from.begin(), from.end(), isspace), from.end());
+	}
+
 	if (from.length() == 40 && decodeHexa(from, to))
 	{
 		return true;
