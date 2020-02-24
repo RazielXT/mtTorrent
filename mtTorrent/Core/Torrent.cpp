@@ -214,6 +214,9 @@ void mtt::Torrent::pause()
 
 void mtt::Torrent::stop()
 {
+	if (state == mttApi::Torrent::State::Stopped)
+		return;
+
 	if (utmDl)
 	{
 		utmDl->stop();
