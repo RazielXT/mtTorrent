@@ -109,7 +109,7 @@ void mtt::FileTransfer::messageReceived(PeerCommunication* p, PeerMessage& msg)
 		std::lock_guard<std::mutex> guard(peersMutex);
 		if (auto peer = getActivePeer(p))
 		{
-			downloader.evaluateNextRequests(peer);
+			downloader.unchokePeer(peer);
 			peer->lastActivityTime = (uint32_t)time(0);
 		}
 	}
@@ -403,8 +403,7 @@ void mtt::FileTransfer::evalCurrentPeers()
 		removePeers(removedPeers);
 	}
 
-	if (!removedPeers.empty())
-		evaluateCurrentPeers();
+	evaluateCurrentPeers();
 }
 
 void mtt::FileTransfer::updateMeasures()
