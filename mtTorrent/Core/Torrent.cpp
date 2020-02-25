@@ -70,13 +70,10 @@ mtt::TorrentPtr mtt::Torrent::fromSavedState(std::string name)
 				}
 			}
 
-			if (state.lastStateTime != 0)
-			{
-				auto filesTime = ptr->files.storage.getLastModifiedTime();
-				ptr->checked = filesTime == 0 ? false : (state.lastStateTime >= filesTime);
-			}
+			ptr->lastStateTime = state.lastStateTime;
+			bool checked = ptr->lastStateTime != 0 && ptr->lastStateTime == ptr->files.storage.getLastModifiedTime();
 
-			if (ptr->checked)
+			if (!checked)
 				ptr->files.progress.recheckPieces();
 			else
 				ptr->files.progress.removeReceived();
@@ -97,7 +94,7 @@ void mtt::Torrent::save()
 {
 	TorrentState saveState(files.progress.pieces);
 	saveState.downloadPath = files.storage.getPath();
-	saveState.lastStateTime = checked ? files.storage.getLastModifiedTime() : 0;
+	saveState.lastStateTime = lastStateTime = files.storage.getLastModifiedTime();
 	saveState.started = state == State::Started;
 
 	for (auto& f : files.selection.files)
@@ -260,7 +257,7 @@ std::shared_ptr<mtt::PiecesCheck> mtt::Torrent::checkFiles(std::function<void(st
 		{
 			files.progress.fromList(check->pieces);
 			files.progress.select(files.selection);
-			checked = true;
+			lastStateTime = files.storage.getLastModifiedTime();
 
 			if (state == State::Started)
 				start();
@@ -292,7 +289,7 @@ float mtt::Torrent::checkingProgress()
 
 bool mtt::Torrent::filesChecked()
 {
-	return checked || files.storage.getLastModifiedTime() == 0;
+	return lastStateTime == files.storage.getLastModifiedTime();
 }
 
 bool mtt::Torrent::selectFiles(std::vector<bool>& s)

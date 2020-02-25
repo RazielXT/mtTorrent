@@ -191,6 +191,8 @@ void mtt::PiecesProgress::fromList(std::vector<uint8_t>& piecesList)
 			if (selectedPiece(i))
 				selectedReceivedPiecesCount++;
 		}
+		else
+			pieces[i] &= ~HasFlag;
 }
 
 DataBuffer mtt::PiecesProgress::toBitfield()

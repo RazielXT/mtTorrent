@@ -67,7 +67,7 @@ namespace mtt
 
 		std::mutex checkStateMutex;
 		std::shared_ptr<mtt::PiecesCheck> checkState;
-		bool checked = false;
+		uint64_t lastStateTime = 0;
 		void init();
 	};
 }
