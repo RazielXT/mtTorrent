@@ -71,9 +71,13 @@ mtt::TorrentPtr mtt::Torrent::fromSavedState(std::string name)
 			}
 
 			ptr->lastStateTime = state.lastStateTime;
-			bool checked = ptr->lastStateTime != 0 && ptr->lastStateTime == ptr->files.storage.getLastModifiedTime();
+			auto fileTime = ptr->files.storage.getLastModifiedTime();
+			if (fileTime == 0)
+				ptr->lastStateTime = 0;
 
-			if (!checked)
+			bool checked = ptr->lastStateTime != 0 && ptr->lastStateTime == fileTime;
+
+			if (checked)
 				ptr->files.progress.recheckPieces();
 			else
 				ptr->files.progress.removeReceived();
@@ -236,9 +240,9 @@ void mtt::Torrent::stop()
 
 	service.stop();
 
+	state = State::Stopped;
 	save();
 
-	state = State::Stopped;
 	lastError = Status::Success;
 }
 
@@ -344,17 +348,33 @@ std::string mtt::Torrent::name()
 
 float mtt::Torrent::currentProgress()
 {
-	return files.progress.getPercentage();
+	float progress = files.progress.getPercentage();
+
+	if (fileTransfer)
+	{
+		float unfinishedPieces = fileTransfer->getUnfinishedPiecesDownloadSize() / (float)BlockRequestMaxSize;
+		progress += unfinishedPieces / files.progress.pieces.size();
+	}
+
+	return progress;
 }
 
 float mtt::Torrent::currentSelectionProgress()
 {
-	return files.progress.getSelectedPercentage();
+	float progress = files.progress.getSelectedPercentage();
+
+	if (fileTransfer)
+	{
+		float unfinishedPieces = fileTransfer->getUnfinishedPiecesDownloadSize() / (float)BlockRequestMaxSize;
+		progress += unfinishedPieces / files.progress.selectedPieces;
+	}
+
+	return progress;
 }
 
 size_t mtt::Torrent::downloaded()
 {
-	return (size_t) (infoFile.info.fullSize*files.progress.getPercentage());
+	return (size_t)(infoFile.info.fullSize * (double)files.progress.getPercentage()) + (fileTransfer ? fileTransfer->getUnfinishedPiecesDownloadSize() : 0);
 }
 
 size_t mtt::Torrent::downloadSpeed()

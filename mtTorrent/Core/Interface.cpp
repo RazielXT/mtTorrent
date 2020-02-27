@@ -24,7 +24,7 @@ void mtt::DownloadedPiece::init(uint32_t idx, uint32_t pieceSize, uint32_t block
 	index = idx;
 }
 
-void DownloadedPiece::addBlock(PieceBlock& block)
+bool DownloadedPiece::addBlock(PieceBlock& block)
 {
 	auto blockIdx = (block.info.begin + 1)/ BlockRequestMaxSize;
 
@@ -33,5 +33,8 @@ void DownloadedPiece::addBlock(PieceBlock& block)
 		memcpy(&data[0] + block.info.begin, block.data.data(), block.info.length);
 		blocksTodo[blockIdx] = 1;
 		remainingBlocks--;
+		return true;
 	}
+
+	return false;
 }

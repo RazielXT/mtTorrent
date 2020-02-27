@@ -20,7 +20,7 @@ void PeerExchange::load(BencodeParser::Object* data)
 
 			while (added->size - pos >= 6)
 			{
-				uint32_t ip = swap32(*reinterpret_cast<const uint32_t*>(added->data + pos));
+				uint32_t ip = *reinterpret_cast<const uint32_t*>(added->data + pos);
 				uint16_t port = swap16(*reinterpret_cast<const uint16_t*>(added->data + pos + 4));
 
 				Addr peer;

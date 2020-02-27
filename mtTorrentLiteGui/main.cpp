@@ -228,6 +228,11 @@ String^ formatBytes(size_t bytes)
 			type = " B";
 		}
 	}
+	else if (sz > 1024)
+	{
+		sz /= 1024.f;
+		type = " GB";
+	}
 
 	auto str = gcnew String(sz.ToString("F"));
 	str = str->TrimEnd('0')->TrimEnd('.', ',');

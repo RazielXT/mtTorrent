@@ -184,6 +184,11 @@ size_t mtt::FileTransfer::getUploadSpeed()
 	return sum;
 }
 
+size_t mtt::FileTransfer::getUnfinishedPiecesDownloadSize()
+{
+	downloader.getUnfinishedPiecesDownloadSize();
+}
+
 std::vector<mtt::ActivePeerInfo> mtt::FileTransfer::getPeersInfo()
 {
 	std::vector<mtt::ActivePeerInfo> out;

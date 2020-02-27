@@ -37,7 +37,7 @@ namespace mtt
 		std::vector<uint8_t> blocksTodo;
 
 		void init(uint32_t idx, uint32_t pieceSize, uint32_t blocksCount);
-		void addBlock(PieceBlock& block);
+		bool addBlock(PieceBlock& block);
 		bool isValid(const uint8_t* expectedHash);
 	};
 

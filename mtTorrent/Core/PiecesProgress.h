@@ -30,11 +30,12 @@ namespace mtt
 		size_t getReceivedPiecesCount();
 
 		std::vector<uint8_t> pieces;
+		size_t selectedPieces = 0;
 
 	private:
 
 		size_t receivedPiecesCount = 0;
 		size_t selectedReceivedPiecesCount = 0;
-		size_t selectedPieces = 0;
+
 	};
 }

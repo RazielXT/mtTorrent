@@ -77,6 +77,20 @@ uint32_t mtt::Downloader::getCurrentRequestsCount()
 	return (uint32_t) requests.size();
 }
 
+size_t mtt::Downloader::getUnfinishedPiecesDownloadSize()
+{
+	size_t s = 0;
+
+	std::lock_guard<std::mutex> guard(requestsMutex);
+
+	for (auto& r : requests)
+	{
+		s += r.receivedSize;
+	}
+
+	return s;
+}
+
 mtt::Downloader::PieceStatus mtt::Downloader::pieceBlockReceived(PieceBlock& block)
 {
 	bool valid = true;
@@ -95,7 +109,8 @@ mtt::Downloader::PieceStatus mtt::Downloader::pieceBlockReceived(PieceBlock& blo
 					r.piece->init(r.pieceIdx, torrent->infoFile.info.getPieceSize(r.pieceIdx), r.blocksCount);
 				}
 
-				r.piece->addBlock(block);
+				if(r.piece->addBlock(block))
+					r.receivedSize += block.info.length;
 
 				if (r.piece->remainingBlocks == 0)
 				{

@@ -33,6 +33,8 @@ namespace mtt
 		size_t getUploadSum();
 		size_t getUploadSpeed();
 
+		size_t getUnfinishedPiecesDownloadSize();
+
 		std::vector<ActivePeerInfo> getPeersInfo();
 
 		std::vector<uint32_t> getCurrentRequests();

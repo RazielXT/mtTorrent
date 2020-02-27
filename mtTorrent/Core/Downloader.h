@@ -48,6 +48,8 @@ namespace mtt
 		std::vector<uint32_t> getCurrentRequests();
 		uint32_t getCurrentRequestsCount();
 
+		size_t getUnfinishedPiecesDownloadSize();
+
 	private:
 
 		std::vector<uint32_t> piecesPriority;
@@ -59,6 +61,7 @@ namespace mtt
 			std::shared_ptr<DownloadedPiece> piece;
 			uint16_t nextBlockRequestIdx = 0;
 			uint16_t blocksCount = 0;
+			uint32_t receivedSize = 0;
 		};
 		std::vector<RequestInfo> requests;
 		std::mutex requestsMutex;
