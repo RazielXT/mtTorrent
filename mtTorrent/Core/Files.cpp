@@ -7,7 +7,7 @@ void mtt::Files::init(TorrentInfo& info)
 
 	for (auto& f : info.files)
 	{
-		selection.files.push_back({ true, f });
+		selection.files.push_back({ true, Priority::Normal, f });
 	}
 
 	progress.init(info.pieces.size());

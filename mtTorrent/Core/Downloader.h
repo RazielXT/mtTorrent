@@ -43,7 +43,8 @@ namespace mtt
 		void unchokePeer(ActivePeer*);
 
 		void reset();
-		void sortPriorityByAvailability(std::vector<uint32_t>& availability);
+		void sortPriorityByAvailability(const std::vector<uint32_t>& availability);
+		void sortPriority(const std::vector<Priority>& priority);
 
 		std::vector<uint32_t> getCurrentRequests();
 		uint32_t getCurrentRequestsCount();

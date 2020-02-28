@@ -209,6 +209,7 @@ struct
 	mtBI::TorrentInfo info;
 	unsigned char hash[20];
 	bool added;
+	bool priorityChanged = false;
 }
 fileSelection;
 
@@ -285,6 +286,21 @@ void fileSelectionChanged(int id, bool selected)
 	updateSelectionFormFooter();
 }
 
+void filePriorityChanged(const std::vector<int>& index, System::String^ value)
+{
+	uint8_t priority = 50;
+	if (value == "Low")
+		priority = 10;
+	else if (value == "High")
+		priority = 90;
+
+	for (auto i : index)
+	{
+		fileSelection.info.files[i].priority = priority;
+	}
+	fileSelection.priorityChanged = true;
+}
+
 void setAllFileSelection(bool selected)
 {
 	GuiLite::FileSelectionForm::instance->initialized = false;
@@ -298,6 +314,16 @@ void setAllFileSelection(bool selected)
 	}
 	GuiLite::FileSelectionForm::instance->initialized = true;
 	updateSelectionFormFooter();
+}
+
+String^ formatPriorityToString(uint8_t p)
+{
+	if (p == 50)
+		return "Normal";
+	else if(p > 50)
+		return "High";
+	else //if (p < 50)
+		return "Low";
 }
 
 void fillFilesSelectionForm()
@@ -314,11 +340,12 @@ void fillFilesSelectionForm()
 	int i = 0;
 	for (auto& f : info.files)
 	{
-		auto row = gcnew cli::array<Object^>(4) {
+		auto row = gcnew cli::array<Object^>(5) {
 			int(i).ToString(),
 			f.selected,
 			gcnew String(f.name.data, 0, (int)f.name.length, System::Text::Encoding::UTF8),
-			formatBytes(f.size)
+			formatBytes(f.size),
+			formatPriorityToString(f.priority)
 		};
 
 		list->Rows[i]->SetValues(row);
@@ -333,6 +360,7 @@ void fillFilesSelectionForm()
 
 	form->labelError->Visible = false;
 	form->checkBoxStart->Visible = fileSelection.added;
+	fileSelection.priorityChanged = false;
 }
 
 void refreshTorrentInfo(uint8_t* hash)
@@ -855,6 +883,20 @@ void onButtonClick(ButtonId id, System::String^ param)
 				}
 
 				IoctlFunc(mtBI::MessageId::SetTorrentFilesSelection, &selection, nullptr);
+			}
+
+			if (fileSelection.priorityChanged)
+			{
+				mtBI::TorrentFilesPriorityRequest request;
+				memcpy(request.hash, fileSelection.hash, 20);
+				request.priority.reserve(fileSelection.info.files.size());
+
+				for (auto& f : fileSelection.info.files)
+				{
+					request.priority.add(f.priority);
+				}
+
+				IoctlFunc(mtBI::MessageId::SetTorrentFilesPriority, &request, nullptr);
 			}
 
 			if (form->checkBoxStart->Visible && form->checkBoxStart->Checked)

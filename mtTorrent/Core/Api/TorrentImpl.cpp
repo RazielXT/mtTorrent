@@ -33,9 +33,14 @@ void mttApi::Torrent::checkFiles()
 	static_cast<mtt::Torrent*>(this)->checkFiles();
 }
 
-bool mttApi::Torrent::selectFiles(std::vector<bool>& s)
+bool mttApi::Torrent::selectFiles(const std::vector<bool>& s)
 {
 	return static_cast<mtt::Torrent*>(this)->selectFiles(s);
+}
+
+void mttApi::Torrent::setFilesPriority(const std::vector<mtt::Priority>& p)
+{
+	return static_cast<mtt::Torrent*>(this)->setFilesPriority(p);
 }
 
 mtt::DownloadSelection mttApi::Torrent::getFilesSelection()

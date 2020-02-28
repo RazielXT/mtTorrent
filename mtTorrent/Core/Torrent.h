@@ -27,7 +27,6 @@ namespace mtt
 		void downloadMetadata(std::function<void(Status, MetadataDownloadState&)> callback);
 
 		bool start();
-		void pause();
 		void stop();
 
 		void checkFiles();
@@ -35,7 +34,8 @@ namespace mtt
 		float checkingProgress();
 		bool filesChecked();
 
-		bool selectFiles(std::vector<bool>&);
+		bool selectFiles(const std::vector<bool>&);
+		void setFilesPriority(const std::vector<mtt::Priority>&);
 
 		std::string name();
 		float currentProgress();
@@ -68,6 +68,7 @@ namespace mtt
 		std::mutex checkStateMutex;
 		std::shared_ptr<mtt::PiecesCheck> checkState;
 		uint64_t lastStateTime = 0;
+		bool stateChanged = false;
 		void init();
 	};
 }

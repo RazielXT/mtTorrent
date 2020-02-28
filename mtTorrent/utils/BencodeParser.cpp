@@ -304,6 +304,18 @@ const mtt::BencodeParser::Object* mtt::BencodeParser::Object::getNextSibling() c
 	return info.nextSiblingOffset ? this + info.nextSiblingOffset : nullptr;
 }
 
+const mtt::BencodeParser::Object& mtt::BencodeParser::Object::operator[](int index)
+{
+	auto ptr = getFirstItem();
+
+	for (int i = 0; i < index; i++)
+	{
+		ptr = ptr->getNextSibling();
+	}
+
+	return *ptr;
+}
+
 bool mtt::BencodeParser::Object::Item::equals(const char* txt, size_t l) const
 {
 	return l != size ? false : strncmp(txt, data, size) == 0;

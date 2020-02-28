@@ -40,6 +40,8 @@ namespace mtt
 		std::vector<uint32_t> getCurrentRequests();
 		uint32_t getCurrentRequestsCount();
 
+		void updatePiecesPriority();
+
 	private:
 
 #ifdef PEER_DIAGNOSTICS
@@ -68,6 +70,7 @@ namespace mtt
 #endif
 
 		std::vector<uint32_t> piecesAvailability;
+		std::vector<Priority> piecesPriority;
 
 		std::vector<ActivePeer> activePeers;
 		std::mutex peersMutex;

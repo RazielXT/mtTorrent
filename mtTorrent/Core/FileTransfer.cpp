@@ -25,6 +25,7 @@ mtt::FileTransfer::FileTransfer(TorrentPtr t) : downloader(t), uploader(t), torr
 void mtt::FileTransfer::start()
 {
 	piecesAvailability.resize(torrent->infoFile.info.pieces.size());
+	updatePiecesPriority();
 	downloader.reset();
 
 	torrent->peers->start([this](Status s, mtt::PeerSource)
@@ -186,7 +187,7 @@ size_t mtt::FileTransfer::getUploadSpeed()
 
 size_t mtt::FileTransfer::getUnfinishedPiecesDownloadSize()
 {
-	downloader.getUnfinishedPiecesDownloadSize();
+	return downloader.getUnfinishedPiecesDownloadSize();
 }
 
 std::vector<mtt::ActivePeerInfo> mtt::FileTransfer::getPeersInfo()
@@ -220,6 +221,19 @@ std::vector<uint32_t> mtt::FileTransfer::getCurrentRequests()
 uint32_t mtt::FileTransfer::getCurrentRequestsCount()
 {
 	return downloader.getCurrentRequestsCount();
+}
+
+void mtt::FileTransfer::updatePiecesPriority()
+{
+	piecesPriority.resize(torrent->infoFile.info.pieces.size(), Priority(0));
+
+	for (auto& f : torrent->files.selection.files)
+	{
+		for (size_t i = f.info.startPieceIndex; i < f.info.endPieceIndex; i++)
+		{
+			piecesPriority[i] = std::max(piecesPriority[i], f.priority);
+		}
+	}
 }
 
 mtt::ActivePeer* mtt::FileTransfer::getActivePeer(PeerCommunication* p)
@@ -446,7 +460,10 @@ void mtt::FileTransfer::updateMeasures()
 	lastSpeedMeasure = currentMeasure;
 
 	if (!torrent->selectionFinished())
+	{
 		downloader.sortPriorityByAvailability(piecesAvailability);
+		downloader.sortPriority(piecesPriority);
+	}
 }
 
 #ifdef PEER_DIAGNOSTICS

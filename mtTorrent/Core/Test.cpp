@@ -273,7 +273,7 @@ void TorrentTest::testStorageLoad()
 
 	DownloadSelection selection;
 	for (auto&f : torrent.info.files)
-		selection.files.push_back({ true, f });
+		selection.files.push_back({ true, Priority::Normal, f });
 
 	mtt::Storage storage(torrent.info);
 	storage.setPath("D:\\test");
@@ -308,7 +308,7 @@ void TorrentTest::testPeerListen()
 
 	DownloadSelection selection;
 	for (auto&f : torrent.info.files)
-		selection.files.push_back({ true, f });
+		selection.files.push_back({ true, Priority::Normal, f });
 
 	mtt::Storage storage(torrent.info);
 	storage.setPath("D:\\test");
@@ -498,7 +498,7 @@ void TorrentTest::bigTestGetTorrentFileByLink()
 
 		DownloadSelection selection;
 		for (auto&f : info.files)
-			selection.files.push_back({ false, f });
+			selection.files.push_back({ false, Priority::Normal, f });
 
 		PiecesProgress piecesTodo;
 		piecesTodo.select(selection);

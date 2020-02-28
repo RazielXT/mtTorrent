@@ -125,7 +125,10 @@ void mtt::Core::deinit()
 	saveTorrentList(torrents);
 
 	for (auto& t : torrents)
+	{
+		t->save();
 		t->stop();
+	}
 
 	torrents.clear();
 

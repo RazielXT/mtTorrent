@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "Api/Interface.h"
 
 namespace mtt
 {
@@ -13,6 +14,7 @@ namespace mtt
 		struct File
 		{
 			bool selected;
+			Priority priority = Priority::Normal;
 		};
 		std::vector<File> files;
 

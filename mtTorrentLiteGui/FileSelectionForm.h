@@ -1,8 +1,10 @@
 #pragma once
 
 #include "Buttons.h"
+#include <vector>
 extern void fillFilesSelectionForm();
 extern void fileSelectionChanged(int id, bool selected);
+extern void filePriorityChanged(const std::vector<int>&, System::String^);
 
 namespace GuiLite {
 
@@ -33,11 +35,6 @@ namespace GuiLite {
 		bool initialized = false;
 
 	public: System::Windows::Forms::DataGridView^ filesGridView;
-
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Id;
-	private: System::Windows::Forms::DataGridViewCheckBoxColumn^ Selected;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ NameColumn;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Size;
 	public: System::Windows::Forms::Button^ selectAllButton;
 	private:
 	public: System::Windows::Forms::Button^ deselectAllButton;
@@ -48,6 +45,12 @@ namespace GuiLite {
 	public: System::Windows::Forms::Label^ labelError;
 	public: System::Windows::Forms::TextBox^ textBoxPath;
 	public: System::Windows::Forms::CheckBox^ checkBoxStart;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Id;
+	public:
+	private: System::Windows::Forms::DataGridViewCheckBoxColumn^ Selected;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ NameColumn;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Size;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Priority;
 
 	public:  static FileSelectionForm^ instance;
 
@@ -84,10 +87,6 @@ namespace GuiLite {
 			this->okButton = (gcnew System::Windows::Forms::Button());
 			this->panel1 = (gcnew System::Windows::Forms::Panel());
 			this->filesGridView = (gcnew System::Windows::Forms::DataGridView());
-			this->Id = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->Selected = (gcnew System::Windows::Forms::DataGridViewCheckBoxColumn());
-			this->NameColumn = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->Size = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->infoLabel = (gcnew System::Windows::Forms::Label());
 			this->selectAllButton = (gcnew System::Windows::Forms::Button());
 			this->deselectAllButton = (gcnew System::Windows::Forms::Button());
@@ -96,13 +95,18 @@ namespace GuiLite {
 			this->labelError = (gcnew System::Windows::Forms::Label());
 			this->textBoxPath = (gcnew System::Windows::Forms::TextBox());
 			this->checkBoxStart = (gcnew System::Windows::Forms::CheckBox());
+			this->Id = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->Selected = (gcnew System::Windows::Forms::DataGridViewCheckBoxColumn());
+			this->NameColumn = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->Size = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->Priority = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->panel1->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->filesGridView))->BeginInit();
 			this->SuspendLayout();
 			// 
 			// cancelButton
 			// 
-			this->cancelButton->Location = System::Drawing::Point(630, 560);
+			this->cancelButton->Location = System::Drawing::Point(738, 560);
 			this->cancelButton->Name = L"cancelButton";
 			this->cancelButton->Size = System::Drawing::Size(103, 30);
 			this->cancelButton->TabIndex = 1;
@@ -112,7 +116,7 @@ namespace GuiLite {
 			// 
 			// okButton
 			// 
-			this->okButton->Location = System::Drawing::Point(521, 560);
+			this->okButton->Location = System::Drawing::Point(629, 560);
 			this->okButton->Name = L"okButton";
 			this->okButton->Size = System::Drawing::Size(103, 30);
 			this->okButton->TabIndex = 2;
@@ -122,67 +126,40 @@ namespace GuiLite {
 			// 
 			// panel1
 			// 
+			this->panel1->Anchor = static_cast<System::Windows::Forms::AnchorStyles>(((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Left)
+				| System::Windows::Forms::AnchorStyles::Right));
 			this->panel1->AutoScroll = true;
+			this->panel1->AutoSize = true;
 			this->panel1->Controls->Add(this->filesGridView);
 			this->panel1->Location = System::Drawing::Point(13, 13);
 			this->panel1->Name = L"panel1";
-			this->panel1->Size = System::Drawing::Size(720, 411);
+			this->panel1->Size = System::Drawing::Size(883, 411);
 			this->panel1->TabIndex = 3;
 			// 
 			// filesGridView
 			// 
 			this->filesGridView->AllowUserToAddRows = false;
 			this->filesGridView->AllowUserToDeleteRows = false;
+			this->filesGridView->AllowUserToResizeRows = false;
 			this->filesGridView->ColumnHeadersHeightSizeMode = System::Windows::Forms::DataGridViewColumnHeadersHeightSizeMode::AutoSize;
-			this->filesGridView->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(4) {
+			this->filesGridView->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(5) {
 				this->Id, this->Selected,
-					this->NameColumn, this->Size
+					this->NameColumn, this->Size, this->Priority
 			});
 			this->filesGridView->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->filesGridView->Location = System::Drawing::Point(0, 0);
-			this->filesGridView->MultiSelect = false;
 			this->filesGridView->Name = L"filesGridView";
+			this->filesGridView->ReadOnly = true;
 			this->filesGridView->RowHeadersVisible = false;
 			this->filesGridView->RowHeadersWidth = 51;
 			this->filesGridView->RowTemplate->Height = 24;
 			this->filesGridView->SelectionMode = System::Windows::Forms::DataGridViewSelectionMode::FullRowSelect;
-			this->filesGridView->Size = System::Drawing::Size(720, 411);
+			this->filesGridView->Size = System::Drawing::Size(883, 411);
 			this->filesGridView->TabIndex = 0;
 			this->filesGridView->CellContentClick += gcnew System::Windows::Forms::DataGridViewCellEventHandler(this, &FileSelectionForm::FilesGridView_CellContentClick);
 			this->filesGridView->CellContentDoubleClick += gcnew System::Windows::Forms::DataGridViewCellEventHandler(this, &FileSelectionForm::FilesGridView_CellContentClick);
 			this->filesGridView->CellValueChanged += gcnew System::Windows::Forms::DataGridViewCellEventHandler(this, &FileSelectionForm::FilesGridView_CellValueChanged);
-			// 
-			// Id
-			// 
-			this->Id->HeaderText = L"Id";
-			this->Id->MinimumWidth = 6;
-			this->Id->Name = L"Id";
-			this->Id->Visible = false;
-			this->Id->Width = 125;
-			// 
-			// Selected
-			// 
-			this->Selected->HeaderText = L"";
-			this->Selected->MinimumWidth = 6;
-			this->Selected->Name = L"Selected";
-			this->Selected->SortMode = System::Windows::Forms::DataGridViewColumnSortMode::Automatic;
-			this->Selected->Width = 50;
-			// 
-			// NameColumn
-			// 
-			this->NameColumn->AutoSizeMode = System::Windows::Forms::DataGridViewAutoSizeColumnMode::Fill;
-			this->NameColumn->HeaderText = L"Name";
-			this->NameColumn->MinimumWidth = 6;
-			this->NameColumn->Name = L"NameColumn";
-			this->NameColumn->ReadOnly = true;
-			// 
-			// Size
-			// 
-			this->Size->HeaderText = L"Size";
-			this->Size->MinimumWidth = 6;
-			this->Size->Name = L"Size";
-			this->Size->ReadOnly = true;
-			this->Size->Width = 125;
+			this->filesGridView->MouseClick += gcnew System::Windows::Forms::MouseEventHandler(this, &FileSelectionForm::FilesGridView_MouseClick);
 			// 
 			// infoLabel
 			// 
@@ -248,7 +225,7 @@ namespace GuiLite {
 			this->textBoxPath->Location = System::Drawing::Point(100, 510);
 			this->textBoxPath->Name = L"textBoxPath";
 			this->textBoxPath->ReadOnly = true;
-			this->textBoxPath->Size = System::Drawing::Size(633, 22);
+			this->textBoxPath->Size = System::Drawing::Size(739, 22);
 			this->textBoxPath->TabIndex = 11;
 			this->textBoxPath->Text = L"path";
 			// 
@@ -264,11 +241,52 @@ namespace GuiLite {
 			this->checkBoxStart->Text = L"Start";
 			this->checkBoxStart->UseVisualStyleBackColor = true;
 			// 
+			// Id
+			// 
+			this->Id->HeaderText = L"Id";
+			this->Id->MinimumWidth = 6;
+			this->Id->Name = L"Id";
+			this->Id->Visible = false;
+			// 
+			// Selected
+			// 
+			this->Selected->HeaderText = L"";
+			this->Selected->MinimumWidth = 6;
+			this->Selected->Name = L"Selected";
+			this->Selected->SortMode = System::Windows::Forms::DataGridViewColumnSortMode::Automatic;
+			this->Selected->Width = 50;
+			// 
+			// NameColumn
+			// 
+			this->NameColumn->AutoSizeMode = System::Windows::Forms::DataGridViewAutoSizeColumnMode::Fill;
+			this->NameColumn->HeaderText = L"Name";
+			this->NameColumn->MinimumWidth = 6;
+			this->NameColumn->Name = L"NameColumn";
+			this->NameColumn->ReadOnly = true;
+			// 
+			// Size
+			// 
+			this->Size->HeaderText = L"Size";
+			this->Size->MinimumWidth = 6;
+			this->Size->Name = L"Size";
+			this->Size->ReadOnly = true;
+			this->Size->Width = 125;
+			// 
+			// Priority
+			// 
+			this->Priority->HeaderText = L"Priority";
+			this->Priority->MinimumWidth = 6;
+			this->Priority->Name = L"Priority";
+			this->Priority->ReadOnly = true;
+			this->Priority->Resizable = System::Windows::Forms::DataGridViewTriState::True;
+			this->Priority->SortMode = System::Windows::Forms::DataGridViewColumnSortMode::NotSortable;
+			this->Priority->Width = 125;
+			// 
 			// FileSelectionForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(8, 16);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(745, 600);
+			this->ClientSize = System::Drawing::Size(920, 600);
 			this->Controls->Add(this->checkBoxStart);
 			this->Controls->Add(this->textBoxPath);
 			this->Controls->Add(this->labelError);
@@ -315,6 +333,46 @@ private: System::Void FilesGridView_CellContentClick(System::Object^ sender, Sys
 				 fileSelectionChanged(id, selected);
 			 }
 		 }
+
+	private: System::Void FilesGridView_MouseClick(System::Object^ sender, System::Windows::Forms::MouseEventArgs^ e) {
+		if (e->Button == System::Windows::Forms::MouseButtons::Right)
+		{
+			int currentMouseOverRow = filesGridView->HitTest(e->X, e->Y)->RowIndex;
+
+			if (currentMouseOverRow >= 0)
+			{
+				auto m = gcnew System::Windows::Forms::ContextMenu();
+				auto menuItem = gcnew System::Windows::Forms::MenuItem("Priority");
+
+				auto submenuItem = gcnew System::Windows::Forms::MenuItem("Low");
+				submenuItem->Click += gcnew System::EventHandler(this, &FileSelectionForm::menuItem_Click);
+				menuItem->MenuItems->Add(submenuItem);
+				submenuItem = gcnew System::Windows::Forms::MenuItem("Normal");
+				submenuItem->Click += gcnew System::EventHandler(this, &FileSelectionForm::menuItem_Click);
+				menuItem->MenuItems->Add(submenuItem);
+				submenuItem = gcnew System::Windows::Forms::MenuItem("High");
+				submenuItem->Click += gcnew System::EventHandler(this, &FileSelectionForm::menuItem_Click);
+				menuItem->MenuItems->Add(submenuItem);
+
+				m->MenuItems->Add(menuItem);
+
+				m->Show(filesGridView, System::Drawing::Point(e->X, e->Y));
+			}
+		}
+	}
+	private: System::Void menuItem_Click(System::Object^ sender, System::EventArgs^ e) {
+		auto buttonText = ((System::Windows::Forms::MenuItem^)sender)->Text;
+
+		std::vector<int> index;
+		for (int i = 0; i < filesGridView->SelectedRows->Count; i++)
+		{
+			filesGridView->SelectedRows[i]->Cells[4]->Value = buttonText;
+			index.push_back(int::Parse((String^)filesGridView->SelectedRows[i]->Cells[0]->EditedFormattedValue));
+		}
+
+		filePriorityChanged(index, buttonText);
+	}
+
 private: System::Void SelectAllButton_Click(System::Object^ sender, System::EventArgs^ e) {
 	onButtonClick(ButtonId::SelectionAll);
 }

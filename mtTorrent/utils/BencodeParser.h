@@ -52,6 +52,8 @@ namespace mtt
 			const Object* getFirstItem() const;
 			const Object* getNextSibling() const;
 
+			const Object& operator[](int index);
+
 			struct iterator {
 			public:
 				iterator(const Object* ptr) : ptr(ptr) {}

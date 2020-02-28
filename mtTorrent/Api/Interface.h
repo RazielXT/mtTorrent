@@ -76,9 +76,17 @@ namespace mtt
 		API_EXPORT std::string createTorrentFileData();
 	};
 
+	enum class Priority : uint8_t
+	{
+		Low = 10,
+		Normal = 50,
+		High = 90
+	};
+
 	struct FileSelectionInfo
 	{
 		bool selected;
+		Priority priority;
 		File info;
 	};
 

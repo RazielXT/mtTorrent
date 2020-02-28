@@ -29,7 +29,10 @@ void mtt::TorrentState::save(const std::string& name)
 	writer.startRawArrayItem("9:selection");
 	for (auto& f : files)
 	{
+		writer.startArray();
 		writer.addNumber(f.selected);
+		writer.addNumber((size_t)f.priority);
+		writer.endArray();
 	}
 	writer.endArray();
 	writer.endArray();
@@ -64,9 +67,15 @@ bool mtt::TorrentState::load(const std::string& name)
 		if (auto fList = root->getListItem("selection"))
 		{
 			files.clear();
-			for (auto f : *fList)
+			for (auto& f : *fList)
 			{
-				files.push_back({f.getInt() != 0});
+				if (f.isList())
+				{
+					auto params = f.getFirstItem();
+					files.push_back({ params->getInt() != 0, (Priority)params->getNextSibling()->getInt() });
+				}
+				else
+					files.push_back({ false, Priority::Normal });
 			}
 		}
 	}

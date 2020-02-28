@@ -149,6 +149,7 @@ extern "C"
 				resp->files[i].name = selection.files[i].info.path.back();
 				resp->files[i].size = selection.files[i].info.size;
 				resp->files[i].selected = selection.files[i].selected;
+				resp->files[i].priority = (uint8_t)selection.files[i].priority;
 			}
 
 			resp->downloadLocation = torrent->getLocationPath();
@@ -289,6 +290,18 @@ extern "C"
 
 			if (!torrent->selectFiles(dlSelect))
 				return mtt::Status::E_InvalidInput;
+		}
+		else if (id == mtBI::MessageId::SetTorrentFilesPriority)
+		{
+			auto pRequest = (mtBI::TorrentFilesPriorityRequest*)request;
+			auto torrent = core->getTorrent(pRequest->hash);
+			if (!torrent)
+				return mtt::Status::E_InvalidInput;
+
+			std::vector<mtt::Priority> dlPriority(pRequest->priority.size());
+			memcpy(dlPriority.data(), pRequest->priority.data(), pRequest->priority.size());
+
+			torrent->setFilesPriority(dlPriority);
 		}
 		else if (id == mtBI::MessageId::RefreshSource)
 		{

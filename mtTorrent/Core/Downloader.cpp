@@ -33,7 +33,7 @@ void mtt::Downloader::reset()
 	}
 }
 
-void mtt::Downloader::sortPriorityByAvailability(std::vector<uint32_t>& availability)
+void mtt::Downloader::sortPriorityByAvailability(const std::vector<uint32_t>& availability)
 {
 	std::lock_guard<std::mutex> guard(priorityMutex);
 
@@ -56,6 +56,12 @@ void mtt::Downloader::sortPriorityByAvailability(std::vector<uint32_t>& availabi
 			lastIdx = i;
 		}
 	}
+}
+
+void mtt::Downloader::sortPriority(const std::vector<Priority>& priority)
+{
+	std::sort(piecesPriority.begin(), piecesPriority.end(),
+		[&](uint32_t i1, uint32_t i2) {return priority[i1] > priority[i2]; });
 }
 
 std::vector<uint32_t> mtt::Downloader::getCurrentRequests()
