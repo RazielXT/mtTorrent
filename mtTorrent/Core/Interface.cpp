@@ -11,7 +11,7 @@ using namespace mtt;
 bool DownloadedPiece::isValid(const uint8_t* expectedHash)
 {
 	uint8_t hash[SHA_DIGEST_LENGTH];
-	SHA1((const uint8_t*)data.data(), data.size(), hash);
+	_SHA1((const uint8_t*)data.data(), data.size(), hash);
 
 	return memcmp(hash, expectedHash, SHA_DIGEST_LENGTH) == 0;
 }

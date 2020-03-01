@@ -350,7 +350,7 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 
 					while (fileIn && !checkState.rejected && currentPieceIdx <= currentFile->endPieceIndex)
 					{
-						SHA1(readBuffer.data(), pieceSize, shaBuffer);
+						_SHA1(readBuffer.data(), pieceSize, shaBuffer);
 						checkState.pieces[currentPieceIdx] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
 						fileIn.read((char*)readBuffer.data(), pieceSize);
 
@@ -359,7 +359,7 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 
 					if (currentPieceIdx == currentFile->endPieceIndex && currentFile == lastFile)
 					{
-						SHA1(readBuffer.data(), currentFile->endPiecePos, shaBuffer);
+						_SHA1(readBuffer.data(), currentFile->endPiecePos, shaBuffer);
 						checkState.pieces[currentPieceIdx] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
 						++currentPieceIdx;
 					}
@@ -374,7 +374,7 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 					{
 						fileIn.read((char*)readBuffer.data() + currentFile->startPiecePos, startPieceSize);
 
-						SHA1(readBuffer.data(), pieceSize, shaBuffer);
+						_SHA1(readBuffer.data(), pieceSize, shaBuffer);
 						checkState.pieces[currentFile->startPieceIndex] = memcmp(shaBuffer, piecesInfo[currentFile->startPieceIndex].hash, 20) == 0;
 
 						if(existingSize == tempFileSize)

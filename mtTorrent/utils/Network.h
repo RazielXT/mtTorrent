@@ -4,7 +4,9 @@
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
 #include <asio.hpp>
-
+#ifdef MTT_WITH_SSL
+#include <asio/ssl.hpp>
+#endif
 using asio::ip::tcp;
 using asio::ip::udp;
 
@@ -36,3 +38,10 @@ struct Addr
 
 	bool operator==(const Addr& r);
 };
+
+#ifdef MTT_WITH_SSL
+typedef asio::ssl::stream<tcp::socket> ssl_socket;
+void openSslSocket(ssl_socket& sock, tcp::resolver& resolver, const char* hostname);
+std::string sendHttpsRequest(ssl_socket& socket, tcp::resolver& resolver, asio::streambuf& request, const char* hostname);
+std::string sendHttpsRequest(ssl_socket& socket, asio::streambuf& request);
+#endif

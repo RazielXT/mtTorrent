@@ -23,6 +23,8 @@ Global
 		Release Standalone|x86 = Release Standalone|x86
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
+		ReleaseWithSSL|x64 = ReleaseWithSSL|x64
+		ReleaseWithSSL|x86 = ReleaseWithSSL|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{7A7123CF-1E7A-408F-8281-6A0ADB328253}.Debug|x64.ActiveCfg = Debug|x64
@@ -41,6 +43,10 @@ Global
 		{7A7123CF-1E7A-408F-8281-6A0ADB328253}.Release|x64.Build.0 = Release|x64
 		{7A7123CF-1E7A-408F-8281-6A0ADB328253}.Release|x86.ActiveCfg = Release|Win32
 		{7A7123CF-1E7A-408F-8281-6A0ADB328253}.Release|x86.Build.0 = Release|Win32
+		{7A7123CF-1E7A-408F-8281-6A0ADB328253}.ReleaseWithSSL|x64.ActiveCfg = ReleaseWithSSL|x64
+		{7A7123CF-1E7A-408F-8281-6A0ADB328253}.ReleaseWithSSL|x64.Build.0 = ReleaseWithSSL|x64
+		{7A7123CF-1E7A-408F-8281-6A0ADB328253}.ReleaseWithSSL|x86.ActiveCfg = ReleaseWithSSL|Win32
+		{7A7123CF-1E7A-408F-8281-6A0ADB328253}.ReleaseWithSSL|x86.Build.0 = ReleaseWithSSL|Win32
 		{08F6658C-96BE-43CD-AF5D-090AD85673CC}.Debug|x64.ActiveCfg = Debug|x64
 		{08F6658C-96BE-43CD-AF5D-090AD85673CC}.Debug|x64.Build.0 = Debug|x64
 		{08F6658C-96BE-43CD-AF5D-090AD85673CC}.Debug|x86.ActiveCfg = Debug|Win32
@@ -57,6 +63,10 @@ Global
 		{08F6658C-96BE-43CD-AF5D-090AD85673CC}.Release|x64.Build.0 = Release|x64
 		{08F6658C-96BE-43CD-AF5D-090AD85673CC}.Release|x86.ActiveCfg = Release|Win32
 		{08F6658C-96BE-43CD-AF5D-090AD85673CC}.Release|x86.Build.0 = Release|Win32
+		{08F6658C-96BE-43CD-AF5D-090AD85673CC}.ReleaseWithSSL|x64.ActiveCfg = Release|x64
+		{08F6658C-96BE-43CD-AF5D-090AD85673CC}.ReleaseWithSSL|x64.Build.0 = Release|x64
+		{08F6658C-96BE-43CD-AF5D-090AD85673CC}.ReleaseWithSSL|x86.ActiveCfg = Release|Win32
+		{08F6658C-96BE-43CD-AF5D-090AD85673CC}.ReleaseWithSSL|x86.Build.0 = Release|Win32
 		{841FA89C-34F1-4180-BECC-193231E68E8F}.Debug|x64.ActiveCfg = Debug|x64
 		{841FA89C-34F1-4180-BECC-193231E68E8F}.Debug|x64.Build.0 = Debug|x64
 		{841FA89C-34F1-4180-BECC-193231E68E8F}.Debug|x86.ActiveCfg = Debug|Win32
@@ -73,6 +83,10 @@ Global
 		{841FA89C-34F1-4180-BECC-193231E68E8F}.Release|x64.Build.0 = Release|x64
 		{841FA89C-34F1-4180-BECC-193231E68E8F}.Release|x86.ActiveCfg = Release|Win32
 		{841FA89C-34F1-4180-BECC-193231E68E8F}.Release|x86.Build.0 = Release|Win32
+		{841FA89C-34F1-4180-BECC-193231E68E8F}.ReleaseWithSSL|x64.ActiveCfg = Release|x64
+		{841FA89C-34F1-4180-BECC-193231E68E8F}.ReleaseWithSSL|x64.Build.0 = Release|x64
+		{841FA89C-34F1-4180-BECC-193231E68E8F}.ReleaseWithSSL|x86.ActiveCfg = Release|Win32
+		{841FA89C-34F1-4180-BECC-193231E68E8F}.ReleaseWithSSL|x86.Build.0 = Release|Win32
 		{DE7B6579-4E15-4B25-9214-E738575419FD}.Debug|x64.ActiveCfg = Debug|x64
 		{DE7B6579-4E15-4B25-9214-E738575419FD}.Debug|x64.Build.0 = Debug|x64
 		{DE7B6579-4E15-4B25-9214-E738575419FD}.Debug|x86.ActiveCfg = Debug|Win32
@@ -89,6 +103,10 @@ Global
 		{DE7B6579-4E15-4B25-9214-E738575419FD}.Release|x64.Build.0 = Release|x64
 		{DE7B6579-4E15-4B25-9214-E738575419FD}.Release|x86.ActiveCfg = Release|Win32
 		{DE7B6579-4E15-4B25-9214-E738575419FD}.Release|x86.Build.0 = Release|Win32
+		{DE7B6579-4E15-4B25-9214-E738575419FD}.ReleaseWithSSL|x64.ActiveCfg = Release|x64
+		{DE7B6579-4E15-4B25-9214-E738575419FD}.ReleaseWithSSL|x64.Build.0 = Release|x64
+		{DE7B6579-4E15-4B25-9214-E738575419FD}.ReleaseWithSSL|x86.ActiveCfg = Release|Win32
+		{DE7B6579-4E15-4B25-9214-E738575419FD}.ReleaseWithSSL|x86.Build.0 = Release|Win32
 		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.Debug|x64.ActiveCfg = Debug|x64
 		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.Debug|x64.Build.0 = Debug|x64
 		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.Debug|x86.ActiveCfg = Debug|Win32
@@ -105,6 +123,10 @@ Global
 		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.Release|x64.Build.0 = Release|x64
 		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.Release|x86.ActiveCfg = Release|Win32
 		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.Release|x86.Build.0 = Release|Win32
+		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.ReleaseWithSSL|x64.ActiveCfg = Release|x64
+		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.ReleaseWithSSL|x64.Build.0 = Release|x64
+		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.ReleaseWithSSL|x86.ActiveCfg = Release|Win32
+		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.ReleaseWithSSL|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

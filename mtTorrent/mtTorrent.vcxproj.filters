@@ -229,6 +229,9 @@
     <ClCompile Include="AlertsManager.cpp">
       <Filter>Source Files\Core\General</Filter>
     </ClCompile>
+    <ClCompile Include="Core\HttpsTrackerComm.cpp">
+      <Filter>Source Files\Core\Torrent\Tracker</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Storage.h">
@@ -434,6 +437,9 @@
     </ClInclude>
     <ClInclude Include="Public\ModuleArray.h">
       <Filter>Source Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\HttpsTrackerComm.h">
+      <Filter>Source Files\Core\Torrent\Tracker</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

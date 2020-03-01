@@ -285,7 +285,7 @@ void SHA1_::final()
 	transform(digest, block, transforms);
 }
 
-void SHA1(const unsigned char* d, size_t n, unsigned char* md)
+void _SHA1(const unsigned char* d, size_t n, unsigned char* md)
 {
 	SHA1_ sha;
 	sha.update((const char*)d, n);

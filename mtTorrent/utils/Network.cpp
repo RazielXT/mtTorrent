@@ -116,3 +116,82 @@ bool Addr::operator==(const Addr& r)
 
 	return memcmp(addrBytes, r.addrBytes, ipv6 ? 16 : 4) == 0;
 }
+#ifdef MTT_WITH_SSL
+void openSslSocket(ssl_socket& sock, tcp::resolver& resolver, const char* hostname)
+{
+	SSL_set_tlsext_host_name(sock.native_handle(), hostname);
+
+	tcp::resolver::query query(hostname, "https");
+	asio::connect(sock.lowest_layer(), resolver.resolve(query));
+	sock.lowest_layer().set_option(tcp::no_delay(true));
+
+	// Perform SSL handshake and verify the remote host's
+	// certificate.
+	//sock.set_verify_mode(ssl::verify_peer);
+	//sock.set_verify_callback(ssl::rfc2818_verification(server));
+
+	sock.set_verify_mode(asio::ssl::verify_none);
+	sock.handshake(ssl_socket::client);
+}
+
+std::vector<std::string> outFHistory;
+std::vector<std::string> outHistory;
+std::vector<std::string> history;
+
+std::string sendHttpsRequest(ssl_socket& socket, asio::streambuf& request)
+{
+	// Send the request.
+	asio::write(socket, request);
+
+	// Read the response status line. The response streambuf will automatically
+	// grow to accommodate the entire line. The growth may be limited by passing
+	// a maximum size to the streambuf constructor.
+	asio::streambuf response;
+	//asio::error_code error;
+	asio::read(socket, response);
+
+	//if (error != asio::error::eof)
+	//	return "";
+
+	std::istream response_stream(&response);
+	std::string message;
+	std::string outMessage;
+	std::string fullmsg;
+
+	bool bodyStarted = false;
+
+	while (std::getline(response_stream, message))
+	{
+		fullmsg += message;
+
+		if (bodyStarted)
+		{
+			if (message.length() > 10)
+			{
+				if (!outMessage.empty() && outMessage.back() == '\r')
+					outMessage.resize(outMessage.size() - 1);
+
+				outMessage += message;
+				outHistory.push_back(message);
+			}
+		}
+
+		if (message == "\r")
+			bodyStarted = true;
+
+		history.push_back(message);
+		//std::cout << message << "\n";
+	}
+
+	outFHistory.push_back(outMessage);
+
+	return fullmsg;
+}
+
+std::string sendHttpsRequest(ssl_socket& socket, tcp::resolver& resolver, asio::streambuf& request, const char* hostname)
+{
+	openSslSocket(socket, resolver, hostname);
+
+	return sendHttpsRequest(socket, request);
+}
+#endif

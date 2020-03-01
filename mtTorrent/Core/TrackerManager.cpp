@@ -3,6 +3,7 @@
 #include "UdpTrackerComm.h"
 #include "Configuration.h"
 #include "Torrent.h"
+#include "HttpsTrackerComm.h"
 
 mtt::TrackerManager::TrackerManager(TorrentPtr t) : torrent(t)
 {
@@ -81,6 +82,8 @@ void mtt::TrackerManager::addTracker(std::string addr)
 		else
 			trackers.push_back(info);
 	}
+	else if(info.protocol == "https")
+		trackers.push_back(info);
 }
 
 void mtt::TrackerManager::addTrackers(const std::vector<std::string>& trackers)
@@ -216,6 +219,10 @@ void mtt::TrackerManager::start(TrackerInfo* tracker)
 		tracker->comm = std::make_shared<UdpTrackerComm>();
 	else if (tracker->protocol == "http")
 		tracker->comm = std::make_shared<HttpTrackerComm>();
+#ifdef MTT_WITH_SSL
+	else if (tracker->protocol == "https")
+		tracker->comm = std::make_shared<HttpsTrackerComm>();
+#endif
 	else
 		return;
 
