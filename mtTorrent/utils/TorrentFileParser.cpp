@@ -132,7 +132,24 @@ bool generateInfoHash(BencodeParser& parser, TorrentFileInfo& fileInfo)
 					auto pieces = infod->getTxtItem("pieces");
 
 					if (pieces)
-						infoEnd = pieces->data + pieces->size + 1; 
+					{
+						infoEnd = pieces->data + pieces->size;
+
+						if (*infoEnd != 'e')
+						{
+							auto endTemp = (infoEnd - 1);
+							auto endTempChar = *endTemp;
+							*const_cast<char*>(infoEnd - 1) = 'd';
+
+							BencodeParser subparse;
+							if (subparse.parse((const uint8_t*)endTemp, parser.bodyEnd - endTemp))
+								infoEnd = subparse.bodyEnd;
+
+							*const_cast<char*>(endTemp) = endTempChar;
+						}
+						else
+							infoEnd++;
+					}
 				}
 
 				it = nullptr;
@@ -144,7 +161,7 @@ bool generateInfoHash(BencodeParser& parser, TorrentFileInfo& fileInfo)
 
 	if (infoStart && infoEnd)
 	{
-		SHA1((const unsigned char*)infoStart, infoEnd - infoStart, (unsigned char*)&fileInfo.info.hash[0]);
+		_SHA1((const unsigned char*)infoStart, infoEnd - infoStart, (unsigned char*)&fileInfo.info.hash[0]);
 
 		return true;
 	}
@@ -163,7 +180,7 @@ mtt::TorrentInfo mtt::TorrentFileParser::parseTorrentInfo(const uint8_t* data, s
 		auto infoStart = (const char*)data;
 		auto infoEnd = (const char*)data + length;
 
-		SHA1((const unsigned char*)infoStart, infoEnd - infoStart, (unsigned char*)&info.hash[0]);
+		_SHA1((const unsigned char*)infoStart, infoEnd - infoStart, (unsigned char*)&info.hash[0]);
 
 		return info;
 	}
