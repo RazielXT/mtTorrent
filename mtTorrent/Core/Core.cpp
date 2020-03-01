@@ -14,7 +14,6 @@ mtt::Core core;
 
 extern void InitLogTime();
 
-
 #include <DbgHelp.h>
 #pragma comment (lib, "dbghelp.lib")
 
@@ -53,6 +52,40 @@ LONG WINAPI OurCrashHandler(EXCEPTION_POINTERS* pException)
 	}
 
 	return EXCEPTION_EXECUTE_HANDLER;
+}
+
+std::string riotApiRequest()
+{
+#ifdef MTT_WITH_SSL
+	char* server = "eun1.api.riotgames.com";
+	char* requestUrl = "/lol/platform/v3/champion-rotations";
+	auto token = "RGAPI-8c80aeff-96cb-41fa-b13f-65c5737edf72";
+
+	// Create a context that uses the default paths for
+	// finding CA certificates.
+	asio::ssl::context ctx(asio::ssl::context::tlsv12);
+	ctx.set_default_verify_paths();
+
+	// Open a socket and connect it to the remote host.
+	asio::io_service io_service;
+	ssl_socket sock(io_service, ctx);
+	tcp::resolver resolver(io_service);
+
+	// Form the request. We specify the "Connection: close" header so that the
+	// server will close the socket after transmitting the response. This will
+	// allow us to treat all data up until the EOF as the content.
+	asio::streambuf request;
+	std::ostream request_stream(&request);
+	request_stream << "GET " << requestUrl << " HTTP/1.1\r\n";
+	request_stream << "Host: " << server << "\r\n";
+	request_stream << "X-Riot-Token: " << token << "\r\n";
+	request_stream << "Accept: */*\r\n";
+	request_stream << "Connection: close\r\n\r\n";
+
+	return sendHttpsRequest(sock, resolver, request, server);
+#else
+	return "";
+#endif
 }
 
 void mtt::Core::init()
