@@ -573,6 +573,23 @@ void showFilesSelectionForm(const uint8_t* hash, bool added)
 	newThread->Start();
 }
 
+void showSettingsFormThread()
+{
+	GuiLite::SettingsForm form;
+	mtBI::SettingsInfo info;
+	if (IoctlFunc(mtBI::MessageId::GetSettings, nullptr, &info) == mtt::Status::Success)
+	{
+		form.checkBoxDht->Checked = info.dhtEnabled;
+		form.directoryTextBox->Text = gcnew String(info.directory.data);
+		form.maxConnectionsNumeric->Value = info.maxConnections;
+		form.udpPortNumeric->Value = info.udpPort;
+		form.tcpPortNumeric->Value = info.tcpPort;
+		form.upnpMapCheckBox->Checked = info.upnpEnabled;
+	}
+
+	form.ShowDialog();
+}
+
 struct ScheduledTorrent
 {
 	uint8_t hash[20];
@@ -784,19 +801,9 @@ void onButtonClick(ButtonId id, System::String^ param)
 	}
 	else if (id == ButtonId::Settings)
 	{
-		GuiLite::SettingsForm form;
-		mtBI::SettingsInfo info;
-		if (IoctlFunc(mtBI::MessageId::GetSettings, nullptr, &info) == mtt::Status::Success)
-		{
-			form.checkBoxDht->Checked = info.dhtEnabled;
-			form.directoryTextBox->Text = gcnew String(info.directory.data);
-			form.maxConnectionsNumeric->Value = info.maxConnections;
-			form.udpPortNumeric->Value = info.udpPort;
-			form.tcpPortNumeric->Value = info.tcpPort;
-			form.upnpMapCheckBox->Checked = info.upnpEnabled;
-		}
-
-		form.ShowDialog();
+		System::Threading::Thread^ newThread = gcnew System::Threading::Thread(gcnew System::Threading::ThreadStart(&showSettingsFormThread));
+		newThread->SetApartmentState(System::Threading::ApartmentState::STA);
+		newThread->Start();
 	}
 	else if (id == ButtonId::SourceRefresh)
 	{
