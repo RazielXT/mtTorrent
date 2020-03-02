@@ -43,6 +43,9 @@ HttpHeaderInfo HttpHeaderInfo::readFromBuffer(DataBuffer& buffer)
 	{
 		if ((p.first == "Content-Length" || p.first == "CONTENT-LENGTH") && !p.second.empty())
 			info.dataSize = std::stoul(p.second);
+
+		if (!info.dataSize && p.first == "Transfer-Encoding" && p.second == "chunked")
+			info.dataSize = buffer.size() - info.dataStart;
 	}
 
 	if (info.dataStart && !(info.dataSize || buffer.size() == info.dataStart))

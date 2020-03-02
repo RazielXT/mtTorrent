@@ -134,10 +134,6 @@ void openSslSocket(ssl_socket& sock, tcp::resolver& resolver, const char* hostna
 	sock.handshake(ssl_socket::client);
 }
 
-std::vector<std::string> outFHistory;
-std::vector<std::string> outHistory;
-std::vector<std::string> history;
-
 std::string sendHttpsRequest(ssl_socket& socket, asio::streambuf& request)
 {
 	// Send the request.
@@ -147,45 +143,18 @@ std::string sendHttpsRequest(ssl_socket& socket, asio::streambuf& request)
 	// grow to accommodate the entire line. The growth may be limited by passing
 	// a maximum size to the streambuf constructor.
 	asio::streambuf response;
-	//asio::error_code error;
-	asio::read(socket, response);
+	asio::error_code error;
+	asio::read(socket, response, error);
 
-	//if (error != asio::error::eof)
-	//	return "";
-
-	std::istream response_stream(&response);
 	std::string message;
-	std::string outMessage;
-	std::string fullmsg;
+	auto dataResp = response.data();
 
-	bool bodyStarted = false;
-
-	while (std::getline(response_stream, message))
+	if (dataResp.size() > 0)
 	{
-		fullmsg += message;
-
-		if (bodyStarted)
-		{
-			if (message.length() > 10)
-			{
-				if (!outMessage.empty() && outMessage.back() == '\r')
-					outMessage.resize(outMessage.size() - 1);
-
-				outMessage += message;
-				outHistory.push_back(message);
-			}
-		}
-
-		if (message == "\r")
-			bodyStarted = true;
-
-		history.push_back(message);
-		//std::cout << message << "\n";
+		message.append((const char*)dataResp.data(), dataResp.size());
 	}
 
-	outFHistory.push_back(outMessage);
-
-	return fullmsg;
+	return message;
 }
 
 std::string sendHttpsRequest(ssl_socket& socket, tcp::resolver& resolver, asio::streambuf& request, const char* hostname)

@@ -192,6 +192,9 @@ std::string mtt::TorrentFileInfo::createTorrentFileData()
 
 	writer.addRawItemFromBuffer("6:pieces", (const char*)info.pieces.data(), info.pieces.size() * 20);
 
+	if(info.isPrivate)
+		writer.addRawItem("7:private", 1);
+
 	writer.endMap();
 	writer.endMap();
 

@@ -56,6 +56,8 @@ namespace mtt
 		uint32_t lastPieceSize = 0;
 		uint32_t lastPieceLastBlockIndex = 0;
 		uint32_t lastPieceLastBlockSize = 0;
+
+		bool isPrivate = false;
 	};
 
 	struct TorrentFileInfo

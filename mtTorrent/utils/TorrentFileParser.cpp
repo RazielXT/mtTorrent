@@ -208,6 +208,11 @@ mtt::TorrentInfo parseTorrentInfo(const BencodeParser::Object* infoDictionary)
 		}
 	}
 
+	if (auto privateItem = infoDictionary->getIntItem("private"))
+	{
+		info.isPrivate = privateItem->getInt() != 0;
+	}
+
 	if (auto files = infoDictionary->getListItem("files"))
 	{
 		info.name = infoDictionary->getTxt("name");
