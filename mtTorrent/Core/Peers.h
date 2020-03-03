@@ -33,6 +33,7 @@ namespace mtt
 
 		uint32_t connectedCount();
 		uint32_t receivedCount();
+		std::vector<std::shared_ptr<PeerCommunication>> getConnectingPeers();
 
 		void reloadTorrentInfo();
 

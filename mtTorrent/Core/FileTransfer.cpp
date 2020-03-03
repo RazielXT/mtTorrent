@@ -194,18 +194,34 @@ std::vector<mtt::ActivePeerInfo> mtt::FileTransfer::getPeersInfo()
 {
 	std::vector<mtt::ActivePeerInfo> out;
 
-	std::lock_guard<std::mutex> guard(peersMutex);
-	out.resize(activePeers.size());
-
+	auto connecting = torrent->peers->getConnectingPeers();
 	uint32_t i = 0;
-	for (auto& peer : activePeers)
+
 	{
-		auto addr = peer.comm->getAddress();
+		std::lock_guard<std::mutex> guard(peersMutex);
+		out.resize(activePeers.size() + connecting.size());
+
+		for (auto& peer : activePeers)
+		{
+			auto addr = peer.comm->getAddress();
+			out[i].address = addr.toString();
+			out[i].percentage = peer.comm->info.pieces.getPercentage();
+			out[i].downloadSpeed = peer.downloadSpeed;
+			out[i].uploadSpeed = peer.uploadSpeed;
+			out[i].client = peer.comm->ext.state.client;
+			out[i].country = addr.ipv6 ? "" : ipToCountry.GetCountry(_byteswap_ulong(*reinterpret_cast<uint32_t*>(addr.addrBytes)));
+			i++;
+		}
+	}
+
+	for (auto& comm : connecting)
+	{
+		auto addr = comm->getAddress();
 		out[i].address = addr.toString();
-		out[i].percentage = peer.comm->info.pieces.getPercentage();
-		out[i].downloadSpeed = peer.downloadSpeed;
-		out[i].uploadSpeed = peer.uploadSpeed;
-		out[i].client = peer.comm->ext.state.client;
+		out[i].percentage = 0;
+		out[i].downloadSpeed = 0;
+		out[i].uploadSpeed = 0;
+		out[i].client = "";
 		out[i].country = addr.ipv6 ? "" : ipToCountry.GetCountry(_byteswap_ulong(*reinterpret_cast<uint32_t*>(addr.addrBytes)));
 		i++;
 	}

@@ -277,6 +277,20 @@ uint32_t mtt::Peers::receivedCount()
 	return (uint32_t)knownPeers.size();
 }
 
+std::vector<std::shared_ptr<mtt::PeerCommunication>> mtt::Peers::getConnectingPeers()
+{
+	std::vector<std::shared_ptr<mtt::PeerCommunication>> out;
+	std::lock_guard<std::mutex> guard(peersMutex);
+
+	for (auto& peer : activeConnections)
+	{
+		if (!peer.comm->state.finishedHandshake)
+			out.push_back(peer.comm);
+	}
+
+	return out;
+}
+
 void mtt::Peers::reloadTorrentInfo()
 {
 	std::lock_guard<std::mutex> guard(peersMutex);
