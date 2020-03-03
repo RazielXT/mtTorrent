@@ -1,5 +1,53 @@
 #include "HttpHeader.h"
 
+struct DataChunk
+{
+	uint32_t start;
+	uint32_t size;
+};
+std::vector<DataChunk> chunks;
+
+std::vector<DataChunk> readChunkedData(DataBuffer& buffer, size_t bufferDataStart)
+{
+	std::vector<DataChunk> chunks;
+	uint32_t chunkSize = 0;
+
+	auto ptr = buffer.data() + bufferDataStart;
+	size_t size = buffer.size() - bufferDataStart;
+	auto bufferEnd = ptr + size;
+	while (ptr < bufferEnd)
+	{
+		size_t pos = 0;
+		while (pos + 1 < size)
+		{
+			if (ptr[pos] == '\r' && ptr[pos + 1] == '\n')
+				break;
+			pos++;
+		}
+
+		if (pos + 1 > size)
+			return {};
+
+		if (pos == 0)
+			chunkSize = 0;
+		else
+		{
+			if (chunkSize == 0)
+				chunkSize = strtoul((const char*)ptr, nullptr, 10);
+			else
+			{
+				chunks.push_back({ (uint32_t)(ptr - buffer.data()), chunkSize });
+				chunkSize = 0;
+			}
+		}
+
+		ptr += pos + 2;
+		size -= pos + 2;
+	}
+
+	return chunks;
+}
+
 HttpHeaderInfo HttpHeaderInfo::readFromBuffer(DataBuffer& buffer)
 {
 	HttpHeaderInfo info;
@@ -41,11 +89,22 @@ HttpHeaderInfo HttpHeaderInfo::readFromBuffer(DataBuffer& buffer)
 
 	for (auto& p : info.headerParameters)
 	{
-		if ((p.first == "Content-Length" || p.first == "CONTENT-LENGTH") && !p.second.empty())
+		std::transform(p.first.begin(), p.first.end(), p.first.begin(), ::toupper);
+		std::transform(p.second.begin(), p.second.end(), p.second.begin(), ::toupper);
+
+		if (p.first == "CONTENT-LENGTH" && !p.second.empty())
 			info.dataSize = std::stoul(p.second);
 
-		if (!info.dataSize && p.first == "Transfer-Encoding" && p.second == "chunked")
-			info.dataSize = buffer.size() - info.dataStart;
+		if (!info.dataSize && p.first == "TRANSFER-ENCODING" && p.second == "CHUNKED")
+		{
+			auto chunks = readChunkedData(buffer, info.dataStart);
+			if (!chunks.empty())
+			{
+				info.dataStart = chunks.front().start;
+				info.dataSize = chunks.front().size;
+			}
+
+		}
 	}
 
 	if (info.dataStart && !(info.dataSize || buffer.size() == info.dataStart))
