@@ -33,7 +33,7 @@ std::vector<DataChunk> readChunkedData(DataBuffer& buffer, size_t bufferDataStar
 		else
 		{
 			if (chunkSize == 0)
-				chunkSize = strtoul((const char*)ptr, nullptr, 10);
+				chunkSize = strtoul((const char*)ptr, nullptr, 16);
 			else
 			{
 				chunks.push_back({ (uint32_t)(ptr - buffer.data()), chunkSize });

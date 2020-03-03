@@ -174,7 +174,7 @@ uint32_t mtt::HttpsTrackerComm::readAnnounceResponse(std::string& resp, Announce
 					auto count = peers->size / 6;
 					for (size_t i = 0; i < count; i++)
 					{
-						uint32_t addr = reader.pop32();
+						uint32_t addr = swap32(reader.pop32());
 						response.peers.push_back(Addr(addr, reader.pop16()));
 					}
 				}
