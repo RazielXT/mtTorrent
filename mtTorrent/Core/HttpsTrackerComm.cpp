@@ -32,8 +32,6 @@ void mtt::HttpsTrackerComm::init(std::string host, std::string path, TorrentPtr 
 	urlpath = path;
 	torrent = t;
 
-	//initializeStream();
-
 	info.state = TrackerState::Initialized;
 }
 
@@ -44,12 +42,6 @@ void mtt::HttpsTrackerComm::initializeStream()
 
 	tcp::resolver resolver(torrent->service.io);
 	openSslSocket(*socket, resolver, info.hostname.data());
-
-// 	tcpComm->onConnectCallback = std::bind(&HttpTrackerComm::onTcpConnected, this);
-// 	tcpComm->onCloseCallback = [this](int code) {onTcpClosed(code); };
-// 	tcpComm->onReceiveCallback = std::bind(&HttpTrackerComm::onTcpReceived, this);
-// 
-// 	tcpComm->init(info.hostname, port);
 }
 
 void mtt::HttpsTrackerComm::fail()
@@ -134,12 +126,9 @@ DataBuffer mtt::HttpsTrackerComm::createAnnounceRequest(std::string host)
 	return builder.getBuffer();
 }
 
-uint32_t mtt::HttpsTrackerComm::readAnnounceResponse(std::string& resp, AnnounceResponse& response)
+uint32_t mtt::HttpsTrackerComm::readAnnounceResponse(std::string& buffer, AnnounceResponse& response)
 {
-	DataBuffer buffer;
-	buffer.insert(buffer.begin(), (uint8_t*)resp.data(), (uint8_t*)resp.data()+resp.size());
-
-	auto info = HttpHeaderInfo::readFromBuffer(buffer);
+	auto info = HttpHeaderInfo::read(buffer.data(), buffer.size());
 
 	if (!info.valid || !info.success)
 		return -1;
@@ -149,7 +138,7 @@ uint32_t mtt::HttpsTrackerComm::readAnnounceResponse(std::string& resp, Announce
 		try
 		{
 			BencodeParser parser;
-			parser.parse(buffer.data() + info.dataStart, info.dataSize);
+			parser.parse((const uint8_t*)buffer.data() + info.dataStart, info.dataSize);
 			auto root = parser.getRoot();
 
 			if (root && root->isMap())
@@ -199,8 +188,7 @@ void mtt::HttpsTrackerComm::announce()
 
 	std::string reqStr((char*)request.data(), request.size());
 
-	if (!socket)
-		initializeStream();
+	initializeStream();
 
 	if (info.state == TrackerState::Announced)
 		info.state = TrackerState::Reannouncing;
@@ -215,6 +203,8 @@ void mtt::HttpsTrackerComm::announce()
 	auto response = sendHttpsRequest(*socket, buffer);
 	
 	onTcpReceived(response);
+
+	socket.reset();
 }
 
 #endif // MTT_WITH_SSL

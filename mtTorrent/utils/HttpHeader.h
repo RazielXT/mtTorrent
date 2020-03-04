@@ -11,4 +11,5 @@ struct HttpHeaderInfo
 	std::vector<std::pair<std::string, std::string>> headerParameters;
 
 	static HttpHeaderInfo readFromBuffer(DataBuffer& buffer);
+	static HttpHeaderInfo read(const char* buffer, size_t bufferSize);
 };
