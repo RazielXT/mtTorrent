@@ -4,6 +4,7 @@
 #include "PeerCommunication.h"
 #include "UdpTrackerComm.h"
 #include "utils/ScheduledTimer.h"
+#include "utils/Uri.h"
 
 namespace mtt
 {
@@ -22,7 +23,7 @@ namespace mtt
 		void removeTracker(const std::string& addr);
 		void removeTrackers();
 
-		std::shared_ptr<Tracker> getTracker(const std::string& addr);
+		std::shared_ptr<Tracker> getTrackerByAddr(const std::string& addr);
 		std::vector<std::shared_ptr<Tracker>> getTrackers();
 		std::vector<std::string> getTrackersList();
 
@@ -35,9 +36,8 @@ namespace mtt
 			std::shared_ptr<Tracker> comm;
 			std::shared_ptr<ScheduledTimer> timer;
 
-			std::string protocol;
-			std::string host;
-			std::string port;
+			Uri uri;
+			std::string fullAddress;
 			bool httpFallback = false;
 
 			bool httpFallbackUsed = false;

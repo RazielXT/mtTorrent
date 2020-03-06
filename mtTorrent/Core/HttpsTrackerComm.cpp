@@ -26,10 +26,11 @@ void mtt::HttpsTrackerComm::deinit()
 	socket.reset();
 }
 
-void mtt::HttpsTrackerComm::init(std::string host, std::string path, TorrentPtr t)
+void mtt::HttpsTrackerComm::init(std::string host, std::string port, std::string path, TorrentPtr t)
 {
 	info.hostname = host;
-	urlpath = path;
+	info.path = path;
+	info.port = port;
 	torrent = t;
 
 	info.state = TrackerState::Initialized;
@@ -107,30 +108,32 @@ void mtt::HttpsTrackerComm::onTcpReceived(std::string& responseData)
 
 void mtt::HttpsTrackerComm::announce()
 {
-	HTTP_TRACKER_LOG("announcing");
+	torrent->service.io.post([this]()
+		{
+			HTTP_TRACKER_LOG("announcing");
 
-	auto hashStr = torrent->hashString();
-	auto request = createAnnounceRequest(urlpath, info.hostname, "");
+			auto hashStr = torrent->hashString();
+			auto request = createAnnounceRequest(info.path, info.hostname, info.port);
 
-	std::string reqStr((char*)request.data(), request.size());
+			std::string reqStr((char*)request.data(), request.size());
 
-	initializeStream();
+			initializeStream();
 
-	if (info.state == TrackerState::Announced)
-		info.state = TrackerState::Reannouncing;
-	else
-		info.state = TrackerState::Announcing;
+			if (info.state == TrackerState::Announced)
+				info.state = TrackerState::Reannouncing;
+			else
+				info.state = TrackerState::Announcing;
 
+			asio::streambuf buffer;
+			std::ostream request_stream(&buffer);
+			request_stream.write((char*)request.data(), request.size());
 
-	asio::streambuf buffer;
-	std::ostream request_stream(&buffer);
-	request_stream.write((char*)request.data(), request.size());
+			auto response = sendHttpsRequest(*socket, buffer);
 
-	auto response = sendHttpsRequest(*socket, buffer);
-	
-	onTcpReceived(response);
+			onTcpReceived(response);
 
-	socket.reset();
+			socket.reset();
+		});
 }
 
 #endif // MTT_WITH_SSL

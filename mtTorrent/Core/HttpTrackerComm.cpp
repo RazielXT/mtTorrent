@@ -28,13 +28,12 @@ void mtt::HttpTrackerComm::deinit()
 	tcpComm.reset();
 }
 
-void mtt::HttpTrackerComm::init(std::string host, std::string p, TorrentPtr t)
+void mtt::HttpTrackerComm::init(std::string host, std::string port, std::string path, TorrentPtr t)
 {
 	info.hostname = host;
-	port = p;
+	info.path = path;
+	info.port = port;
 	torrent = t;
-
-	initializeStream();
 
 	info.state = TrackerState::Initialized;
 }
@@ -46,7 +45,7 @@ void mtt::HttpTrackerComm::initializeStream()
 	tcpComm->onCloseCallback = [this](int code) {onTcpClosed(code); };
 	tcpComm->onReceiveCallback = std::bind(&HttpTrackerComm::onTcpReceived, this);
 
-	tcpComm->init(info.hostname, port);
+	tcpComm->init(info.hostname, info.port);
 }
 
 void mtt::HttpTrackerComm::fail()
@@ -115,7 +114,7 @@ void mtt::HttpTrackerComm::onTcpReceived()
 DataBuffer mtt::HttpTracker::createAnnounceRequest(std::string path, std::string host, std::string port)
 {
 	PacketBuilder builder(500);
-	builder << "GET /" << path << "?info_hash=" << UrlEncode(torrent->hash(), 20);
+	builder << "GET " << path << "?info_hash=" << UrlEncode(torrent->hash(), 20);
 	builder << "&peer_id=" << UrlEncode(mtt::config::getInternal().hashId, 20);
 	builder << "&port=" << std::to_string(mtt::config::getExternal().connection.tcpPort);
 	builder << "&uploaded=" << std::to_string(torrent->uploaded());
@@ -201,7 +200,7 @@ void mtt::HttpTrackerComm::announce()
 	else
 		info.state = TrackerState::Announcing;
 
-	auto request = createAnnounceRequest("announce", info.hostname, port);
+	auto request = createAnnounceRequest(info.path, info.hostname, info.port);
 
 	tcpComm->write(request);
 }

@@ -366,6 +366,7 @@
     <ClCompile Include="utils\UdpAsyncReceiver.cpp" />
     <ClCompile Include="utils\UpnpDiscovery.cpp" />
     <ClCompile Include="utils\UpnpPortMapping.cpp" />
+    <ClCompile Include="utils\Uri.cpp" />
     <ClCompile Include="utils\UrlEncoding.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -437,6 +438,7 @@
     <ClInclude Include="utils\UdpAsyncReceiver.h" />
     <ClInclude Include="utils\UpnpDiscovery.h" />
     <ClInclude Include="utils\UpnpPortMapping.h" />
+    <ClInclude Include="utils\Uri.h" />
     <ClInclude Include="utils\UrlEncoding.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

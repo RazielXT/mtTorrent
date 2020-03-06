@@ -18,7 +18,7 @@ mtt::UdpTrackerComm::~UdpTrackerComm()
 	deinit();
 }
 
-void UdpTrackerComm::init(std::string host, std::string port, TorrentPtr t)
+void UdpTrackerComm::init(std::string host, std::string port, std::string, TorrentPtr t)
 {
 	info.hostname = host;
 	torrent = t;

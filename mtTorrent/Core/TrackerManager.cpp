@@ -9,28 +9,6 @@ mtt::TrackerManager::TrackerManager(TorrentPtr t) : torrent(t)
 {
 }
 
-std::string cutStringPart(std::string& source, DataBuffer endChars, int cutAdd)
-{
-	size_t id = std::string::npos;
-
-	for (auto c : endChars)
-	{
-		auto nid = source.find(c);
-
-		if (nid < id)
-			id = nid;
-	}
-
-	std::string ret = source.substr(0, id);
-
-	if (id == std::string::npos)
-		source = "";
-	else
-		source = source.substr(id + 1 + cutAdd, std::string::npos);
-
-	return ret;
-}
-
 void mtt::TrackerManager::start(AnnounceCallback callbk)
 {
 	std::lock_guard<std::mutex> guard(trackersMutex);
@@ -63,26 +41,25 @@ void mtt::TrackerManager::addTracker(std::string addr)
 
 	TrackerInfo info;
 
-	info.protocol = cutStringPart(addr, { ':' }, 2);
-	info.host = cutStringPart(addr, { ':', '/' }, 0);
-	info.port = cutStringPart(addr, { '/' }, 0);
+	info.uri = Uri::Parse(addr);
+	info.fullAddress = addr;
 
-	if (!info.port.empty())
+	if (!info.uri.port.empty())
 	{
-		auto i = findTrackerInfo(info.host);
+		auto i = findTrackerInfo(info.uri.host);
 
-		if (i && i->port == info.port)
+		if (i && i->uri.port == info.uri.port)
 		{
-			if ((i->protocol == "http" || info.protocol == "http") && (i->protocol == "udp" || info.protocol == "udp") && !i->comm)
+			if ((i->uri.protocol == "http" || info.uri.protocol == "http") && (i->uri.protocol == "udp" || info.uri.protocol == "udp") && !i->comm)
 			{
-				i->protocol = "udp";
+				i->uri.protocol = "udp";
 				i->httpFallback = true;
 			}
 		}
 		else
 			trackers.push_back(info);
 	}
-	else if(info.protocol == "https")
+	else if(info.uri.protocol == "https")
 		trackers.push_back(info);
 }
 
@@ -100,7 +77,7 @@ void mtt::TrackerManager::removeTracker(const std::string& addr)
 
 	for (auto it = trackers.begin(); it != trackers.end(); it++)
 	{
-		if (it->host == addr)
+		if (it->uri.host == addr)
 		{
 			trackers.erase(it);
 			break;
@@ -114,11 +91,14 @@ void mtt::TrackerManager::removeTrackers()
 	trackers.clear();
 }
 
-std::shared_ptr<mtt::Tracker> mtt::TrackerManager::getTracker(const std::string& addr)
+std::shared_ptr<mtt::Tracker> mtt::TrackerManager::getTrackerByAddr(const std::string& addr)
 {
-	if (auto info = findTrackerInfo(addr))
+	std::lock_guard<std::mutex> guard(trackersMutex);
+
+	for (auto& tracker : trackers)
 	{
-		return info->comm;
+		if (tracker.fullAddress == addr)
+			return tracker.comm;
 	}
 
 	return nullptr;
@@ -147,7 +127,7 @@ std::vector<std::string> mtt::TrackerManager::getTrackersList()
 
 	for (auto& t : trackers)
 	{
-		out.push_back(t.host);
+		out.push_back(t.fullAddress);
 	}
 
 	return out;
@@ -184,17 +164,17 @@ void mtt::TrackerManager::onTrackerFail(Tracker* t)
 
 	if (auto trackerInfo = findTrackerInfo(t))
 	{
-		if (trackerInfo->httpFallback && !trackerInfo->httpFallbackUsed && trackerInfo->protocol == "udp")
+		if (trackerInfo->httpFallback && !trackerInfo->httpFallbackUsed && trackerInfo->uri.protocol == "udp")
 		{
 			trackerInfo->httpFallbackUsed = true;
-			trackerInfo->protocol = "http";
+			trackerInfo->uri.protocol = "http";
 			start(trackerInfo);
 		}
 		else
 		{
-			if (trackerInfo->httpFallback && trackerInfo->httpFallbackUsed && trackerInfo->protocol == "http")
+			if (trackerInfo->httpFallback && trackerInfo->httpFallbackUsed && trackerInfo->uri.protocol == "http")
 			{
-				trackerInfo->protocol = "udp";
+				trackerInfo->uri.protocol = "udp";
 				start(trackerInfo);
 			}
 			else
@@ -215,12 +195,12 @@ void mtt::TrackerManager::onTrackerFail(Tracker* t)
 
 void mtt::TrackerManager::start(TrackerInfo* tracker)
 {
-	if (tracker->protocol == "udp")
+	if (tracker->uri.protocol == "udp")
 		tracker->comm = std::make_shared<UdpTrackerComm>();
-	else if (tracker->protocol == "http")
+	else if (tracker->uri.protocol == "http")
 		tracker->comm = std::make_shared<HttpTrackerComm>();
 #ifdef MTT_WITH_SSL
-	else if (tracker->protocol == "https")
+	else if (tracker->uri.protocol == "https")
 		tracker->comm = std::make_shared<HttpsTrackerComm>();
 #endif
 	else
@@ -229,7 +209,7 @@ void mtt::TrackerManager::start(TrackerInfo* tracker)
 	tracker->comm->onFail = std::bind(&TrackerManager::onTrackerFail, this, tracker->comm.get());
 	tracker->comm->onAnnounceResult = std::bind(&TrackerManager::onAnnounce, this, std::placeholders::_1, tracker->comm.get());
 
-	tracker->comm->init(tracker->host, tracker->port, torrent);
+	tracker->comm->init(tracker->uri.host, tracker->uri.port, tracker->uri.path, torrent);
 	tracker->timer = ScheduledTimer::create(torrent->service.io, std::bind(&Tracker::announce, tracker->comm.get()));
 	tracker->retryCount = 0;
 
@@ -274,7 +254,7 @@ mtt::TrackerManager::TrackerInfo* mtt::TrackerManager::findTrackerInfo(std::stri
 {
 	for (auto& tracker : trackers)
 	{
-		if (tracker.host == host)
+		if (tracker.uri.host == host)
 			return &tracker;
 	}
 

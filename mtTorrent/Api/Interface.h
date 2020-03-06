@@ -102,6 +102,8 @@ namespace mtt
 	struct TrackerInfo
 	{
 		std::string hostname;
+		std::string port;
+		std::string path;
 
 		uint32_t peers = 0;
 		uint32_t seeds = 0;

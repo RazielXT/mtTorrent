@@ -261,7 +261,7 @@ std::vector<mtt::TrackerInfo> mtt::Peers::getSourcesInfo()
 
 void mtt::Peers::refreshSource(const std::string& name)
 {
-	if (auto t = trackers.getTracker(name))
+	if (auto t = trackers.getTrackerByAddr(name))
 		t->announce();
 	else if (name == "DHT")
 		dht.findPeers();

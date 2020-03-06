@@ -232,6 +232,9 @@
     <ClCompile Include="Core\HttpsTrackerComm.cpp">
       <Filter>Source Files\Core\Torrent\Tracker</Filter>
     </ClCompile>
+    <ClCompile Include="utils\Uri.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Storage.h">
@@ -440,6 +443,9 @@
     </ClInclude>
     <ClInclude Include="Core\HttpsTrackerComm.h">
       <Filter>Source Files\Core\Torrent\Tracker</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\Uri.h">
+      <Filter>Source Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -15,7 +15,7 @@ namespace mtt
 		HttpsTrackerComm();
 		~HttpsTrackerComm();
 
-		virtual void init(std::string host, std::string port, TorrentPtr core) override;
+		virtual void init(std::string host, std::string port, std::string path, TorrentPtr core) override;
 		virtual void deinit() override;
 
 		virtual void announce() override;
@@ -29,10 +29,8 @@ namespace mtt
 		void onTcpConnected();
 		void onTcpReceived(std::string&);
 
-		std::string urlpath;
 		std::shared_ptr<ssl_socket> socket;
 		asio::ssl::context ctx;
-
 	};
 }
 
