@@ -6,7 +6,16 @@
 
 namespace mtt
 {
-	class HttpTrackerComm : public Tracker
+	class HttpTracker : public Tracker
+	{
+	protected:
+
+		DataBuffer createAnnounceRequest(std::string path, std::string host, std::string port);
+		uint32_t readAnnounceResponse(const char* buffer, size_t bufferSize, AnnounceResponse& out);
+
+	};
+
+	class HttpTrackerComm : public HttpTracker
 	{
 	public:
 
@@ -29,9 +38,6 @@ namespace mtt
 
 		std::string port;
 		std::shared_ptr<TcpAsyncStream> tcpComm;
-
-		DataBuffer createAnnounceRequest(std::string host, std::string port);
-		uint32_t readAnnounceResponse(DataBuffer& buffer, AnnounceResponse& out);
 
 	};
 }

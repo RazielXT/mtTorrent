@@ -76,7 +76,7 @@ void mtt::HttpsTrackerComm::onTcpReceived(std::string& responseData)
 	if (info.state == TrackerState::Announcing || info.state == TrackerState::Reannouncing)
 	{
 		mtt::AnnounceResponse announceResp;
-		auto msgSize = readAnnounceResponse(responseData, announceResp);
+		auto msgSize = readAnnounceResponse(responseData.data(), responseData.size(), announceResp);
 
 		if (msgSize == 0)
 			return;
@@ -105,86 +105,12 @@ void mtt::HttpsTrackerComm::onTcpReceived(std::string& responseData)
 	}
 }
 
-DataBuffer mtt::HttpsTrackerComm::createAnnounceRequest(std::string host)
-{
-	PacketBuilder builder(500);
-	builder << "GET /"<< urlpath << "?info_hash=" << UrlEncode(torrent->hash(), 20);
-	builder << "&peer_id=" << UrlEncode(mtt::config::getInternal().hashId, 20);
-	builder << "&port=" << std::to_string(mtt::config::getExternal().connection.tcpPort);
-	builder << "&uploaded=" << std::to_string(torrent->uploaded());
-	builder << "&downloaded=" << std::to_string(torrent->downloaded());
-	builder << "&left=" << std::to_string(torrent->dataLeft());
-	builder << "&numwant=" << std::to_string(mtt::config::getInternal().maxPeersPerTrackerRequest);
-	builder << "&compact=1&no_peer_id=0&key=" << std::to_string(mtt::config::getInternal().trackerKey);
-	builder << "&event=" << (torrent->finished() ? "completed" : "started");
-	builder << " HTTP/1.1\r\n";
-	builder << "User-Agent: " << MT_NAME << "\r\n";
-	builder << "Connection: close\r\n";
-	builder << "Host: " << host << "\r\n";
-	builder << "Cache-Control: no-cache\r\n\r\n";
-
-	return builder.getBuffer();
-}
-
-uint32_t mtt::HttpsTrackerComm::readAnnounceResponse(std::string& buffer, AnnounceResponse& response)
-{
-	auto info = HttpHeaderInfo::read(buffer.data(), buffer.size());
-
-	if (!info.valid || !info.success)
-		return -1;
-
-	if (info.dataSize && info.dataStart && (info.dataStart + info.dataSize) <= buffer.size())
-	{
-		try
-		{
-			BencodeParser parser;
-			parser.parse((const uint8_t*)buffer.data() + info.dataStart, info.dataSize);
-			auto root = parser.getRoot();
-
-			if (root && root->isMap())
-			{
-				auto interval = root->getIntItem("min interval");
-				if (!interval)
-					interval = root->getIntItem("interval");
-
-				response.interval = interval ? interval->getInt() : 5 * 60;
-
-				auto seeds = root->getIntItem("complete");
-				response.seedCount = seeds ? seeds->getInt() : 0;
-
-				auto leechs = root->getIntItem("incomplete");
-				response.leechCount = leechs ? leechs->getInt() : 0;
-
-				auto peers = root->getTxtItem("peers");
-				if (peers && peers->size % 6 == 0)
-				{
-					PacketReader reader(peers->data, peers->size);
-
-					auto count = peers->size / 6;
-					for (size_t i = 0; i < count; i++)
-					{
-						uint32_t addr = swap32(reader.pop32());
-						response.peers.push_back(Addr(addr, reader.pop16()));
-					}
-				}
-			}
-		}
-		catch (...)
-		{
-		}
-
-		return info.dataStart + info.dataSize;
-	}
-
-	return 0;
-}
-
 void mtt::HttpsTrackerComm::announce()
 {
 	HTTP_TRACKER_LOG("announcing");
 
 	auto hashStr = torrent->hashString();
-	auto request = createAnnounceRequest(info.hostname);
+	auto request = createAnnounceRequest(urlpath, info.hostname, "");
 
 	std::string reqStr((char*)request.data(), request.size());
 

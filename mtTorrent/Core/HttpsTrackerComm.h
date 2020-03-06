@@ -2,13 +2,13 @@
 
 #include "Interface.h"
 #include "utils\Network.h"
-#include "ITracker.h"
+#include "HttpTrackerComm.h"
 
 #ifdef MTT_WITH_SSL
 
 namespace mtt
 {
-	class HttpsTrackerComm : public Tracker
+	class HttpsTrackerComm : public HttpTracker
 	{
 	public:
 
@@ -32,9 +32,6 @@ namespace mtt
 		std::string urlpath;
 		std::shared_ptr<ssl_socket> socket;
 		asio::ssl::context ctx;
-
-		DataBuffer createAnnounceRequest(std::string host);
-		uint32_t readAnnounceResponse(std::string& buffer, AnnounceResponse& out);
 
 	};
 }

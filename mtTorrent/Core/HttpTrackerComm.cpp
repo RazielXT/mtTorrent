@@ -83,7 +83,7 @@ void mtt::HttpTrackerComm::onTcpReceived()
 	if (info.state == TrackerState::Announcing || info.state == TrackerState::Reannouncing)
 	{
 		mtt::AnnounceResponse announceResp;
-		auto msgSize = readAnnounceResponse(respData, announceResp);
+		auto msgSize = readAnnounceResponse((const char*)respData.data(), respData.size(), announceResp);
 
 		if (msgSize == 0)
 			return;
@@ -112,10 +112,10 @@ void mtt::HttpTrackerComm::onTcpReceived()
 	}
 }
 
-DataBuffer mtt::HttpTrackerComm::createAnnounceRequest(std::string host, std::string port)
+DataBuffer mtt::HttpTracker::createAnnounceRequest(std::string path, std::string host, std::string port)
 {
 	PacketBuilder builder(500);
-	builder << "GET /announce?info_hash=" << UrlEncode(torrent->hash(), 20);
+	builder << "GET /" << path << "?info_hash=" << UrlEncode(torrent->hash(), 20);
 	builder << "&peer_id=" << UrlEncode(mtt::config::getInternal().hashId, 20);
 	builder << "&port=" << std::to_string(mtt::config::getExternal().connection.tcpPort);
 	builder << "&uploaded=" << std::to_string(torrent->uploaded());
@@ -124,29 +124,31 @@ DataBuffer mtt::HttpTrackerComm::createAnnounceRequest(std::string host, std::st
 	builder << "&numwant=" << std::to_string(mtt::config::getInternal().maxPeersPerTrackerRequest);
 	builder << "&compact=1&no_peer_id=0&key=" << std::to_string(mtt::config::getInternal().trackerKey);
 	builder << "&event=" << (torrent->finished() ? "completed" : "started");
-	builder << " HTTP/1.0\r\n";
+	builder << " HTTP/1.1\r\n";
 	builder << "User-Agent: " << MT_NAME << "\r\n";
 	builder << "Connection: close\r\n";
-	builder << "Accept-Encoding: gzip, deflate\r\n";
-	builder << "Host: " << host << ":" << port << "\r\n";
+	builder << "Host: " << host;
+	if (!port.empty())
+		builder << ":" << port;
+	builder << "\r\n";
 	builder << "Cache-Control: no-cache\r\n\r\n";
 
 	return builder.getBuffer();
 }
 
-uint32_t mtt::HttpTrackerComm::readAnnounceResponse(DataBuffer& buffer, AnnounceResponse& response)
+uint32_t mtt::HttpTracker::readAnnounceResponse(const char* buffer, size_t bufferSize, AnnounceResponse& response)
 {
-	auto info = HttpHeaderInfo::readFromBuffer(buffer);
+	auto info = HttpHeaderInfo::read(buffer, bufferSize);
 
 	if (!info.valid || !info.success)
 		return -1;
 
-	if (info.dataSize && info.dataStart && (info.dataStart + info.dataSize) <= buffer.size())
+	if (info.dataSize && info.dataStart && (info.dataStart + info.dataSize) <= bufferSize)
 	{
 		try
 		{
 			BencodeParser parser;
-			parser.parse(buffer.data() + info.dataStart, info.dataSize);
+			parser.parse((const uint8_t*)buffer + info.dataStart, info.dataSize);
 			auto root = parser.getRoot();
 
 			if (root && root->isMap())
@@ -199,7 +201,7 @@ void mtt::HttpTrackerComm::announce()
 	else
 		info.state = TrackerState::Announcing;
 
-	auto request = createAnnounceRequest(info.hostname, port);
+	auto request = createAnnounceRequest("announce", info.hostname, port);
 
 	tcpComm->write(request);
 }
