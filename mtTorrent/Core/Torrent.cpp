@@ -355,7 +355,7 @@ float mtt::Torrent::currentProgress()
 
 	if (fileTransfer)
 	{
-		float unfinishedPieces = fileTransfer->getUnfinishedPiecesDownloadSize() / (float)BlockRequestMaxSize;
+		float unfinishedPieces = fileTransfer->getUnfinishedPiecesDownloadSize() / (float)infoFile.info.pieceSize;
 		progress += unfinishedPieces / files.progress.pieces.size();
 	}
 

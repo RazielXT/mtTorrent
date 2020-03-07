@@ -216,6 +216,11 @@ std::string mtt::PeerCommunication::getAddressName()
 	return stream->getHostname();
 }
 
+size_t mtt::PeerCommunication::getReceivedDataCount()
+{
+	return stream->getReceivedDataCount();
+}
+
 void mtt::PeerCommunication::connectionClosed(int code)
 {
 	addLogEvent(End, (uint16_t)code);

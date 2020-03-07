@@ -41,6 +41,8 @@ public:
 	std::string& getHostname();
 	tcp::endpoint& getEndpoint();
 
+	size_t getReceivedDataCount();
+
 protected:
 
 	void connectByHostname();
@@ -65,6 +67,7 @@ protected:
 	void appendData(char* data, size_t size);
 	std::mutex receiveBuffer_mutex;
 	DataBuffer receiveBuffer;
+	size_t receivedCounter = 0;
 
 	std::mutex socket_mutex;
 	tcp::socket socket;

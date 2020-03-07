@@ -101,7 +101,6 @@ void mtt::FileTransfer::messageReceived(PeerCommunication* p, PeerMessage& msg)
 
 		if (auto peer = getActivePeer(p))
 		{
-			peer->downloaded += msg.piece.info.length;
 			peer->lastActivityTime = (uint32_t)time(0);
 		}
 	}
@@ -450,6 +449,7 @@ void mtt::FileTransfer::updateMeasures()
 		std::lock_guard<std::mutex> guard(peersMutex);
 		for (auto& peer : activePeers)
 		{
+			peer.downloaded = peer.comm->getReceivedDataCount();
 			currentMeasure.push_back({ peer.comm, {peer.downloaded, peer.uploaded} });
 			peer.downloadSpeed = 0;
 			peer.uploadSpeed = 0;

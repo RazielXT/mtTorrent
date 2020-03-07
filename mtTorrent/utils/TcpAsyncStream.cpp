@@ -107,6 +107,11 @@ tcp::endpoint& TcpAsyncStream::getEndpoint()
 	return info.endpoint;
 }
 
+size_t TcpAsyncStream::getReceivedDataCount()
+{
+	return receivedCounter;
+}
+
 void TcpAsyncStream::connectByHostname()
 {
 	state = Connecting;
@@ -312,6 +317,7 @@ void TcpAsyncStream::appendData(char* data, size_t size)
 {
 	std::lock_guard<std::mutex> guard(receiveBuffer_mutex);
 
+	receivedCounter += size;
 	receiveBuffer.insert(receiveBuffer.end(), data, data + size);
 }
 

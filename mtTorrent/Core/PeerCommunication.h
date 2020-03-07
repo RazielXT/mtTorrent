@@ -77,6 +77,8 @@ namespace mtt
 		Addr getAddress();
 		std::string getAddressName();
 
+		size_t getReceivedDataCount();
+
 	protected:
 
 		enum LogEvent : uint8_t { Msg, Start, End, Request, Want, RespPiece };
