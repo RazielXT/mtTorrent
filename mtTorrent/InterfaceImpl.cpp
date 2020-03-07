@@ -131,7 +131,7 @@ mtt::Status mtt::TorrentFileInfo::parseMagnetLink(std::string link)
 	return correct ? Status::Success : Status::E_InvalidInput;
 }
 
-std::string mtt::TorrentFileInfo::createTorrentFileData()
+std::string mtt::TorrentFileInfo::createTorrentFileData(const uint8_t* infoData, size_t infoDataSize)
 {
 	BencodeWriter writer;
 
@@ -156,44 +156,49 @@ std::string mtt::TorrentFileInfo::createTorrentFileData()
 		writer.endArray();
 	}
 
-	if(!about.createdBy.empty())
+	if (!about.createdBy.empty())
 		writer.addRawItem("10:created by", about.createdBy);
 	if (about.creationDate != 0)
 		writer.addRawItem("13:creation date", about.creationDate);
 
 	writer.startRawMapItem("4:info");
 
-	if (info.files.size() > 1)
+	if (!infoData)
 	{
-		writer.startRawArrayItem("5:files");
-
-		for (auto f : info.files)
+		if (info.files.size() > 1)
 		{
-			writer.startMap();
-			writer.addRawItem("6:length", f.size);
-			writer.startRawArrayItem("4:path");
+			writer.startRawArrayItem("5:files");
 
-			for (size_t i = 1; i < f.path.size(); i++)
+			for (auto f : info.files)
 			{
-				writer.addText(f.path[i]);
+				writer.startMap();
+				writer.addRawItem("6:length", f.size);
+				writer.startRawArrayItem("4:path");
+
+				for (size_t i = 1; i < f.path.size(); i++)
+				{
+					writer.addText(f.path[i]);
+				}
+
+				writer.endArray();
+				writer.endMap();
 			}
 
 			writer.endArray();
-			writer.endMap();
 		}
+		else if (info.files.size() == 1)
+			writer.addRawItem("6:length", info.files.front().size);
 
-		writer.endArray();
+		writer.addRawItem("4:name", info.name);
+		writer.addRawItem("12:piece length", info.pieceSize);
+
+		writer.addRawItemFromBuffer("6:pieces", (const char*)info.pieces.data(), info.pieces.size() * 20);
+
+		if (info.isPrivate)
+			writer.addRawItem("7:private", 1);
 	}
-	else if (info.files.size() == 1)
-		writer.addRawItem("6:length", info.files.front().size);
-
-	writer.addRawItem("4:name", info.name);
-	writer.addRawItem("12:piece length", info.pieceSize);
-
-	writer.addRawItemFromBuffer("6:pieces", (const char*)info.pieces.data(), info.pieces.size() * 20);
-
-	if(info.isPrivate)
-		writer.addRawItem("7:private", 1);
+	else
+		writer.data.append((const char*)infoData, infoDataSize);
 
 	writer.endMap();
 	writer.endMap();

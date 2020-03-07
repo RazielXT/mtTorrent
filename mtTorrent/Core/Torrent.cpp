@@ -25,22 +25,6 @@ mtt::TorrentPtr mtt::Torrent::fromFile(mtt::TorrentFileInfo& fileInfo)
 		return nullptr;
 }
 
-mtt::TorrentPtr mtt::Torrent::fromFile(std::string filepath)
-{
-	mtt::TorrentPtr torrent = std::make_shared<Torrent>();
-	torrent->infoFile = mtt::TorrentFileParser::parseFile(filepath.data());
-
-	if (!torrent->infoFile.info.name.empty())
-	{
-		torrent->peers = std::make_shared<Peers>(torrent);
-		torrent->fileTransfer = std::make_shared<FileTransfer>(torrent);
-		torrent->init();
-		return torrent;
-	}
-	else
-		return nullptr;
-}
-
 mtt::TorrentPtr mtt::Torrent::fromMagnetLink(std::string link)
 {
 	mtt::TorrentPtr torrent = std::make_shared<Torrent>();
@@ -55,7 +39,11 @@ mtt::TorrentPtr mtt::Torrent::fromMagnetLink(std::string link)
 
 mtt::TorrentPtr mtt::Torrent::fromSavedState(std::string name)
 {
-	if (auto ptr = fromFile(mtt::config::getInternal().stateFolder + "\\" + name + ".torrent"))
+	DataBuffer buffer;
+	if (!Torrent::loadSavedTorrentFile(name, buffer))
+		return nullptr;
+
+	if (auto ptr = fromFile(mtt::TorrentFileParser::parse(buffer.data(), buffer.size())))
 	{
 		TorrentState state(ptr->files.progress.pieces);
 		if (state.load(name))
@@ -114,7 +102,7 @@ void mtt::Torrent::save()
 	stateChanged = saveState.started;
 }
 
-void mtt::Torrent::saveTorrentFile()
+void mtt::Torrent::saveTorrentFile(const char* data, size_t size)
 {
 	auto folderPath = mtt::config::getInternal().stateFolder + "\\" + hashString() + ".torrent";
 
@@ -123,7 +111,16 @@ void mtt::Torrent::saveTorrentFile()
 	if (!file)
 		return;
 
-	file << infoFile.createTorrentFileData();
+	file.write(data, size);
+}
+
+void mtt::Torrent::saveTorrentFileFromUtm()
+{
+	if (utmDl)
+	{
+		auto fileData = infoFile.createTorrentFileData(utmDl->metadata.buffer.data(), utmDl->metadata.buffer.size());
+		saveTorrentFile(fileData.data(), fileData.size());
+	}
 }
 
 void mtt::Torrent::removeMetaFiles()
@@ -131,6 +128,55 @@ void mtt::Torrent::removeMetaFiles()
 	auto path = mtt::config::getInternal().stateFolder + "\\" + hashString();
 	std::remove((path + ".torrent").data());
 	std::remove((path + ".state").data());
+}
+
+bool mtt::Torrent::importTrackers(const mtt::TorrentFileInfo& otherFileInfo)
+{
+	std::vector<std::string> added;
+
+	for (auto& t : otherFileInfo.announceList)
+	{
+		if (std::find(infoFile.announceList.begin(), infoFile.announceList.end(), t) == infoFile.announceList.end())
+		{
+			added.push_back(t);
+			infoFile.announceList.push_back(t);
+		}
+	}
+
+	if (!added.empty())
+	{
+		if(infoFile.announce.empty())
+			infoFile.announce = infoFile.announceList.front();
+
+		DataBuffer buffer;
+		if (loadSavedTorrentFile(hashString(), buffer))
+		{
+			auto loadedFile = mtt::TorrentFileParser::parse(buffer.data(), buffer.size());
+			
+			if (!loadedFile.info.name.empty())
+			{
+				auto newFile = infoFile.createTorrentFileData((const uint8_t*)loadedFile.file.infoStart, loadedFile.file.infoSize);
+				saveTorrentFile(newFile.data(), newFile.size());
+			}
+		}
+
+		peers->trackers.addTrackers(added);
+	}
+
+	return !added.empty();
+}
+
+bool mtt::Torrent::loadSavedTorrentFile(const std::string& hash, DataBuffer& out)
+{
+	auto filename = mtt::config::getInternal().stateFolder + "\\" + hash + ".torrent";
+	std::ifstream file(filename, std::ios_base::binary);
+
+	if (!file.good())
+		return false;
+
+	out = DataBuffer((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
+
+	return !out.empty();
 }
 
 void mtt::Torrent::downloadMetadata(std::function<void(Status, MetadataDownloadState&)> callback)

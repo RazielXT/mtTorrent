@@ -11,6 +11,7 @@ namespace mtt
 		I_Requesting,
 		I_Stopped,
 		I_AlreadyExists,
+		I_Merged,
 
 		E_Unknown = 1000,
 		E_InvalidInput,
@@ -19,6 +20,7 @@ namespace mtt
 		E_AllocationProblem,
 		E_InvalidPath,
 		E_NoData,
+		E_FileReadError,
 
 		E_NetworkError = 2000,
 		E_ConnectionClosed

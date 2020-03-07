@@ -21,7 +21,6 @@ namespace mtt
 		Status lastError = Status::Success;
 
 		static TorrentPtr fromFile(mtt::TorrentFileInfo& fileInfo);
-		static TorrentPtr fromFile(std::string filepath);
 		static TorrentPtr fromMagnetLink(std::string link);
 		static TorrentPtr fromSavedState(std::string name);
 		void downloadMetadata(std::function<void(Status, MetadataDownloadState&)> callback);
@@ -60,10 +59,15 @@ namespace mtt
 		std::unique_ptr<MetadataDownload> utmDl;
 
 		void save();
-		void saveTorrentFile();
+		void saveTorrentFile(const char* data, size_t size);
+		void saveTorrentFileFromUtm();
 		void removeMetaFiles();
 
+		bool importTrackers(const mtt::TorrentFileInfo& fileInfo);
+
 	protected:
+
+		static bool loadSavedTorrentFile(const std::string& hash, DataBuffer& out);
 
 		std::mutex checkStateMutex;
 		std::shared_ptr<mtt::PiecesCheck> checkState;

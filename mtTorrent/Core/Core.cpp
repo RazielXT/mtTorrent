@@ -181,38 +181,43 @@ void mtt::Core::deinit()
 
 std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addFile(const char* filename)
 {
-	auto infofile = mtt::TorrentFileParser::parseFile(filename);
+	size_t maxSize = 10 * 1024 * 1024;
+	std::filesystem::path dir(filename);
 
-	if (auto t = getTorrent(infofile.info.hash))
-		return { mtt::Status::I_AlreadyExists, t };
+	if (!std::filesystem::exists(dir) || std::filesystem::file_size(dir) > maxSize)
+		return { mtt::Status::E_InvalidPath, nullptr };
 
-	auto torrent = Torrent::fromFile(infofile);
+	std::ifstream file(filename, std::ios_base::binary);
 
-	if (!torrent)
-		return { mtt::Status::E_InvalidInput, nullptr };
+	if (!file.good())
+		return { mtt::Status::E_FileReadError, nullptr };
 
-	torrents.push_back(torrent);
-	torrent->saveTorrentFile();
-	torrent->checkFiles();
-	saveTorrentList(torrents);
+	DataBuffer buffer((
+		std::istreambuf_iterator<char>(file)),
+		(std::istreambuf_iterator<char>()));
 
-	return { mtt::Status::Success, torrent };
+	return addFile(buffer.data(), buffer.size());
 }
 
 std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addFile(const uint8_t* data, size_t size)
 {
-	auto infofile = mtt::TorrentFileParser::parse(data, size);
+	auto infoFile = mtt::TorrentFileParser::parse(data, size);
 
-	if (auto t = getTorrent(infofile.info.hash))
-		return { mtt::Status::I_AlreadyExists, t };
+	if (auto t = getTorrent(infoFile.info.hash))
+	{
+		if (t->importTrackers(infoFile))
+			return { mtt::Status::I_Merged, t };
+		else
+			return { mtt::Status::I_AlreadyExists, t };
+	}
 
-	auto torrent = Torrent::fromFile(infofile);
+	auto torrent = Torrent::fromFile(infoFile);
 
 	if (!torrent)
 		return { mtt::Status::E_InvalidInput, nullptr };
 
 	torrents.push_back(torrent);
-	torrent->saveTorrentFile();
+	torrent->saveTorrentFile((const char*)data, size);
 	torrent->checkFiles();
 	saveTorrentList(torrents);
 
@@ -227,13 +232,18 @@ std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addMagnet(const char* magnet)
 		return { mtt::Status::E_InvalidInput, nullptr };
 
 	if (auto t = getTorrent(torrent->hash()))
-		return { mtt::Status::I_AlreadyExists, torrent };
+	{
+		if(t->importTrackers(torrent->infoFile))
+			return { mtt::Status::I_Merged, t };
+		else
+			return { mtt::Status::I_AlreadyExists, t };
+	}
 
 	auto onMetadataUpdate = [this, torrent](Status s, mtt::MetadataDownloadState& state)
 	{
 		if (s == Status::Success && state.finished)
 		{
-			torrent->saveTorrentFile();
+			torrent->saveTorrentFileFromUtm();
 			torrent->checkFiles();
 		}
 	};

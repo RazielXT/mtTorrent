@@ -12,8 +12,9 @@ bool mtt::BencodeParser::parse(const uint8_t* data, size_t length)
 	uint32_t reserveSize = length < 200 ? uint32_t(length*0.2f) : std::min(uint32_t(2000), uint32_t(40 + length/500));
 	objects.reserve(reserveSize);
 
-	auto parserEnd = (const char*)data;
 	bodyEnd = (const char*)data + length;
+	bodyStart = (const char*)data;
+	auto parserEnd = bodyStart;
 
 	internalParse(&parserEnd);
 

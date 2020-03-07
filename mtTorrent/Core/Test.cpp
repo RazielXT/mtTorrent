@@ -248,9 +248,21 @@ std::string findFileByPiece(mtt::TorrentFileInfo& file, uint32_t piece)
 	return "";
 }
 
+static TorrentFileInfo parseTorrentFile(const char* filepath)
+{
+	std::ifstream file(filepath, std::ios_base::binary);
+
+	if (!file.good())
+		return TorrentFileInfo{};
+
+	DataBuffer buffer((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
+
+	return mtt::TorrentFileParser::parse(buffer.data(), buffer.size());
+}
+
 void TorrentTest::testStorageCheck()
 {
-	auto torrent = mtt::TorrentFileParser::parseFile("D:\\hunter.torrent");
+	auto torrent = parseTorrentFile("D:\\hunter.torrent");
 
 	mtt::Storage storage(torrent.info);
 	storage.setPath("D:\\Torrent");
@@ -269,7 +281,7 @@ void TorrentTest::testStorageCheck()
 
 void TorrentTest::testStorageLoad()
 {
-	auto torrent = mtt::TorrentFileParser::parseFile("D:\\wifi.torrent");
+	auto torrent = parseTorrentFile("D:\\wifi.torrent");
 
 	DownloadSelection selection;
 	for (auto&f : torrent.info.files)
@@ -304,7 +316,7 @@ void TorrentTest::testStorageLoad()
 
 void TorrentTest::testPeerListen()
 {
-	auto torrent = mtt::TorrentFileParser::parseFile("D:\\wifi.torrent");
+	auto torrent = parseTorrentFile("D:\\wifi.torrent");
 
 	DownloadSelection selection;
 	for (auto&f : torrent.info.files)
@@ -392,7 +404,7 @@ void TorrentTest::testDhtTable()
 	mtt::BencodeParser::Object obj;
 	auto s = sizeof(obj);
 
-	auto torrent = mtt::TorrentFileParser::parseFile("D:\\hunter.torrent");
+	auto torrent = parseTorrentFile("D:\\hunter.torrent");
 
 	mtt::dht::Communication dhtComm;
 	dhtComm.load();
@@ -420,24 +432,24 @@ void TorrentTest::testDhtTable()
 
 void TorrentTest::testTorrentFileSerialization()
 {
-	auto torrent = mtt::TorrentFileParser::parseFile("D:\\hunter.torrent");
+	auto torrent = parseTorrentFile("D:\\hunter.torrent");
 	auto file = torrent.createTorrentFileData();
 	auto torrentOut = mtt::TorrentFileParser::parse((const uint8_t*)file.data(), file.size());
 	bool ok = memcmp(torrent.info.hash, torrentOut.info.hash, 20) == 0;
 
-	torrent = mtt::TorrentFileParser::parseFile("D:\\folk.torrent");
+	torrent = parseTorrentFile("D:\\folk.torrent");
 	file = torrent.createTorrentFileData();
 	torrentOut = mtt::TorrentFileParser::parse((const uint8_t*)file.data(), file.size());
 	ok = memcmp(torrent.info.hash, torrentOut.info.hash, 20) == 0;
 
-	torrent = mtt::TorrentFileParser::parseFile("D:\\wifi.torrent");
+	torrent = parseTorrentFile("D:\\wifi.torrent");
 	file = torrent.createTorrentFileData();
 	std::ofstream fileOut("D:\\wifi2.torrent", std::ios_base::binary);
 	fileOut.write((const char*)file.data(), file.size());
 	torrentOut = mtt::TorrentFileParser::parse((const uint8_t*)file.data(), file.size());
 	ok = memcmp(torrent.info.hash, torrentOut.info.hash, 20) == 0;
 
-	torrent = mtt::TorrentFileParser::parseFile("D:\\Shoujo.torrent");
+	torrent = parseTorrentFile("D:\\Shoujo.torrent");
 	file = torrent.createTorrentFileData();
 	torrentOut = mtt::TorrentFileParser::parse((const uint8_t*)file.data(), file.size());
 	ok = memcmp(torrent.info.hash, torrentOut.info.hash, 20) == 0;
@@ -549,7 +561,7 @@ void TorrentTest::bigTestGetTorrentFileByLink()
 
 void TorrentTest::testMetadataReceive()
 {
-	auto torrent = mtt::TorrentFileParser::parseFile("D:\\wifi.torrent");
+	auto torrent = parseTorrentFile("D:\\wifi.torrent");
 
 	ServiceThreadpool service;
 
@@ -622,9 +634,21 @@ void TorrentTest::dhtFindingPeersFinished(const uint8_t* hash, uint32_t count)
 		dhtResult.finalCount = count;
 }
 
+static TorrentPtr torrentFromFile(const char* path)
+{
+	std::ifstream file(path, std::ios_base::binary);
+
+	if (!file.good())
+		return nullptr;
+
+	DataBuffer buffer((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
+
+	return Torrent::fromFile(mtt::TorrentFileParser::parse(buffer.data(), buffer.size()));
+}
+
 void idealGeneralTest()
 {
-	TorrentPtr torrent = Torrent::fromFile("G:\\giant.torrent");
+	TorrentPtr torrent = torrentFromFile("G:\\giant.torrent");
 
 	if (!torrent)
 		return;
@@ -671,7 +695,7 @@ void TorrentTest::idealMagnetLinkTest()
 
 void idealPeersRetrievalTest()
 {
-	TorrentPtr torrent = Torrent::fromFile("filepath");
+	TorrentPtr torrent = torrentFromFile("filepath");
 
 	if (!torrent)
 		return;
@@ -688,7 +712,7 @@ void idealPeersRetrievalTest()
 
 void idealTorrentStateTest()
 {
-	TorrentPtr torrent = Torrent::fromFile("G:\\test.torrent");
+	TorrentPtr torrent = torrentFromFile("G:\\test.torrent");
 
 	if (!torrent|| torrent->name().empty())
 		return;
@@ -708,7 +732,7 @@ void idealTorrentStateTest()
 
 void idealLocalTest()
 {
-	TorrentPtr torrent = Torrent::fromFile("G:\\test.torrent");
+	TorrentPtr torrent = torrentFromFile("G:\\test.torrent");
 
 	if (!torrent)
 		return;

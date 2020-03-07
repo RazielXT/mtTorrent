@@ -76,6 +76,7 @@ namespace mtt
 
 		Object* getRoot();
 
+		const char* bodyStart = nullptr;
 		const char* bodyEnd = nullptr;
 		size_t remainingData = 0;
 

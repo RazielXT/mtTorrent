@@ -1,6 +1,5 @@
 #include "TorrentFileParser.h"
 #include <iostream>
-#include <filesystem>
 #include "SHA.h"
 
 #define TPARSER_LOG(x) WRITE_LOG(LogTypeFileParser, x)
@@ -23,34 +22,6 @@ TorrentFileInfo TorrentFileParser::parse(const uint8_t* data, size_t length)
 	generateInfoHash(parser, out);
 
 	return out;
-}
-
-TorrentFileInfo TorrentFileParser::parseFile(const char* filename)
-{
-	TorrentFileInfo out;
-
-	size_t maxSize = 10 * 1024 * 1024;
-	std::filesystem::path dir(filename);
-
-	if (!std::filesystem::exists(dir) || std::filesystem::file_size(dir) > maxSize)
-	{
-		TPARSER_LOG("Invalid torrent file " << filename);
-		return out;
-	}
-
-	std::ifstream file(filename, std::ios_base::binary);
-
-	if (!file.good())
-	{
-		TPARSER_LOG("Failed to open torrent file " << filename);
-		return out;
-	}
-
-	DataBuffer buffer((
-		std::istreambuf_iterator<char>(file)),
-		(std::istreambuf_iterator<char>()));
-
-	return parse(buffer.data(), buffer.size());
 }
 
 static uint32_t getPieceIndex(size_t pos, size_t pieceSize)
@@ -161,6 +132,9 @@ bool generateInfoHash(BencodeParser& parser, TorrentFileInfo& fileInfo)
 
 	if (infoStart && infoEnd)
 	{
+		fileInfo.file.infoStart = infoStart;
+		fileInfo.file.infoSize = infoEnd - infoStart;
+
 		_SHA1((const unsigned char*)infoStart, infoEnd - infoStart, (unsigned char*)&fileInfo.info.hash[0]);
 
 		return true;

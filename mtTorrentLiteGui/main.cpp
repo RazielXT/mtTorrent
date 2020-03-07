@@ -436,26 +436,39 @@ void init()
 	}
 }
 
-System::String^ getSelectedTorrentName()
+System::String^ getTorrentName(uint8_t* hash)
 {
 	mtBI::TorrentStateInfo info;
 
-	if (selected && IoctlFunc(mtBI::MessageId::GetTorrentStateInfo, firstSelectedHash, &info) == mtt::Status::Success)
+	if (selected && IoctlFunc(mtBI::MessageId::GetTorrentStateInfo, hash, &info) == mtt::Status::Success)
 		return gcnew System::String(info.name.data);
 	else
 		return "";
+}
+
+System::String^ getSelectedTorrentName()
+{
+	return getTorrentName(firstSelectedHash);
+}
+
+void handleTorrentAddResponse(mtt::Status status, uint8_t* hash)
+{
+	if (status == mtt::Status::I_AlreadyExists || status == mtt::Status::I_Merged)
+	{
+		auto name = getTorrentName(hash);
+
+		if (status == mtt::Status::I_AlreadyExists)
+			::MessageBox(NULL, L"Torrent already exists", getWStringPtr(name), MB_OK);
+		else if (status == mtt::Status::I_Merged)
+			::MessageBox(NULL, L"Torrent already exists, new trackers added", getWStringPtr(name), MB_OK);
+	}
 }
 
 mtt::Status addTorrentFromFile(const char* filepath)
 {
 	uint8_t hash[20];
 	auto status = IoctlFunc(mtBI::MessageId::AddFromFile, filepath, hash);
-
-	if (status == mtt::Status::I_AlreadyExists)
-	{
-		auto name = getSelectedTorrentName();
-		::MessageBox(NULL, L"Torrent already added", getWStringPtr(name), MB_OK);
-	}
+	handleTorrentAddResponse(status, hash);
 
 	return status;
 }
@@ -484,12 +497,7 @@ magnet;
 mtt::Status addTorrentFromMetadata(const char* magnetPtr)
 {
 	auto status = IoctlFunc(mtBI::MessageId::AddFromMetadata, magnetPtr, magnet.hash);
-
-	if (status == mtt::Status::I_AlreadyExists)
-	{
-		auto name = getSelectedTorrentName();
-		::MessageBox(NULL, L"Torrent already added", getWStringPtr(name), MB_OK);
-	}
+	handleTorrentAddResponse(status, magnet.hash);
 
 	return status;
 }
@@ -842,7 +850,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 
 					GuiLite::MagnetInputForm::instance->magnetFormButton->Text = "Logs";
 				}
-				else if (status == mtt::Status::I_AlreadyExists)
+				else if (status == mtt::Status::I_AlreadyExists || status == mtt::Status::I_Merged)
 				{
 					GuiLite::MagnetInputForm::instance->Close();
 				}
