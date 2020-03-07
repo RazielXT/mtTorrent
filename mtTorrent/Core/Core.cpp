@@ -159,8 +159,11 @@ void mtt::Core::deinit()
 
 	for (auto& t : torrents)
 	{
-		t->save();
+		auto state = t->state;
 		t->stop();
+		t->state = state;
+		t->save();
+		t->state = mttApi::Torrent::State::Stopped;
 	}
 
 	torrents.clear();
