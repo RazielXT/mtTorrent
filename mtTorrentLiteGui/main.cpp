@@ -274,6 +274,9 @@ void updateSelectionFormFooter()
 	txt += ")";
 
 	GuiLite::FileSelectionForm::instance->infoLabel->Text = txt;
+
+	GuiLite::FileSelectionForm::instance->requiredSize = selectedSize;
+	GuiLite::FileSelectionForm::instance->validate();
 }
 
 void fileSelectionChanged(int id, bool selected)
@@ -353,7 +356,6 @@ void fillFilesSelectionForm()
 	}
 
 	list->Sort(list->Columns[2], System::ComponentModel::ListSortDirection::Ascending);
-	updateSelectionFormFooter();
 
 	form->Text = gcnew System::String(info.name.data);
 	form->textBoxPath->Text = gcnew System::String(info.downloadLocation.data);
@@ -361,6 +363,8 @@ void fillFilesSelectionForm()
 	form->labelError->Visible = false;
 	form->checkBoxStart->Visible = fileSelection.added;
 	fileSelection.priorityChanged = false;
+
+	updateSelectionFormFooter();
 }
 
 void refreshTorrentInfo(uint8_t* hash)
@@ -1070,6 +1074,8 @@ void refreshUi()
 				{
 					if (info.activeStatus == mtt::Status::E_NotEnoughSpace)
 						activeStatus = "Not enough space";
+					else if(info.activeStatus == mtt::Status::E_InvalidPath)
+						activeStatus = "Invalid path";
 					else
 						activeStatus = "Problem " + int(info.activeStatus).ToString();
 				}

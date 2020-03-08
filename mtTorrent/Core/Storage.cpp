@@ -179,6 +179,10 @@ mtt::Status mtt::Storage::preallocateSelection(DownloadSelection& selection)
 	{
 		std::lock_guard<std::mutex> guard(storageMutex);
 
+		auto s = validatePath(selection);
+		if (s != Status::Success)
+			return s;
+
 		for (auto& f : selection.files)
 		{
 			if (f.selected)
@@ -210,9 +214,10 @@ mtt::Status mtt::Storage::deleteAll()
 {
 	std::lock_guard<std::mutex> guard(storageMutex);
 
+	std::error_code ec;
 	for (auto& f : files)
 	{
-		std::filesystem::remove(getFullpath(f));
+		std::filesystem::remove(getFullpath(f), ec);
 	}
 
 	return Status::Success;
@@ -333,7 +338,8 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 	{
 		auto fullpath = getFullpath(*currentFile);
 
-		if (std::filesystem::exists(fullpath))
+		std::error_code ec;
+		if (std::filesystem::exists(fullpath, ec))
 		{
 			fileIn.open(fullpath, std::ios_base::binary);
 
@@ -467,5 +473,33 @@ void mtt::Storage::createPath(const std::filesystem::path& path)
 		if (!std::filesystem::create_directories(folder, ec))
 			return;
 	}
+}
+
+mtt::Status mtt::Storage::validatePath(DownloadSelection& selection)
+{
+	std::filesystem::path dlPath(path);
+
+	if(!dlPath.has_root_path())
+		return Status::E_InvalidPath;
+
+	auto root = dlPath.root_path();
+	std::error_code ec;
+	if (!std::filesystem::exists(root, ec))
+		return Status::E_InvalidPath;
+
+	size_t fullsize = 0;
+	for (auto& f : selection.files)
+	{
+		if (f.selected)
+		{
+			fullsize += f.info.size;
+		}
+	}
+
+	auto spaceInfo = std::filesystem::space(root, ec);
+	if (spaceInfo.available < fullsize)
+		return Status::E_NotEnoughSpace;
+
+	return Status::Success;
 }
 

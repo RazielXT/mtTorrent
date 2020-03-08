@@ -33,6 +33,41 @@ namespace GuiLite {
 		}
 
 		bool initialized = false;
+		size_t requiredSize = 0;
+
+		const char* validatePath(System::String^ path, size_t size)
+		{
+			if (!path->Contains(":"))
+				return "Invalid path";
+
+			System::IO::DriveInfo^ drive = nullptr;
+			System::IO::FileInfo^ file = gcnew System::IO::FileInfo(path);
+			if (!file->Directory)
+				drive = gcnew System::IO::DriveInfo(path);
+			else
+				drive = gcnew System::IO::DriveInfo(file->Directory->Root->FullName);
+
+			if (!drive->IsReady)
+				return "Invalid drive";
+
+			if ((size_t)drive->AvailableFreeSpace < size)
+				return "Not enough space";
+
+			return nullptr;
+		}
+
+		void validate()
+		{
+			auto error = validatePath(textBoxPath->Text, requiredSize);
+
+			if (error)
+			{
+				labelError->Text = gcnew String(error);
+				labelError->Visible = true;
+			}
+			else
+				labelError->Visible = false;
+		}
 
 	public: System::Windows::Forms::DataGridView^ filesGridView;
 	public: System::Windows::Forms::Button^ selectAllButton;
@@ -45,12 +80,6 @@ namespace GuiLite {
 	public: System::Windows::Forms::Label^ labelError;
 	public: System::Windows::Forms::TextBox^ textBoxPath;
 	public: System::Windows::Forms::CheckBox^ checkBoxStart;
-
-	public:
-
-
-
-
 	private: System::Windows::Forms::TextBox^ searchTextBox;
 	private: System::Windows::Forms::Label^ label2;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Id;
@@ -360,7 +389,9 @@ namespace GuiLite {
 		}
 #pragma endregion
 	private: System::Void Button1_Click(System::Object^ sender, System::EventArgs^ e) {
-		onButtonClick(ButtonId::SelectionOk);
+		validate();
+		if(labelError->Visible == false)
+			onButtonClick(ButtonId::SelectionOk);
 	}
 	private: System::Void Button2_Click(System::Object^ sender, System::EventArgs^ e) {
 		onButtonClick(ButtonId::SelectionCancel);
@@ -453,7 +484,8 @@ private: System::Void buttonBrowse_Click(System::Object^ sender, System::EventAr
 	if (result == System::Windows::Forms::DialogResult::OK && dialog.SelectedPath->Length > 0)
 	{
 		textBoxPath->Text = dialog.SelectedPath;
-		labelError->Visible = false;
+
+		validate();
 	}
 }
 private: System::Void searchTextBox_TextChanged(System::Object^ sender, System::EventArgs^ e) {

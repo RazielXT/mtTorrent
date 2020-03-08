@@ -234,21 +234,13 @@ std::vector<mtt::TrackerInfo> mtt::Peers::getSourcesInfo()
 {
 	std::vector<mtt::TrackerInfo> out;
 	auto tr = trackers.getTrackers();
+	auto names = trackers.getTrackersList();
+	out.reserve(names.size() + 2);
 
-	if(!tr.empty())
-		for (auto& t : tr)
-		{
-			if (t)
-				out.push_back(t->info);
-		}
-	else
+	for (size_t i = 0; i < names.size(); i++)
 	{
-		auto list = trackers.getTrackersList();
-
-		for (auto& name : list)
-		{
-			out.push_back({ name });
-		}
+		out.push_back(tr.empty() ? mtt::TrackerInfo{} : tr[i]->info);
+		out.back().hostname = names[i];
 	}
 
 	out.push_back(pexInfo);

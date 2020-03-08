@@ -71,20 +71,6 @@ void mtt::TrackerManager::addTrackers(const std::vector<std::string>& trackers)
 	}
 }
 
-void mtt::TrackerManager::removeTracker(const std::string& addr)
-{
-	std::lock_guard<std::mutex> guard(trackersMutex);
-
-	for (auto it = trackers.begin(); it != trackers.end(); it++)
-	{
-		if (it->uri.host == addr)
-		{
-			trackers.erase(it);
-			break;
-		}
-	}
-}
-
 void mtt::TrackerManager::removeTrackers()
 {
 	std::lock_guard<std::mutex> guard(trackersMutex);

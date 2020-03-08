@@ -20,7 +20,6 @@ namespace mtt
 
 		void addTracker(std::string addr);
 		void addTrackers(const std::vector<std::string>& trackers);
-		void removeTracker(const std::string& addr);
 		void removeTrackers();
 
 		std::shared_ptr<Tracker> getTrackerByAddr(const std::string& addr);

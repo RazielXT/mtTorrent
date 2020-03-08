@@ -36,6 +36,8 @@ namespace mtt
 		std::filesystem::path getFullpath(File& file);
 		void createPath(const std::filesystem::path& path);
 
+		mtt::Status validatePath(DownloadSelection& selection);
+
 		void flushAllFiles();
 		void flush(File& file);
 		Status preallocate(File& file);
