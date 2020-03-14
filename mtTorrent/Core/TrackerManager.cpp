@@ -90,30 +90,15 @@ std::shared_ptr<mtt::Tracker> mtt::TrackerManager::getTrackerByAddr(const std::s
 	return nullptr;
 }
 
-std::vector<std::shared_ptr<mtt::Tracker>> mtt::TrackerManager::getTrackers()
+std::vector<std::pair<std::string, std::shared_ptr<mtt::Tracker>>> mtt::TrackerManager::getTrackers()
 {
-	std::vector<std::shared_ptr<mtt::Tracker>> out;
+	std::vector<std::pair<std::string, std::shared_ptr<mtt::Tracker>>> out;
 
 	std::lock_guard<std::mutex> guard(trackersMutex);
 
 	for (auto& t : trackers)
 	{
-		if(t.comm)
-			out.push_back(t.comm);
-	}
-
-	return out;
-}
-
-std::vector<std::string> mtt::TrackerManager::getTrackersList()
-{
-	std::vector<std::string> out;
-
-	std::lock_guard<std::mutex> guard(trackersMutex);
-
-	for (auto& t : trackers)
-	{
-		out.push_back(t.fullAddress);
+		out.push_back({ t.fullAddress, t.comm });
 	}
 
 	return out;

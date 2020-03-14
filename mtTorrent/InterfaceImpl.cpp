@@ -161,10 +161,10 @@ std::string mtt::TorrentFileInfo::createTorrentFileData(const uint8_t* infoData,
 	if (about.creationDate != 0)
 		writer.addRawItem("13:creation date", about.creationDate);
 
-	writer.startRawMapItem("4:info");
-
 	if (!infoData)
 	{
+		writer.startRawMapItem("4:info");
+
 		if (info.files.size() > 1)
 		{
 			writer.startRawArrayItem("5:files");
@@ -196,11 +196,15 @@ std::string mtt::TorrentFileInfo::createTorrentFileData(const uint8_t* infoData,
 
 		if (info.isPrivate)
 			writer.addRawItem("7:private", 1);
+
+		writer.endMap();
 	}
 	else
+	{
+		writer.data.append("4:info");
 		writer.data.append((const char*)infoData, infoDataSize);
+	}
 
-	writer.endMap();
 	writer.endMap();
 
 	return writer.data;

@@ -23,8 +23,7 @@ namespace mtt
 		void removeTrackers();
 
 		std::shared_ptr<Tracker> getTrackerByAddr(const std::string& addr);
-		std::vector<std::shared_ptr<Tracker>> getTrackers();
-		std::vector<std::string> getTrackersList();
+		std::vector<std::pair<std::string,std::shared_ptr<Tracker>>> getTrackers();
 
 		uint32_t getTrackersCount();
 

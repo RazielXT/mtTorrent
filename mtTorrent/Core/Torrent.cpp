@@ -399,7 +399,7 @@ float mtt::Torrent::currentProgress()
 {
 	float progress = files.progress.getPercentage();
 
-	if (fileTransfer)
+	if (fileTransfer && infoFile.info.pieceSize)
 	{
 		float unfinishedPieces = fileTransfer->getUnfinishedPiecesDownloadSize() / (float)infoFile.info.pieceSize;
 		progress += unfinishedPieces / files.progress.pieces.size();

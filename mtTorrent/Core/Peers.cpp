@@ -182,6 +182,9 @@ std::shared_ptr<mtt::PeerCommunication> mtt::Peers::getPeer(PeerCommunication* p
 
 void mtt::Peers::add(std::shared_ptr<TcpAsyncStream> stream)
 {
+	if (torrent->state == mttApi::Torrent::State::Stopped)
+		return;
+
 	ActivePeer peer;
 	peer.comm = std::make_shared<PeerCommunication>(torrent->infoFile.info, *peersListener);
 
@@ -234,13 +237,12 @@ std::vector<mtt::TrackerInfo> mtt::Peers::getSourcesInfo()
 {
 	std::vector<mtt::TrackerInfo> out;
 	auto tr = trackers.getTrackers();
-	auto names = trackers.getTrackersList();
-	out.reserve(names.size() + 2);
+	out.reserve(tr.size() + 2);
 
-	for (size_t i = 0; i < names.size(); i++)
+	for (size_t i = 0; i < tr.size(); i++)
 	{
-		out.push_back(tr.empty() ? mtt::TrackerInfo{} : tr[i]->info);
-		out.back().hostname = names[i];
+		out.push_back(tr[i].second ? tr[i].second->info : mtt::TrackerInfo{});
+		out.back().hostname = tr[i].first;
 	}
 
 	out.push_back(pexInfo);
