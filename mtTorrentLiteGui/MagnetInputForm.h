@@ -32,18 +32,6 @@ namespace GuiLite {
 	public: System::Windows::Forms::Button^ magnetFormButton;
 	private: System::Windows::Forms::Panel^ panel1;
 	public: System::Windows::Forms::RichTextBox^ logsTextBox;
-	private:
-	public:
-
-
-	public:
-
-
-
-
-	public:
-	private:
-	public:
 
 		static MagnetInputForm^ instance;
 	protected:
@@ -57,18 +45,6 @@ namespace GuiLite {
 				delete components;
 			}
 		}
-
-	protected:
-
-
-
-	private:
-	protected:
-
-
-
-
-	protected:
 
 	private:
 		/// <summary>

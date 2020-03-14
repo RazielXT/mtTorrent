@@ -517,6 +517,7 @@ void setSelected(bool v)
 
 		GuiLite::MainForm::instance->torrentInfoLabel->Clear();
 		GuiLite::MainForm::instance->dlSpeedChart->Visible = false;
+		memset(firstSelectedHash, 0, 20);
 	}
 }
 
@@ -669,6 +670,25 @@ void stopSchedule(uint8_t* hash)
 	}
 }
 
+System::String^ GetClipboardText()
+{
+	System::String^ text = "";
+	if (OpenClipboard(nullptr))
+	{
+		HANDLE hData = GetClipboardData(CF_TEXT);
+		if (hData)
+		{
+			char* pszText = static_cast<char*>(GlobalLock(hData));
+			if (pszText)
+				text = gcnew System::String(pszText);
+
+			GlobalUnlock(hData);
+		}
+		CloseClipboard();
+	}
+	return text;
+}
+
 void onButtonClick(ButtonId id, System::String^ param)
 {
 	if (id == ButtonId::AddPeerMenu)
@@ -806,6 +826,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 	{
 		magnet.magnetLinkSequence = 1;
 		GuiLite::MagnetInputForm form;
+		form.textBoxMagnet->Text = GetClipboardText();
 		form.ShowDialog();
 		GuiLite::MagnetInputForm::instance = nullptr;
 		magnet.magnetLinkSequence = 0;
