@@ -737,12 +737,11 @@ void onButtonClick(ButtonId id, System::String^ param)
 		if (!GuiLite::MagnetInputForm::instance && IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, magnet.hash, &magnetProgress) == mtt::Status::Success)
 		{
 			GuiLite::MagnetInputForm form;
-			form.labelText->Text = "Getting info...";
 			form.magnetFormButton->Text = "Logs";
 			form.magnetFormButton->Enabled = false;
 			form.logsTextBox->Visible = true;
 			form.textBoxMagnet->Text = gcnew String(hexToString(magnet.hash, 20).data());
-			form.textBoxMagnet->Enabled = true;
+			form.textBoxMagnet->ReadOnly = true;
 			magnet.magnetLinkSequence = 3;
 			form.ShowDialog();
 			GuiLite::MagnetInputForm::instance = nullptr;
@@ -826,6 +825,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 	{
 		magnet.magnetLinkSequence = 1;
 		GuiLite::MagnetInputForm form;
+		form.progressBarMagnet->Visible = false;
 		form.textBoxMagnet->Text = GetClipboardText();
 		form.ShowDialog();
 		GuiLite::MagnetInputForm::instance = nullptr;
@@ -870,7 +870,8 @@ void onButtonClick(ButtonId id, System::String^ param)
 				if (status == mtt::Status::Success)
 				{
 					GuiLite::MagnetInputForm::instance->textBoxMagnet->ReadOnly = true;
-					GuiLite::MagnetInputForm::instance->labelText->Text = "Getting info...";
+					GuiLite::MagnetInputForm::instance->progressBarMagnet->Visible = true;
+					GuiLite::MagnetInputForm::instance->labelText->Text = "";
 					magnet.magnetLinkSequence = 2;
 
 					GuiLite::MagnetInputForm::instance->magnetFormButton->Text = "Logs";
@@ -880,7 +881,10 @@ void onButtonClick(ButtonId id, System::String^ param)
 					GuiLite::MagnetInputForm::instance->Close();
 				}
 				else
+				{
+					GuiLite::MagnetInputForm::instance->progressBarMagnet->Visible = false;
 					GuiLite::MagnetInputForm::instance->labelText->Text = "Invalid magnet link";
+				}
 			}
 			else if (GuiLite::MagnetInputForm::instance->magnetFormButton->Text->StartsWith("Logs"))
 			{
@@ -1048,7 +1052,8 @@ void refreshUi()
 				if (progress.finished)
 				{
 					GuiLite::MagnetInputForm::instance->labelText->Text = "Finished";
-		
+					GuiLite::MagnetInputForm::instance->progressBarMagnet->Visible = false;
+
 					if(magnet.magnetLinkSequence == 2)
 						GuiLite::MagnetInputForm::instance->Close();
 					else
@@ -1056,7 +1061,10 @@ void refreshUi()
 				}
 			}
 			else
+			{
+				GuiLite::MagnetInputForm::instance->progressBarMagnet->Visible = false;
 				GuiLite::MagnetInputForm::instance->labelText->Text = status == mtt::Status::E_NoData ? "No magnet data" : "Error";
+			}
 		}
 	}
 

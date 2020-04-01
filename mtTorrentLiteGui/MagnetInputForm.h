@@ -72,7 +72,7 @@ namespace GuiLite {
 			// 
 			this->labelText->AutoSize = true;
 			this->labelText->BackColor = System::Drawing::Color::Transparent;
-			this->labelText->Location = System::Drawing::Point(225, 45);
+			this->labelText->Location = System::Drawing::Point(225, 49);
 			this->labelText->Name = L"labelText";
 			this->labelText->Size = System::Drawing::Size(0, 17);
 			this->labelText->TabIndex = 4;
