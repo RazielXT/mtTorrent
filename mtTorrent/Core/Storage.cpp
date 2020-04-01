@@ -19,6 +19,9 @@ void mtt::Storage::init(TorrentInfo& info, const std::string& locationPath)
 	pieceSize = info.pieceSize;
 	files = info.files;
 	path = locationPath;
+
+	if (!path.empty() && path.back() != '\\')
+		path += '\\';
 }
 
 mtt::Status mtt::Storage::setPath(std::string p)
@@ -219,6 +222,9 @@ mtt::Status mtt::Storage::deleteAll()
 	{
 		std::filesystem::remove(getFullpath(f), ec);
 	}
+
+	if (files.size() > 1)
+		std::filesystem::remove_all(std::filesystem::u8path(path + files.front().path.front()), ec);
 
 	return Status::Success;
 }
@@ -477,7 +483,7 @@ void mtt::Storage::createPath(const std::filesystem::path& path)
 
 mtt::Status mtt::Storage::validatePath(DownloadSelection& selection)
 {
-	std::filesystem::path dlPath(path);
+	std::filesystem::path dlPath = std::filesystem::u8path(path);
 
 	if(!dlPath.has_root_path())
 		return Status::E_InvalidPath;

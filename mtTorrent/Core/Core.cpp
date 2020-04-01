@@ -182,7 +182,7 @@ void mtt::Core::deinit()
 std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addFile(const char* filename)
 {
 	size_t maxSize = 10 * 1024 * 1024;
-	std::filesystem::path dir(filename);
+	std::filesystem::path dir = std::filesystem::u8path(filename);
 
 	if (!std::filesystem::exists(dir) || std::filesystem::file_size(dir) > maxSize)
 		return { mtt::Status::E_InvalidPath, nullptr };

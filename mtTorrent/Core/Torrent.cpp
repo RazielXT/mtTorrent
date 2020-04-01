@@ -217,7 +217,7 @@ void mtt::Torrent::init()
 bool mtt::Torrent::start()
 {
 #ifdef PEER_DIAGNOSTICS
-	std::filesystem::path logDir(".\\logs\\" + name());
+	std::filesystem::path logDir = std::filesystem::u8path(".\\logs\\" + name());
 	if (!std::filesystem::exists(logDir))
 	{
 		std::error_code ec;
