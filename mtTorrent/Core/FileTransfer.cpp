@@ -53,15 +53,17 @@ void mtt::FileTransfer::stop()
 {
 	saveLogEvents();
 
+	{
+		std::lock_guard<std::mutex> guard(peersMutex);
+		activePeers.clear();
+	}
+
 	torrent->peers->stop();
 	downloader.reset();
 	torrent->files.storage.flush();
 
 	if(refreshTimer)
 		refreshTimer->disable();
-
-	std::lock_guard<std::mutex> guard(peersMutex);
-	activePeers.clear();
 }
 
 void mtt::FileTransfer::reevaluate()
