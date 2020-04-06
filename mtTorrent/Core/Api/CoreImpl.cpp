@@ -25,9 +25,9 @@ std::vector<mttApi::TorrentPtr> mttApi::Core::getTorrents()
 	auto core = static_cast<mtt::Core*>(this);
 
 	std::vector<mttApi::TorrentPtr> out;
-	for (auto t : core->torrents)
+	for (auto t = core->torrents.rbegin(); t != core->torrents.rend(); t++)
 	{
-		out.push_back(t);
+		out.push_back(*t);
 	}
 
 	return out;
