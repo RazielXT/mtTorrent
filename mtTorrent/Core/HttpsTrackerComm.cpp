@@ -36,13 +36,20 @@ void mtt::HttpsTrackerComm::init(std::string host, std::string port, std::string
 	info.state = TrackerState::Initialized;
 }
 
-void mtt::HttpsTrackerComm::initializeStream()
+bool mtt::HttpsTrackerComm::initializeStream()
 {
 	ctx.set_default_verify_paths();
 	socket = std::make_shared<ssl_socket>(torrent->service.io, ctx);
 
 	tcp::resolver resolver(torrent->service.io);
-	openSslSocket(*socket, resolver, info.hostname.data());
+
+	if (!openSslSocket(*socket, resolver, info.hostname.data()))
+	{
+		fail();
+		return false;
+	}
+
+	return true;
 }
 
 void mtt::HttpsTrackerComm::fail()
@@ -112,17 +119,15 @@ void mtt::HttpsTrackerComm::announce()
 		{
 			HTTP_TRACKER_LOG("announcing");
 
-			auto hashStr = torrent->hashString();
-			auto request = createAnnounceRequest(info.path, info.hostname, info.port);
-
-			std::string reqStr((char*)request.data(), request.size());
-
-			initializeStream();
-
 			if (info.state == TrackerState::Announced)
 				info.state = TrackerState::Reannouncing;
 			else
 				info.state = TrackerState::Announcing;
+
+			if (!initializeStream())
+				return;
+
+			auto request = createAnnounceRequest(info.path, info.hostname, info.port);
 
 			asio::streambuf buffer;
 			std::ostream request_stream(&buffer);

@@ -117,12 +117,16 @@ bool Addr::operator==(const Addr& r)
 	return memcmp(addrBytes, r.addrBytes, ipv6 ? 16 : 4) == 0;
 }
 #ifdef MTT_WITH_SSL
-void openSslSocket(ssl_socket& sock, tcp::resolver& resolver, const char* hostname)
+bool openSslSocket(ssl_socket& sock, tcp::resolver& resolver, const char* hostname)
 {
 	SSL_set_tlsext_host_name(sock.native_handle(), hostname);
 
 	tcp::resolver::query query(hostname, "https");
-	asio::connect(sock.lowest_layer(), resolver.resolve(query));
+	asio::error_code ec;
+	asio::connect(sock.lowest_layer(), resolver.resolve(query), ec);
+	if (ec)
+		return false;
+
 	sock.lowest_layer().set_option(tcp::no_delay(true));
 
 	// Perform SSL handshake and verify the remote host's
@@ -131,7 +135,9 @@ void openSslSocket(ssl_socket& sock, tcp::resolver& resolver, const char* hostna
 	//sock.set_verify_callback(ssl::rfc2818_verification(server));
 
 	sock.set_verify_mode(asio::ssl::verify_none);
-	sock.handshake(ssl_socket::client);
+	sock.handshake(ssl_socket::client, ec);
+
+	return (bool)ec;
 }
 
 std::string sendHttpsRequest(ssl_socket& socket, asio::streambuf& request)

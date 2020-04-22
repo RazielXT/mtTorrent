@@ -22,7 +22,7 @@ namespace mtt
 
 	private:
 
-		void initializeStream();
+		bool initializeStream();
 		void fail();
 
 		void onTcpClosed(int code);
