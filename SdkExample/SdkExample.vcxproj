@@ -23,6 +23,7 @@
     <ProjectGuid>{8D1AE2D0-94D2-4705-91B2-CA824F565537}</ProjectGuid>
     <RootNamespace>SdkTest</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>SdkExample</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

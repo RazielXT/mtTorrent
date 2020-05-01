@@ -177,7 +177,5 @@ namespace mtt
 	struct MetadataAlert : public TorrentAlert
 	{
 		static const mtt::AlertCategory category = mtt::AlertCategory::Metadata;
-
-		static const int alert_type = 1;
 	};
 }
