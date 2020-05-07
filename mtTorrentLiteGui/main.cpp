@@ -420,26 +420,6 @@ void refreshTorrentInfo(uint8_t* hash)
 	initSpeedChart();
 }
 
-void init()
-{
-	wchar_t pathBuffer[256];
-	if (GetModuleFileName(NULL, pathBuffer, 256))
-	{
-		PathRemoveFileSpec(pathBuffer);
-		SetCurrentDirectory(pathBuffer);
-	}
-
-	lib = LoadLibrary(L"mtTorrent.dll");
-
-	if (lib)
-	{
-		IoctlFunc = (IOCTL_FUNC)GetProcAddress(lib, "Ioctl");
-		IoctlFunc(mtBI::MessageId::Init, nullptr, nullptr);
-		mtBI::RegisterAlertsRequest alertsRequest{ (uint32_t)mtt::AlertCategory::Torrent | (uint32_t)mtt::AlertCategory::Metadata };
-		IoctlFunc(mtBI::MessageId::RegisterAlerts, &alertsRequest, nullptr);
-	}
-}
-
 System::String^ getTorrentName(uint8_t* hash)
 {
 	mtBI::TorrentStateInfo info;
@@ -911,6 +891,8 @@ void onButtonClick(ButtonId id, System::String^ param)
 					form->labelError->Visible = true;
 					return;
 				}
+
+				selectionChanged = true;
 			}
 
 			if (!fileSelection.info.files.empty())
@@ -990,6 +972,12 @@ void adjustGridRowsCount(System::Windows::Forms::DataGridView^ grid, int count)
 	}
 }
 
+void registerAlerts()
+{
+	mtBI::RegisterAlertsRequest alertsRequest{ (uint32_t)mtt::AlertCategory::Torrent | (uint32_t)mtt::AlertCategory::Metadata };
+	IoctlFunc(mtBI::MessageId::RegisterAlerts, &alertsRequest, nullptr);
+}
+
 void checkAlerts()
 {
 	mtBI::AlertsList alertsRequest;
@@ -1004,7 +992,10 @@ void checkAlerts()
 			else if (alert.id == mtt::AlertId::MetadataFinished)
 			{
 				if (memcmp(firstSelectedHash, alert.hash, 20) == 0)
+				{
+					selectionChanged = true;
 					forceRefresh = true;
+				}
 			}
 		}
 	}
@@ -1375,6 +1366,26 @@ public ref class MyMessageFilter : System::Windows::Forms::IMessageFilter
 			return false;
 		}
 };
+
+void init()
+{
+	wchar_t pathBuffer[256];
+	if (GetModuleFileName(NULL, pathBuffer, 256))
+	{
+		PathRemoveFileSpec(pathBuffer);
+		SetCurrentDirectory(pathBuffer);
+	}
+
+	lib = LoadLibrary(L"mtTorrent.dll");
+
+	if (lib)
+	{
+		IoctlFunc = (IOCTL_FUNC)GetProcAddress(lib, "Ioctl");
+		IoctlFunc(mtBI::MessageId::Init, nullptr, nullptr);
+
+		registerAlerts();
+	}
+}
 
 [STAThread]
 void FormsMain(cli::array<System::String ^>^ args)
