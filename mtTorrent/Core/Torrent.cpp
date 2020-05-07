@@ -231,13 +231,26 @@ bool mtt::Torrent::start()
 		return true;
 	}
 
-	if (!checking && !filesChecked())
+	if (!checking)
 	{
-		checkFiles([this](std::shared_ptr<PiecesCheck> ch)
+		auto filesTime = files.storage.getLastModifiedTime();
+
+		if (filesTime != lastStateTime)
+		{
+			if (filesTime == 0)
 			{
-				if (!ch->rejected)
-					start();
-			});
+				files.progress.removeReceived();
+				lastStateTime = 0;
+			}
+			else
+				checkFiles([this](std::shared_ptr<PiecesCheck> ch)
+					{
+						if (!ch->rejected)
+							start();
+					});
+		}
+
+		files.progress.select(files.selection);
 	}
 
 	lastError = Status::E_InvalidInput;
@@ -338,11 +351,6 @@ float mtt::Torrent::checkingProgress()
 		return checkState->piecesChecked / (float)checkState->piecesCount;
 	else
 		return 1;
-}
-
-bool mtt::Torrent::filesChecked()
-{
-	return lastStateTime == files.storage.getLastModifiedTime();
 }
 
 bool mtt::Torrent::selectFiles(const std::vector<bool>& s)
@@ -461,4 +469,9 @@ void mtt::Torrent::setFilesPriority(const std::vector<mtt::Priority>& priority)
 		fileTransfer->updatePiecesPriority();
 
 	stateChanged = true;
+}
+
+mtt::Status mtt::Torrent::setLocationPath(const std::string& path)
+{
+	return files.storage.setPath(path, lastStateTime != 0);
 }

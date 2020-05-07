@@ -31,10 +31,10 @@ namespace mtt
 		void checkFiles();
 		std::shared_ptr<PiecesCheck> checkFiles(std::function<void(std::shared_ptr<PiecesCheck>)> onFinish);
 		float checkingProgress();
-		bool filesChecked();
 
 		bool selectFiles(const std::vector<bool>&);
 		void setFilesPriority(const std::vector<mtt::Priority>&);
+		mtt::Status setLocationPath(const std::string& path);
 
 		std::string name();
 		float currentProgress();

@@ -24,7 +24,7 @@ void mtt::Storage::init(TorrentInfo& info, const std::string& locationPath)
 		path += '\\';
 }
 
-mtt::Status mtt::Storage::setPath(std::string p)
+mtt::Status mtt::Storage::setPath(std::string p, bool moveFiles)
 {
 	if (!p.empty() && p.back() != '\\')
 		p += '\\';
@@ -37,7 +37,7 @@ mtt::Status mtt::Storage::setPath(std::string p)
 		{
 			std::error_code ec;
 			auto originalPath = path + files.back().path.front();
-			if (std::filesystem::exists(originalPath, ec))
+			if (std::filesystem::exists(originalPath, ec) && moveFiles)
 			{
 				if (!std::filesystem::exists(p, ec))
 					return mtt::Status::E_InvalidPath;
@@ -53,7 +53,7 @@ mtt::Status mtt::Storage::setPath(std::string p)
 					{
 						if (i + 1 == f.path.size())
 						{
-							if (!std::filesystem::create_directories(newPathF, ec))
+							if (!std::filesystem::create_directories(newPathF, ec) && ec.value() != 0)
 								return mtt::Status::E_AllocationProblem;
 						}
 

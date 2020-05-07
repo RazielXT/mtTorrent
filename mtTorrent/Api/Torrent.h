@@ -32,7 +32,7 @@ namespace mttApi
 		API_EXPORT bool selectFiles(const std::vector<bool>&);
 		API_EXPORT void setFilesPriority(const std::vector<mtt::Priority>&);
 		API_EXPORT std::string getLocationPath();
-		API_EXPORT mtt::Status setLocationPath(const std::string path);
+		API_EXPORT mtt::Status setLocationPath(const std::string& path);
 
 		API_EXPORT std::string name();
 		API_EXPORT float currentProgress();

@@ -53,9 +53,9 @@ std::string mttApi::Torrent::getLocationPath()
 	return static_cast<mtt::Torrent*>(this)->files.storage.getPath();
 }
 
-mtt::Status mttApi::Torrent::setLocationPath(const std::string path)
+mtt::Status mttApi::Torrent::setLocationPath(const std::string& path)
 {
-	return static_cast<mtt::Torrent*>(this)->files.storage.setPath(path);
+	return static_cast<mtt::Torrent*>(this)->setLocationPath(path);
 }
 
 std::string mttApi::Torrent::name()

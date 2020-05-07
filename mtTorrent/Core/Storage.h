@@ -15,7 +15,7 @@ namespace mtt
 		~Storage();
 
 		void init(TorrentInfo& info, const std::string& locationPath);
-		Status setPath(std::string path);
+		Status setPath(std::string path, bool moveFiles = true);
 		std::string getPath();
 
 		void storePiece(DownloadedPiece& piece);
