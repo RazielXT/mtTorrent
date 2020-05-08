@@ -89,9 +89,8 @@ extern "C"
 			auto resp = (mtBI::TorrentStateInfo*) output;
 			resp->name = torrent->name();
 			resp->connectedPeers = torrent->getPeers()->connectedCount();
-			resp->checking = torrent->getStatus() ==  mttApi::Torrent::State::Started && torrent->checkingProgress() < 1;
-			if (resp->checking)
-				resp->checkingProgress = torrent->checkingProgress();
+			resp->checkingProgress = torrent->checkingProgress();
+			resp->checking = resp->checkingProgress < 1;
 			resp->foundPeers = torrent->getPeers()->receivedCount();
 			resp->downloaded = torrent->downloaded();
 			resp->uploaded = torrent->uploaded();
@@ -153,6 +152,25 @@ extern "C"
 			}
 
 			resp->downloadLocation = torrent->getLocationPath();
+		}
+		else if (id == mtBI::MessageId::GetTorrentFilesProgress)
+		{
+			auto torrent = core->getTorrent((const uint8_t*)request);
+			if (!torrent)
+				return mtt::Status::E_InvalidInput;
+			auto resp = (mtBI::TorrentFilesProgress*) output;
+
+			auto selection = torrent->getFilesSelection();
+			auto progress = torrent->getFilesProgress();
+
+			resp->files.resize(selection.files.size());
+
+			for (size_t i = 0; i < selection.files.size(); i++)
+			{
+				resp->files[i].pieceStart = selection.files[i].info.startPieceIndex;
+				resp->files[i].pieceEnd = selection.files[i].info.endPieceIndex;
+				resp->files[i].progress = progress[i];
+			}
 		}
 		else if (id == mtBI::MessageId::GetSourcesInfo)
 		{

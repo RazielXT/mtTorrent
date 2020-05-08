@@ -28,6 +28,7 @@ namespace mtBI
 		RefreshSource, //SourceId, null
 		SetTorrentFilesSelection, //TorrentFilesSelectionRequest, null
 		SetTorrentFilesPriority, //TorrentFilesPriorityRequest, null
+		GetTorrentFilesProgress, //hash, TorrentFilesProgress
 		SetTorrentPath, //TorrentSetPathRequest, null
 		AddPeer,	//AddPeerRequest, null
 		GetPiecesInfo, //uint8_t[20], PiecesInfo
@@ -205,5 +206,17 @@ namespace mtBI
 	struct AlertsList
 	{
 		mtt::array<Alert> alerts;
+	};
+
+	struct TorrentFileProgress
+	{
+		float progress;
+		uint32_t pieceStart;
+		uint32_t pieceEnd;
+	};
+
+	struct TorrentFilesProgress
+	{
+		mtt::array<TorrentFileProgress> files;
 	};
 };
