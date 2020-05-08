@@ -278,6 +278,16 @@ bool mtt::Torrent::start()
 
 void mtt::Torrent::stop()
 {
+	if (checking)
+	{
+		std::lock_guard<std::mutex> guard(checkStateMutex);
+
+		if (checkState)
+			checkState->rejected = true;
+
+		checking = false;
+	}
+
 	if (state == mttApi::Torrent::State::Stopped)
 		return;
 
@@ -289,16 +299,6 @@ void mtt::Torrent::stop()
 	if (fileTransfer)
 	{
 		fileTransfer->stop();
-	}
-
-	if (checking)
-	{
-		std::lock_guard<std::mutex> guard(checkStateMutex);
-
-		if(checkState)
-			checkState->rejected = true;
-
-		checking = false;
 	}
 
 	service.stop();
@@ -340,7 +340,8 @@ std::shared_ptr<mtt::PiecesCheck> mtt::Torrent::checkFiles(std::function<void(st
 
 void mtt::Torrent::checkFiles()
 {
-	checkFiles([](std::shared_ptr<PiecesCheck>) {});
+	if(!checking)
+		checkFiles([](std::shared_ptr<PiecesCheck>) {});
 }
 
 float mtt::Torrent::checkingProgress()
