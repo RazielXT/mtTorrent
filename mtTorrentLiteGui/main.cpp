@@ -61,7 +61,6 @@ System::String^ getUpnpInfo()
 }
 
 int chartTime = 0;
-void updateSpeedChart(float dlSpeed, float upSpeed);
 void initSpeedChart()
 {
 	auto chart = GuiLite::MainForm::instance->dlSpeedChart;
@@ -150,6 +149,8 @@ TorrentCtxMenuInfo getTorrentContexMenuInfo()
 
 mtBI::PiecesInfo progress;
 mtt::array<uint8_t> lastBitfield;
+const uint32_t MaxProgressChartIntervalSize = 1000;
+uint32_t ProgressChartIntervalSize = 0;
 
 void initPiecesChart()
 {
@@ -162,8 +163,37 @@ void initPiecesChart()
 
 		chart->Series["HasSeries"]->Points->Clear();
 		chart->Series["Request"]->Points->Clear();
-		chart->ChartAreas[0]->AxisX->Interval = progress.piecesCount;
+		ProgressChartIntervalSize = min(progress.piecesCount, MaxProgressChartIntervalSize);
+		chart->ChartAreas[0]->AxisX->Interval = ProgressChartIntervalSize;
+
+		for (uint32_t i = 0; i < ProgressChartIntervalSize; i++)
+		{
+			chart->Series["HasSeries"]->Points->AddXY(i, 0);
+			chart->Series["HasSeries"]->Points[i]->IsEmpty = true;
+		}
 	}
+}
+
+uint32_t getProgressChartIndex(uint32_t pieceIdx)
+{
+	if (ProgressChartIntervalSize < MaxProgressChartIntervalSize)
+		return pieceIdx;
+
+	float coef =  ProgressChartIntervalSize / (float)progress.piecesCount;
+
+	return (uint32_t)(pieceIdx * coef);
+}
+
+struct  
+{
+	uint32_t from = -1;
+	uint32_t to;
+}
+piecesHighlight;
+
+void highlightChartPieces(uint32_t from, uint32_t to)
+{
+	piecesHighlight = { from, to };
 }
 
 void updatePiecesChart()
@@ -187,15 +217,26 @@ void updatePiecesChart()
 
 			if (value && !lastValue)
 			{
-				chart->Series["HasSeries"]->Points->AddXY(i, 0);
+				chart->Series["HasSeries"]->Points[getProgressChartIndex(i)]->IsEmpty = false;
 			}
 		}
 
 		chart->Series["Request"]->Points->Clear();
 
-		for (size_t i = 0; i < progress.requests.size(); i++)
+		if (piecesHighlight.from == -1)
 		{
-			chart->Series["Request"]->Points->AddXY(progress.requests[i], 0);
+			for (size_t i = 0; i < progress.requests.size(); i++)
+			{
+				chart->Series["Request"]->Points->AddXY(getProgressChartIndex(progress.requests[i]), 0);
+			}
+		}
+		else
+		{
+			for (size_t i = piecesHighlight.from; i <= piecesHighlight.to; i++)
+			{
+				chart->Series["Request"]->Points->AddXY(getProgressChartIndex(i), 0);
+			}
+			piecesHighlight.from = -1;
 		}
 
 		std::swap(progress.bitfield, lastBitfield);
@@ -1160,8 +1201,9 @@ void refreshUi()
 
 				auto row = gcnew cli::array< System::String^  >(12) {
 					gcnew String(hexToString(t.hash, 20).data()),
-						name, progress, activeStatus, speedInfo,
-						int(info.downloadSpeed).ToString(), t.active ? formatBytesSpeed(info.uploadSpeed) : "", int(info.uploadSpeed).ToString(),
+						name, progress, activeStatus,
+						speedInfo, int(info.downloadSpeed).ToString(),
+						info.uploadSpeed ? formatBytesSpeed(info.uploadSpeed) : "", int(info.uploadSpeed).ToString(),
 						(t.active || info.connectedPeers) ? int(info.connectedPeers).ToString() : "",
 						(t.active || info.foundPeers) ? int(info.foundPeers).ToString() : "",
 						formatBytes(info.downloaded), formatBytes(info.uploaded)
@@ -1179,9 +1221,10 @@ void refreshUi()
 
 				if (torrentGrid->Rows[i]->Selected)
 				{
-					if (t.active)
+					if (t.active || info.checking)
 						selectionActive = true;
-					else
+
+					if(!t.active)
 						selectionStopped = true;
 				}
 
@@ -1296,8 +1339,55 @@ void refreshUi()
 			sourcesGrid->Sort(sourcesGrid->SortedColumn, sourcesGrid->SortOrder == SortOrder::Ascending ? System::ComponentModel::ListSortDirection::Ascending : System::ComponentModel::ListSortDirection::Descending);
 	}
 
-	if(selectionChanged || activeTab == GuiLite::MainForm::TabType::Progress)
+	if (selectionChanged || activeTab == GuiLite::MainForm::TabType::Progress)
+	{
+		auto filesGrid = GuiLite::MainForm::instance->filesProgressGridView;
+		static bool firstIgnored = false;
+
+		if (selectionChanged)
+		{
+			mtBI::TorrentInfo info;
+			if (IoctlFunc(mtBI::MessageId::GetTorrentInfo, &firstSelectedHash, &info) == mtt::Status::Success)
+			{
+				adjustGridRowsCount(filesGrid, (int)info.files.size());
+
+				for (uint32_t i = 0; i < info.files.size(); i++)
+				{
+					auto& file = info.files[i];
+					auto row = gcnew cli::array< System::String^ >(5) { int(i).ToString(),
+						gcnew String(file.name.data),
+							"", formatBytes(file.size), int(file.size).ToString()
+					};
+
+					filesGrid->Rows[i]->SetValues(row);
+				}
+
+				filesGrid->Sort(filesGrid->Columns[1], System::ComponentModel::ListSortDirection::Ascending);
+				filesGrid->ClearSelection();
+			}
+		}
+
+		mtBI::TorrentFilesProgress progressInfo;
+
+		if (IoctlFunc(mtBI::MessageId::GetTorrentFilesProgress, &firstSelectedHash, &progressInfo) == mtt::Status::Success)
+		{
+			for (uint32_t i = 0; i < progressInfo.files.size(); i++)
+			{
+				filesGrid->Rows[i]->Cells[2]->Value = float(progressInfo.files[i].progress).ToString("P");
+			}
+
+			if (filesGrid->SelectedRows->Count > 0)
+			{
+				int idx = Convert::ToInt32(filesGrid->SelectedRows[0]->Cells[0]->Value->ToString());
+				if(!selectionChanged && firstIgnored)
+					highlightChartPieces(progressInfo.files[idx].pieceStart, progressInfo.files[idx].pieceEnd);
+				filesGrid->ClearSelection();
+				firstIgnored = true;
+			}
+		}
+
 		updatePiecesChart();
+	}
 
 	selectionChanged = false;
 	forceRefresh = false;
