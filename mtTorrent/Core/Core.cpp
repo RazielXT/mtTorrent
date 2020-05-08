@@ -152,7 +152,6 @@ void mtt::Core::deinit()
 	if (listener)
 	{
 		listener->stop();
-		listener.reset();
 	}
 
 	saveTorrentList(torrents);
@@ -167,6 +166,7 @@ void mtt::Core::deinit()
 	}
 
 	torrents.clear();
+	listener.reset();
 
 	if (dht)
 	{
