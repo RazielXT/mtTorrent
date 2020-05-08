@@ -137,6 +137,36 @@ bool mttApi::Torrent::getReceivedPieces(uint32_t* dataPieces, size_t& dataSize)
 	return true;
 }
 
+std::vector<float> mttApi::Torrent::getFilesProgress()
+{
+	auto& selection = static_cast<mtt::Torrent*>(this)->files.selection;
+	auto& progress = static_cast<mtt::Torrent*>(this)->files.progress;
+
+	if (selection.files.empty())
+		return {};
+
+
+	std::vector<float> out;
+	out.resize(selection.files.size());
+
+	for (size_t i = 0; i < selection.files.size(); i++)
+	{
+		auto& file = selection.files[i].info;
+		uint32_t piecesCount = file.endPieceIndex - file.startPieceIndex + 1;
+		uint32_t receivedPieces = 0;
+
+		for (uint32_t p = file.startPieceIndex; p <= file.endPieceIndex; p++)
+		{
+			if (progress.hasPiece(p))
+				receivedPieces++;
+		}
+
+		out[i] = receivedPieces / (float)piecesCount;
+	}
+
+	return out;
+}
+
 bool mttApi::Torrent::getMetadataDownloadState(mtt::MetadataDownloadState& state)
 {
 	if (auto utm = static_cast<mtt::Torrent*>(this)->utmDl.get())
