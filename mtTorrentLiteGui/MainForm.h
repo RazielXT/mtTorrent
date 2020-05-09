@@ -1056,6 +1056,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->filesProgressGridView->SelectionMode = System::Windows::Forms::DataGridViewSelectionMode::FullRowSelect;
 			this->filesProgressGridView->Size = System::Drawing::Size(1253, 102);
 			this->filesProgressGridView->TabIndex = 3;
+			this->filesProgressGridView->SelectionChanged += gcnew System::EventHandler(this, &MainForm::FilesProgressSelection);
 			// 
 			// pieceChart
 			// 
@@ -1349,6 +1350,16 @@ private: System::Void MainForm_Resize(System::Object^ sender, System::EventArgs^
 	if (WindowState == FormWindowState::Minimized)
 	{
 		//Hide();
+	}
+}
+private: System::Void FilesProgressSelection(System::Object^ sender, System::EventArgs^ e) {
+	
+	static bool firstIngnored = false;
+
+	if (!firstIngnored)
+	{
+		firstIngnored = true;
+		filesProgressGridView->ClearSelection();
 	}
 }
 };
