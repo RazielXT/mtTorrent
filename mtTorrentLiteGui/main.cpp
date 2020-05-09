@@ -232,7 +232,7 @@ void updatePiecesChart()
 		}
 		else
 		{
-			for (size_t i = piecesHighlight.from; i <= piecesHighlight.to; i++)
+			for (uint32_t i = piecesHighlight.from; i <= piecesHighlight.to; i++)
 			{
 				chart->Series["Request"]->Points->AddXY(getProgressChartIndex(i), 0);
 			}
@@ -1342,7 +1342,6 @@ void refreshUi()
 	if (selectionChanged || activeTab == GuiLite::MainForm::TabType::Progress)
 	{
 		auto filesGrid = GuiLite::MainForm::instance->filesProgressGridView;
-		static bool firstIgnored = false;
 
 		if (selectionChanged)
 		{
@@ -1371,18 +1370,20 @@ void refreshUi()
 
 		if (IoctlFunc(mtBI::MessageId::GetTorrentFilesProgress, &firstSelectedHash, &progressInfo) == mtt::Status::Success)
 		{
-			for (uint32_t i = 0; i < progressInfo.files.size(); i++)
+			for (int i = 0; i < filesGrid->Rows->Count; i++)
 			{
-				filesGrid->Rows[i]->Cells[2]->Value = float(progressInfo.files[i].progress).ToString("P");
+				int idx = Convert::ToInt32(filesGrid->Rows[i]->Cells[0]->Value->ToString());
+
+				if(idx < progressInfo.files.size())
+					filesGrid->Rows[i]->Cells[2]->Value = float(progressInfo.files[idx].progress).ToString("P");
 			}
 
 			if (filesGrid->SelectedRows->Count > 0)
 			{
 				int idx = Convert::ToInt32(filesGrid->SelectedRows[0]->Cells[0]->Value->ToString());
-				if(!selectionChanged && firstIgnored)
+				if(!selectionChanged)
 					highlightChartPieces(progressInfo.files[idx].pieceStart, progressInfo.files[idx].pieceEnd);
 				filesGrid->ClearSelection();
-				firstIgnored = true;
 			}
 		}
 
