@@ -150,9 +150,9 @@ namespace mtt
 	{
 		std::string address;
 		std::string client;
-		uint32_t uploadSpeed;
-		uint32_t downloadSpeed;
-		float percentage;
+		uint32_t uploadSpeed = 0;
+		uint32_t downloadSpeed = 0;
+		float percentage = 0;
 		std::string country;
 	};
 
