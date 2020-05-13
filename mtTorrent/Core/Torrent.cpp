@@ -182,7 +182,7 @@ bool mtt::Torrent::loadSavedTorrentFile(const std::string& hash, DataBuffer& out
 void mtt::Torrent::downloadMetadata(std::function<void(Status, MetadataDownloadState&)> callback)
 {
 	state = State::DownloadUtm;
-	utmDl = std::make_unique<MetadataDownload>(*peers);
+	utmDl = std::make_shared<MetadataDownload>(*peers);
 	utmDl->start([this, callback](Status s, MetadataDownloadState& state)
 	{
 		if (s == Status::Success && state.finished)

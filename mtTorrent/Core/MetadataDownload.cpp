@@ -72,15 +72,42 @@ void mtt::MetadataDownload::stop()
 	peers.stop();
 }
 
-std::vector<mtt::MetadataDownload::EventInfo> mtt::MetadataDownload::getEvents()
+std::vector<mtt::MetadataDownload::EventInfo> mtt::MetadataDownload::getEvents(size_t startIndex)
 {
 	std::lock_guard<std::mutex> guard(commsMutex);
-	return eventLog;
+
+	if(startIndex >= eventLog.size())
+		return {};
+
+	return { eventLog.begin() + startIndex, eventLog.end() };
 }
 
-uint32_t mtt::MetadataDownload::getEventsCount()
+size_t mtt::MetadataDownload::getEventsCount()
 {
-	return (uint32_t)eventLog.size();
+	return eventLog.size();
+}
+
+std::vector<mtt::ActivePeerInfo> mtt::MetadataDownload::getPeersInfo()
+{
+	std::lock_guard<std::mutex> guard(commsMutex);
+
+	std::vector<mtt::ActivePeerInfo> out;
+	out.resize(activeComms.size());
+
+	size_t i = 0;
+	for (auto& peer : activeComms)
+	{
+		auto addr = peer->getAddress();
+		out[i].address = addr.toString();
+		out[i].percentage = peer->info.pieces.getPercentage();
+		out[i].downloadSpeed = 0;
+		out[i].uploadSpeed = 0;
+		out[i].client = peer->ext.state.client;
+		out[i].country = "";
+		i++;
+	}
+
+	return out;
 }
 
 void mtt::MetadataDownload::evalComms()

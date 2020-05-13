@@ -56,7 +56,7 @@ namespace mtt
 
 		std::shared_ptr<Peers> peers;
 		std::shared_ptr<FileTransfer> fileTransfer;
-		std::unique_ptr<MetadataDownload> utmDl;
+		std::shared_ptr<MetadataDownload> utmDl;
 
 		void save();
 		void saveTorrentFile(const char* data, size_t size);

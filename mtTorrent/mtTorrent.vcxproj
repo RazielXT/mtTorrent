@@ -310,6 +310,7 @@
     <ClCompile Include="Core\Api\CoreImpl.cpp" />
     <ClCompile Include="Core\Api\FileTransferImpl.cpp" />
     <ClCompile Include="Core\Api\ListenerImpl.cpp" />
+    <ClCompile Include="Core\Api\MagnetDownloadImpl.cpp" />
     <ClCompile Include="Core\Api\PeersImpl.cpp" />
     <ClCompile Include="Core\Api\TorrentImpl.cpp" />
     <ClCompile Include="Core\BinaryInterfaceHandler.cpp" />
@@ -376,6 +377,7 @@
     <ClInclude Include="Api\FileTransfer.h" />
     <ClInclude Include="Api\Interface.h" />
     <ClInclude Include="Api\Listener.h" />
+    <ClInclude Include="Api\MagnetDownload.h" />
     <ClInclude Include="Api\Peers.h" />
     <ClInclude Include="Api\Torrent.h" />
     <ClInclude Include="Core\Core.h" />

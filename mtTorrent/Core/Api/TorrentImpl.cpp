@@ -113,6 +113,11 @@ std::shared_ptr<mttApi::FileTransfer> mttApi::Torrent::getFileTransfer()
 	return std::static_pointer_cast<mttApi::FileTransfer>(static_cast<mtt::Torrent*>(this)->fileTransfer);
 }
 
+std::shared_ptr<mttApi::MagnetDownload> mttApi::Torrent::getMagnetDownload()
+{
+	return std::static_pointer_cast<mttApi::MagnetDownload>(static_cast<mtt::Torrent*>(this)->utmDl);
+}
+
 bool mttApi::Torrent::getPiecesBitfield(uint8_t* dataBitfield, size_t dataSize)
 {
 	return static_cast<mtt::Torrent*>(this)->files.progress.toBitfield(dataBitfield, dataSize);
@@ -165,43 +170,4 @@ std::vector<float> mttApi::Torrent::getFilesProgress()
 	}
 
 	return out;
-}
-
-bool mttApi::Torrent::getMetadataDownloadState(mtt::MetadataDownloadState& state)
-{
-	if (auto utm = static_cast<mtt::Torrent*>(this)->utmDl.get())
-	{
-		state = utm->state;
-
-		return true;
-	}
-
-	return false;
-}
-
-bool mttApi::Torrent::getMetadataDownloadLog(std::vector<std::string>& logs, size_t logStart)
-{
-	if (auto utm = static_cast<mtt::Torrent*>(this)->utmDl.get())
-	{
-		auto& events = utm->getEvents();
-
-		for (size_t i = logStart; i < events.size(); i++)
-		{
-			logs.push_back(events[i].toString());
-		}
-
-		return !logs.empty();
-	}
-
-	return false;
-}
-
-size_t mttApi::Torrent::getMetadataDownloadLogSize()
-{
-	if (auto utm = static_cast<mtt::Torrent*>(this)->utmDl.get())
-	{
-		return utm->getEvents().size();
-	}
-
-	return 0;
 }

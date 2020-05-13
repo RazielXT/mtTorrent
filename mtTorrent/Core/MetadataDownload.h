@@ -7,10 +7,11 @@
 #include "MetadataReconstruction.h"
 #include "Interface.h"
 #include "LogFile.h"
+#include "Api/MagnetDownload.h"
 
 namespace mtt
 {
-	class MetadataDownload : public IPeerListener
+	class MetadataDownload : public mttApi::MagnetDownload, public IPeerListener
 	{
 	public:
 
@@ -31,8 +32,10 @@ namespace mtt
 			std::string toString();
 		};
 
-		std::vector<EventInfo> getEvents();
-		uint32_t getEventsCount();
+		std::vector<EventInfo> getEvents(size_t startIndex = 0);
+		size_t getEventsCount();
+
+		std::vector<ActivePeerInfo> getPeersInfo();
 
 	private:
 

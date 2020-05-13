@@ -101,8 +101,8 @@ extern "C"
 			resp->activeStatus = torrent->getLastError();
 			resp->started = torrent->getStatus() == mttApi::Torrent::State::Started;
 
-			mtt::MetadataDownloadState utm;
-			resp->utmActive = torrent->getMetadataDownloadState(utm) && !utm.finished;
+			auto utm = torrent->getMagnetDownload();
+			resp->utmActive = utm && !utm->getState().finished;
 		}
 		else if (id == mtBI::MessageId::GetPeersInfo)
 		{
@@ -114,6 +114,26 @@ extern "C"
 			if (auto transfer = torrent->getFileTransfer())
 			{
 				auto peers = transfer->getPeersInfo();
+				resp->peers.resize(peers.size());
+
+				for (size_t i = 0; i < peers.size(); i++)
+				{
+					auto& peer = peers[i];
+					auto& out = resp->peers[i];
+					out.addr = peer.address;
+					out.progress = peer.percentage;
+					out.dlSpeed = peer.downloadSpeed;
+					out.upSpeed = peer.uploadSpeed;
+					out.client = peer.client;
+					out.country = peer.country;
+				}
+			}
+
+			if (resp->peers.empty() && torrent->getMagnetDownload())
+			{
+				auto utm = torrent->getMagnetDownload();
+
+				auto peers = utm->getPeersInfo();
 				resp->peers.resize(peers.size());
 
 				for (size_t i = 0; i < peers.size(); i++)
@@ -235,13 +255,14 @@ extern "C"
 			if (!torrent)
 				return mtt::Status::E_InvalidInput;
 
-			mtt::MetadataDownloadState utm;
-			if (!torrent->getMetadataDownloadState(utm))
+			auto utm = torrent->getMagnetDownload();
+			if (!utm)
 				return mtt::Status::E_NoData;
 
+			auto utmState = utm->getState();
 			auto resp = (mtBI::MagnetLinkProgress*) output;
-			resp->finished = utm.finished;
-			resp->progress = utm.partsCount == 0 ? 0 : utm.receivedParts / (float)utm.partsCount;
+			resp->finished = utmState.finished;
+			resp->progress = utmState.partsCount == 0 ? 0 : utmState.receivedParts / (float)utmState.partsCount;
 		}
 		else if (id == mtBI::MessageId::GetMagnetLinkProgressLogs)
 		{
@@ -251,18 +272,20 @@ extern "C"
 				return mtt::Status::E_InvalidInput;
 
 			auto resp = (mtBI::MagnetLinkProgressLogsResponse*) output;
-			resp->fullcount = (uint32_t)torrent->getMetadataDownloadLogSize();
+			resp->fullcount = 0;
 
-			if (resp->fullcount)
+			if (auto utm = torrent->getMagnetDownload())
 			{
-				std::vector<std::string> logs;
-				if (!torrent->getMetadataDownloadLog(logs, requestInfo->start))
-					return mtt::Status::E_NoData;
+				resp->fullcount = (uint32_t)utm->getDownloadLogSize();
 
-				resp->logs.resize(logs.size());
-				for (size_t i = 0; i < logs.size(); i++)
+				std::vector<std::string> logs;
+				if (utm->getDownloadLog(logs, requestInfo->start) > 0)
 				{
-					resp->logs[i] = logs[i];
+					resp->logs.resize(logs.size());
+					for (size_t i = 0; i < logs.size(); i++)
+					{
+						resp->logs[i] = logs[i];
+					}
 				}
 			}
 		}

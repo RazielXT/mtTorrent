@@ -418,9 +418,11 @@ extern "C"
 			if (!t)
 				return mtt::Status::E_InvalidInput;
 
-			mtt::MetadataDownloadState state;
-			if (!t->getMetadataDownloadState(state))
+			auto utm = t->getMagnetDownload();
+			if (!utm)
 				return mtt::Status::E_NoData;
+
+			mtt::MetadataDownloadState state = utm->getState();
 
 			js::StringBuffer s;
 			js::Writer<js::StringBuffer> writer(s);
@@ -456,8 +458,12 @@ extern "C"
 
 			uint32_t logStart = requestJs.HasMember("start") ? requestJs["start"].GetUint() : 0;
 
+			auto utm = t->getMagnetDownload();
+			if (!utm)
+				return mtt::Status::E_NoData;
+
 			std::vector<std::string> logs;
-			if (!t->getMetadataDownloadLog(logs, logStart))
+			if (utm->getDownloadLog(logs, logStart) == 0)
 				return mtt::Status::E_NoData;
 
 			writer.StartObject();

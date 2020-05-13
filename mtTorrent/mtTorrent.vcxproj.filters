@@ -235,6 +235,9 @@
     <ClCompile Include="utils\Uri.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Api\MagnetDownloadImpl.cpp">
+      <Filter>Source Files\Core\ApiImpl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Storage.h">
@@ -446,6 +449,9 @@
     </ClInclude>
     <ClInclude Include="utils\Uri.h">
       <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Api\MagnetDownload.h">
+      <Filter>Source Files\Core\Api</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
