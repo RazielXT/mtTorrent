@@ -306,9 +306,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AlertsManager.cpp" />
+    <ClCompile Include="Core\AlertsManager.cpp" />
     <ClCompile Include="Core\Api\CoreImpl.cpp" />
     <ClCompile Include="Core\Api\FileTransferImpl.cpp" />
+    <ClCompile Include="Core\Api\InterfaceImpl.cpp" />
     <ClCompile Include="Core\Api\ListenerImpl.cpp" />
     <ClCompile Include="Core\Api\MagnetDownloadImpl.cpp" />
     <ClCompile Include="Core\Api\PeersImpl.cpp" />
@@ -346,7 +347,6 @@
     <ClCompile Include="Core\TrackerManager.cpp" />
     <ClCompile Include="Core\UdpTrackerComm.cpp" />
     <ClCompile Include="Core\Uploader.cpp" />
-    <ClCompile Include="InterfaceImpl.cpp" />
     <ClCompile Include="Public\ModuleString.cpp" />
     <ClCompile Include="utils\Base32.cpp" />
     <ClCompile Include="utils\BencodeWriter.cpp" />
@@ -371,7 +371,6 @@
     <ClCompile Include="utils\UrlEncoding.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AlertsManager.h" />
     <ClInclude Include="Api\Configuration.h" />
     <ClInclude Include="Api\Core.h" />
     <ClInclude Include="Api\FileTransfer.h" />
@@ -380,6 +379,7 @@
     <ClInclude Include="Api\MagnetDownload.h" />
     <ClInclude Include="Api\Peers.h" />
     <ClInclude Include="Api\Torrent.h" />
+    <ClInclude Include="Core\AlertsManager.h" />
     <ClInclude Include="Core\Core.h" />
     <ClInclude Include="Core\Dht\Listener.h" />
     <ClInclude Include="Core\Files.h" />

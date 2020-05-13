@@ -211,9 +211,6 @@
     <ClCompile Include="Core\Api\CoreImpl.cpp">
       <Filter>Source Files\Core\ApiImpl</Filter>
     </ClCompile>
-    <ClCompile Include="InterfaceImpl.cpp">
-      <Filter>Source Files\Core\ApiImpl</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Api\ListenerImpl.cpp">
       <Filter>Source Files\Core\ApiImpl</Filter>
     </ClCompile>
@@ -226,9 +223,6 @@
     <ClCompile Include="Core\Api\FileTransferImpl.cpp">
       <Filter>Source Files\Core\ApiImpl</Filter>
     </ClCompile>
-    <ClCompile Include="AlertsManager.cpp">
-      <Filter>Source Files\Core\General</Filter>
-    </ClCompile>
     <ClCompile Include="Core\HttpsTrackerComm.cpp">
       <Filter>Source Files\Core\Torrent\Tracker</Filter>
     </ClCompile>
@@ -237,6 +231,12 @@
     </ClCompile>
     <ClCompile Include="Core\Api\MagnetDownloadImpl.cpp">
       <Filter>Source Files\Core\ApiImpl</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Api\InterfaceImpl.cpp">
+      <Filter>Source Files\Core\ApiImpl</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\AlertsManager.cpp">
+      <Filter>Source Files\Core\General</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -438,9 +438,6 @@
     <ClInclude Include="Public\Alerts.h">
       <Filter>Source Files\Public</Filter>
     </ClInclude>
-    <ClInclude Include="AlertsManager.h">
-      <Filter>Source Files\Core\General</Filter>
-    </ClInclude>
     <ClInclude Include="Public\ModuleArray.h">
       <Filter>Source Files\Public</Filter>
     </ClInclude>
@@ -452,6 +449,9 @@
     </ClInclude>
     <ClInclude Include="Api\MagnetDownload.h">
       <Filter>Source Files\Core\Api</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\AlertsManager.h">
+      <Filter>Source Files\Core\General</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
