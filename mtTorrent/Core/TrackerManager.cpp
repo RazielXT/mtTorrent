@@ -139,7 +139,14 @@ void mtt::TrackerManager::onTrackerFail(Tracker* t)
 		{
 			trackerInfo->httpFallbackUsed = true;
 			trackerInfo->uri.protocol = "http";
-			start(trackerInfo);
+
+			torrent->service.io.post([this, trackerInfo]()
+				{
+					trackerInfo->comm.reset();
+
+					std::lock_guard<std::mutex> guard(trackersMutex);
+					start(trackerInfo);
+				});
 		}
 		else
 		{
