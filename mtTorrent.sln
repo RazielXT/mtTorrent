@@ -9,8 +9,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mtTorrentLiteGui", "mtTorre
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "countryIpListParser", "countryIpListParser\countryIpListParser.vcxproj", "{841FA89C-34F1-4180-BECC-193231E68E8F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "test\test.vcxproj", "{DE7B6579-4E15-4B25-9214-E738575419FD}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SdkExample", "SdkExample\SdkExample.vcxproj", "{8D1AE2D0-94D2-4705-91B2-CA824F565537}"
 EndProject
 Global
@@ -87,26 +85,6 @@ Global
 		{841FA89C-34F1-4180-BECC-193231E68E8F}.ReleaseWithSSL|x64.Build.0 = Release|x64
 		{841FA89C-34F1-4180-BECC-193231E68E8F}.ReleaseWithSSL|x86.ActiveCfg = Release|Win32
 		{841FA89C-34F1-4180-BECC-193231E68E8F}.ReleaseWithSSL|x86.Build.0 = Release|Win32
-		{DE7B6579-4E15-4B25-9214-E738575419FD}.Debug|x64.ActiveCfg = Debug|x64
-		{DE7B6579-4E15-4B25-9214-E738575419FD}.Debug|x64.Build.0 = Debug|x64
-		{DE7B6579-4E15-4B25-9214-E738575419FD}.Debug|x86.ActiveCfg = Debug|Win32
-		{DE7B6579-4E15-4B25-9214-E738575419FD}.Debug|x86.Build.0 = Debug|Win32
-		{DE7B6579-4E15-4B25-9214-E738575419FD}.DebugStandalone|x64.ActiveCfg = Debug|x64
-		{DE7B6579-4E15-4B25-9214-E738575419FD}.DebugStandalone|x64.Build.0 = Debug|x64
-		{DE7B6579-4E15-4B25-9214-E738575419FD}.DebugStandalone|x86.ActiveCfg = Debug|Win32
-		{DE7B6579-4E15-4B25-9214-E738575419FD}.DebugStandalone|x86.Build.0 = Debug|Win32
-		{DE7B6579-4E15-4B25-9214-E738575419FD}.Release Standalone|x64.ActiveCfg = Release|x64
-		{DE7B6579-4E15-4B25-9214-E738575419FD}.Release Standalone|x64.Build.0 = Release|x64
-		{DE7B6579-4E15-4B25-9214-E738575419FD}.Release Standalone|x86.ActiveCfg = Release|Win32
-		{DE7B6579-4E15-4B25-9214-E738575419FD}.Release Standalone|x86.Build.0 = Release|Win32
-		{DE7B6579-4E15-4B25-9214-E738575419FD}.Release|x64.ActiveCfg = Release|x64
-		{DE7B6579-4E15-4B25-9214-E738575419FD}.Release|x64.Build.0 = Release|x64
-		{DE7B6579-4E15-4B25-9214-E738575419FD}.Release|x86.ActiveCfg = Release|Win32
-		{DE7B6579-4E15-4B25-9214-E738575419FD}.Release|x86.Build.0 = Release|Win32
-		{DE7B6579-4E15-4B25-9214-E738575419FD}.ReleaseWithSSL|x64.ActiveCfg = Release|x64
-		{DE7B6579-4E15-4B25-9214-E738575419FD}.ReleaseWithSSL|x64.Build.0 = Release|x64
-		{DE7B6579-4E15-4B25-9214-E738575419FD}.ReleaseWithSSL|x86.ActiveCfg = Release|Win32
-		{DE7B6579-4E15-4B25-9214-E738575419FD}.ReleaseWithSSL|x86.Build.0 = Release|Win32
 		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.Debug|x64.ActiveCfg = Debug|x64
 		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.Debug|x64.Build.0 = Debug|x64
 		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.Debug|x86.ActiveCfg = Debug|Win32
