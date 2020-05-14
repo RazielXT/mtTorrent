@@ -7,6 +7,12 @@
 *.cfg
 *.cachefile
 x64/
+Win32/
 mtTorrent/x64/
+mtTorrent/Win32/
 .vs/
 test/
+SdkExample/x64/
+SdkExample/Win32/
+mtTorrentLiteGui/x64/
+mtTorrentLiteGui/Win32/

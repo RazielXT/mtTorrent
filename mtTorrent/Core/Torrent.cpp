@@ -431,9 +431,9 @@ float mtt::Torrent::currentSelectionProgress()
 	return progress;
 }
 
-size_t mtt::Torrent::downloaded()
+uint64_t mtt::Torrent::downloaded()
 {
-	return (size_t)(infoFile.info.fullSize * (double)files.progress.getPercentage()) + (fileTransfer ? fileTransfer->getUnfinishedPiecesDownloadSize() : 0);
+	return (uint64_t)(infoFile.info.fullSize * (double)files.progress.getPercentage()) + (fileTransfer ? fileTransfer->getUnfinishedPiecesDownloadSize() : 0);
 }
 
 size_t mtt::Torrent::downloadSpeed()
@@ -441,7 +441,7 @@ size_t mtt::Torrent::downloadSpeed()
 	return fileTransfer ? fileTransfer->getDownloadSpeed() : 0;
 }
 
-size_t mtt::Torrent::uploaded()
+uint64_t mtt::Torrent::uploaded()
 {
 	return fileTransfer ? fileTransfer->getUploadSum() : 0;
 }
@@ -451,7 +451,7 @@ size_t mtt::Torrent::uploadSpeed()
 	return fileTransfer ? fileTransfer->getUploadSpeed() : 0;
 }
 
-size_t mtt::Torrent::dataLeft()
+uint64_t mtt::Torrent::dataLeft()
 {
 	return infoFile.info.fullSize - downloaded();
 }

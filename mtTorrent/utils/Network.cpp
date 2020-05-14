@@ -123,7 +123,10 @@ bool openSslSocket(ssl_socket& sock, tcp::resolver& resolver, const char* hostna
 
 	tcp::resolver::query query(hostname, "https");
 	asio::error_code ec;
-	asio::connect(sock.lowest_layer(), resolver.resolve(query), ec);
+	auto resolveResult = resolver.resolve(query, ec);
+	if (ec)
+		return false;
+	asio::connect(sock.lowest_layer(), resolveResult, ec);
 	if (ec)
 		return false;
 

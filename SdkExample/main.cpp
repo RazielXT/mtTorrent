@@ -46,9 +46,11 @@ int main()
 		{
 			if (t->getStatus() == mttApi::Torrent::State::DownloadUtm)
 			{
-				mtt::MetadataDownloadState utmState;
-				if(t->getMetadataDownloadState(utmState))
-					printf("Name: %s, Metadata Progress: %d / %d, Found peers: %d\n", t->name().c_str(), (int)utmState.receivedParts, (int) utmState.partsCount, (int) t->getPeers()->receivedCount());
+				if (auto magnet = t->getMagnetDownload())
+				{
+					mtt::MetadataDownloadState utmState = magnet->getState();
+					printf("Name: %s, Metadata Progress: %d / %d, Found peers: %d\n", t->name().c_str(), (int)utmState.receivedParts, (int)utmState.partsCount, (int)t->getPeers()->receivedCount());
+				}
 			}
 			else
 				printf("Name: %s, Progress: %d, Speed: %d, Found peers: %d\n", t->name().c_str(), (int)t->downloaded(), (int)t->getFileTransfer()->getDownloadSpeed(), (int)t->getPeers()->receivedCount());

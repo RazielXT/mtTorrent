@@ -284,13 +284,13 @@ int mtt::BencodeParser::Object::getInt() const
 	return strtol(info.data, 0, 10);
 }
 
-size_t mtt::BencodeParser::Object::getBigInt(const char* name) const
+uint64_t mtt::BencodeParser::Object::getBigInt(const char* name) const
 {
 	auto o = getIntItem(name);
 	return o ? o->getBigInt() : 0;
 }
 
-size_t mtt::BencodeParser::Object::getBigInt() const
+uint64_t mtt::BencodeParser::Object::getBigInt() const
 {
 	return strtoull(info.data, 0, 10);
 }

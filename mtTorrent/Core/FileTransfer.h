@@ -30,7 +30,7 @@ namespace mtt
 		virtual void progressUpdated(PeerCommunication*, uint32_t) override;
 
 		size_t getDownloadSpeed();
-		size_t getUploadSum();
+		uint64_t getUploadSum();
 		size_t getUploadSpeed();
 
 		size_t getUnfinishedPiecesDownloadSize();
@@ -84,7 +84,7 @@ namespace mtt
 		std::shared_ptr<ScheduledTimer> refreshTimer;
 
 		void updateMeasures();
-		std::vector<std::pair<PeerCommunication*, std::pair<size_t, size_t>>> lastSpeedMeasure;
+		std::vector<std::pair<PeerCommunication*, std::pair<uint64_t, uint64_t>>> lastSpeedMeasure;
 
 		void evalCurrentPeers();
 		void removePeers(std::vector<uint32_t> sortedIdx);

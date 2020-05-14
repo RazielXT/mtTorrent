@@ -169,8 +169,8 @@ uint32_t mtt::HttpTracker::readAnnounceResponse(const char* buffer, size_t buffe
 				{
 					PacketReader reader(peers->data, peers->size);
 
-					auto count = peers->size / 6;
-					for (size_t i = 0; i < count; i++)
+					int count = peers->size / 6;
+					for (int i = 0; i < count; i++)
 					{
 						uint32_t addr = swap32(reader.pop32());
 						response.peers.push_back(Addr(addr, reader.pop16()));

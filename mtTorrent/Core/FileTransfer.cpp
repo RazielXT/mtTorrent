@@ -159,7 +159,7 @@ void mtt::FileTransfer::progressUpdated(PeerCommunication* p, uint32_t idx)
 	evaluateNextRequests(p);
 }
 
-size_t mtt::FileTransfer::getUploadSum()
+uint64_t mtt::FileTransfer::getUploadSum()
 {
 	return uploader.uploaded;
 }
@@ -215,6 +215,7 @@ std::vector<mtt::ActivePeerInfo> mtt::FileTransfer::getPeersInfo()
 			{
 				out[i].downloadSpeed = active.downloadSpeed;
 				out[i].uploadSpeed = active.uploadSpeed;
+				break;
 			}
 		}
 
@@ -439,7 +440,7 @@ void mtt::FileTransfer::evalCurrentPeers()
 void mtt::FileTransfer::updateMeasures()
 {
 	auto& freshPieces = torrent->files.freshPieces;
-	std::vector<std::pair<PeerCommunication*, std::pair<size_t, size_t>>> currentMeasure;
+	std::vector<std::pair<PeerCommunication*, std::pair<uint64_t, uint64_t>>> currentMeasure;
 
 	{
 		std::lock_guard<std::mutex> guard(peersMutex);

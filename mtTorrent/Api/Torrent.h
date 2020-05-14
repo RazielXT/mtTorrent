@@ -39,9 +39,9 @@ namespace mttApi
 		API_EXPORT std::string name();
 		API_EXPORT float currentProgress();
 		API_EXPORT float currentSelectionProgress();
-		API_EXPORT size_t downloaded();
-		API_EXPORT size_t uploaded();
-		API_EXPORT size_t dataLeft();
+		API_EXPORT uint64_t downloaded();
+		API_EXPORT uint64_t uploaded();
+		API_EXPORT uint64_t dataLeft();
 		API_EXPORT bool finished();
 		API_EXPORT bool selectionFinished();
 

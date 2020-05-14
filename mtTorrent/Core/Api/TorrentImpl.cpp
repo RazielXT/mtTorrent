@@ -73,17 +73,17 @@ float mttApi::Torrent::currentSelectionProgress()
 	return static_cast<mtt::Torrent*>(this)->currentSelectionProgress();
 }
 
-size_t mttApi::Torrent::downloaded()
+uint64_t mttApi::Torrent::downloaded()
 {
 	return static_cast<mtt::Torrent*>(this)->downloaded();
 }
 
-size_t mttApi::Torrent::uploaded()
+uint64_t mttApi::Torrent::uploaded()
 {
 	return static_cast<mtt::Torrent*>(this)->uploaded();
 }
 
-size_t mttApi::Torrent::dataLeft()
+uint64_t mttApi::Torrent::dataLeft()
 {
 	return static_cast<mtt::Torrent*>(this)->dataLeft();
 }

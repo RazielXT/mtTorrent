@@ -33,8 +33,8 @@ namespace mtt
 			const Object* getIntItem(const char* name) const;
 			int getInt(const char* name) const;
 			int getInt() const;
-			size_t getBigInt(const char* name) const;
-			size_t getBigInt() const;
+			uint64_t getBigInt(const char* name) const;
+			uint64_t getBigInt() const;
 
 			template <typename T>
 			T getValueOr(const char* name, T def) const

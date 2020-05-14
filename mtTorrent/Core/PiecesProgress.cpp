@@ -166,7 +166,7 @@ void mtt::PiecesProgress::fromBitfield(DataBuffer& bitfield)
 
 	init(maxPiecesCount);
 
-	for (int i = 0; i < maxPiecesCount; i++)
+	for (size_t i = 0; i < maxPiecesCount; i++)
 	{
 		size_t idx = static_cast<size_t>(i / 8.0f);
 		unsigned char bitmask = 128 >> i % 8;
@@ -209,7 +209,7 @@ bool mtt::PiecesProgress::toBitfield(uint8_t* dataBitfield, size_t dataSize)
 	if (dataSize < getBitfieldSize())
 		return false;
 
-	for (int i = 0; i < pieces.size(); i++)
+	for (uint32_t i = 0; i < pieces.size(); i++)
 	{
 		if (!hasPiece(i))
 			continue;

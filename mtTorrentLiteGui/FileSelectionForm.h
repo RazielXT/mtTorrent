@@ -33,9 +33,9 @@ namespace GuiLite {
 		}
 
 		bool initialized = false;
-		size_t requiredSize = 0;
+		uint64_t requiredSize = 0;
 
-		const char* validatePath(System::String^ path, size_t size)
+		const char* validatePath(System::String^ path, uint64_t size)
 		{
 			if (!path->Contains(":"))
 				return "Invalid path";
@@ -50,7 +50,7 @@ namespace GuiLite {
 			if (!drive->IsReady)
 				return "Invalid drive";
 
-			if ((size_t)drive->AvailableFreeSpace < size)
+			if ((uint64_t)drive->AvailableFreeSpace < size)
 				return "Not enough space";
 
 			return nullptr;

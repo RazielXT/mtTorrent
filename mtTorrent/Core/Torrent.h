@@ -39,11 +39,11 @@ namespace mtt
 		std::string name();
 		float currentProgress();
 		float currentSelectionProgress();
-		size_t downloaded();
+		uint64_t downloaded();
 		size_t downloadSpeed();
-		size_t uploaded();
+		uint64_t uploaded();
 		size_t uploadSpeed();
-		size_t dataLeft();
+		uint64_t dataLeft();
 		bool finished();
 		bool selectionFinished();
 

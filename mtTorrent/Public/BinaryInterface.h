@@ -122,7 +122,7 @@ namespace mtBI
 	struct TorrentFile
 	{
 		mtt::string name;
-		size_t size;
+		uint64_t size;
 		bool selected;
 		uint8_t priority;
 	};
@@ -130,11 +130,11 @@ namespace mtBI
 	struct TorrentInfo
 	{
 		mtt::array<TorrentFile> files;
-		size_t fullsize;
+		uint64_t fullsize;
 		mtt::string name;
 		mtt::string downloadLocation;
 		mtt::string createdBy;
-		size_t creationDate;
+		int creationDate;
 	};
 
 	struct TorrentStateInfo
@@ -142,10 +142,10 @@ namespace mtBI
 		mtt::string name;
 		float progress;
 		float selectionProgress;
-		size_t downloaded;
-		size_t downloadSpeed;
-		size_t uploaded;
-		size_t uploadSpeed;
+		uint64_t downloaded;
+		uint32_t downloadSpeed;
+		uint64_t uploaded;
+		uint32_t uploadSpeed;
 		uint32_t foundPeers;
 		uint32_t connectedPeers;
 		bool started;
@@ -158,8 +158,8 @@ namespace mtBI
 	struct PeerInfo
 	{
 		float progress;
-		size_t dlSpeed;
-		size_t upSpeed;
+		uint32_t dlSpeed;
+		uint32_t upSpeed;
 		mtt::string addr;
 		mtt::string client;
 		mtt::string country;

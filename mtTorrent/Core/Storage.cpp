@@ -161,7 +161,7 @@ void mtt::Storage::loadPiece(File& file, CachedPiece& piece)
 
 	uint32_t bufferDataPos = (piece.index == file.startPieceIndex) ? file.startPiecePos : 0;
 
-	auto dataSize = (uint32_t)std::min((size_t)pieceSize, file.size);
+	auto dataSize = (uint32_t)std::min((uint64_t)pieceSize, file.size);
 	if (file.startPieceIndex == piece.index)
 		dataSize = std::min(pieceSize - file.startPiecePos, dataSize);
 	else if (file.endPieceIndex == piece.index)
@@ -277,7 +277,7 @@ void mtt::Storage::flush(File& file)
 	createPath(path);
 
 	bool fileExists = std::filesystem::exists(path);
-	size_t existingSize = fileExists ? std::filesystem::file_size(path) : 0;
+	uint64_t existingSize = fileExists ? std::filesystem::file_size(path) : 0;
 
 	if (fileExists && existingSize == file.size)
 	{
@@ -288,10 +288,10 @@ void mtt::Storage::flush(File& file)
 			{
 				auto pieceDataPos = file.startPieceIndex == p->index ? file.startPiecePos : 0;
 				auto fileDataPos = file.startPieceIndex == p->index ? 0 : (pieceSize - file.startPiecePos + (p->index - file.startPieceIndex - 1) * pieceSize);
-				auto pieceDataSize = std::min(file.size, p->data.size() - pieceDataPos);
+				auto pieceDataSize = std::min(file.size, (uint64_t)p->data.size() - pieceDataPos);
 
 				if (file.endPieceIndex == p->index)
-					pieceDataSize = std::min(pieceDataSize, (size_t)file.endPiecePos);
+					pieceDataSize = std::min(pieceDataSize, (uint64_t)file.endPiecePos);
 
 				fileOut.seekp(fileDataPos);
 				fileOut.write((const char*)p->data.data() + pieceDataPos, pieceDataSize);
@@ -306,7 +306,7 @@ void mtt::Storage::flush(File& file)
 			{
 				if (p->index == file.startPieceIndex)
 				{
-					tempFileOut.write((const char*)p->data.data() + file.startPiecePos, std::min(file.size, p->data.size() - file.startPiecePos));
+					tempFileOut.write((const char*)p->data.data() + file.startPiecePos, std::min(file.size, (uint64_t)p->data.size() - file.startPiecePos));
 				}
 				else if (p->index == file.endPieceIndex)
 				{
@@ -351,7 +351,7 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 
 			if (fileIn)
 			{
-				size_t existingSize = std::filesystem::file_size(fullpath);
+				uint64_t existingSize = std::filesystem::file_size(fullpath);
 
 				if (existingSize == currentFile->size)
 				{
@@ -493,7 +493,7 @@ mtt::Status mtt::Storage::validatePath(DownloadSelection& selection)
 	if (!std::filesystem::exists(root, ec))
 		return Status::E_InvalidPath;
 
-	size_t fullsize = 0;
+	uint64_t fullsize = 0;
 	for (auto& f : selection.files)
 	{
 		if (f.selected)

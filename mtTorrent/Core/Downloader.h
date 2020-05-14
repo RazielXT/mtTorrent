@@ -16,8 +16,8 @@ namespace mtt
 		uint32_t downloadSpeed = 0;
 		uint32_t uploadSpeed = 0;
 
-		size_t downloaded = 0;
-		size_t uploaded = 0;
+		uint64_t downloaded = 0;
+		uint64_t uploaded = 0;
 
 		struct RequestedPiece
 		{

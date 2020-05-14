@@ -16,7 +16,7 @@ namespace mtt
 	struct File
 	{
 		std::vector<std::string> path;
-		size_t size;
+		uint64_t size;
 		uint32_t startPieceIndex;
 		uint32_t startPiecePos;
 		uint32_t endPieceIndex;
@@ -45,7 +45,7 @@ namespace mtt
 		std::vector<PieceInfo> pieces;
 		uint32_t pieceSize = 0;
 		size_t expectedBitfieldSize = 0;
-		size_t fullSize = 0;
+		uint64_t fullSize = 0;
 
 		API_EXPORT std::vector<PieceBlockInfo> makePieceBlocksInfo(uint32_t idx);
 		API_EXPORT PieceBlockInfo getPieceBlockInfo(uint32_t idx, uint32_t blockIdx);

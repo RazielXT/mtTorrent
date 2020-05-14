@@ -254,7 +254,7 @@ struct
 }
 fileSelection;
 
-String^ formatBytes(size_t bytes)
+String^ formatBytes(uint64_t bytes)
 {
 	const char* type = " MB";
 
@@ -282,15 +282,15 @@ String^ formatBytes(size_t bytes)
 	return str + gcnew String(type);
 }
 
-String^ formatBytesSpeed(size_t bytes)
+String^ formatBytesSpeed(uint64_t bytes)
 {
 	return formatBytes(bytes) + "/s";
 }
 
 void updateSelectionFormFooter()
 {
-	size_t selectedSize = 0;
-	size_t fullsize = 0;
+	uint64_t selectedSize = 0;
+	uint64_t fullsize = 0;
 	uint32_t selectedCount = 0;
 
 	for (auto& f : fileSelection.info.files)
@@ -322,7 +322,7 @@ void updateSelectionFormFooter()
 
 void fileSelectionChanged(int id, bool selected)
 {
-	if (id >= fileSelection.info.files.size())
+	if (id >= (int)fileSelection.info.files.size())
 		return;
 
 	fileSelection.info.files[id].selected = selected;
@@ -1168,8 +1168,8 @@ void refreshUi()
 				{
 					speedInfo = formatBytesSpeed(info.downloadSpeed);
 					speedInfo += " (";
-					size_t leftBytes = ((size_t)(info.downloaded / info.selectionProgress)) - info.downloaded;
-					size_t leftSeconds = leftBytes / info.downloadSpeed;
+					uint64_t leftBytes = ((uint64_t)(info.downloaded / info.selectionProgress)) - info.downloaded;
+					uint64_t leftSeconds = leftBytes / info.downloadSpeed;
 					TimeSpan time = System::TimeSpan::FromSeconds((double)leftSeconds);
 					speedInfo += time.ToString("d\\d\\ hh\\hmm\\mss\\s")->TrimStart(' ', 'd', 'h', 'm', 's', '0');
 					speedInfo += ")";
@@ -1374,7 +1374,7 @@ void refreshUi()
 			{
 				int idx = Convert::ToInt32(filesGrid->Rows[i]->Cells[0]->Value->ToString());
 
-				if(idx < progressInfo.files.size())
+				if(idx < (int)progressInfo.files.size())
 					filesGrid->Rows[i]->Cells[2]->Value = float(progressInfo.files[idx].progress).ToString("P");
 			}
 
