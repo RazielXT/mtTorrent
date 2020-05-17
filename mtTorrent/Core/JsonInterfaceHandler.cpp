@@ -1,3 +1,5 @@
+#ifdef MTT_JSON_INTERFACE
+
 #include "Api/Core.h"
 #include "Api/Configuration.h"
 #include "Public/JsonInterface.h"
@@ -6,7 +8,7 @@
 #include "rapidjson/writer.h"
 #include <time.h>
 
-std::shared_ptr<mttApi::Core> core;
+extern std::shared_ptr<mttApi::Core> core;
 
 namespace js = rapidjson;
 
@@ -589,3 +591,5 @@ extern "C"
 		return mtt::Status::Success;
 	}
 }
+
+#endif // MTT_JSON_INTERFACE

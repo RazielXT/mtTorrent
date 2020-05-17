@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <time.h>
 
-extern std::shared_ptr<mttApi::Core> core;
+std::shared_ptr<mttApi::Core> core;
 
 extern "C"
 {
