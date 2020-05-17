@@ -29,6 +29,20 @@ void mtt::AlertsManager::metadataAlert(AlertId id, const uint8_t* hash)
 	alerts.push_back(std::move(alert));
 }
 
+void mtt::AlertsManager::configAlert(AlertId id, config::ValueType type)
+{
+	if (!isAlertRegistered(id))
+		return;
+
+	auto alert = std::make_unique<ConfigAlert>();
+	alert->id = id;
+	alert->configType = type;
+
+	std::lock_guard<std::mutex> guard(alertsMutex);
+	alerts.push_back(std::move(alert));
+}
+
+
 mtt::AlertsManager::AlertsManager()
 {
 	ptr = this;

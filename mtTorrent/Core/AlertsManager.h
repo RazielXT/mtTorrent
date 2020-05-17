@@ -12,6 +12,7 @@ namespace mtt
 		static AlertsManager& Get();
 		void torrentAlert(AlertId id, const uint8_t* hash);
 		void metadataAlert(AlertId id, const uint8_t* hash);
+		void configAlert(AlertId id, config::ValueType type);
 
 		void registerAlerts(uint32_t alertMask);
 		std::vector<std::unique_ptr<mtt::AlertMessage>> popAlerts();

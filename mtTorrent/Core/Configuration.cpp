@@ -6,6 +6,7 @@
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "utils/HexEncoding.h"
+#include "AlertsManager.h"
 
 namespace mtt
 {
@@ -20,6 +21,8 @@ namespace mtt
 
 		static void triggerChange(ValueType type)
 		{
+			AlertsManager::Get().configAlert(AlertId::ConfigChanged, type);
+
 			std::lock_guard<std::mutex> guard(cbMutex);
 
 			for (auto cb : callbacks)

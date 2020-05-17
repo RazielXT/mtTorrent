@@ -4,6 +4,7 @@
 #include "Public\Status.h"
 #include "Public\Alerts.h"
 #include <atomic>
+#include "Api\Configuration.h"
 
 #ifdef ASIO_STANDALONE
 #define API_EXPORT __declspec(dllexport)
@@ -177,5 +178,12 @@ namespace mtt
 	struct MetadataAlert : public TorrentAlert
 	{
 		static const mtt::AlertCategory category = mtt::AlertCategory::Metadata;
+	};
+
+	struct ConfigAlert : public AlertMessage
+	{
+		static const mtt::AlertCategory category = mtt::AlertCategory::Config;
+
+		mtt::config::ValueType configType;
 	};
 }

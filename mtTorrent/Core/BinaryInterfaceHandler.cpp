@@ -401,6 +401,8 @@ extern "C"
 						memcpy(out->alerts[i].hash, t->hash, 20);
 					if (auto t = alerts[i]->getAs<mtt::MetadataAlert>())
 						memcpy(out->alerts[i].hash, t->hash, 20);
+					if (auto t = alerts[i]->getAs<mtt::ConfigAlert>())
+						out->alerts[i].type = (int)t->configType;
 				}
 			}
 		}
