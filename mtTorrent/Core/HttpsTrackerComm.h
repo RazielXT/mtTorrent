@@ -25,8 +25,6 @@ namespace mtt
 		bool initializeStream();
 		void fail();
 
-		void onTcpClosed(int code);
-		void onTcpConnected();
 		void onTcpReceived(std::string&);
 
 		std::shared_ptr<ssl_socket> socket;

@@ -68,17 +68,6 @@ void mtt::HttpsTrackerComm::fail()
 	}
 }
 
-void mtt::HttpsTrackerComm::onTcpClosed(int)
-{
-	if (info.state != TrackerState::Announced)
-		fail();
-}
-
-void mtt::HttpsTrackerComm::onTcpConnected()
-{
-	info.state = std::max(info.state, TrackerState::Alive);
-}
-
 void mtt::HttpsTrackerComm::onTcpReceived(std::string& responseData)
 {
 	if (info.state == TrackerState::Announcing || info.state == TrackerState::Reannouncing)
