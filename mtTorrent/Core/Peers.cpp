@@ -180,7 +180,7 @@ std::shared_ptr<mtt::PeerCommunication> mtt::Peers::getPeer(PeerCommunication* p
 	return nullptr;
 }
 
-void mtt::Peers::add(std::shared_ptr<TcpAsyncStream> stream)
+void mtt::Peers::add(std::shared_ptr<TcpAsyncLimitedStream> stream)
 {
 	if (torrent->state == mttApi::Torrent::State::Stopped)
 		return;

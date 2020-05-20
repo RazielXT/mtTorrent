@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "utils/TcpAsyncStream.h"
+#include "utils/TcpAsyncLimitedStream.h"
 #include "PeerMessage.h"
 #include "ExtensionProtocol.h"
 #include "IPeerListener.h"
@@ -49,7 +49,7 @@ namespace mtt
 		PeerCommunication(TorrentInfo& torrent, IPeerListener& listener);
 		~PeerCommunication();
 
-		void setStream(std::shared_ptr<TcpAsyncStream> stream);
+		void setStream(std::shared_ptr<TcpAsyncLimitedStream> stream);
 
 		PeerInfo info;
 		PeerCommunicationState state;
@@ -103,7 +103,7 @@ namespace mtt
 
 		TorrentInfo& torrent;
 
-		std::shared_ptr<TcpAsyncStream> stream;
+		std::shared_ptr<TcpAsyncLimitedStream> stream;
 
 		std::mutex read_mutex;
 		mtt::PeerMessage readNextStreamMessage();
@@ -113,6 +113,7 @@ namespace mtt
 		void dataReceived();
 		void connectionClosed(int);
 
+		void initializeBandwidth();
 		void initializeCallbacks();
 		void resetState();
 	};

@@ -78,6 +78,18 @@ namespace mtt
 			}
 		}
 
+		API_EXPORT void setValues(const External::Transfer& val)
+		{
+			bool changed = val.maxDownloadSpeed != external.transfer.maxDownloadSpeed;
+			changed |= val.maxUploadSpeed != external.transfer.maxUploadSpeed;
+
+			if (changed)
+			{
+				external.transfer = val;
+				triggerChange(ValueType::Transfer);
+			}
+		}
+
 		static void fromJson(rapidjson::Value& externalSettings)
 		{
 			auto conn = externalSettings.FindMember("connection");
@@ -98,6 +110,15 @@ namespace mtt
 			{
 				if (dht->value.HasMember("enabled"))
 					external.dht.enable = dht->value["enabled"].GetBool();
+			}
+
+			auto tran = externalSettings.FindMember("transfer");
+			if (tran != externalSettings.MemberEnd())
+			{
+				if (tran->value.HasMember("maxDownloadSpeed"))
+					external.transfer.maxDownloadSpeed = (uint32_t)tran->value["maxDownloadSpeed"].GetUint();
+				if (tran->value.HasMember("maxUploadSpeed"))
+					external.transfer.maxUploadSpeed = (uint32_t)tran->value["maxUploadSpeed"].GetUint();
 			}
 
 			auto files = externalSettings.FindMember("files");
@@ -284,6 +305,14 @@ namespace mtt
 			{
 				writer.StartObject();
 				writer.Key("enabled"); writer.Bool(dht.enable);
+				writer.EndObject();
+			}
+
+			writer.Key("transfer");
+			{
+				writer.StartObject();
+				writer.Key("maxDownloadSpeed"); writer.Uint(transfer.maxDownloadSpeed);
+				writer.Key("maxUploadSpeed"); writer.Uint(transfer.maxUploadSpeed);
 				writer.EndObject();
 			}
 

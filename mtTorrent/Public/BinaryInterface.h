@@ -52,6 +52,8 @@ namespace mtBI
 		mtt::string directory;
 		uint32_t maxConnections;
 		bool upnpEnabled;
+		uint32_t maxDownloadSpeed;
+		uint32_t maxUploadSpeed;
 	};
 
 	struct PiecesInfo
@@ -201,6 +203,7 @@ namespace mtBI
 	{
 		mtt::AlertId id;
 		uint8_t hash[20];
+		int type = 0;
 	};
 
 	struct AlertsList

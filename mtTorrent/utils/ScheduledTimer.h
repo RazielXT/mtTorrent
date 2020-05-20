@@ -1,6 +1,7 @@
 #pragma once
 #include <asio.hpp>
 #include <functional>
+#include <chrono>
 
 struct ScheduledTimer : public std::enable_shared_from_this<ScheduledTimer>
 {
@@ -10,6 +11,8 @@ struct ScheduledTimer : public std::enable_shared_from_this<ScheduledTimer>
 	~ScheduledTimer();
 
 	void schedule(uint32_t secondsOffset);
+	void schedule(std::chrono::milliseconds time);
+
 	void disable();
 	uint32_t getSecondsTillNextUpdate();
 

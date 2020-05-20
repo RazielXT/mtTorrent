@@ -238,6 +238,12 @@
     <ClCompile Include="Core\AlertsManager.cpp">
       <Filter>Source Files\Core\General</Filter>
     </ClCompile>
+    <ClCompile Include="utils\TcpAsyncLimitedStream.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\Bandwidth.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Storage.h">
@@ -452,6 +458,12 @@
     </ClInclude>
     <ClInclude Include="Core\AlertsManager.h">
       <Filter>Source Files\Core\General</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\TcpAsyncLimitedStream.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\Bandwidth.h">
+      <Filter>Source Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

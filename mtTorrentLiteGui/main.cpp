@@ -47,6 +47,8 @@ void applySettings(GuiLite::SettingsForm^ form)
 	info.udpPort = (unsigned int)form->udpPortNumeric->Value;
 	info.tcpPort = (unsigned int)form->tcpPortNumeric->Value;
 	info.upnpEnabled = form->upnpMapCheckBox->Checked;
+	info.maxDownloadSpeed = (unsigned int)form->numericDlSpeed->Value*1024;
+	info.maxUploadSpeed = (unsigned int)form->numericUpSpeed->Value*1024;
 
 	IoctlFunc(mtBI::MessageId::SetSettings, &info, nullptr);
 }
@@ -419,18 +421,29 @@ void refreshTorrentInfo(uint8_t* hash)
 	GuiLite::MainForm::instance->torrentInfoLabel->Clear();
 	auto infoLines = GuiLite::MainForm::instance->torrentInfoLabel;
 
-	infoLines->AppendText(gcnew String(info.name.data, 0, (int)info.name.length, System::Text::Encoding::UTF8));
-	infoLines->AppendText(Environment::NewLine);
-	infoLines->AppendText(Environment::NewLine);
-	infoLines->AppendText("Total size: ");
-	infoLines->AppendText(formatBytes(info.fullsize));
-	infoLines->AppendText(Environment::NewLine);
-	infoLines->AppendText(Environment::NewLine);
-	infoLines->AppendText("Save in: \t");
-	info.downloadLocation.append(info.name);
-	infoLines->AppendText(gcnew String(info.downloadLocation.data, 0, (int)info.downloadLocation.length, System::Text::Encoding::UTF8));
-	infoLines->AppendText(Environment::NewLine);
-	infoLines->AppendText(Environment::NewLine);
+	if (info.name.length)
+	{
+		infoLines->AppendText(gcnew String(info.name.data, 0, (int)info.name.length, System::Text::Encoding::UTF8));
+		infoLines->AppendText(Environment::NewLine);
+		infoLines->AppendText(Environment::NewLine);
+
+	}
+	if (info.fullsize)
+	{
+		infoLines->AppendText("Total size: ");
+		infoLines->AppendText(formatBytes(info.fullsize));
+		infoLines->AppendText(Environment::NewLine);
+		infoLines->AppendText(Environment::NewLine);
+	}
+	if (info.downloadLocation.length)
+	{
+		infoLines->AppendText("Save in: \t");
+		info.downloadLocation.append(info.name);
+		infoLines->AppendText(gcnew String(info.downloadLocation.data, 0, (int)info.downloadLocation.length, System::Text::Encoding::UTF8));
+		infoLines->AppendText(Environment::NewLine);
+		infoLines->AppendText(Environment::NewLine);
+	}
+	
 	infoLines->AppendText("Hash: \t");
 	auto hashStr = hexToString(hash, 20);
 	for (int i = 0; i < 4; i++)
@@ -619,6 +632,8 @@ void showSettingsFormThread()
 		form.udpPortNumeric->Value = info.udpPort;
 		form.tcpPortNumeric->Value = info.tcpPort;
 		form.upnpMapCheckBox->Checked = info.upnpEnabled;
+		form.numericDlSpeed->Value = info.maxDownloadSpeed / 1024;
+		form.numericUpSpeed->Value = info.maxUploadSpeed / 1024;
 	}
 
 	form.ShowDialog();
@@ -873,7 +888,8 @@ void onButtonClick(ButtonId id, System::String^ param)
 	{
 		showFilesSelectionForm(firstSelectedHash, false);
 	}
-	else if (GuiLite::MagnetInputForm::instance)
+	
+	if (GuiLite::MagnetInputForm::instance)
 	{
 		if (id == ButtonId::MagnetButton)
 		{
@@ -1167,12 +1183,16 @@ void refreshUi()
 				if (t.active && info.downloadSpeed > 0 && info.selectionProgress && info.selectionProgress < 1.0f && info.downloaded > 0)
 				{
 					speedInfo = formatBytesSpeed(info.downloadSpeed);
-					speedInfo += " (";
+					
 					uint64_t leftBytes = ((uint64_t)(info.downloaded / info.selectionProgress)) - info.downloaded;
 					uint64_t leftSeconds = leftBytes / info.downloadSpeed;
-					TimeSpan time = System::TimeSpan::FromSeconds((double)leftSeconds);
-					speedInfo += time.ToString("d\\d\\ hh\\hmm\\mss\\s")->TrimStart(' ', 'd', 'h', 'm', 's', '0');
-					speedInfo += ")";
+					if (leftSeconds > 0)
+					{
+						TimeSpan time = System::TimeSpan::FromSeconds((double)leftSeconds);
+						speedInfo += " (";
+						speedInfo += time.ToString("d\\d\\ hh\\hmm\\mss\\s")->TrimStart(' ', 'd', 'h', 'm', 's', '0');
+						speedInfo += ")";
+					}
 				}
 
 				String^ name = gcnew String(info.name.data, 0, (int)info.name.length, System::Text::Encoding::UTF8);

@@ -14,6 +14,7 @@
 #include "MetadataDownload.h"
 #include "FileTransfer.h"
 #include "utils/HexEncoding.h"
+#include <iostream>
 
 using namespace mtt;
 
@@ -331,9 +332,9 @@ void TorrentTest::testPeerListen()
 
 	ServiceThreadpool service(2);
 
-	std::shared_ptr<TcpAsyncStream> peerStream;
+	std::shared_ptr<TcpAsyncLimitedStream> peerStream;
 	TcpAsyncServer server(service.io, mtt::config::getExternal().connection.tcpPort, false);
-	server.acceptCallback = [&](std::shared_ptr<TcpAsyncStream> c) { peerStream = c; };
+	server.acceptCallback = [&](std::shared_ptr<TcpAsyncLimitedStream> c) { peerStream = c; };
 	server.listen();
 
 	WAITFOR(peerStream);
@@ -763,7 +764,69 @@ void idealLocalTest()
 	TEST_LOG("Finished");
 }
 
+void testBandwidthLimit()
+{
+	class TestPeer : public BandwidthUser
+	{
+	public:
+		uint32_t m_quota = 0;
+
+		virtual void assignBandwidth(int amount) override
+		{
+			m_quota += amount;
+		}
+
+		virtual bool isActive() override
+		{
+			return true;
+		}
+	};
+
+	std::vector<std::shared_ptr<TestPeer>> peers;
+	for (int i = 0; i < 2; i++)
+	{
+		peers.push_back(std::make_shared<TestPeer>());
+	}
+
+	uint32_t limit = 1024 * 1024;
+
+	BandwidthChannel globalBw;
+	globalBw.throttle(limit);
+
+	BandwidthChannel torrentBw;
+	//torrentBw.throttle(limit);
+
+	BandwidthManager& manager = BandwidthManager::Get();
+
+	BandwidthChannel* channels[BandwidthRequest::max_bandwidth_channels] = { &globalBw, &torrentBw };
+
+	for (auto p : peers)
+	{
+		manager.request_bandwidth(p, 40000000, 1, channels, 2);
+	}
+	//manager.request_bandwidth(peers[0], 1000, 10, channels, 2);
+	//manager.request_bandwidth(peers[1], 40000000, 1, channels, 2);
+
+	int tick_interval = 500;
+	int fullTime = 10;
+	for (int i = 0; i < int(fullTime * 1000 / tick_interval); ++i)
+	{
+		manager.update_quotas(tick_interval);
+	}
+
+
+	float sum = 0.f;
+	float const err = std::max(limit / peers.size() * 0.3f, 1000.f);
+	for (auto p : peers)
+	{
+		sum += p->m_quota;
+		std::cout << p->m_quota / fullTime << " target: " << (limit / peers.size()) << std::endl;
+	}
+	sum /= fullTime;
+	std::cout << "sum: " << sum << " target: " << limit << std::endl;
+}
+
 void TorrentTest::start()
 {
-	testTorrentFileSerialization();
+	testBandwidthLimit();
 }

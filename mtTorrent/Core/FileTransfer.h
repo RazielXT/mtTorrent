@@ -29,9 +29,9 @@ namespace mtt
 		virtual void pexReceived(PeerCommunication*, ext::PeerExchange::Message&) override;
 		virtual void progressUpdated(PeerCommunication*, uint32_t) override;
 
-		size_t getDownloadSpeed();
+		uint32_t getDownloadSpeed();
 		uint64_t getUploadSum();
-		size_t getUploadSpeed();
+		uint32_t getUploadSpeed();
 
 		size_t getUnfinishedPiecesDownloadSize();
 
@@ -91,7 +91,7 @@ namespace mtt
 		uint32_t peersEvalCounter = 0;
 
 		Downloader downloader;
-		Uploader uploader;
+		std::shared_ptr<Uploader> uploader;
 
 		TorrentPtr torrent;
 

@@ -2,6 +2,7 @@
 #include "utils/PacketHelper.h"
 #include "Configuration.h"
 #include <fstream>
+#include "utils/HexEncoding.h"
 
 #define BT_LOG(x) WRITE_LOG(LogTypeBt, "(" << getAddressName() << ") " << x)
 #define LOG_MGS(x) {}//{std::stringstream ss; ss << x; LogMsg(ss);}
@@ -119,16 +120,27 @@ PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l) : torrent
 
 PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, asio::io_service& io_service) : torrent(t), listener(l)
 {
-	stream = std::make_shared<TcpAsyncStream>(io_service);
+	stream = std::make_shared<TcpAsyncLimitedStream>(io_service);
+	initializeBandwidth();
 }
 
-void mtt::PeerCommunication::setStream(std::shared_ptr<TcpAsyncStream> s)
+void mtt::PeerCommunication::setStream(std::shared_ptr<TcpAsyncLimitedStream> s)
 {
 	stream = s;
-	state.action = PeerCommunicationState::Connected;
 
+	state.action = PeerCommunicationState::Connected;
+	initializeBandwidth();
 	initializeCallbacks();
 	dataReceived();
+}
+
+void mtt::PeerCommunication::initializeBandwidth()
+{
+	BandwidthChannel* channels[2];
+	channels[0] = BandwidthManager::Get().GetChannel("");
+	channels[1] = BandwidthManager::Get().GetChannel(hexToString(torrent.hash, 20));
+
+	stream->setBandwidthChannels(channels, 2);
 }
 
 void mtt::PeerCommunication::initializeCallbacks()
@@ -378,10 +390,12 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 	else if (message.id == Unchoke)
 	{
 		state.peerChoking = false;
+		stream->setMinBandwidthRequest(BlockRequestMaxSize + 20);
 	}
 	else if (message.id == Choke)
 	{
 		state.peerChoking = true;
+		stream->setMinBandwidthRequest(100);
 	}
 	else if (message.id == NotInterested)
 	{

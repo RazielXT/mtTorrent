@@ -419,6 +419,9 @@ float mtt::Torrent::currentProgress()
 
 float mtt::Torrent::currentSelectionProgress()
 {
+	if (files.progress.selectedPieces == files.progress.pieces.size())
+		return currentProgress();
+
 	float progress = files.progress.getSelectedPercentage();
 
 	if (fileTransfer)

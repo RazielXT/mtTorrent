@@ -1,11 +1,11 @@
 #include "FileTransfer.h"
 
-size_t mttApi::FileTransfer::getDownloadSpeed()
+uint32_t mttApi::FileTransfer::getDownloadSpeed()
 {
 	return static_cast<mtt::FileTransfer*>(this)->getDownloadSpeed();
 }
 
-size_t mttApi::FileTransfer::getUploadSpeed()
+uint32_t mttApi::FileTransfer::getUploadSpeed()
 {
 	return static_cast<mtt::FileTransfer*>(this)->getUploadSpeed();
 }

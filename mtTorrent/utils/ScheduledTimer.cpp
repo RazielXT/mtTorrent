@@ -12,11 +12,16 @@ ScheduledTimer::~ScheduledTimer()
 
 void ScheduledTimer::schedule(uint32_t secondsOffset)
 {
+	schedule(std::chrono::seconds(secondsOffset));
+}
+
+void ScheduledTimer::schedule(std::chrono::milliseconds time)
+{
 	std::lock_guard<std::mutex> guard(mtx);
 
 	if (timer)
 	{
-		timer->expires_from_now(std::chrono::seconds(secondsOffset));
+		timer->expires_from_now(time);
 		timer->async_wait(std::bind(&ScheduledTimer::checkTimer, shared_from_this(), std::placeholders::_1));
 	}
 }

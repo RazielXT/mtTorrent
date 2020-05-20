@@ -56,6 +56,24 @@ namespace GuiLite {
 	private: System::Windows::Forms::Button^  buttonCancel;
 	public: System::Windows::Forms::CheckBox^ upnpMapCheckBox;
 	private: System::Windows::Forms::Button^ dirButton;
+	private: System::Windows::Forms::Label^ label5;
+	private: System::Windows::Forms::Label^ label6;
+	public: System::Windows::Forms::NumericUpDown^ numericUpSpeed;
+	private:
+
+	public: System::Windows::Forms::NumericUpDown^ numericDlSpeed;
+	private:
+
+
+	private:
+
+
+	private:
+
+
+
+	private:
+
 	public:
 
 	public:
@@ -89,12 +107,18 @@ namespace GuiLite {
 			this->upnpMapCheckBox = (gcnew System::Windows::Forms::CheckBox());
 			this->upnpToolTip = (gcnew System::Windows::Forms::ToolTip(this->components));
 			this->dirButton = (gcnew System::Windows::Forms::Button());
+			this->label5 = (gcnew System::Windows::Forms::Label());
+			this->label6 = (gcnew System::Windows::Forms::Label());
+			this->numericUpSpeed = (gcnew System::Windows::Forms::NumericUpDown());
+			this->numericDlSpeed = (gcnew System::Windows::Forms::NumericUpDown());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->tcpPortNumeric))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->udpPortNumeric))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->maxConnectionsNumeric))->BeginInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->numericUpSpeed))->BeginInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->numericDlSpeed))->BeginInit();
 			this->SuspendLayout();
 			this->checkBoxDht->AutoSize = true;
-			this->checkBoxDht->Location = System::Drawing::Point(57, 203);
+			this->checkBoxDht->Location = System::Drawing::Point(58, 276);
 			this->checkBoxDht->Name = L"checkBoxDht";
 			this->checkBoxDht->Size = System::Drawing::Size(59, 21);
 			this->checkBoxDht->TabIndex = 0;
@@ -146,14 +170,14 @@ namespace GuiLite {
 			this->label4->Size = System::Drawing::Size(112, 17);
 			this->label4->TabIndex = 8;
 			this->label4->Text = L"Default directory";
-			this->buttonOk->Location = System::Drawing::Point(118, 253);
+			this->buttonOk->Location = System::Drawing::Point(119, 326);
 			this->buttonOk->Name = L"buttonOk";
 			this->buttonOk->Size = System::Drawing::Size(81, 27);
 			this->buttonOk->TabIndex = 9;
 			this->buttonOk->Text = L"OK";
 			this->buttonOk->UseVisualStyleBackColor = true;
 			this->buttonOk->Click += gcnew System::EventHandler(this, &SettingsForm::buttonOk_Click);
-			this->buttonCancel->Location = System::Drawing::Point(205, 253);
+			this->buttonCancel->Location = System::Drawing::Point(206, 326);
 			this->buttonCancel->Name = L"buttonCancel";
 			this->buttonCancel->Size = System::Drawing::Size(84, 27);
 			this->buttonCancel->TabIndex = 10;
@@ -161,7 +185,7 @@ namespace GuiLite {
 			this->buttonCancel->UseVisualStyleBackColor = true;
 			this->buttonCancel->Click += gcnew System::EventHandler(this, &SettingsForm::buttonCancel_Click);
 			this->upnpMapCheckBox->AutoSize = true;
-			this->upnpMapCheckBox->Location = System::Drawing::Point(57, 176);
+			this->upnpMapCheckBox->Location = System::Drawing::Point(58, 249);
 			this->upnpMapCheckBox->Name = L"upnpMapCheckBox";
 			this->upnpMapCheckBox->Size = System::Drawing::Size(151, 21);
 			this->upnpMapCheckBox->TabIndex = 11;
@@ -181,9 +205,35 @@ namespace GuiLite {
 			this->dirButton->Text = L"Browse";
 			this->dirButton->UseVisualStyleBackColor = true;
 			this->dirButton->Click += gcnew System::EventHandler(this, &SettingsForm::dirButton_Click);
+			this->label5->AutoSize = true;
+			this->label5->Location = System::Drawing::Point(56, 205);
+			this->label5->Name = L"label5";
+			this->label5->Size = System::Drawing::Size(113, 17);
+			this->label5->TabIndex = 16;
+			this->label5->Text = L"Max upload KB/s";
+			this->label6->AutoSize = true;
+			this->label6->Location = System::Drawing::Point(56, 177);
+			this->label6->Name = L"label6";
+			this->label6->Size = System::Drawing::Size(130, 17);
+			this->label6->TabIndex = 15;
+			this->label6->Text = L"Max download KB/s";
+			this->numericUpSpeed->Location = System::Drawing::Point(228, 205);
+			this->numericUpSpeed->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) { 65535, 0, 0, 0 });
+			this->numericUpSpeed->Name = L"numericUpSpeed";
+			this->numericUpSpeed->Size = System::Drawing::Size(120, 22);
+			this->numericUpSpeed->TabIndex = 14;
+			this->numericDlSpeed->Location = System::Drawing::Point(228, 177);
+			this->numericDlSpeed->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) { 65535, 0, 0, 0 });
+			this->numericDlSpeed->Name = L"numericUpSpeed";
+			this->numericDlSpeed->Size = System::Drawing::Size(120, 22);
+			this->numericDlSpeed->TabIndex = 13;
 			this->AutoScaleDimensions = System::Drawing::SizeF(8, 16);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(400, 297);
+			this->ClientSize = System::Drawing::Size(400, 365);
+			this->Controls->Add(this->label5);
+			this->Controls->Add(this->label6);
+			this->Controls->Add(this->numericUpSpeed);
+			this->Controls->Add(this->numericDlSpeed);
 			this->Controls->Add(this->dirButton);
 			this->Controls->Add(this->upnpMapCheckBox);
 			this->Controls->Add(this->buttonCancel);
@@ -208,6 +258,8 @@ namespace GuiLite {
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->tcpPortNumeric))->EndInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->udpPortNumeric))->EndInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->maxConnectionsNumeric))->EndInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->numericUpSpeed))->EndInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->numericDlSpeed))->EndInit();
 			this->ResumeLayout(false);
 			this->PerformLayout();
 

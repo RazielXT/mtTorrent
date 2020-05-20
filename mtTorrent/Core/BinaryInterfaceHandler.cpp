@@ -299,6 +299,8 @@ extern "C"
 			resp->tcpPort = settings.connection.tcpPort;
 			resp->udpPort = settings.connection.udpPort;
 			resp->upnpEnabled = settings.connection.upnpPortMapping;
+			resp->maxDownloadSpeed = settings.transfer.maxDownloadSpeed;
+			resp->maxUploadSpeed = settings.transfer.maxUploadSpeed;
 		}
 		else if (id == mtBI::MessageId::SetSettings)
 		{
@@ -311,10 +313,13 @@ extern "C"
 			settings.connection.tcpPort = info->tcpPort;
 			settings.connection.udpPort = info->udpPort;
 			settings.connection.upnpPortMapping = info->upnpEnabled;
+			settings.transfer.maxDownloadSpeed = info->maxDownloadSpeed;
+			settings.transfer.maxUploadSpeed = info->maxUploadSpeed;
 
 			mtt::config::setValues(settings.dht);
 			mtt::config::setValues(settings.connection);
 			mtt::config::setValues(settings.files);
+			mtt::config::setValues(settings.transfer);
 		}
 		else if (id == mtBI::MessageId::SetTorrentFilesSelection)
 		{

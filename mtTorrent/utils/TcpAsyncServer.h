@@ -1,4 +1,4 @@
-#include "TcpAsyncStream.h"
+#include "TcpAsyncLimitedStream.h"
 
 class TcpAsyncServer
 {
@@ -9,13 +9,13 @@ public:
 	void listen();
 	void stop();
 
-	std::function<void(std::shared_ptr<TcpAsyncStream>)> acceptCallback;
+	std::function<void(std::shared_ptr<TcpAsyncLimitedStream>)> acceptCallback;
 
 private:
 
 	void startListening();
 
-	void handle_accept(std::shared_ptr<TcpAsyncStream> connection, const std::error_code& error);
+	void handle_accept(std::shared_ptr<TcpAsyncLimitedStream> connection, const std::error_code& error);
 	
 	tcp::endpoint endpoint;
 

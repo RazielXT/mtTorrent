@@ -14,6 +14,8 @@ mtt::Core core;
 
 extern void InitLogTime();
 
+#ifdef WINAPI
+
 #include <DbgHelp.h>
 #pragma comment (lib, "dbghelp.lib")
 
@@ -54,6 +56,8 @@ LONG WINAPI OurCrashHandler(EXCEPTION_POINTERS* pException)
 	return EXCEPTION_EXECUTE_HANDLER;
 }
 
+#endif // WINAPI
+
 std::string riotApiRequest()
 {
 #ifdef MTT_WITH_SSL
@@ -90,7 +94,9 @@ std::string riotApiRequest()
 
 void mtt::Core::init()
 {
+#ifdef WINAPI
 	::SetUnhandledExceptionFilter(OurCrashHandler);
+#endif // WINAPI
 
 	InitLogTime();
 
@@ -101,7 +107,9 @@ void mtt::Core::init()
 	if(mtt::config::getExternal().dht.enable)
 		dht->start();
 
-	listener = std::make_shared<IncomingPeersListener>([this](std::shared_ptr<TcpAsyncStream> s, const uint8_t* hash)
+	bandwidth = std::make_unique<GlobalBandwidth>();
+
+	listener = std::make_shared<IncomingPeersListener>([this](std::shared_ptr<TcpAsyncLimitedStream> s, const uint8_t* hash)
 	{
 		auto t = getTorrent(hash);
 		if (t)
@@ -149,6 +157,8 @@ static void saveTorrentList(const std::vector<mtt::TorrentPtr>& torrents)
 
 void mtt::Core::deinit()
 {
+	bandwidth.reset();
+
 	if (listener)
 	{
 		listener->stop();
@@ -307,4 +317,26 @@ mtt::Status mtt::Core::removeTorrent(const char* hash, bool deleteFiles)
 	decodeHexa(hash, hexa);
 
 	return removeTorrent(hexa, deleteFiles);
+}
+
+mtt::GlobalBandwidth::GlobalBandwidth()
+{
+	BandwidthManager::Get().GetChannel("")->throttle(mtt::config::getExternal().transfer.maxDownloadSpeed);
+	BandwidthManager::Get().GetChannel("upload")->throttle(mtt::config::getExternal().transfer.maxUploadSpeed);
+
+	uint32_t bwTick = mtt::config::getInternal().bandwidthUpdatePeriodMs;
+
+	bwTimer = ScheduledTimer::create(bwPool.io, [this, bwTick]()
+		{
+			BandwidthManager::Get().update_quotas(bwTick);
+			bwTimer->schedule(std::chrono::milliseconds(bwTick));
+		});
+
+	bwTimer->schedule(std::chrono::milliseconds(bwTick));
+
+	config::registerOnChangeCallback(config::ValueType::Transfer, [this]()
+		{
+			BandwidthManager::Get().GetChannel("")->throttle(mtt::config::getExternal().transfer.maxDownloadSpeed);
+			BandwidthManager::Get().GetChannel("upload")->throttle(mtt::config::getExternal().transfer.maxUploadSpeed);
+		});
 }

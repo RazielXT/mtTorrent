@@ -19,12 +19,12 @@ void TcpAsyncServer::stop()
 
 void TcpAsyncServer::startListening()
 {
-	auto connection = std::make_shared<TcpAsyncStream>(acceptor_.get_io_service());
+	auto connection = std::make_shared<TcpAsyncLimitedStream>(acceptor_.get_io_service());
 
 	acceptor_.async_accept(connection->socket, endpoint, std::bind(&TcpAsyncServer::handle_accept, this, connection, std::placeholders::_1));
 }
 
-void TcpAsyncServer::handle_accept(std::shared_ptr<TcpAsyncStream> connection, const std::error_code& error)
+void TcpAsyncServer::handle_accept(std::shared_ptr<TcpAsyncLimitedStream> connection, const std::error_code& error)
 {
 	if (!error && acceptor_.is_open())
 	{

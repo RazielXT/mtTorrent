@@ -8,8 +8,8 @@ namespace mttApi
 	{
 	public:
 
-		API_EXPORT size_t getDownloadSpeed();
-		API_EXPORT size_t getUploadSpeed();
+		API_EXPORT uint32_t getDownloadSpeed();
+		API_EXPORT uint32_t getUploadSpeed();
 
 		API_EXPORT std::vector<mtt::ActivePeerInfo> getPeersInfo();
 

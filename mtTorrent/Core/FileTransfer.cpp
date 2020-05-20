@@ -11,8 +11,9 @@
 FastIpToCountry ipToCountry;
 bool ipToCountryLoaded = false;
 
-mtt::FileTransfer::FileTransfer(TorrentPtr t) : downloader(t), uploader(t), torrent(t)
+mtt::FileTransfer::FileTransfer(TorrentPtr t) : downloader(t), torrent(t)
 {
+	uploader = std::make_shared<Uploader>(t);
 	log.init("download");
 
 	if (!ipToCountryLoaded)
@@ -41,6 +42,7 @@ void mtt::FileTransfer::start()
 		{
 			evalCurrentPeers();
 			updateMeasures();
+			uploader->refreshRequest();
 
 			refreshTimer->schedule(1);
 		}
@@ -117,16 +119,11 @@ void mtt::FileTransfer::messageReceived(PeerCommunication* p, PeerMessage& msg)
 	}
 	else if (msg.id == Interested)
 	{
-		uploader.isInterested(p);
+		uploader->isInterested(p);
 	}
 	else if (msg.id == Request)
 	{
-		if (uploader.pieceRequest(p, msg.request))
-		{
-			std::lock_guard<std::mutex> guard(peersMutex);
-			if (auto peer = getActivePeer(p))
-				peer->uploaded += msg.request.length;
-		}
+		uploader->pieceRequest(p, msg.request);
 	}
 }
 
@@ -161,12 +158,12 @@ void mtt::FileTransfer::progressUpdated(PeerCommunication* p, uint32_t idx)
 
 uint64_t mtt::FileTransfer::getUploadSum()
 {
-	return uploader.uploaded;
+	return uploader->uploaded;
 }
 
-size_t mtt::FileTransfer::getDownloadSpeed()
+uint32_t mtt::FileTransfer::getDownloadSpeed()
 {
-	size_t sum = 0;
+	uint32_t sum = 0;
 
 	std::lock_guard<std::mutex> guard(peersMutex);
 	for (auto& peer : activePeers)
@@ -175,9 +172,9 @@ size_t mtt::FileTransfer::getDownloadSpeed()
 	return sum;
 }
 
-size_t mtt::FileTransfer::getUploadSpeed()
+uint32_t mtt::FileTransfer::getUploadSpeed()
 {
-	size_t sum = 0;
+	uint32_t sum = 0;
 
 	std::lock_guard<std::mutex> guard(peersMutex);
 	for (auto& peer : activePeers)
@@ -444,6 +441,14 @@ void mtt::FileTransfer::updateMeasures()
 
 	{
 		std::lock_guard<std::mutex> guard(peersMutex);
+
+		auto finishedUploadRequests = uploader->popHandledRequests();
+		for(auto& r : finishedUploadRequests)
+		{
+			if (auto peer = getActivePeer(r.first))
+				peer->uploaded += r.second;
+		}
+
 		for (auto& peer : activePeers)
 		{
 			peer.downloaded = peer.comm->getReceivedDataCount();

@@ -4,7 +4,7 @@
 #include "PeerMessage.h"
 #include "utils/UpnpPortMapping.h"
 
-mtt::IncomingPeersListener::IncomingPeersListener(std::function<void(std::shared_ptr<TcpAsyncStream>, const uint8_t* hash)> cb)
+mtt::IncomingPeersListener::IncomingPeersListener(std::function<void(std::shared_ptr<TcpAsyncLimitedStream>, const uint8_t* hash)> cb)
 {
 	onNewPeer = cb;
 	pool.start(2);
@@ -94,7 +94,7 @@ void mtt::IncomingPeersListener::createListener()
 		return;
 	}
 
-	listener->acceptCallback = [this](std::shared_ptr<TcpAsyncStream> c)
+	listener->acceptCallback = [this](std::shared_ptr<TcpAsyncLimitedStream> c)
 	{
 		auto sPtr = c.get();
 
@@ -120,7 +120,7 @@ void mtt::IncomingPeersListener::createListener()
 	listener->listen();
 }
 
-void mtt::IncomingPeersListener::removePeer(TcpAsyncStream* s)
+void mtt::IncomingPeersListener::removePeer(TcpAsyncLimitedStream* s)
 {
 	std::lock_guard<std::mutex> guard(peersMutex);
 	for (auto it = pendingPeers.begin(); it != pendingPeers.end(); it++)
@@ -133,7 +133,7 @@ void mtt::IncomingPeersListener::removePeer(TcpAsyncStream* s)
 	}
 }
 
-void mtt::IncomingPeersListener::addPeer(TcpAsyncStream* s, const uint8_t* hash)
+void mtt::IncomingPeersListener::addPeer(TcpAsyncLimitedStream* s, const uint8_t* hash)
 {
 	std::lock_guard<std::mutex> guard(peersMutex);
 	for (auto it = pendingPeers.begin(); it != pendingPeers.end(); it++)

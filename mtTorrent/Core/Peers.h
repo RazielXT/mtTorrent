@@ -21,7 +21,7 @@ namespace mtt
 		void connectNext(uint32_t count);
 		std::shared_ptr<PeerCommunication> connect(Addr& addr);
 		std::shared_ptr<PeerCommunication> getPeer(PeerCommunication*);
-		void add(std::shared_ptr<TcpAsyncStream> stream);
+		void add(std::shared_ptr<TcpAsyncLimitedStream> stream);
 		std::shared_ptr<PeerCommunication> disconnect(PeerCommunication*);
 
 		bool active = false;

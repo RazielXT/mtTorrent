@@ -3,6 +3,7 @@
 #include "Torrent.h"
 #include "Api/Core.h"
 #include "AlertsManager.h"
+#include "utils/ScheduledTimer.h"
 
 class TcpAsyncServer;
 class ServiceThreadpool;
@@ -15,6 +16,14 @@ namespace mtt
 	}
 
 	class IncomingPeersListener;
+
+	class GlobalBandwidth
+	{
+	public:
+		GlobalBandwidth();
+		std::shared_ptr<ScheduledTimer> bwTimer;
+		ServiceThreadpool bwPool;
+	};
 
 	class Core : public mttApi::Core
 	{
@@ -39,5 +48,6 @@ namespace mtt
 		Status removeTorrent(const char* hash, bool deleteFiles);
 
 		AlertsManager alerts;
+		std::unique_ptr<GlobalBandwidth> bandwidth;
 	};
 }

@@ -33,6 +33,13 @@ namespace mtt
 			}
 			dht;
 
+			struct Transfer
+			{
+				uint32_t maxDownloadSpeed = 0;
+				uint32_t maxUploadSpeed = 0;
+			}
+			transfer;
+
 			struct Files
 			{
 				std::string defaultDirectory;
@@ -64,16 +71,19 @@ namespace mtt
 			std::string programFolderPath;
 			std::string stateFolder;
 
+			uint32_t bandwidthUpdatePeriodMs = 250;
+
 			API_EXPORT void fromJson(const char* js);
 		};
 
 		const API_EXPORT External& getExternal();
 		API_EXPORT Internal& getInternal();
 
-		enum class ValueType { Connection, Dht, Files };
+		enum class ValueType { Connection, Dht, Files, Transfer };
 		API_EXPORT void setValues(const External::Connection& val);
 		API_EXPORT void setValues(const External::Dht& val);
 		API_EXPORT void setValues(const External::Files& val);
+		API_EXPORT void setValues(const External::Transfer& val);
 		API_EXPORT bool fromJson(const char* js);
 	}
 }
