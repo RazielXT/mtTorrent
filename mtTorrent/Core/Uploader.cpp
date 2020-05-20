@@ -38,7 +38,7 @@ void mtt::Uploader::requestBytes(uint32_t amount)
 		return;
 	amount -= availableBytes;
 
-	int returned = BandwidthManager::Get().request_bandwidth(shared_from_this(), amount, 1, &globalBw, 1);
+	int returned = BandwidthManager::Get().requestBandwidth(shared_from_this(), amount, 1, &globalBw, 1);
 
 	if (returned == 0)
 		requestingBytes = true;

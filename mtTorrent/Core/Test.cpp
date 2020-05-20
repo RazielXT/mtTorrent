@@ -791,18 +791,18 @@ void testBandwidthLimit()
 	uint32_t limit = 1024 * 1024;
 
 	BandwidthChannel globalBw;
-	globalBw.throttle(limit);
+	globalBw.setLimit(limit);
 
 	BandwidthChannel torrentBw;
 	//torrentBw.throttle(limit);
 
 	BandwidthManager& manager = BandwidthManager::Get();
 
-	BandwidthChannel* channels[BandwidthRequest::max_bandwidth_channels] = { &globalBw, &torrentBw };
+	BandwidthChannel* channels[BandwidthRequest::MaxBandwidthChannels] = { &globalBw, &torrentBw };
 
 	for (auto p : peers)
 	{
-		manager.request_bandwidth(p, 40000000, 1, channels, 2);
+		manager.requestBandwidth(p, 40000000, 1, channels, 2);
 	}
 	//manager.request_bandwidth(peers[0], 1000, 10, channels, 2);
 	//manager.request_bandwidth(peers[1], 40000000, 1, channels, 2);
@@ -811,7 +811,7 @@ void testBandwidthLimit()
 	int fullTime = 10;
 	for (int i = 0; i < int(fullTime * 1000 / tick_interval); ++i)
 	{
-		manager.update_quotas(tick_interval);
+		manager.updateQuotas(tick_interval);
 	}
 
 

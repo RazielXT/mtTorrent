@@ -321,14 +321,14 @@ mtt::Status mtt::Core::removeTorrent(const char* hash, bool deleteFiles)
 
 mtt::GlobalBandwidth::GlobalBandwidth()
 {
-	BandwidthManager::Get().GetChannel("")->throttle(mtt::config::getExternal().transfer.maxDownloadSpeed);
-	BandwidthManager::Get().GetChannel("upload")->throttle(mtt::config::getExternal().transfer.maxUploadSpeed);
+	BandwidthManager::Get().GetChannel("")->setLimit(mtt::config::getExternal().transfer.maxDownloadSpeed);
+	BandwidthManager::Get().GetChannel("upload")->setLimit(mtt::config::getExternal().transfer.maxUploadSpeed);
 
 	uint32_t bwTick = mtt::config::getInternal().bandwidthUpdatePeriodMs;
 
 	bwTimer = ScheduledTimer::create(bwPool.io, [this, bwTick]()
 		{
-			BandwidthManager::Get().update_quotas(bwTick);
+			BandwidthManager::Get().updateQuotas(bwTick);
 			bwTimer->schedule(std::chrono::milliseconds(bwTick));
 		});
 
@@ -336,7 +336,7 @@ mtt::GlobalBandwidth::GlobalBandwidth()
 
 	config::registerOnChangeCallback(config::ValueType::Transfer, [this]()
 		{
-			BandwidthManager::Get().GetChannel("")->throttle(mtt::config::getExternal().transfer.maxDownloadSpeed);
-			BandwidthManager::Get().GetChannel("upload")->throttle(mtt::config::getExternal().transfer.maxUploadSpeed);
+			BandwidthManager::Get().GetChannel("")->setLimit(mtt::config::getExternal().transfer.maxDownloadSpeed);
+			BandwidthManager::Get().GetChannel("upload")->setLimit(mtt::config::getExternal().transfer.maxUploadSpeed);
 		});
 }

@@ -3,70 +3,50 @@
 #include <map>
 
 BandwidthChannel::BandwidthChannel()
-	: tmp(0)
-	, distribute_quota(0)
-	, m_quota_left(0)
-	, m_limit(0)
 {}
 
-// 0 means infinite
-void BandwidthChannel::throttle(int const limit)
+void BandwidthChannel::setLimit(int const l)
 {
-	//TORRENT_ASSERT_VAL(limit >= 0, limit);
-	// if the throttle is more than this, we might overflow
-	//TORRENT_ASSERT_VAL(limit < inf, limit);
-	m_limit = limit;
+	limit = l;
 }
 
-int BandwidthChannel::quota_left() const
+int BandwidthChannel::getQuotaLeft() const
 {
-	if (m_limit == 0) return inf;
-	return std::max(int(m_quota_left), 0);
+	if (limit == 0) return inf;
+	return std::max(int(quotaLeft), 0);
 }
 
-void BandwidthChannel::update_quota(int const dt_milliseconds)
+void BandwidthChannel::updateQuota(int const dt_milliseconds)
 {
-	//TORRENT_ASSERT_VAL(m_limit >= 0, m_limit);
-	//TORRENT_ASSERT_VAL(m_limit < inf, m_limit);
+	if (limit == 0) return;
 
-	if (m_limit == 0) return;
+	std::int64_t const toAdd = (std::int64_t(limit) * dt_milliseconds + 500) / 1000;
 
-	// "to_add" should never have int64 overflow: "m_limit" contains < "<int>::max"
-	std::int64_t const to_add = (std::int64_t(m_limit) * dt_milliseconds + 500) / 1000;
-
-	if (to_add > inf - m_quota_left)
+	if (toAdd > inf - quotaLeft)
 	{
-		m_quota_left = inf;
+		quotaLeft = inf;
 	}
 	else
 	{
-		m_quota_left += to_add;
-		if (m_quota_left / 3 > m_limit) m_quota_left = std::int64_t(m_limit) * 3;
-		// "m_quota_left" will never have int64 overflow but may exceed "<int>::max"
-		m_quota_left = std::min(m_quota_left, std::int64_t(inf));
+		quotaLeft += toAdd;
+		if (quotaLeft / 3 > limit) quotaLeft = std::int64_t(limit) * 3;
+		quotaLeft = std::min(quotaLeft, std::int64_t(inf));
 	}
 
-	distribute_quota = int(std::max(m_quota_left, std::int64_t(0)));
+	distributeQuota = int(std::max(quotaLeft, std::int64_t(0)));
 }
 
-// this is used when connections disconnect with
-// some quota left. It's returned to its bandwidth
-// channels.
-void BandwidthChannel::return_quota(int const amount)
+void BandwidthChannel::returnQuota(int const amount)
 {
-	//TORRENT_ASSERT(amount >= 0);
-	if (m_limit == 0) return;
-	//TORRENT_ASSERT(m_quota_left <= m_quota_left + amount);
-	m_quota_left += amount;
+	if (limit == 0) return;
+	quotaLeft += amount;
 }
 
-void BandwidthChannel::use_quota(int const amount)
+void BandwidthChannel::useQuota(int const amount)
 {
-	//TORRENT_ASSERT(amount >= 0);
-	//TORRENT_ASSERT(m_limit >= 0);
-	if (m_limit == 0) return;
+	if (limit == 0) return;
 
-	m_quota_left -= amount;
+	quotaLeft -= amount;
 }
 
 
@@ -74,32 +54,28 @@ BandwidthRequest::BandwidthRequest(std::shared_ptr<BandwidthUser> pe
 	, int blk, int prio)
 	: user(std::move(pe))
 	, priority(prio)
-	, assigned(0)
-	, request_size(blk)
+	, requestSize(blk)
 {
 	memset(channel, 0, sizeof(channel));
-	//TORRENT_ASSERT(priority > 0);
 }
 
 int BandwidthRequest::assign_bandwidth()
 {
-	//TORRENT_ASSERT(assigned < request_size);
-	int quota = request_size - assigned;
-	//TORRENT_ASSERT(quota >= 0);
+	int quota = requestSize - assigned;
 
 	if (quota == 0) return quota;
 
-	for (int j = 0; j < max_bandwidth_channels && channel[j]; ++j)
+	for (int j = 0; j < MaxBandwidthChannels && channel[j]; ++j)
 	{
-		if (channel[j]->throttle() == 0) continue;
-		if (channel[j]->tmp == 0) continue;
-		quota = std::min(int(std::int64_t(channel[j]->distribute_quota)
-			* priority / channel[j]->tmp), quota);
+		if (channel[j]->getLimit() == 0) continue;
+		if (channel[j]->tmpPrioritySum == 0) continue;
+		quota = std::min(int(std::int64_t(channel[j]->distributeQuota)
+			* priority / channel[j]->tmpPrioritySum), quota);
 	}
 	assigned += quota;
-	for (int j = 0; j < max_bandwidth_channels && channel[j]; ++j)
-		channel[j]->use_quota(quota);
-	//TORRENT_ASSERT(assigned <= request_size);
+	for (int j = 0; j < MaxBandwidthChannels && channel[j]; ++j)
+		channel[j]->useQuota(quota);
+
 	return quota;
 }
 
@@ -110,10 +86,9 @@ BandwidthManager& BandwidthManager::Get()
 	return mgr;
 }
 
-
 BandwidthChannel* BandwidthManager::GetChannel(const std::string& name)
 {
-	std::lock_guard<std::mutex> guard(request_mutex);
+	std::lock_guard<std::mutex> guard(requestMutex);
 
 	auto it = channels.find(name);
 	if (it != channels.end())
@@ -127,18 +102,16 @@ BandwidthChannel* BandwidthManager::GetChannel(const std::string& name)
 }
 
 BandwidthManager::BandwidthManager()
-	: m_queued_bytes(0)
-	, m_abort(false)
 {
 }
 
 void BandwidthManager::close()
 {
-	m_abort = true;
+	abort = true;
 
 	std::vector<BandwidthRequest> queue;
-	queue.swap(m_queue);
-	m_queued_bytes = 0;
+	queue.swap(requestsQueue);
+	queuedBytes = 0;
 
 	while (!queue.empty())
 	{
@@ -148,132 +121,113 @@ void BandwidthManager::close()
 	}
 }
 
-int BandwidthManager::queue_size() const
+int BandwidthManager::queueSize() const
 {
-	return int(m_queue.size());
+	return int(requestsQueue.size());
 }
 
-std::int64_t BandwidthManager::queued_bytes() const
+std::int64_t BandwidthManager::getQueuedBytes() const
 {
-	return m_queued_bytes;
+	return queuedBytes;
 }
 
-// non prioritized means that, if there's a line for bandwidth,
-// others will cut in front of the non-prioritized peers.
-// this is used by web seeds
-int BandwidthManager::request_bandwidth(std::shared_ptr<BandwidthUser> peer, int const blk, int const priority, BandwidthChannel** chan, int const num_channels)
+int BandwidthManager::requestBandwidth(std::shared_ptr<BandwidthUser> peer, int const amount, int const priority, BandwidthChannel** chan, int const num_channels)
 {
-	if (m_abort) return 0;
-
-	//TORRENT_ASSERT(blk > 0);
-	//TORRENT_ASSERT(priority > 0);
-
-	// if this assert is hit, the peer is requesting more bandwidth before
-	// being assigned bandwidth for an already outstanding request
-	//TORRENT_ASSERT(!is_queued(peer.get()));
+	if (abort)
+		return 0;
 
 	if (num_channels == 0)
-	{
-		// the connection is not rate limited by any of its
-		// bandwidth channels, or it doesn't belong to any
-		// channels. There's no point in adding it to
-		// the queue, just satisfy the request immediately
-		return blk;
-	}
+		return amount;
 
-	std::lock_guard<std::mutex> guard(request_mutex);
+	std::lock_guard<std::mutex> guard(requestMutex);
 
 	int k = 0;
-	BandwidthRequest bwr(std::move(peer), blk, priority);
+	BandwidthRequest bwr(std::move(peer), amount, priority);
 	for (int i = 0; i < num_channels && chan[i]; ++i)
 	{
-		if (chan[i]->need_queueing(blk))
+		if (chan[i]->needQueueing(amount))
 			bwr.channel[k++] = chan[i];
 	}
 
-	if (k == 0) return blk;
+	if (k == 0) return amount;
 
-	m_queued_bytes += blk;
-	m_queue.push_back(std::move(bwr));
+	queuedBytes += amount;
+	requestsQueue.push_back(std::move(bwr));
 	return 0;
 }
 
-void BandwidthManager::update_quotas(int dt)
+void BandwidthManager::updateQuotas(int dt)
 {
-	if (m_abort) return;
-	if (m_queue.empty()) return;
+	if (abort) return;
+	if (requestsQueue.empty()) return;
 
 	if (dt > 3000) dt = 3000;
-
-	// for each bandwidth channel, call update_quota(dt)
 
 	std::vector<BandwidthChannel*> channels;
 
 	std::vector<BandwidthRequest> queue;
 
 	{
-		std::lock_guard<std::mutex> guard(request_mutex);
+		std::lock_guard<std::mutex> guard(requestMutex);
 
-		for (auto i = m_queue.begin(); i != m_queue.end();)
+		for (auto i = requestsQueue.begin(); i != requestsQueue.end();)
 		{
 			if (!i->user->isActive())
 			{
-				m_queued_bytes -= i->request_size - i->assigned;
+				queuedBytes -= i->requestSize - i->assigned;
 
 				// return all assigned quota to all the
 				// bandwidth channels this peer belongs to
-				for (int j = 0; j < BandwidthRequest::max_bandwidth_channels && i->channel[j]; ++j)
+				for (int j = 0; j < BandwidthRequest::MaxBandwidthChannels && i->channel[j]; ++j)
 				{
 					BandwidthChannel* bwc = i->channel[j];
-					bwc->return_quota(i->assigned);
+					bwc->returnQuota(i->assigned);
 				}
 
 				i->assigned = 0;
 				queue.push_back(std::move(*i));
-				i = m_queue.erase(i);
+				i = requestsQueue.erase(i);
 				continue;
 			}
-			for (int j = 0; j < BandwidthRequest::max_bandwidth_channels && i->channel[j]; ++j)
+			for (int j = 0; j < BandwidthRequest::MaxBandwidthChannels && i->channel[j]; ++j)
 			{
 				BandwidthChannel* bwc = i->channel[j];
-				bwc->tmp = 0;
+				bwc->tmpPrioritySum = 0;
 			}
 			++i;
 		}
 
-		for (auto const& r : m_queue)
+		for (auto const& r : requestsQueue)
 		{
-			for (int j = 0; j < BandwidthRequest::max_bandwidth_channels && r.channel[j]; ++j)
+			for (int j = 0; j < BandwidthRequest::MaxBandwidthChannels && r.channel[j]; ++j)
 			{
 				BandwidthChannel* bwc = r.channel[j];
-				if (bwc->tmp == 0) channels.push_back(bwc);
-				//TORRENT_ASSERT(INT_MAX - bwc->tmp > r.priority);
-				bwc->tmp += r.priority;
+				if (bwc->tmpPrioritySum == 0) channels.push_back(bwc);
+				bwc->tmpPrioritySum += r.priority;
 			}
 		}
 
 		for (auto const& ch : channels)
 		{
-			ch->update_quota(dt);
+			ch->updateQuota(dt);
 		}
 
-		for (auto r = m_queue.begin(); r != m_queue.end();)
+		for (auto r = requestsQueue.begin(); r != requestsQueue.end();)
 		{
 			r->ttl -= dt;
 			int a = r->assign_bandwidth();
-			if (r->assigned == r->request_size
+			if (r->assigned == r->requestSize
 				|| (r->ttl <= 0 && r->assigned > 0))
 			{
-				a += r->request_size - r->assigned;
-				//TORRENT_ASSERT(r->assigned <= r->request_size);
+				a += r->requestSize - r->assigned;
 				queue.push_back(std::move(*r));
-				r = m_queue.erase(r);
+				r = requestsQueue.erase(r);
 			}
 			else
 			{
 				++r;
 			}
-			m_queued_bytes -= a;
+			queuedBytes -= a;
 		}
 	}	
 
@@ -284,56 +238,3 @@ void BandwidthManager::update_quotas(int dt)
 		queue.pop_back();
 	}
 }
-/*
-void bw_peer::assign_bandwidth(int channel, int amount)
-{
-	waiting_for_bw = false;
-	m_quota += amount;
-
-	if (is_disconnecting())
-		return;
-}
-
-void bw_peer::check_read()
-{
-	if (is_disconnecting())
-		return;
-
-	//reserve buffer size
-
-	//request bw
-	{
-		int wanted_transfer = 0;
-		{
-			const int tick_interval = std::max(1, m_settings.get_int(settings_pack::tick_interval));
-			std::int64_t const download_rate = std::int64_t(m_statistics.download_rate()) * 3 / 2;
-
-			wanted_transfer =  std::max({ m_outstanding_bytes + 30
-					, m_recv_buffer.packet_bytes_remaining() + 30
-					, int(download_rate * tick_interval / 1000) });
-		}
-
-		int bytes = std::max(wanted_transfer, bytes);
-
-		// we already have enough quota
-		if (m_quota >= bytes) return 0;
-
-		// deduct the bytes we already have quota for
-		bytes -= m_quota;
-
-		int const ret = manager->request_bandwidth(self(), bytes, priority, channels.data(), c);
-
-		if (ret == 0)
-			waiting_for_bw = true;
-		else
-			m_quota += ret;
-	}
-
-	if (m_quota == 0)
-		return;
-
-	//int const max_receive = std::min(buffer_size, quota_left);
-
-	//m_socket->async_read_some(
-}
-*/
