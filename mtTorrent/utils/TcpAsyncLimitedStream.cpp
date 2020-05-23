@@ -77,7 +77,7 @@ void TcpAsyncLimitedStream::checkReceivedData()
 	}
 }
 
-size_t TcpAsyncLimitedStream::getReceivedDataCount()
+uint64_t TcpAsyncLimitedStream::getReceivedDataCount()
 {
 	return readBuffer.receivedCounter;
 }

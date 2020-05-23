@@ -77,7 +77,7 @@ namespace mtt
 		Addr getAddress();
 		std::string getAddressName();
 
-		size_t getReceivedDataCount();
+		uint64_t getReceivedDataCount();
 
 	protected:
 

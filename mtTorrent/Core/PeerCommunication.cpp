@@ -242,7 +242,7 @@ std::string mtt::PeerCommunication::getAddressName()
 	return stream->getHostname();
 }
 
-size_t mtt::PeerCommunication::getReceivedDataCount()
+uint64_t mtt::PeerCommunication::getReceivedDataCount()
 {
 	return stream->getReceivedDataCount();
 }
