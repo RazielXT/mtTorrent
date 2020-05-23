@@ -91,7 +91,7 @@ void WriteLogFileImplementation(const char* const type, std::stringstream& ss)
 {
 	LockLog();
 
-	fileLogger.logStrings.push_back(GetLogTime() + ": " + ss.str());
+	fileLogger.logStrings.push_back(GetLogTime() + " (" + type + "): " + ss.str());
 
 	UnlockLog();
 }

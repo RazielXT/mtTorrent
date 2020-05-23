@@ -7,6 +7,8 @@
 #include "LogFile.h"
 #include <fstream>
 
+#define PEERS_LOG(x) WRITE_LOG("Peers", x)
+
 mtt::Peers::Peers(TorrentPtr t) : torrent(t), trackers(t), dht(*this, t)
 {
 	pexInfo.hostname = "PEX";
@@ -90,6 +92,8 @@ void mtt::Peers::stop()
 
 void mtt::Peers::connectNext(uint32_t count)
 {
+	PEERS_LOG("connectNext " << count);
+
 	std::lock_guard<std::mutex> guard(peersMutex);
 	count = std::min(count, mtt::config::getExternal().connection.maxTorrentConnections - (uint32_t)activeConnections.size());
 
@@ -150,6 +154,8 @@ void mtt::Peers::connectNext(uint32_t count)
 		}
 #endif
 	}
+
+	PEERS_LOG("connected " << (origCount - count));
 }
 
 std::shared_ptr<mtt::PeerCommunication> mtt::Peers::connect(Addr& addr)
@@ -331,6 +337,7 @@ uint32_t mtt::Peers::updateKnownPeers(const std::vector<Addr>& peers, PeerSource
 		for (uint32_t i = 0; i < accepted.size(); i++)
 		{
 			addedPeersPtr->address = peers[accepted[i]];
+			PEERS_LOG("New peer " << addedPeersPtr->address.toString() << " source " << (int)source);
 			addedPeersPtr->source = source;
 			addedPeersPtr++;
 		}
@@ -354,6 +361,7 @@ uint32_t mtt::Peers::updateKnownPeers(Addr& addr, PeerSource source)
 		peer.address = addr;
 		peer.source = source;
 		knownPeers.push_back(peer);
+		PEERS_LOG("New peer " << addr.toString());
 
 		return (uint32_t)knownPeers.size() - 1;
 	}
@@ -368,6 +376,8 @@ std::shared_ptr<mtt::PeerCommunication> mtt::Peers::connect(uint32_t idx)
 	auto& knownPeer = knownPeers[idx];
 	if (knownPeer.lastQuality == PeerQuality::Unknown)
 		knownPeer.lastQuality = PeerQuality::Connecting;
+
+	PEERS_LOG("connect " << knownPeer.address.toString());
 
 	ActivePeer peer;
 	peer.comm = std::make_shared<PeerCommunication>(torrent->infoFile.info, *peersListener, torrent->service.io);

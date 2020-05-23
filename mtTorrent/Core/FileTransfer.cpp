@@ -11,6 +11,8 @@
 FastIpToCountry ipToCountry;
 bool ipToCountryLoaded = false;
 
+#define TRANSFER_LOG(x) WRITE_LOG("Transfer", x)
+
 mtt::FileTransfer::FileTransfer(TorrentPtr t) : downloader(t), torrent(t)
 {
 	uploader = std::make_shared<Uploader>(t);
@@ -70,6 +72,8 @@ void mtt::FileTransfer::stop()
 
 void mtt::FileTransfer::reevaluate()
 {
+	TRANSFER_LOG("reevaluate");
+
 	std::lock_guard<std::mutex> guard(peersMutex);
 	for(auto& p : activePeers)
 		downloader.evaluateNextRequests(&p);
@@ -78,6 +82,7 @@ void mtt::FileTransfer::reevaluate()
 void mtt::FileTransfer::handshakeFinished(PeerCommunication* p)
 {
 	LOG_APPEND("handshake " << p->getAddressName());
+	TRANSFER_LOG("handshake " << p->getAddressName());
 	if (!torrent->files.progress.empty())
 		p->sendBitfield(torrent->files.progress.toBitfield());
 
@@ -87,11 +92,13 @@ void mtt::FileTransfer::handshakeFinished(PeerCommunication* p)
 void mtt::FileTransfer::connectionClosed(PeerCommunication* p, int code)
 {
 	LOG_APPEND("closed " << p->getAddressName());
+	TRANSFER_LOG("closed " << p->getAddressName());
 	removePeer(p);
 }
 
 void mtt::FileTransfer::messageReceived(PeerCommunication* p, PeerMessage& msg)
 {
+	TRANSFER_LOG("msg " << msg.id << " " << p->getAddressName());
 	LOG_APPEND("msg " << msg.id << " " << p->getAddressName());
 
 	if (msg.id == Piece)
@@ -304,18 +311,21 @@ void mtt::FileTransfer::removePeers(std::vector<uint32_t> sortedIdx)
 {
 	for (auto it = sortedIdx.rbegin(); it != sortedIdx.rend(); it++)
 	{
+		TRANSFER_LOG("remove " << (activePeers.begin() + *it)->comm->getAddressName());
 		activePeers.erase(activePeers.begin() + *it);
 	}
 }
 
 void mtt::FileTransfer::evaluateCurrentPeers()
 {
+	TRANSFER_LOG("evalCurrentPeers?");
 	if (activePeers.size() < mtt::config::getExternal().connection.maxTorrentConnections && !torrent->selectionFinished())
 		torrent->peers->connectNext(10);
 }
 
 void mtt::FileTransfer::evalCurrentPeers()
 {
+	TRANSFER_LOG("evalCurrentPeers");
 	const uint32_t peersEvalInterval = 5;
 
 	if (peersEvalCounter-- > 0)
