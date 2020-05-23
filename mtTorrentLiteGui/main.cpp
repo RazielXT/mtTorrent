@@ -931,7 +931,8 @@ void onButtonClick(ButtonId id, System::String^ param)
 			}
 		}
 	}
-	else if (GuiLite::FileSelectionForm::instance)
+
+	if (GuiLite::FileSelectionForm::instance)
 	{
 		if (id == ButtonId::SelectionOk)
 		{
