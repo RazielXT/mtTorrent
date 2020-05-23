@@ -49,7 +49,7 @@ protected:
 	void connectEndpoint();
 	void setAsConnected();
 
-	void postFail(std::string place, const std::error_code& error);
+	void postFail(const char* place, const std::error_code& error);
 
 	enum { Disconnected, Connecting, Connected } state = Disconnected;
 	void handle_resolve(const std::error_code& error, tcp::resolver::iterator iterator, std::shared_ptr<tcp::resolver> resolver);
@@ -62,8 +62,9 @@ protected:
 	std::deque<DataBuffer> write_msgs;
 	void handle_write(const std::error_code& error);
 
-	std::array<char, 10*1024> recv_buffer;
+	std::vector<char> recv_buffer;
 	void handle_receive(const std::error_code& error, std::size_t bytes_transferred);
+	bool readAvailableData();
 	void appendData(char* data, size_t size);
 	std::mutex receiveBuffer_mutex;
 	DataBuffer receiveBuffer;

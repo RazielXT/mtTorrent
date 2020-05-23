@@ -43,7 +43,7 @@ namespace mtt
 		uint16_t port;
 		uint16_t messageSize = 0;
 
-		PeerMessage(DataBuffer& data);
+		PeerMessage(const BufferView& buffer);
 
 		struct
 		{

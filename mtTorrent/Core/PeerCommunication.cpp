@@ -85,13 +85,13 @@ namespace mtt
 
 		DataBuffer createPiece(PieceBlock& block)
 		{
-			uint32_t dataSize = 1 + 8 + (uint32_t)block.data.size();
+			uint32_t dataSize = 1 + 8 + (uint32_t)block.buffer.size;
 			PacketBuilder packet(4 + dataSize);
 			packet.add32(dataSize);
 			packet.add(Piece);
 			packet.add32(block.info.index);
 			packet.add32(block.info.begin);
-			packet.add(block.data.data(), block.data.size());
+			packet.add(block.buffer.data, block.buffer.size);
 
 			return packet.getBuffer();
 		}
@@ -131,7 +131,7 @@ void mtt::PeerCommunication::setStream(std::shared_ptr<TcpAsyncLimitedStream> s)
 	state.action = PeerCommunicationState::Connected;
 	initializeBandwidth();
 	initializeCallbacks();
-	dataReceived();
+	stream->checkReceivedData();
 }
 
 void mtt::PeerCommunication::initializeBandwidth()
@@ -149,7 +149,7 @@ void mtt::PeerCommunication::initializeCallbacks()
 		std::lock_guard<std::mutex> guard(stream->callbackMutex);
 		stream->onConnectCallback = std::bind(&PeerCommunication::connectionOpened, shared_from_this());
 		stream->onCloseCallback = [this](int code) {connectionClosed(code); };
-		stream->onReceiveCallback = std::bind(&PeerCommunication::dataReceived, shared_from_this());
+		stream->onReceiveCallback = std::bind(&PeerCommunication::dataReceived, shared_from_this(), std::placeholders::_1);
 	}
 
 	ext.stream = stream;
@@ -186,18 +186,32 @@ void mtt::PeerCommunication::sendHandshake()
 	}
 }
 
-void PeerCommunication::dataReceived()
+size_t PeerCommunication::dataReceived(const BufferView& buffer)
 {
-	std::lock_guard<std::mutex> guard(read_mutex);
+	size_t consumedSize = 0;
 
-	auto message = readNextStreamMessage();
+	auto readNextMessage = [&]()
+	{
+		PeerMessage msg({ buffer.data + consumedSize, buffer.size - consumedSize });
+
+		if (msg.id != Invalid)
+			consumedSize += msg.messageSize;
+		else if (!msg.messageSize)
+			consumedSize = buffer.size;
+
+		return std::move(msg);
+	};
+
+	auto message = readNextMessage();
 	auto ptr = shared_from_this();
 
 	while (message.id != Invalid)
 	{
 		handleMessage(message);
-		message = readNextStreamMessage();
+		message = readNextMessage();
 	}
+
+	return consumedSize;
 }
 
 void PeerCommunication::connectionOpened()
@@ -243,19 +257,6 @@ void mtt::PeerCommunication::connectionClosed(int code)
 		state.action = PeerCommunicationState::Disconnected;
 		listener.connectionClosed(this, code);
 	}
-}
-
-mtt::PeerMessage mtt::PeerCommunication::readNextStreamMessage()
-{
-	auto data = stream->getReceivedData();
-	PeerMessage msg(data);
-
-	if (msg.id != Invalid)
-		stream->consumeData(msg.messageSize);
-	else if (!msg.messageSize)
-		stream->consumeData(data.size());
-
-	return msg;
 }
 
 mtt::PeerCommunication::~PeerCommunication()

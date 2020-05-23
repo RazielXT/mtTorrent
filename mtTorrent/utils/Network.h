@@ -12,6 +12,19 @@ using asio::ip::udp;
 
 using DataBuffer = std::vector<uint8_t>;
 
+struct BufferView
+{
+	BufferView();
+	BufferView(const uint8_t* data, size_t size);
+
+	const uint8_t* data;
+	size_t size;
+
+	void store(const uint8_t* data, size_t size);
+private:
+	DataBuffer localbuffer;
+};
+
 struct Addr
 {
 	Addr();

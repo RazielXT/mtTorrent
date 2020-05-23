@@ -306,7 +306,7 @@ void TorrentTest::testStorageLoad()
 		for (auto& blockInfo : blocksInfo)
 		{
 			auto block = storage.getPieceBlock(blockInfo);		
-			memcpy(piece.data.data() + block.info.begin, block.data.data(), block.info.length);
+			memcpy(piece.data.data() + block.info.begin, block.buffer.data, block.info.length);
 		}
 
 		outStorage.storePiece(piece);

@@ -3,30 +3,30 @@
 
 using namespace mtt;
 
-PeerMessage::PeerMessage(DataBuffer& data)
+PeerMessage::PeerMessage(const BufferView& buffer)
 {
-	if (data.size() < 4)
+	if (buffer.size < 4)
 	{
 		messageSize = 1;
 		return;
 	}
 
-	if (data.size() >= 68 && data[0] == 19)
+	if (buffer.size >= 68 && buffer.data[0] == 19)
 	{
-		if (memcmp(data.data() + 1, "BitTorrent protocol", 19) == 0)
+		if (memcmp(buffer.data + 1, "BitTorrent protocol", 19) == 0)
 		{
 			id = Handshake;
 
 			messageSize = 68;
-			memcpy(handshake.reservedBytes, &data[0] + 20, 8);
-			memcpy(handshake.info, &data[0] + 20 + 8, 20);
-			memcpy(handshake.peerId, &data[0] + 20 + 8 + 20, 20);
+			memcpy(handshake.reservedBytes, buffer.data + 20, 8);
+			memcpy(handshake.info, buffer.data + 20 + 8, 20);
+			memcpy(handshake.peerId, buffer.data + 20 + 8 + 20, 20);
 
 			return;
 		}
 	}
 
-	PacketReader reader(data);
+	PacketReader reader(buffer.data, buffer.size);
 
 	auto size = reader.pop32();
 	messageSize = size + 4;
@@ -61,8 +61,8 @@ PeerMessage::PeerMessage(DataBuffer& data)
 		{
 			piece.info.index = reader.pop32();
 			piece.info.begin = reader.pop32();
-			piece.data = reader.popBuffer(size - 9);
-			piece.info.length = static_cast<uint32_t>(piece.data.size());
+			piece.buffer = reader.popBufferView(size - 9);
+			piece.info.length = static_cast<uint32_t>(piece.buffer.size);
 		}
 		else if (id == Cancel && size == 13)
 		{

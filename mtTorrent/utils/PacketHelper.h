@@ -44,6 +44,13 @@ struct PacketReader
 		return out;
 	}
 
+	BufferView popBufferView(size_t size)
+	{
+		auto out = BufferView{ buffer + pos, size };
+		pos += size;
+		return out;
+	}
+
 	PacketReader(DataBuffer& buffer) : buffer(buffer.data()), size(buffer.size())
 	{
 	}

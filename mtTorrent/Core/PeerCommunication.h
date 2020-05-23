@@ -105,12 +105,10 @@ namespace mtt
 
 		std::shared_ptr<TcpAsyncLimitedStream> stream;
 
-		std::mutex read_mutex;
-		mtt::PeerMessage readNextStreamMessage();
 		void handleMessage(PeerMessage& msg);
 
 		void connectionOpened();
-		void dataReceived();
+		size_t dataReceived(const BufferView& buffer);
 		void connectionClosed(int);
 
 		void initializeBandwidth();

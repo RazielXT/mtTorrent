@@ -26,19 +26,17 @@ public:
 
 	void write(const DataBuffer& data);
 
-	DataBuffer getReceivedData();
-	void consumeData(size_t size);
-
 	std::mutex callbackMutex;
 	std::function<void()> onConnectCallback;
-	std::function<void()> onReceiveCallback;
+	std::function<size_t(const BufferView&)> onReceiveCallback;
 	std::function<void(int)> onCloseCallback;
 
 	uint16_t getPort();
 	std::string& getHostname();
 	tcp::endpoint& getEndpoint();
 
-	size_t getReceivedDataCount();
+	void checkReceivedData();
+	uint64_t getReceivedDataCount();
 
 	void setBandwidthChannels(BandwidthChannel**, uint32_t count);
 	void setBandwidthPriority(int priority);
@@ -60,12 +58,22 @@ protected:
 	std::deque<DataBuffer> write_msgs;
 	void handle_write(const std::error_code& error);
 
-	std::vector<char> recv_buffer;
-	void handle_receive(const std::error_code& error, std::size_t bytes_transferred);
-	void appendData(char* data, size_t size);
+	struct ReadBuffer
+	{
+		void advanceBuffer(size_t size);
+		void consume(size_t size);
+		uint8_t* reserve(size_t size);
+		size_t reserved();
+
+		DataBuffer data;
+		uint64_t receivedCounter = 0;
+		size_t pos = 0;
+	}
+	readBuffer;
 	std::mutex receive_mutex;
-	DataBuffer receiveBuffer;
-	size_t receivedCounter = 0;
+
+	void handle_receive(const std::error_code& error, std::size_t bytes_transferred);
+	void appendData(size_t size);
 
 	std::mutex socket_mutex;
 	tcp::socket socket;
@@ -87,7 +95,7 @@ protected:
 	int32_t timeout = 15;
 	bool writing = false;
 
-	uint32_t m_quota = 0;
+	uint32_t bw_quota = 0;
 	bool waiting_for_bw = false;
 	bool waiting_for_data = false;
 

@@ -30,7 +30,7 @@ bool DownloadedPiece::addBlock(PieceBlock& block)
 
 	if (blockIdx < blocksTodo.size() && blocksTodo[blockIdx] == 0)
 	{
-		memcpy(&data[0] + block.info.begin, block.data.data(), block.info.length);
+		memcpy(&data[0] + block.info.begin, block.buffer.data, block.info.length);
 		blocksTodo[blockIdx] = 1;
 		remainingBlocks--;
 		return true;

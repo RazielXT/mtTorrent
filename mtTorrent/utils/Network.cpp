@@ -146,13 +146,15 @@ bool openSslSocket(ssl_socket& sock, tcp::resolver& resolver, const char* hostna
 std::string sendHttpsRequest(ssl_socket& socket, asio::streambuf& request)
 {
 	// Send the request.
-	asio::write(socket, request);
+	asio::error_code error;
+	asio::write(socket, request, error);
+	if (error)
+		return "";
 
 	// Read the response status line. The response streambuf will automatically
 	// grow to accommodate the entire line. The growth may be limited by passing
 	// a maximum size to the streambuf constructor.
 	asio::streambuf response;
-	asio::error_code error;
 	asio::read(socket, response, error);
 
 	std::string message;
@@ -173,3 +175,21 @@ std::string sendHttpsRequest(ssl_socket& socket, tcp::resolver& resolver, asio::
 	return sendHttpsRequest(socket, request);
 }
 #endif
+
+BufferView::BufferView()
+{
+}
+
+BufferView::BufferView(const uint8_t* d, size_t s)
+{
+	data = d;
+	size = s;
+}
+
+void BufferView::store(const uint8_t* d, size_t s)
+{
+	localbuffer.resize(s);
+	memcpy(localbuffer.data(), d, s);
+	data = localbuffer.data();
+	size = localbuffer.size();
+}

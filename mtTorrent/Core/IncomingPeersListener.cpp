@@ -102,15 +102,16 @@ void mtt::IncomingPeersListener::createListener()
 		{
 			removePeer(sPtr);
 		};
-		c->onReceiveCallback = [sPtr, this]()
+		c->onReceiveCallback = [sPtr, this](const BufferView& data)
 		{
-			auto data = sPtr->getReceivedData();
 			PeerMessage msg(data);
 
 			if (msg.id == Handshake)
 				addPeer(sPtr, msg.handshake.info);
 			else if (msg.messageSize == 0)
 				removePeer(sPtr);
+
+			return 0;
 		};
 
 		std::lock_guard<std::mutex> guard(peersMutex);

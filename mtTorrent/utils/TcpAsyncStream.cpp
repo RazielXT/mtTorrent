@@ -139,6 +139,15 @@ void TcpAsyncStream::setAsConnected()
 	info.endpoint = socket.remote_endpoint();
 	info.endpointInitialized = true;
 
+	std::error_code ec;
+	socket.non_blocking(true, ec);
+	if (ec)
+	{
+		postFail("non_blocking", ec);
+		return;
+	}
+
+	recv_buffer.resize(100);
 	socket.async_receive(asio::buffer(recv_buffer), std::bind(&TcpAsyncStream::handle_receive, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 
 	{
@@ -149,7 +158,7 @@ void TcpAsyncStream::setAsConnected()
 	}
 }
 
-void TcpAsyncStream::postFail(std::string place, const std::error_code& error)
+void TcpAsyncStream::postFail(const char* place, const std::error_code& error)
 {
 	if (state == Disconnected)
 		return;
@@ -286,6 +295,39 @@ void TcpAsyncStream::handle_write(const std::error_code& error)
 	}
 }
 
+bool TcpAsyncStream::readAvailableData()
+{
+	std::error_code ec;
+	uint32_t availableSize = uint32_t(socket.available(ec));
+	if (ec)
+	{
+		postFail("Available", ec);
+		return false;
+	}
+
+	if (availableSize > 0)
+	{
+		recv_buffer.resize(availableSize);
+		size_t bytes_transferred = socket.read_some(asio::buffer(recv_buffer, availableSize), ec);
+
+		if (ec || bytes_transferred == 0)
+		{
+			if (ec != asio::error::would_block && ec != asio::error::try_again)
+			{
+				postFail("Read", ec);
+				return false;
+			}
+		}
+		else
+		{
+			TCP_LOG("Read available " << bytes_transferred << " bytes");
+			appendData(recv_buffer.data(), bytes_transferred);
+		}
+	}
+
+	return true;
+}
+
 void TcpAsyncStream::handle_receive(const std::error_code& error, std::size_t bytes_transferred)
 {
 	TCP_LOG("received " << bytes_transferred << " bytes");
@@ -294,9 +336,13 @@ void TcpAsyncStream::handle_receive(const std::error_code& error, std::size_t by
 	{
 		appendData(recv_buffer.data(), bytes_transferred);
 
+		if (int(bytes_transferred) == recv_buffer.size() && !readAvailableData())
+			return;
+
 		timeoutTimer.expires_from_now(std::chrono::seconds(60));
 		timeoutTimer.async_wait(std::bind(&TcpAsyncStream::checkTimeout, shared_from_this(), std::placeholders::_1));
 
+		recv_buffer.resize(recv_buffer.capacity());
 		socket.async_receive(asio::buffer(recv_buffer),
 			std::bind(&TcpAsyncStream::handle_receive, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 

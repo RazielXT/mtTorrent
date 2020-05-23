@@ -19,7 +19,7 @@ namespace mtt
 	struct PieceBlock
 	{
 		PieceBlockInfo info;
-		DataBuffer data;
+		BufferView buffer;
 	};
 
 	struct PieceDownloadInfo

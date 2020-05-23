@@ -104,8 +104,7 @@ mtt::PieceBlock mtt::Storage::getPieceBlock(PieceBlockInfo& block)
 
 	if (piece.data.size() >= block.begin + block.length)
 	{
-		out.data.resize(block.length);
-		memcpy(out.data.data(), piece.data.data() + block.begin, block.length);
+		out.buffer.store(piece.data.data() + block.begin, block.length);
 	}
 
 	return out;
