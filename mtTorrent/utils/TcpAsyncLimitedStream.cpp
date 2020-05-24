@@ -1,8 +1,8 @@
 #include "TcpAsyncLimitedStream.h"
 #include "Logging.h"
 
-#define TCP_LOG(x) WRITE_LOG_FILE(LogTypeTcp, getHostname() << " " << x)
-#define TCP_LOG_BUFFER(x) WRITE_LOG_FILE(LogTypeTcp, "Buffer " << x)
+#define TCP_LOG(x) WRITE_LOG(LogTypeTcp, getHostname() << " " << x)
+#define TCP_LOG_BUFFER(x) WRITE_LOG(LogTypeTcp, "Buffer " << x)
 
 TcpAsyncLimitedStream::TcpAsyncLimitedStream(asio::io_service& io) : io_service(io), socket(io), timeoutTimer(io)
 {
