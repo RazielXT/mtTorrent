@@ -139,16 +139,16 @@ void UpnpDiscovery::queryNext()
 	info.clientIp = upnpLocation.adapter.clientIp;
 	info.port = upnpLocation.port;
 
-	stream->onReceiveCallback = [streamPtr, this, info]()
+	stream->onReceiveCallback = [streamPtr, this, info](const BufferView& data) -> size_t
 	{
-		auto data = streamPtr->getReceivedData();
-		auto header = HttpHeaderInfo::readFromBuffer(data);
+		auto header = HttpHeaderInfo::read((const char*)data.data, data.size);
 
-		if (header.valid && data.size() >= (header.dataStart + header.dataSize))
+		if (header.valid && data.size >= (header.dataStart + header.dataSize))
 		{
-			streamPtr->consumeData(header.dataStart + header.dataSize);
-			onRootXmlReceive((const char*)data.data() + header.dataStart, header.dataSize, info);
+			onRootXmlReceive((const char*)data.data + header.dataStart, header.dataSize, info);
+			return header.dataStart + header.dataSize;
 		}
+		return 0;
 	};
 
 	stream->onCloseCallback = [streamPtr, this](int code)

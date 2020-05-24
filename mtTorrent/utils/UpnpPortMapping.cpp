@@ -144,22 +144,22 @@ void UpnpPortMapping::mapPort(const std::string& gateway, uint16_t gatewayPort, 
 		streamPtr->write(buffer);
 	};
 
-	stream->onReceiveCallback = [streamPtr, upnpState, gateway, gatewayPort, port, type]()
+	stream->onReceiveCallback = [streamPtr, upnpState, gateway, gatewayPort, port, type](const BufferView& data) -> size_t
 	{
-		auto data = streamPtr->getReceivedData();
-		auto header = HttpHeaderInfo::readFromBuffer(data);
+		auto header = HttpHeaderInfo::read((const char*)data.data, data.size);
 
-		if (header.valid && data.size() >= (header.dataStart + header.dataSize))
+		if (header.valid && data.size >= (header.dataStart + header.dataSize))
 		{
-			streamPtr->consumeData(header.dataStart + header.dataSize);
-
 			std::lock_guard<std::mutex> guard(upnpState->stateMutex);
 
 			if (header.success)
 			{
 				upnpState->mappedPorts.push_back({ gateway, gatewayPort, port, type });
 			}
+
+			return header.dataStart + header.dataSize;
 		}
+		return 0;
 	};
 
 	stream->onCloseCallback = [streamPtr, upnpState, gateway, this](int code)
@@ -234,15 +234,12 @@ void UpnpPortMapping::unmapPort(const std::string& gateway, uint16_t gatewayPort
 		streamPtr->write(buffer);
 	};
 
-	stream->onReceiveCallback = [streamPtr, upnpState, gateway, port, type]()
+	stream->onReceiveCallback = [streamPtr, upnpState, gateway, port, type](const BufferView& data) -> size_t
 	{
-		auto data = streamPtr->getReceivedData();
-		auto header = HttpHeaderInfo::readFromBuffer(data);
+		auto header = HttpHeaderInfo::read((const char*)data.data, data.size);
 
-		if (header.valid && data.size() >= (header.dataStart + header.dataSize))
+		if (header.valid && data.size >= (header.dataStart + header.dataSize))
 		{
-			streamPtr->consumeData(header.dataStart + header.dataSize);
-
 			std::lock_guard<std::mutex> guard(upnpState->stateMutex);
 
 			if (header.success)
@@ -256,7 +253,10 @@ void UpnpPortMapping::unmapPort(const std::string& gateway, uint16_t gatewayPort
 					}
 				}
 			}
+
+			return header.dataStart + header.dataSize;
 		}
+		return 0;
 	};
 
 	stream->onCloseCallback = [streamPtr, upnpState, gateway, this](int code)

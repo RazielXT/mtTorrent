@@ -2,28 +2,15 @@
 #include "Logging.h"
 
 #define TCP_LOG(x) WRITE_LOG(LogTypeTcp, getHostname() << " " << x)
+#define TCP_LOG_BUFFER(x) WRITE_LOG(LogTypeTcp, "Buffer " << x)
 
 TcpAsyncStream::TcpAsyncStream(asio::io_service& io) : io_service(io), socket(io), timeoutTimer(io)
 {
+	setBandwidthChannels(nullptr, 0);
 }
 
 TcpAsyncStream::~TcpAsyncStream()
 {
-}
-
-void TcpAsyncStream::init(const std::string& hostname, const std::string& port)
-{
-	info.host = hostname;
-	info.port = (uint16_t)strtoul(port.data(), NULL, 10);
-}
-
-void TcpAsyncStream::connect(const std::string& hostname, const std::string& port)
-{
-	if (state != Disconnected)
-		return;
-
-	init(hostname, port);
-	connectByHostname();
 }
 
 void TcpAsyncStream::connect(const uint8_t* ip, uint16_t port, bool ipv6)
@@ -58,6 +45,12 @@ void TcpAsyncStream::connect(const std::string& ip, uint16_t port)
 	connectEndpoint();
 }
 
+void TcpAsyncStream::init(const std::string& hostname, const std::string& port)
+{
+	info.host = hostname;
+	info.port = (uint16_t)strtoul(port.data(), NULL, 10);
+}
+
 void TcpAsyncStream::close(bool immediate)
 {
 	if (immediate)
@@ -78,20 +71,6 @@ void TcpAsyncStream::write(const DataBuffer& data)
 	io_service.post(std::bind(&TcpAsyncStream::do_write, shared_from_this(), data));
 }
 
-DataBuffer TcpAsyncStream::getReceivedData()
-{
-	std::lock_guard<std::mutex> guard(receiveBuffer_mutex);
-
-	return receiveBuffer;
-}
-
-void TcpAsyncStream::consumeData(size_t size)
-{
-	std::lock_guard<std::mutex> guard(receiveBuffer_mutex);
-
-	receiveBuffer.erase(receiveBuffer.begin(), receiveBuffer.begin() + size);
-}
-
 uint16_t TcpAsyncStream::getPort()
 {
 	return info.port;
@@ -107,13 +86,37 @@ tcp::endpoint& TcpAsyncStream::getEndpoint()
 	return info.endpoint;
 }
 
-size_t TcpAsyncStream::getReceivedDataCount()
+uint64_t TcpAsyncStream::getReceivedDataCount()
 {
-	return receivedCounter;
+	return readBuffer.receivedCounter;
+}
+
+void TcpAsyncStream::setBandwidthPriority(int p)
+{
+	priority = p;
+}
+
+void TcpAsyncStream::setMinBandwidthRequest(uint32_t size)
+{
+	expecting_size = size;
+}
+
+void TcpAsyncStream::setBandwidthChannels(BandwidthChannel** bwc, uint32_t count)
+{
+	bwChannelsCount = count;
+	for (uint32_t i = 0; i < 2; i++)
+	{
+		if (i < count)
+			bwChannels[i] = bwc[i];
+		else
+			bwChannels[i] = nullptr;
+	}
 }
 
 void TcpAsyncStream::connectByHostname()
 {
+	TCP_LOG("resolving hostname");
+
 	state = Connecting;
 
 	tcp::resolver::query query(info.host, std::to_string(info.port));
@@ -133,11 +136,13 @@ void TcpAsyncStream::connectEndpoint()
 
 void TcpAsyncStream::setAsConnected()
 {
-	TCP_LOG("connected");
-
 	state = Connected;
 	info.endpoint = socket.remote_endpoint();
 	info.endpointInitialized = true;
+	info.host = info.endpoint.address().to_string();
+	info.port = info.endpoint.port();
+
+	TCP_LOG("connected");
 
 	std::error_code ec;
 	socket.non_blocking(true, ec);
@@ -147,8 +152,20 @@ void TcpAsyncStream::setAsConnected()
 		return;
 	}
 
-	recv_buffer.resize(100);
-	socket.async_receive(asio::buffer(recv_buffer), std::bind(&TcpAsyncStream::handle_receive, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
+	{
+		std::lock_guard<std::mutex> guard(write_msgs_mutex);
+
+		if (!write_msgs.empty())
+		{
+			TCP_LOG("writing " << write_msgs.front().size() << " bytes");
+
+			asio::async_write(socket,
+				asio::buffer(write_msgs.front().data(), write_msgs.front().size()),
+				std::bind(&TcpAsyncStream::handle_write, shared_from_this(), std::placeholders::_1));
+		}
+	}
+
+	startReceive();
 
 	{
 		std::lock_guard<std::mutex> guard(callbackMutex);
@@ -192,10 +209,23 @@ void TcpAsyncStream::postFail(const char* place, const std::error_code& error)
 	}
 }
 
+void TcpAsyncStream::handle_connect(const std::error_code& error)
+{
+	if (!error)
+	{
+		setAsConnected();
+	}
+	else
+	{
+		postFail("Connect", error);
+	}
+}
+
 void TcpAsyncStream::handle_resolve(const std::error_code& error, tcp::resolver::iterator iterator, std::shared_ptr<tcp::resolver> resolver)
 {
 	if (!error)
 	{
+		TCP_LOG("resolved connecting");
 		tcp::endpoint endpoint = *iterator;
 		socket.async_connect(endpoint, std::bind(&TcpAsyncStream::handle_resolver_connect, shared_from_this(), std::placeholders::_1, ++iterator, resolver));
 	}
@@ -209,6 +239,8 @@ void TcpAsyncStream::handle_resolver_connect(const std::error_code& error, tcp::
 {
 	if (error && iterator != tcp::resolver::iterator())
 	{
+		TCP_LOG("connect resolved next");
+
 		socket.close();
 		tcp::endpoint endpoint = *iterator;
 		socket.async_connect(endpoint, std::bind(&TcpAsyncStream::handle_resolver_connect, shared_from_this(), std::placeholders::_1, ++iterator, resolver));
@@ -217,23 +249,12 @@ void TcpAsyncStream::handle_resolver_connect(const std::error_code& error, tcp::
 	{
 		if (!error)
 		{
+			TCP_LOG("resolved connected");
 			info.endpoint = socket.remote_endpoint();
 			info.endpointInitialized = true;
 		}
 
 		handle_connect(error);
-	}
-}
-
-void TcpAsyncStream::handle_connect(const std::error_code& error)
-{
-	if (!error)
-	{
-		setAsConnected();
-	}
-	else
-	{
-		postFail("Connect", error);
 	}
 }
 
@@ -305,10 +326,14 @@ bool TcpAsyncStream::readAvailableData()
 		return false;
 	}
 
+	TCP_LOG("Socket available " << availableSize << " bytes");
+	requestBandwidth(availableSize);
+
+	if (availableSize > bw_quota) availableSize = bw_quota;
 	if (availableSize > 0)
 	{
-		recv_buffer.resize(availableSize);
-		size_t bytes_transferred = socket.read_some(asio::buffer(recv_buffer, availableSize), ec);
+		auto readData = readBuffer.reserve(availableSize);
+		size_t bytes_transferred = socket.read_some(asio::buffer(readData, availableSize), ec);
 
 		if (ec || bytes_transferred == 0)
 		{
@@ -321,37 +346,38 @@ bool TcpAsyncStream::readAvailableData()
 		else
 		{
 			TCP_LOG("Read available " << bytes_transferred << " bytes");
-			appendData(recv_buffer.data(), bytes_transferred);
+			appendData(bytes_transferred);
 		}
 	}
 
 	return true;
 }
 
-void TcpAsyncStream::handle_receive(const std::error_code& error, std::size_t bytes_transferred)
+void TcpAsyncStream::handle_receive(const std::error_code& error, std::size_t bytes_transferred, std::size_t bytes_requested)
 {
 	TCP_LOG("received " << bytes_transferred << " bytes");
+	waiting_for_data = false;
 
 	if (!error)
 	{
-		appendData(recv_buffer.data(), bytes_transferred);
+		std::lock_guard<std::mutex> guard(receive_mutex);
 
-		if (int(bytes_transferred) == recv_buffer.size() && !readAvailableData())
+		appendData(bytes_transferred);
+
+		if (bytes_transferred == bytes_requested && !readAvailableData())
 			return;
-
-		timeoutTimer.expires_from_now(std::chrono::seconds(60));
-		timeoutTimer.async_wait(std::bind(&TcpAsyncStream::checkTimeout, shared_from_this(), std::placeholders::_1));
-
-		recv_buffer.resize(recv_buffer.capacity());
-		socket.async_receive(asio::buffer(recv_buffer),
-			std::bind(&TcpAsyncStream::handle_receive, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 
 		{
 			std::lock_guard<std::mutex> guard(callbackMutex);
 
 			if (onReceiveCallback)
-				onReceiveCallback();
+			{
+				size_t consumed = onReceiveCallback({ readBuffer.data.data(), readBuffer.pos });
+				readBuffer.consume(consumed);
+			}
 		}
+
+		startReceive();
 	}
 	else
 	{
@@ -359,12 +385,14 @@ void TcpAsyncStream::handle_receive(const std::error_code& error, std::size_t by
 	}
 }
 
-void TcpAsyncStream::appendData(char* data, size_t size)
+void TcpAsyncStream::appendData(size_t size)
 {
-	std::lock_guard<std::mutex> guard(receiveBuffer_mutex);
+	readBuffer.advanceBuffer(size);
 
-	receivedCounter += size;
-	receiveBuffer.insert(receiveBuffer.end(), data, data + size);
+	auto currentTimeDiff = (uint32_t)time(0) - lastReceiveTime;
+	lastReceiveSpeed = (uint32_t)size / (currentTimeDiff * 1000);
+
+	bw_quota = std::min(bw_quota - (uint32_t)size, (uint32_t)0);
 }
 
 void TcpAsyncStream::checkTimeout(const asio::error_code& error)
@@ -373,4 +401,118 @@ void TcpAsyncStream::checkTimeout(const asio::error_code& error)
 		return;
 
 	postFail("timeout", std::error_code());
+}
+
+uint32_t TcpAsyncStream::wantedTransfer()
+{
+	uint32_t wanted_transfer = std::max({ expecting_size/*, m_recv_buffer.packet_bytes_remaining() + 30*/, lastReceiveSpeed });
+
+	wanted_transfer = std::min(wanted_transfer, (uint32_t)1024*1024);
+
+	return wanted_transfer;
+}
+
+void TcpAsyncStream::requestBandwidth(uint32_t bytes)
+{
+	if (waiting_for_bw)
+		return;
+
+	TCP_LOG("wants quota " << bytes << " bytes, current quota " << bw_quota << " bytes");
+
+	if (bw_quota >= bytes)
+		return;
+
+	TCP_LOG("requesting " << bytes << " bytes");
+
+	bytes -= bw_quota;
+
+	uint32_t ret = BandwidthManager::Get().requestBandwidth(shared_from_this(), bytes, priority, bwChannels, bwChannelsCount);
+	TCP_LOG("request_bandwidth returned " << ret << " bytes");
+
+	if (ret == 0)
+		waiting_for_bw = true;
+	else
+		bw_quota += ret;
+}
+
+void TcpAsyncStream::startReceive()
+{
+	uint32_t bytes = wantedTransfer();
+	requestBandwidth(bytes);
+
+	if (waiting_for_data)
+		return;
+
+	uint32_t max_receive = bw_quota;
+
+	waiting_for_data = true;
+
+	timeoutTimer.expires_from_now(std::chrono::seconds(60));
+	timeoutTimer.async_wait(std::bind(&TcpAsyncStream::checkTimeout, shared_from_this(), std::placeholders::_1));
+
+	TCP_LOG("call async_receive for " << max_receive << " bytes");
+
+	auto readData = readBuffer.reserve(max_receive);
+	socket.async_receive(asio::buffer(readData, max_receive), std::bind(&TcpAsyncStream::handle_receive, shared_from_this(), std::placeholders::_1, std::placeholders::_2, max_receive));
+}
+
+bool TcpAsyncStream::isActive()
+{
+	return state == Connected;
+}
+
+void TcpAsyncStream::assignBandwidth(int amount)
+{
+	TCP_LOG("assignBandwidth returned " << amount << " bytes");
+
+	std::lock_guard<std::mutex> guard(receive_mutex);
+
+	waiting_for_bw = false;
+	bw_quota += amount;
+
+	if(isActive())
+		startReceive();
+}
+
+void TcpAsyncStream::ReadBuffer::advanceBuffer(size_t size)
+{
+	pos += size;
+	receivedCounter += size;
+
+	TCP_LOG_BUFFER("advance " << size << " - Buffer pos " << pos << ", reserved " << reserved() << ", fullsize " << data.size());
+}
+
+void TcpAsyncStream::ReadBuffer::consume(size_t size)
+{
+	pos -= size;
+
+	if (pos && size)
+	{
+		auto tmp = DataBuffer(data.begin() + size, data.begin() + size + pos);
+		data.resize(pos);
+		memcpy(data.data(), tmp.data(), pos);
+	}
+
+	TCP_LOG_BUFFER("consume " << size << " - Buffer pos " << pos << ", reserved " << reserved() << ", fullsize " << data.size());
+}
+
+uint8_t* TcpAsyncStream::ReadBuffer::reserve(size_t size)
+{
+	if (pos && data.capacity() - pos < size)
+	{
+		auto tmp = std::move(data);
+		data.resize(pos + size);
+		memcpy(data.data(), tmp.data(), pos);
+	}
+	else
+		data.resize(pos + size);
+
+	TCP_LOG_BUFFER("reserve " << size << " - Buffer pos " << pos << ", reserved " << reserved() << ", fullsize " << data.size());
+
+	return data.data() + pos;
+}
+
+size_t TcpAsyncStream::ReadBuffer::reserved()
+{
+	return data.size() - pos;
 }

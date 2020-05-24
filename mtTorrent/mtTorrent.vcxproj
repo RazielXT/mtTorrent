@@ -384,7 +384,7 @@
     <ClCompile Include="utils\HttpHeader.cpp" />
     <ClCompile Include="utils\NetAdaptersListWin.cpp" />
     <ClCompile Include="utils\SHA.cpp" />
-    <ClCompile Include="utils\TcpAsyncLimitedStream.cpp" />
+    <ClCompile Include="utils\TcpAsyncStream.cpp" />
     <ClCompile Include="utils\TorrentFileParser.cpp" />
     <ClCompile Include="utils\BencodeParser.cpp" />
     <ClCompile Include="utils\ScheduledTimer.cpp" />
@@ -392,7 +392,6 @@
     <ClCompile Include="utils\Network.cpp" />
     <ClCompile Include="utils\ServiceThreadpool.cpp" />
     <ClCompile Include="utils\TcpAsyncServer.cpp" />
-    <ClCompile Include="utils\TcpAsyncStream.cpp" />
     <ClCompile Include="utils\UdpAsyncWriter.cpp" />
     <ClCompile Include="utils\UdpAsyncComm.cpp" />
     <ClCompile Include="utils\UdpAsyncReceiver.cpp" />
@@ -459,7 +458,7 @@
     <ClInclude Include="utils\HttpHeader.h" />
     <ClInclude Include="utils\NetAdaptersList.h" />
     <ClInclude Include="utils\SHA.h" />
-    <ClInclude Include="utils\TcpAsyncLimitedStream.h" />
+    <ClInclude Include="utils\TcpAsyncStream.h" />
     <ClInclude Include="utils\TorrentFileParser.h" />
     <ClInclude Include="utils\BencodeParser.h" />
     <ClInclude Include="utils\ScheduledTimer.h" />
@@ -467,7 +466,6 @@
     <ClInclude Include="utils\Network.h" />
     <ClInclude Include="utils\ServiceThreadpool.h" />
     <ClInclude Include="utils\TcpAsyncServer.h" />
-    <ClInclude Include="utils\TcpAsyncStream.h" />
     <ClInclude Include="utils\UdpAsyncWriter.h" />
     <ClInclude Include="utils\UdpAsyncComm.h" />
     <ClInclude Include="utils\UdpAsyncReceiver.h" />

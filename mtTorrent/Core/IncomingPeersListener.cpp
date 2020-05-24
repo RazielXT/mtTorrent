@@ -4,7 +4,7 @@
 #include "PeerMessage.h"
 #include "utils/UpnpPortMapping.h"
 
-mtt::IncomingPeersListener::IncomingPeersListener(std::function<uint32_t(std::shared_ptr<TcpAsyncLimitedStream>, const BufferView& data, const uint8_t* hash)> cb)
+mtt::IncomingPeersListener::IncomingPeersListener(std::function<size_t(std::shared_ptr<TcpAsyncStream>, const BufferView& data, const uint8_t* hash)> cb)
 {
 	onNewPeer = cb;
 	pool.start(2);
@@ -94,7 +94,7 @@ void mtt::IncomingPeersListener::createListener()
 		return;
 	}
 
-	listener->acceptCallback = [this](std::shared_ptr<TcpAsyncLimitedStream> c)
+	listener->acceptCallback = [this](std::shared_ptr<TcpAsyncStream> c)
 	{
 		auto sPtr = c.get();
 
@@ -102,23 +102,23 @@ void mtt::IncomingPeersListener::createListener()
 		{
 			removePeer(sPtr);
 		};
-		c->onReceiveCallback = [sPtr, this](const BufferView& data)
+		c->onReceiveCallback = [sPtr, this](const BufferView& data) -> size_t
 		{
 			PeerMessage msg(data);
 
 			if (msg.id == Handshake)
 			{
-				auto sz = addPeer(sPtr, data, msg.handshake.info);
+				size_t sz = addPeer(sPtr, data, msg.handshake.info);
 				if (sz == 0)
 				{
 					sPtr->close(false);
 				}
-				return (size_t)sz;
+				return sz;
 			}
 			else if (msg.messageSize == 0)
 				removePeer(sPtr);
 
-			return (size_t)0;
+			return 0;
 		};
 
 		std::lock_guard<std::mutex> guard(peersMutex);
@@ -128,7 +128,7 @@ void mtt::IncomingPeersListener::createListener()
 	listener->listen();
 }
 
-void mtt::IncomingPeersListener::removePeer(TcpAsyncLimitedStream* s)
+void mtt::IncomingPeersListener::removePeer(TcpAsyncStream* s)
 {
 	std::lock_guard<std::mutex> guard(peersMutex);
 	for (auto it = pendingPeers.begin(); it != pendingPeers.end(); it++)
@@ -141,7 +141,7 @@ void mtt::IncomingPeersListener::removePeer(TcpAsyncLimitedStream* s)
 	}
 }
 
-uint32_t mtt::IncomingPeersListener::addPeer(TcpAsyncLimitedStream* s, const BufferView& data, const uint8_t* hash)
+size_t mtt::IncomingPeersListener::addPeer(TcpAsyncStream* s, const BufferView& data, const uint8_t* hash)
 {
 	std::lock_guard<std::mutex> guard(peersMutex);
 	for (auto it = pendingPeers.begin(); it != pendingPeers.end(); it++)

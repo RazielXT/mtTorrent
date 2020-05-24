@@ -7,10 +7,11 @@
 #include <array>
 #include <functional>
 #include <deque>
+#include "Bandwidth.h"
 
 class TcpAsyncServer;
 
-class TcpAsyncStream : public std::enable_shared_from_this<TcpAsyncStream>
+class TcpAsyncStream : public std::enable_shared_from_this<TcpAsyncStream>, public BandwidthUser
 {
 	friend class TcpAsyncServer;
 
@@ -19,29 +20,28 @@ public:
 	TcpAsyncStream(asio::io_service& io_service);
 	~TcpAsyncStream();
 
-	void init(const std::string& hostname, const std::string& port);
-
 	void connect(const uint8_t* data, uint16_t port, bool ipv6);
 	void connect(const std::string& ip, uint16_t port);
-	void connect(const std::string& hostname, const std::string& port);
+	void init(const std::string& hostname, const std::string& port);
 
 	void close(bool immediate = true);
 
 	void write(const DataBuffer& data);
 
-	DataBuffer getReceivedData();
-	void consumeData(size_t size);
-
 	std::mutex callbackMutex;
 	std::function<void()> onConnectCallback;
-	std::function<void()> onReceiveCallback;
+	std::function<size_t(const BufferView&)> onReceiveCallback;
 	std::function<void(int)> onCloseCallback;
 
 	uint16_t getPort();
 	std::string& getHostname();
 	tcp::endpoint& getEndpoint();
 
-	size_t getReceivedDataCount();
+	uint64_t getReceivedDataCount();
+
+	void setBandwidthChannels(BandwidthChannel**, uint32_t count);
+	void setBandwidthPriority(int priority);
+	void setMinBandwidthRequest(uint32_t size);
 
 protected:
 
@@ -62,13 +62,22 @@ protected:
 	std::deque<DataBuffer> write_msgs;
 	void handle_write(const std::error_code& error);
 
-	std::vector<char> recv_buffer;
-	void handle_receive(const std::error_code& error, std::size_t bytes_transferred);
-	bool readAvailableData();
-	void appendData(char* data, size_t size);
-	std::mutex receiveBuffer_mutex;
-	DataBuffer receiveBuffer;
-	size_t receivedCounter = 0;
+	struct ReadBuffer
+	{
+		void advanceBuffer(size_t size);
+		void consume(size_t size);
+		uint8_t* reserve(size_t size);
+		size_t reserved();
+
+		DataBuffer data;
+		uint64_t receivedCounter = 0;
+		size_t pos = 0;
+	}
+	readBuffer;
+	std::mutex receive_mutex;
+
+	void handle_receive(const std::error_code& error, std::size_t bytes_transferred, std::size_t bytes_requested);
+	void appendData(size_t size);
 
 	std::mutex socket_mutex;
 	tcp::socket socket;
@@ -89,4 +98,26 @@ protected:
 
 	int32_t timeout = 15;
 	bool writing = false;
+
+	uint32_t bw_quota = 0;
+	bool waiting_for_bw = false;
+	bool waiting_for_data = false;
+
+	uint32_t wantedTransfer();
+	void requestBandwidth(uint32_t size);
+
+	void startReceive();
+	bool readAvailableData();
+
+	virtual void assignBandwidth(int amount) override;
+	virtual bool isActive() override;
+
+	uint32_t expecting_size = 100;
+	int priority = 1;
+
+	uint32_t bwChannelsCount = 0;
+	BandwidthChannel* bwChannels[2];
+
+	uint32_t lastReceiveSpeed = 0;
+	uint32_t lastReceiveTime = 0;
 };

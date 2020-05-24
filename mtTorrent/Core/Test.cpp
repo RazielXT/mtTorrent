@@ -332,9 +332,9 @@ void TorrentTest::testPeerListen()
 
 	ServiceThreadpool service(2);
 
-	std::shared_ptr<TcpAsyncLimitedStream> peerStream;
+	std::shared_ptr<TcpAsyncStream> peerStream;
 	TcpAsyncServer server(service.io, mtt::config::getExternal().connection.tcpPort, false);
-	server.acceptCallback = [&](std::shared_ptr<TcpAsyncLimitedStream> c) { peerStream = c; };
+	server.acceptCallback = [&](std::shared_ptr<TcpAsyncStream> c) { peerStream = c; };
 	server.listen();
 
 	WAITFOR(peerStream);

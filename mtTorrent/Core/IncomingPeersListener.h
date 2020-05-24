@@ -1,6 +1,6 @@
 #pragma once
 #include "utils/ServiceThreadpool.h"
-#include "utils/TcpAsyncLimitedStream.h"
+#include "utils/TcpAsyncStream.h"
 #include "Api/Listener.h"
 
 class UpnpPortMapping;
@@ -11,7 +11,7 @@ namespace mtt
 	{
 	public:
 
-		IncomingPeersListener(std::function<uint32_t(std::shared_ptr<TcpAsyncLimitedStream>, const BufferView& data, const uint8_t* hash)> onNewPeer);
+		IncomingPeersListener(std::function<size_t(std::shared_ptr<TcpAsyncStream>, const BufferView& data, const uint8_t* hash)> onNewPeer);
 
 		void stop();
 
@@ -21,16 +21,16 @@ namespace mtt
 
 		void createListener();
 
-		std::function<uint32_t(std::shared_ptr<TcpAsyncLimitedStream>, const BufferView& data, const uint8_t* hash)> onNewPeer;
+		std::function<size_t(std::shared_ptr<TcpAsyncStream>, const BufferView& data, const uint8_t* hash)> onNewPeer;
 
 		std::mutex peersMutex;
-		std::vector<std::shared_ptr<TcpAsyncLimitedStream>> pendingPeers;
+		std::vector<std::shared_ptr<TcpAsyncStream>> pendingPeers;
 
 		std::shared_ptr<TcpAsyncServer> listener;
 		ServiceThreadpool pool;
 
-		void removePeer(TcpAsyncLimitedStream* s);
-		uint32_t addPeer(TcpAsyncLimitedStream* s, const BufferView& data, const uint8_t* hash);
+		void removePeer(TcpAsyncStream* s);
+		size_t addPeer(TcpAsyncStream* s, const BufferView& data, const uint8_t* hash);
 
 
 		std::shared_ptr<UpnpPortMapping> upnp;

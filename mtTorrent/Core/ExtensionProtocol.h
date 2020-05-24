@@ -1,6 +1,6 @@
 #pragma once
 #include "utils/BencodeParser.h"
-#include "utils/TcpAsyncLimitedStream.h"
+#include "utils/TcpAsyncStream.h"
 #include <map>
 
 namespace mtt
@@ -82,7 +82,7 @@ namespace mtt
 			MessageType load(char id, DataBuffer& data);
 			DataBuffer createExtendedHandshakeMessage(bool enablePex = true, uint16_t metadataSize = 0);
 
-			std::shared_ptr<TcpAsyncLimitedStream> stream;
+			std::shared_ptr<TcpAsyncStream> stream;
 			std::map<int, MessageType> messageIds;
 		};
 	}

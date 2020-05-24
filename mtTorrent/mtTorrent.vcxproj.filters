@@ -106,9 +106,6 @@
     <ClCompile Include="utils\TcpAsyncServer.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="utils\TcpAsyncStream.cpp">
-      <Filter>Source Files\Utils</Filter>
-    </ClCompile>
     <ClCompile Include="utils\UrlEncoding.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
@@ -238,10 +235,10 @@
     <ClCompile Include="Core\AlertsManager.cpp">
       <Filter>Source Files\Core\General</Filter>
     </ClCompile>
-    <ClCompile Include="utils\TcpAsyncLimitedStream.cpp">
+    <ClCompile Include="utils\Bandwidth.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="utils\Bandwidth.cpp">
+    <ClCompile Include="utils\TcpAsyncStream.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
   </ItemGroup>
@@ -301,9 +298,6 @@
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="utils\TcpAsyncServer.h">
-      <Filter>Source Files\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="utils\TcpAsyncStream.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="utils\UrlEncoding.h">
@@ -459,10 +453,10 @@
     <ClInclude Include="Core\AlertsManager.h">
       <Filter>Source Files\Core\General</Filter>
     </ClInclude>
-    <ClInclude Include="utils\TcpAsyncLimitedStream.h">
+    <ClInclude Include="utils\Bandwidth.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="utils\Bandwidth.h">
+    <ClInclude Include="utils\TcpAsyncStream.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>

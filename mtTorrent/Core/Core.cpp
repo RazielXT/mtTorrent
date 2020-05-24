@@ -75,7 +75,7 @@ void mtt::Core::init()
 
 	bandwidth = std::make_unique<GlobalBandwidth>();
 
-	listener = std::make_shared<IncomingPeersListener>([this](std::shared_ptr<TcpAsyncLimitedStream> s, const BufferView& data, const uint8_t* hash)
+	listener = std::make_shared<IncomingPeersListener>([this](std::shared_ptr<TcpAsyncStream> s, const BufferView& data, const uint8_t* hash)
 	{
 		auto t = getTorrent(hash);
 		return t ? t->peers->add(s, data) : 0;

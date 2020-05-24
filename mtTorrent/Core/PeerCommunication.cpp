@@ -120,11 +120,11 @@ PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l) : torrent
 
 PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, asio::io_service& io_service) : torrent(t), listener(l)
 {
-	stream = std::make_shared<TcpAsyncLimitedStream>(io_service);
+	stream = std::make_shared<TcpAsyncStream>(io_service);
 	initializeBandwidth();
 }
 
-uint32_t mtt::PeerCommunication::fromStream(std::shared_ptr<TcpAsyncLimitedStream> s, const BufferView& streamData)
+size_t mtt::PeerCommunication::fromStream(std::shared_ptr<TcpAsyncStream> s, const BufferView& streamData)
 {
 	stream = s;
 

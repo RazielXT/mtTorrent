@@ -34,7 +34,7 @@ namespace mtt
 
 		void onTcpClosed(int code);
 		void onTcpConnected();
-		void onTcpReceived();
+		size_t onTcpReceived(const BufferView&);
 
 		std::shared_ptr<TcpAsyncStream> tcpComm;
 

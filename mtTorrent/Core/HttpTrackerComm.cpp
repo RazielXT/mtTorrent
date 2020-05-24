@@ -43,7 +43,7 @@ void mtt::HttpTrackerComm::initializeStream()
 	tcpComm = std::make_shared<TcpAsyncStream>(torrent->service.io);
 	tcpComm->onConnectCallback = std::bind(&HttpTrackerComm::onTcpConnected, this);
 	tcpComm->onCloseCallback = [this](int code) {onTcpClosed(code); };
-	tcpComm->onReceiveCallback = std::bind(&HttpTrackerComm::onTcpReceived, this);
+	tcpComm->onReceiveCallback = std::bind(&HttpTrackerComm::onTcpReceived, this, std::placeholders::_1);
 
 	tcpComm->init(info.hostname, info.port);
 }
@@ -75,26 +75,20 @@ void mtt::HttpTrackerComm::onTcpConnected()
 	info.state = std::max(info.state, TrackerState::Alive);
 }
 
-void mtt::HttpTrackerComm::onTcpReceived()
+size_t mtt::HttpTrackerComm::onTcpReceived(const BufferView& respData)
 {
-	auto respData = tcpComm->getReceivedData();
-
 	if (info.state == TrackerState::Announcing || info.state == TrackerState::Reannouncing)
 	{
 		mtt::AnnounceResponse announceResp;
-		auto msgSize = readAnnounceResponse((const char*)respData.data(), respData.size(), announceResp);
+		auto msgSize = readAnnounceResponse((const char*)respData.data, respData.size, announceResp);
 
-		if (msgSize == 0)
-			return;
-		else if (msgSize == -1)
+		if (msgSize == -1)
 		{
-			tcpComm->consumeData(respData.size());
 			fail();
-			return;
+			return respData.size;
 		}
-		else
+		else if(msgSize != 0)
 		{
-			tcpComm->consumeData(msgSize);
 			info.state = TrackerState::Announced;
 
 			info.leechers = announceResp.leechCount;
@@ -108,7 +102,9 @@ void mtt::HttpTrackerComm::onTcpReceived()
 			if (onAnnounceResult)
 				onAnnounceResult(announceResp);
 		}
+		return msgSize;
 	}
+	return 0;
 }
 
 DataBuffer mtt::HttpTracker::createAnnounceRequest(std::string path, std::string host, std::string port)
