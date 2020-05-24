@@ -35,7 +35,6 @@ public:
 	std::string& getHostname();
 	tcp::endpoint& getEndpoint();
 
-	void checkReceivedData();
 	uint64_t getReceivedDataCount();
 
 	void setBandwidthChannels(BandwidthChannel**, uint32_t count);
@@ -72,7 +71,7 @@ protected:
 	readBuffer;
 	std::mutex receive_mutex;
 
-	void handle_receive(const std::error_code& error, std::size_t bytes_transferred);
+	void handle_receive(const std::error_code& error, std::size_t bytes_transferred, std::size_t bytes_requested);
 	void appendData(size_t size);
 
 	std::mutex socket_mutex;
@@ -111,6 +110,7 @@ protected:
 	uint32_t expecting_size = 100;
 	int priority = 1;
 
+	uint32_t bwChannelsCount = 0;
 	BandwidthChannel* bwChannels[2];
 
 	uint32_t lastReceiveSpeed = 0;

@@ -21,6 +21,7 @@ namespace mtt
 	{
 	public:
 		GlobalBandwidth();
+		~GlobalBandwidth();
 		ServiceThreadpool bwPool;
 		std::shared_ptr<ScheduledTimer> bwTimer;
 	};

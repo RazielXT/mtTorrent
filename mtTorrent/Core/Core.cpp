@@ -75,13 +75,10 @@ void mtt::Core::init()
 
 	bandwidth = std::make_unique<GlobalBandwidth>();
 
-	listener = std::make_shared<IncomingPeersListener>([this](std::shared_ptr<TcpAsyncLimitedStream> s, const uint8_t* hash)
+	listener = std::make_shared<IncomingPeersListener>([this](std::shared_ptr<TcpAsyncLimitedStream> s, const BufferView& data, const uint8_t* hash)
 	{
 		auto t = getTorrent(hash);
-		if (t)
-		{
-			t->peers->add(s);
-		}
+		return t ? t->peers->add(s, data) : 0;
 	}
 	);
 
@@ -305,4 +302,9 @@ mtt::GlobalBandwidth::GlobalBandwidth()
 			BandwidthManager::Get().GetChannel("")->setLimit(mtt::config::getExternal().transfer.maxDownloadSpeed);
 			BandwidthManager::Get().GetChannel("upload")->setLimit(mtt::config::getExternal().transfer.maxUploadSpeed);
 		});
+}
+
+mtt::GlobalBandwidth::~GlobalBandwidth()
+{
+	BandwidthManager::Get().close();
 }

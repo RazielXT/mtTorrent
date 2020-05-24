@@ -1,7 +1,8 @@
 #include "TcpAsyncLimitedStream.h"
 #include "Logging.h"
 
-#define TCP_LOG(x) WRITE_LOG(LogTypeTcp, getHostname() << " " << x)
+#define TCP_LOG(x) WRITE_LOG_FILE(LogTypeTcp, getHostname() << " " << x)
+#define TCP_LOG_BUFFER(x) WRITE_LOG_FILE(LogTypeTcp, "Buffer " << x)
 
 TcpAsyncLimitedStream::TcpAsyncLimitedStream(asio::io_service& io) : io_service(io), socket(io), timeoutTimer(io)
 {
@@ -65,18 +66,6 @@ tcp::endpoint& TcpAsyncLimitedStream::getEndpoint()
 	return info.endpoint;
 }
 
-void TcpAsyncLimitedStream::checkReceivedData()
-{
-	std::lock_guard<std::mutex> guard(receive_mutex);
-	std::lock_guard<std::mutex> guard2(callbackMutex);
-
-	if (onReceiveCallback)
-	{
-		size_t consumed = onReceiveCallback({ readBuffer.data.data(), readBuffer.pos });
-		readBuffer.consume(consumed);
-	}
-}
-
 uint64_t TcpAsyncLimitedStream::getReceivedDataCount()
 {
 	return readBuffer.receivedCounter;
@@ -94,6 +83,7 @@ void TcpAsyncLimitedStream::setMinBandwidthRequest(uint32_t size)
 
 void TcpAsyncLimitedStream::setBandwidthChannels(BandwidthChannel** bwc, uint32_t count)
 {
+	bwChannelsCount = count;
 	for (uint32_t i = 0; i < 2; i++)
 	{
 		if (i < count)
@@ -114,11 +104,13 @@ void TcpAsyncLimitedStream::connectEndpoint()
 
 void TcpAsyncLimitedStream::setAsConnected()
 {
-	TCP_LOG("connected");
-
 	state = Connected;
 	info.endpoint = socket.remote_endpoint();
 	info.endpointInitialized = true;
+	info.host = info.endpoint.address().to_string();
+	info.port = info.endpoint.port();
+
+	TCP_LOG("connected");
 
 	std::error_code ec;
 	socket.non_blocking(true, ec);
@@ -248,6 +240,7 @@ bool TcpAsyncLimitedStream::readAvailableData()
 		return false;
 	}
 
+	TCP_LOG("Socket available " << availableSize << " bytes");
 	requestBandwidth(availableSize);
 
 	if (availableSize > bw_quota) availableSize = bw_quota;
@@ -274,7 +267,7 @@ bool TcpAsyncLimitedStream::readAvailableData()
 	return true;
 }
 
-void TcpAsyncLimitedStream::handle_receive(const std::error_code& error, std::size_t bytes_transferred)
+void TcpAsyncLimitedStream::handle_receive(const std::error_code& error, std::size_t bytes_transferred, std::size_t bytes_requested)
 {
 	TCP_LOG("received " << bytes_transferred << " bytes");
 	waiting_for_data = false;
@@ -285,7 +278,7 @@ void TcpAsyncLimitedStream::handle_receive(const std::error_code& error, std::si
 
 		appendData(bytes_transferred);
 
-		if (readBuffer.reserved() == 0 && !readAvailableData())
+		if (bytes_transferred == bytes_requested && !readAvailableData())
 			return;
 
 		{
@@ -340,14 +333,14 @@ void TcpAsyncLimitedStream::requestBandwidth(uint32_t bytes)
 
 	TCP_LOG("wants quota " << bytes << " bytes, current quota " << bw_quota << " bytes");
 
-	if (bytes == 0 || bw_quota >= bytes)
+	if (bw_quota >= bytes)
 		return;
 
 	TCP_LOG("requesting " << bytes << " bytes");
 
 	bytes -= bw_quota;
 
-	uint32_t ret = BandwidthManager::Get().requestBandwidth(shared_from_this(), bytes, priority, bwChannels, 1);
+	uint32_t ret = BandwidthManager::Get().requestBandwidth(shared_from_this(), bytes, priority, bwChannels, bwChannelsCount);
 	TCP_LOG("request_bandwidth returned " << ret << " bytes");
 
 	if (ret == 0)
@@ -361,10 +354,10 @@ void TcpAsyncLimitedStream::startReceive()
 	uint32_t bytes = wantedTransfer();
 	requestBandwidth(bytes);
 
-	if (waiting_for_data || bw_quota == 0)
+	if (waiting_for_data)
 		return;
 
-	uint32_t max_receive = bw_quota;// std::min(buffer_size, quota_left);
+	uint32_t max_receive = bw_quota;
 
 	waiting_for_data = true;
 
@@ -374,7 +367,7 @@ void TcpAsyncLimitedStream::startReceive()
 	TCP_LOG("call async_receive for " << max_receive << " bytes");
 
 	auto readData = readBuffer.reserve(max_receive);
-	socket.async_receive(asio::buffer(readData, max_receive), std::bind(&TcpAsyncLimitedStream::handle_receive, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
+	socket.async_receive(asio::buffer(readData, max_receive), std::bind(&TcpAsyncLimitedStream::handle_receive, shared_from_this(), std::placeholders::_1, std::placeholders::_2, max_receive));
 }
 
 bool TcpAsyncLimitedStream::isActive()
@@ -399,18 +392,22 @@ void TcpAsyncLimitedStream::ReadBuffer::advanceBuffer(size_t size)
 {
 	pos += size;
 	receivedCounter += size;
+
+	TCP_LOG_BUFFER("advance " << size << " - Buffer pos " << pos << ", reserved " << reserved() << ", fullsize " << data.size());
 }
 
 void TcpAsyncLimitedStream::ReadBuffer::consume(size_t size)
 {
 	pos -= size;
 
-	if (pos)
+	if (pos && size)
 	{
 		auto tmp = DataBuffer(data.begin() + size, data.begin() + size + pos);
 		data.resize(pos);
 		memcpy(data.data(), tmp.data(), pos);
 	}
+
+	TCP_LOG_BUFFER("consume " << size << " - Buffer pos " << pos << ", reserved " << reserved() << ", fullsize " << data.size());
 }
 
 uint8_t* TcpAsyncLimitedStream::ReadBuffer::reserve(size_t size)
@@ -423,6 +420,8 @@ uint8_t* TcpAsyncLimitedStream::ReadBuffer::reserve(size_t size)
 	}
 	else
 		data.resize(pos + size);
+
+	TCP_LOG_BUFFER("reserve " << size << " - Buffer pos " << pos << ", reserved " << reserved() << ", fullsize " << data.size());
 
 	return data.data() + pos;
 }

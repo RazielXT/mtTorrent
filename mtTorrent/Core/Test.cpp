@@ -387,7 +387,7 @@ void TorrentTest::testPeerListen()
 	listener.storage = &storage;
 
 	PeerCommunication comm(torrent.info, listener);
-	comm.setStream(peerStream);
+	comm.fromStream(peerStream, {nullptr, 0});
 	listener.comm = &comm;
 
 	WAITFOR(listener.success || listener.fail);

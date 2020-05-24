@@ -49,7 +49,7 @@ namespace mtt
 		PeerCommunication(TorrentInfo& torrent, IPeerListener& listener);
 		~PeerCommunication();
 
-		void setStream(std::shared_ptr<TcpAsyncLimitedStream> stream);
+		uint32_t fromStream(std::shared_ptr<TcpAsyncLimitedStream> stream, const BufferView& streamData);
 
 		PeerInfo info;
 		PeerCommunicationState state;

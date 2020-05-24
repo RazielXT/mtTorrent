@@ -186,10 +186,10 @@ std::shared_ptr<mtt::PeerCommunication> mtt::Peers::getPeer(PeerCommunication* p
 	return nullptr;
 }
 
-void mtt::Peers::add(std::shared_ptr<TcpAsyncLimitedStream> stream)
+uint32_t mtt::Peers::add(std::shared_ptr<TcpAsyncLimitedStream> stream, const BufferView& data)
 {
 	if (torrent->state == mttApi::Torrent::State::Stopped)
-		return;
+		return 0;
 
 	ActivePeer peer;
 	peer.comm = std::make_shared<PeerCommunication>(torrent->infoFile.info, *peersListener);
@@ -207,7 +207,7 @@ void mtt::Peers::add(std::shared_ptr<TcpAsyncLimitedStream> stream)
 		addLogEvent(RemoteConnect, p.address, 0);
 	}
 
-	peer.comm->setStream(stream);
+	return peer.comm->fromStream(stream, data);
 }
 
 std::shared_ptr<mtt::PeerCommunication> mtt::Peers::disconnect(PeerCommunication* p)

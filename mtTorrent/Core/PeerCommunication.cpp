@@ -4,8 +4,8 @@
 #include <fstream>
 #include "utils/HexEncoding.h"
 
-#define BT_LOG(x) WRITE_LOG(LogTypeBt, "(" << getAddressName() << ") " << x)
-#define LOG_MGS(x) {}//{std::stringstream ss; ss << x; LogMsg(ss);}
+#define BT_LOG(x) WRITE_LOG_FILE(LogTypeBt, "(" << getAddressName() << ") " << x)
+#define LOG_MGS(x) BT_LOG(x)//{std::stringstream ss; ss << x; LogMsg(ss);}
 using namespace mtt;
 
 namespace mtt
@@ -124,14 +124,15 @@ PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, asio::io_
 	initializeBandwidth();
 }
 
-void mtt::PeerCommunication::setStream(std::shared_ptr<TcpAsyncLimitedStream> s)
+uint32_t mtt::PeerCommunication::fromStream(std::shared_ptr<TcpAsyncLimitedStream> s, const BufferView& streamData)
 {
 	stream = s;
 
 	state.action = PeerCommunicationState::Connected;
 	initializeBandwidth();
 	initializeCallbacks();
-	stream->checkReceivedData();
+
+	return dataReceived(streamData);
 }
 
 void mtt::PeerCommunication::initializeBandwidth()
@@ -146,7 +147,7 @@ void mtt::PeerCommunication::initializeBandwidth()
 void mtt::PeerCommunication::initializeCallbacks()
 {
 	{
-		std::lock_guard<std::mutex> guard(stream->callbackMutex);
+		//std::lock_guard<std::mutex> guard(stream->callbackMutex);
 		stream->onConnectCallback = std::bind(&PeerCommunication::connectionOpened, shared_from_this());
 		stream->onCloseCallback = [this](int code) {connectionClosed(code); };
 		stream->onReceiveCallback = std::bind(&PeerCommunication::dataReceived, shared_from_this(), std::placeholders::_1);
@@ -272,7 +273,7 @@ void mtt::PeerCommunication::setInterested(bool enabled)
 	if (state.amInterested == enabled)
 		return;
 
-	LOG_MGS("Interested");
+	LOG_MGS("Interested " << enabled);
 	addLogEvent(Want, 0);
 
 	state.amInterested = enabled;
@@ -288,7 +289,7 @@ void mtt::PeerCommunication::setChoke(bool enabled)
 		return;
 
 	addLogEvent(Want, 1);
-	LOG_MGS("Choke");
+	LOG_MGS("Choke " << enabled);
 	state.amChoking = enabled;
 	stream->write(mtt::bt::createStateMessage(enabled ? Choke : Unchoke));
 }
@@ -300,7 +301,7 @@ void mtt::PeerCommunication::requestPieceBlock(PieceBlockInfo& pieceInfo)
 
 	addLogEvent(Request, (uint16_t)pieceInfo.index, (char)((float)pieceInfo.begin / (16 * 1024.f)));
 
-	LOG_MGS("Request");
+	LOG_MGS("Request " << pieceInfo.index);
 	stream->write(mtt::bt::createBlockRequest(pieceInfo));
 }
 
@@ -323,7 +324,7 @@ void mtt::PeerCommunication::sendHave(uint32_t pieceIdx)
 	if (!isEstablished())
 		return;
 
-	LOG_MGS("Have");
+	LOG_MGS("Have " << pieceIdx);
 	stream->write(mtt::bt::createHave(pieceIdx));
 }
 
@@ -332,7 +333,7 @@ void mtt::PeerCommunication::sendPieceBlock(PieceBlock& block)
 	if (!isEstablished())
 		return;
 
-	LOG_MGS("Piece");
+	LOG_MGS("Piece " << block.info.index);
 	stream->write(mtt::bt::createPiece(block));
 }
 
@@ -356,7 +357,7 @@ void mtt::PeerCommunication::sendPort(uint16_t port)
 	if (!isEstablished())
 		return;
 
-	LOG_MGS("Port");
+	LOG_MGS("Port " << port);
 	stream->write(mtt::bt::createPort(port));
 }
 
@@ -367,16 +368,12 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 	else
 		addLogEvent(Msg, (uint16_t)message.id);
 
-	LOG_MGS("Received: " << message.id);
-
-	if (message.id != Piece)
-		BT_LOG("MSG ID:" << (int)message.id << ", size: " << message.messageSize);
+	LOG_MGS("Received MSG: " << message.id << ", size: " << message.messageSize);
 
 	if (message.id == Bitfield)
 	{
 		info.pieces.fromBitfield(message.bitfield);
 
-		BT_LOG("new percentage: " << std::to_string(info.pieces.getPercentage()));
 		LOG_MGS("Received progress: " << info.pieces.getPercentage());
 		listener.progressUpdated(this, -1);
 	}
@@ -384,7 +381,6 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 	{
 		info.pieces.addPiece(message.havePieceIndex);
 
-		BT_LOG("new percentage: " << std::to_string(info.pieces.getPercentage()));
 		LOG_MGS("Received progress: " << info.pieces.getPercentage());
 		listener.progressUpdated(this, message.havePieceIndex);
 	}

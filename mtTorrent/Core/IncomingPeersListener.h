@@ -11,7 +11,7 @@ namespace mtt
 	{
 	public:
 
-		IncomingPeersListener(std::function<void(std::shared_ptr<TcpAsyncLimitedStream>, const uint8_t* hash)> onNewPeer);
+		IncomingPeersListener(std::function<uint32_t(std::shared_ptr<TcpAsyncLimitedStream>, const BufferView& data, const uint8_t* hash)> onNewPeer);
 
 		void stop();
 
@@ -21,7 +21,7 @@ namespace mtt
 
 		void createListener();
 
-		std::function<void(std::shared_ptr<TcpAsyncLimitedStream>, const uint8_t* hash)> onNewPeer;
+		std::function<uint32_t(std::shared_ptr<TcpAsyncLimitedStream>, const BufferView& data, const uint8_t* hash)> onNewPeer;
 
 		std::mutex peersMutex;
 		std::vector<std::shared_ptr<TcpAsyncLimitedStream>> pendingPeers;
@@ -30,7 +30,7 @@ namespace mtt
 		ServiceThreadpool pool;
 
 		void removePeer(TcpAsyncLimitedStream* s);
-		void addPeer(TcpAsyncLimitedStream* s, const uint8_t* hash);
+		uint32_t addPeer(TcpAsyncLimitedStream* s, const BufferView& data, const uint8_t* hash);
 
 
 		std::shared_ptr<UpnpPortMapping> upnp;
