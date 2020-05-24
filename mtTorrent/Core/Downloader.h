@@ -71,6 +71,7 @@ namespace mtt
 		void sendPieceRequests(ActivePeer*);
 		uint32_t sendPieceRequests(ActivePeer*,ActivePeer::RequestedPiece*, RequestInfo*, uint32_t max);
 		bool pieceFinished(RequestInfo*);
+		bool hasWantedPieces(ActivePeer*);
 
 		TorrentPtr torrent;
 

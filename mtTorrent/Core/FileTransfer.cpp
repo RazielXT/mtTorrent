@@ -160,7 +160,8 @@ void mtt::FileTransfer::progressUpdated(PeerCommunication* p, uint32_t idx)
 		}
 	}
 
-	evaluateNextRequests(p);
+	if(!torrent->selectionFinished())
+		evaluateNextRequests(p);
 }
 
 uint64_t mtt::FileTransfer::getUploadSum()

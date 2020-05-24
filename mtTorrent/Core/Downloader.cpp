@@ -193,7 +193,7 @@ void mtt::Downloader::evaluateNextRequests(ActivePeer* peer)
 {
 	if (peer->comm->state.peerChoking)
 	{
-		if (!peer->comm->info.pieces.empty() && !peer->comm->state.amInterested)
+		if (!peer->comm->info.pieces.empty() && !peer->comm->state.amInterested && hasWantedPieces(peer))
 			peer->comm->setInterested(true);
 
 		return;
@@ -371,6 +371,19 @@ bool mtt::Downloader::pieceFinished(RequestInfo* r)
 	}
 
 	return valid;
+}
+
+bool mtt::Downloader::hasWantedPieces(ActivePeer* p)
+{
+	std::lock_guard<std::mutex> guard(priorityMutex);
+
+	for (uint32_t idx = 0; idx < p->comm->info.pieces.pieces.size(); idx++)
+	{
+		if (torrent->files.progress.wantedPiece(idx))
+			return true;
+	}
+
+	return false;
 }
 
 void mtt::Downloader::onFinish()
