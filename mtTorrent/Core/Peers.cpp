@@ -25,10 +25,10 @@ void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listen
 	{
 		if (r)
 		{
-			LOG_APPEND(t->info.hostname << " returned " << r->peers.size());
+			PEERS_LOG(t->info.hostname << " returned " << r->peers.size());
 			for (auto& a : r->peers)
 			{
-				LOG_APPEND(t->info.hostname << " " << a.toString());
+				PEERS_LOG(t->info.hostname << " " << a.toString());
 			}
 			updateKnownPeers(r->peers, PeerSource::Tracker);
 		}
