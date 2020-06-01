@@ -140,7 +140,7 @@ bool openSslSocket(ssl_socket& sock, tcp::resolver& resolver, const char* hostna
 	sock.set_verify_mode(asio::ssl::verify_none);
 	sock.handshake(ssl_socket::client, ec);
 
-	return (bool)ec;
+	return ec.value() == 0;
 }
 
 std::string sendHttpsRequest(ssl_socket& socket, asio::streambuf& request)
