@@ -11,6 +11,7 @@
 #include "FileSelectionForm.h"
 #include "ScheduleForm.h"
 #include "AddPeerForm.h"
+#include <codecvt>
 
 #include <Shlwapi.h>
 #pragma comment(lib,"shlwapi.lib")
@@ -495,10 +496,13 @@ void handleTorrentAddResponse(mtt::Status status, uint8_t* hash)
 	{
 		auto name = getTorrentName(hash);
 
+		std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> conv_utf8_w;
+		std::wstring unicode_codepoints = conv_utf8_w.from_bytes(getStringPtr(name));
+
 		if (status == mtt::Status::I_AlreadyExists)
-			::MessageBox(NULL, L"Torrent already exists", getWStringPtr(name), MB_OK);
+			::MessageBox(NULL, L"Torrent already exists", unicode_codepoints.data(), MB_OK);
 		else if (status == mtt::Status::I_Merged)
-			::MessageBox(NULL, L"Torrent already exists, new trackers added", getWStringPtr(name), MB_OK);
+			::MessageBox(NULL, L"Torrent already exists, new trackers added", unicode_codepoints.data(), MB_OK);
 	}
 }
 
