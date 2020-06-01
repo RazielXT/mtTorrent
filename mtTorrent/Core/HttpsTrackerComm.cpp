@@ -23,6 +23,7 @@ mtt::HttpsTrackerComm::~HttpsTrackerComm()
 
 void mtt::HttpsTrackerComm::deinit()
 {
+	std::lock_guard<std::mutex> guard(commMutex);
 	socket.reset();
 }
 
@@ -112,6 +113,8 @@ void mtt::HttpsTrackerComm::announce()
 				info.state = TrackerState::Reannouncing;
 			else
 				info.state = TrackerState::Announcing;
+
+			std::lock_guard<std::mutex> guard(commMutex);
 
 			if (!initializeStream())
 				return;

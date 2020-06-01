@@ -27,6 +27,7 @@ namespace mtt
 
 		void onTcpReceived(std::string&);
 
+		std::mutex commMutex;
 		std::shared_ptr<ssl_socket> socket;
 		asio::ssl::context ctx;
 	};

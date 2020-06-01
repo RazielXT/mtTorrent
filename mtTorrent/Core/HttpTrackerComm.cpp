@@ -22,6 +22,8 @@ mtt::HttpTrackerComm::~HttpTrackerComm()
 
 void mtt::HttpTrackerComm::deinit()
 {
+	std::lock_guard<std::mutex> guard(commMutex);
+
 	if (tcpComm)
 		tcpComm->close();
 
@@ -187,6 +189,8 @@ uint32_t mtt::HttpTracker::readAnnounceResponse(const char* buffer, size_t buffe
 void mtt::HttpTrackerComm::announce()
 {
 	HTTP_TRACKER_LOG("announcing");
+
+	std::lock_guard<std::mutex> guard(commMutex);
 
 	if (!tcpComm)
 		initializeStream();

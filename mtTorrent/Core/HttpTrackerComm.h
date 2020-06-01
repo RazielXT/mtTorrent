@@ -37,6 +37,6 @@ namespace mtt
 		size_t onTcpReceived(const BufferView&);
 
 		std::shared_ptr<TcpAsyncStream> tcpComm;
-
+		std::mutex commMutex;
 	};
 }
