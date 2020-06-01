@@ -70,7 +70,6 @@ namespace mtt
 		std::vector<uint32_t> getBestNextPieces(ActivePeer*);
 		void sendPieceRequests(ActivePeer*);
 		uint32_t sendPieceRequests(ActivePeer*,ActivePeer::RequestedPiece*, RequestInfo*, uint32_t max);
-		bool pieceFinished(RequestInfo*);
 		bool hasWantedPieces(ActivePeer*);
 
 		TorrentPtr torrent;

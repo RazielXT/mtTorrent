@@ -102,11 +102,14 @@ mtt::Downloader::PieceStatus mtt::Downloader::pieceBlockReceived(PieceBlock& blo
 	bool valid = true;
 	bool finished = false;
 
+	DL_LOG("Receive block idx " << block.info.index << " begin " << block.info.begin);
+
 	{
 		std::lock_guard<std::mutex> guard(requestsMutex);
 
-		for (auto& r : requests)
+		for (auto it = requests.begin(); it != requests.end(); it++)
 		{
+			auto& r = *it;
 			if (r.pieceIdx == block.info.index)
 			{
 				if (!r.piece)
@@ -121,17 +124,27 @@ mtt::Downloader::PieceStatus mtt::Downloader::pieceBlockReceived(PieceBlock& blo
 				if (r.piece->remainingBlocks == 0)
 				{
 					finished = true;
-					valid = pieceFinished(&r);
+					valid = r.piece->isValid(torrent->infoFile.info.pieces[r.pieceIdx].hash);
+
+					if (valid)
+					{
+						DL_LOG("Request finished piece " << r->pieceIdx);
+						auto piecePtr = r.piece;
+						requests.erase(it);
+
+						torrent->service.io.post([this, valid, finished, piecePtr]()
+							{
+								torrent->files.addPiece(*piecePtr);
+
+								if (valid && finished && torrent->selectionFinished())
+									onFinish();
+							});
+					}
 				}
 				break;
 			}
 		}
 	}
-
-	LOG_APPEND("receive " << block.info.index << " " << block.info.begin);
-
-	if (valid && finished && torrent->selectionFinished())
-		onFinish();
 
 	if (finished)
 		return valid ? Finished : Invalid;
@@ -336,8 +349,6 @@ uint32_t mtt::Downloader::sendPieceRequests(ActivePeer* peer, ActivePeer::Reques
 				request->blocks.push_back(info.begin);
 				peer->comm->requestPieceBlock(info);
 				count++;
-
-				LOG_APPEND("request " << info.index << " " << info.begin << " " << peer->comm->getAddressName());
 			}
 		}
 
@@ -349,28 +360,6 @@ uint32_t mtt::Downloader::sendPieceRequests(ActivePeer* peer, ActivePeer::Reques
 	r->nextBlockRequestIdx = nextBlock;
 
 	return count;
-}
-
-bool mtt::Downloader::pieceFinished(RequestInfo* r)
-{
-	DL_LOG("Finished piece " << r->pieceIdx);
-
-	bool valid = r->piece->isValid(torrent->infoFile.info.pieces[r->pieceIdx].hash);
-
-	if (valid)
-		torrent->files.addPiece(*r->piece.get());
-
-	for (auto it = requests.begin(); it != requests.end(); it++)
-	{
-		if (it->pieceIdx == r->pieceIdx)
-		{
-			DL_LOG("Request rem " << r->pieceIdx);
-			requests.erase(it);
-			break;
-		}
-	}
-
-	return valid;
 }
 
 bool mtt::Downloader::hasWantedPieces(ActivePeer* p)
