@@ -13,12 +13,12 @@ void mtt::Files::init(TorrentInfo& info)
 	progress.init(info.pieces.size());
 }
 
-void mtt::Files::addPiece(DownloadedPiece& piece)
+mtt::Status mtt::Files::addPiece(DownloadedPiece& piece)
 {
 	progress.addPiece(piece.index);
-	storage.storePiece(piece);
-
 	freshPieces.push_back(piece.index);
+
+	return storage.storePiece(piece);
 }
 
 void mtt::Files::select(DownloadSelection& s)

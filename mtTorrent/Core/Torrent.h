@@ -28,7 +28,8 @@ namespace mtt
 		void downloadMetadata(std::function<void(Status, MetadataDownloadState&)> callback);
 
 		bool start();
-		void stop(bool saveStopped = true);
+		enum class StopReason { Deinit, Manual, Internal };
+		void stop(StopReason reason = StopReason::Manual);
 
 		void checkFiles();
 		std::shared_ptr<PiecesCheck> checkFiles(std::function<void(std::shared_ptr<PiecesCheck>)> onFinish);

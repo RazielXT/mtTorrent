@@ -280,7 +280,7 @@ bool mtt::Torrent::start()
 	return true;
 }
 
-void mtt::Torrent::stop(bool saveStopped)
+void mtt::Torrent::stop(StopReason reason)
 {
 	if (checking)
 	{
@@ -305,15 +305,17 @@ void mtt::Torrent::stop(bool saveStopped)
 		fileTransfer->stop();
 	}
 
-	service.stop();
+	if (reason != StopReason::Internal)
+		service.stop();
 
-	if(saveStopped)
+	if(reason == StopReason::Manual)
 		state = State::Stopped;
 
 	save();
 
 	state = State::Stopped;
-	lastError = Status::Success;
+	if(reason != StopReason::Internal)
+		lastError = Status::Success;
 	stateChanged = true;
 }
 
@@ -344,6 +346,7 @@ std::shared_ptr<mtt::PiecesCheck> mtt::Torrent::checkFiles(std::function<void(st
 	};
 
 	checking = true;
+	lastError = Status::Success;
 	std::lock_guard<std::mutex> guard(checkStateMutex);
 	checkState = files.storage.checkStoredPiecesAsync(infoFile.info.pieces, service.io, checkFunc);
 	return checkState;

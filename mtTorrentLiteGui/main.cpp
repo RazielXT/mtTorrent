@@ -34,11 +34,6 @@ const char* getStringPtr(System::String^ str)
 	return (const char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(str).ToPointer();
 }
 
-const wchar_t* getWStringPtr(System::String^ str)
-{
-	return (const wchar_t*)System::Runtime::InteropServices::Marshal::StringToHGlobalUni(str).ToPointer();
-}
-
 void applySettings(GuiLite::SettingsForm^ form)
 {
 	mtBI::SettingsInfo info;
@@ -755,7 +750,14 @@ void onButtonClick(ButtonId id, System::String^ param)
 			auto path = gcnew String(info.downloadLocation.data);
 			if (info.files.size() > 1)
 				path += gcnew String(info.name.data);
-			System::Diagnostics::Process::Start(path);
+			try
+			{
+				System::Diagnostics::Process::Start(path);
+			}
+			catch (Exception^ ex)
+			{
+				::MessageBoxA(NULL, getStringPtr(ex->Message), "Error", MB_OK);
+			}
 		}
 	}
 	else if (id == ButtonId::CheckFiles)

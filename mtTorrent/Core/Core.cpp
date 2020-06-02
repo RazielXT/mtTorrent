@@ -131,7 +131,7 @@ void mtt::Core::deinit()
 
 	for (auto& t : torrents)
 	{
-		t->stop(false);
+		t->stop(Torrent::StopReason::Deinit);
 	}
 
 	torrents.clear();

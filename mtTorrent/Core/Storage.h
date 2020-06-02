@@ -18,13 +18,13 @@ namespace mtt
 		Status setPath(std::string path, bool moveFiles = true);
 		std::string getPath();
 
-		void storePiece(DownloadedPiece& piece);
+		Status storePiece(DownloadedPiece& piece);
 		PieceBlock getPieceBlock(PieceBlockInfo& piece);
 
 		Status preallocateSelection(DownloadSelection& files);
 		DataBuffer checkStoredPieces(std::vector<PieceInfo>& piecesInfo);
 		std::shared_ptr<PiecesCheck> checkStoredPiecesAsync(std::vector<PieceInfo>& piecesInfo, asio::io_service& io, std::function<void(std::shared_ptr<PiecesCheck>)> onFinish);
-		void flush();
+		Status flush();
 
 		Status deleteAll();
 		int64_t getLastModifiedTime();
@@ -38,8 +38,8 @@ namespace mtt
 
 		mtt::Status validatePath(DownloadSelection& selection);
 
-		void flushAllFiles();
-		void flush(File& file);
+		Status flushAllFiles();
+		Status flush(File& file);
 		Status preallocate(File& file);
 
 		std::string path;

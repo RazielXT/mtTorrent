@@ -83,14 +83,16 @@ std::string mtt::Storage::getPath()
 	return path;
 }
 
-void mtt::Storage::storePiece(DownloadedPiece& piece)
+mtt::Status mtt::Storage::storePiece(DownloadedPiece& piece)
 {
 	std::lock_guard<std::mutex> guard(storageMutex);
 
 	unsavedPieces.getNext() = piece;
 
 	if (unsavedPieces.count == unsavedPieces.data.size())
-		flushAllFiles();
+		return flushAllFiles();
+
+	return Status::Success;
 }
 
 mtt::PieceBlock mtt::Storage::getPieceBlock(PieceBlockInfo& block)
@@ -205,11 +207,11 @@ mtt::Status mtt::Storage::preallocateSelection(DownloadSelection& selection)
 	return Status::Success;
 }
 
-void mtt::Storage::flush()
+mtt::Status mtt::Storage::flush()
 {
 	std::lock_guard<std::mutex> guard(storageMutex);
 
-	flushAllFiles();
+	return flushAllFiles();
 }
 
 mtt::Status mtt::Storage::deleteAll()
@@ -249,17 +251,20 @@ int64_t mtt::Storage::getLastModifiedTime()
 	return time;
 }
 
-void mtt::Storage::flushAllFiles()
+mtt::Status mtt::Storage::flushAllFiles()
 {
 	for (auto& f : files)
 	{
-		flush(f);
+		auto s = flush(f);
+		if (s != Status::Success)
+			return s;
 	}
 
 	unsavedPieces.reset();
+	return Status::Success;
 }
 
-void mtt::Storage::flush(File& file)
+mtt::Status mtt::Storage::flush(File& file)
 {
 	std::vector<DownloadedPiece*> filePieces;
 	for (uint32_t i = 0; i < unsavedPieces.count; i++)
@@ -270,13 +275,19 @@ void mtt::Storage::flush(File& file)
 	}
 
 	if (filePieces.empty())
-		return;
+		return Status::Success;
 
 	auto path = getFullpath(file);
 	createPath(path);
 
-	bool fileExists = std::filesystem::exists(path);
-	uint64_t existingSize = fileExists ? std::filesystem::file_size(path) : 0;
+	std::error_code ec;
+	bool fileExists = std::filesystem::exists(path, ec);
+	if (ec)
+		return Status::E_InvalidPath;
+
+	uint64_t existingSize = fileExists ? std::filesystem::file_size(path, ec) : 0;
+	if (ec)
+		return Status::E_FileReadError;
 
 	if (fileExists && existingSize == file.size)
 	{
@@ -300,7 +311,7 @@ void mtt::Storage::flush(File& file)
 	{
 		std::ofstream tempFileOut(path, fileExists ? (std::ios_base::binary | std::ios_base::in) : std::ios_base::binary);
 
-		if(tempFileOut)
+		if (tempFileOut)
 			for (auto& p : filePieces)
 			{
 				if (p->index == file.startPieceIndex)
@@ -314,7 +325,10 @@ void mtt::Storage::flush(File& file)
 				}
 
 			}
+		else
+			return fileExists ? Status::E_FileReadError : Status::E_InvalidPath;
 	}
+	return Status::Success;
 }
 
 DataBuffer mtt::Storage::checkStoredPieces(std::vector<PieceInfo>& piecesInfo)

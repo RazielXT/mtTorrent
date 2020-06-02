@@ -11,7 +11,7 @@ namespace mtt
 	public:
 
 		void init(TorrentInfo&);
-		void addPiece(DownloadedPiece& piece);
+		Status addPiece(DownloadedPiece& piece);
 		void select(DownloadSelection&);
 		Status prepareSelection();
 

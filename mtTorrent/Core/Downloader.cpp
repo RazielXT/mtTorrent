@@ -134,9 +134,14 @@ mtt::Downloader::PieceStatus mtt::Downloader::pieceBlockReceived(PieceBlock& blo
 
 						torrent->service.io.post([this, valid, finished, piecePtr]()
 							{
-								torrent->files.addPiece(*piecePtr);
+								auto s = torrent->files.addPiece(*piecePtr);
 
-								if (valid && finished && torrent->selectionFinished())
+								if (s != Status::Success)
+								{
+									torrent->lastError = s;
+									torrent->stop(Torrent::StopReason::Internal);
+								}
+								else if (valid && finished && torrent->selectionFinished())
 									onFinish();
 							});
 					}
