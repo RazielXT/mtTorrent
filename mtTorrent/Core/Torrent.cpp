@@ -9,6 +9,10 @@
 #include <filesystem>
 #include "AlertsManager.h"
 
+mtt::Torrent::Torrent() : service(0)
+{
+}
+
 mtt::TorrentPtr mtt::Torrent::fromFile(mtt::TorrentFileInfo& fileInfo)
 {
 	mtt::TorrentPtr torrent = std::make_shared<Torrent>();
@@ -327,6 +331,8 @@ std::shared_ptr<mtt::PiecesCheck> mtt::Torrent::checkFiles(std::function<void(st
 
 			if (state == State::Started)
 				start();
+			else
+				stop();
 		}
 
 		onFinish(check);
@@ -340,6 +346,9 @@ std::shared_ptr<mtt::PiecesCheck> mtt::Torrent::checkFiles(std::function<void(st
 
 void mtt::Torrent::checkFiles()
 {
+	if(state == State::Stopped)
+		service.start(1);
+
 	if(!checking)
 		checkFiles([](std::shared_ptr<PiecesCheck>) {});
 }

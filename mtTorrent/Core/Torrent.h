@@ -16,6 +16,8 @@ namespace mtt
 	{
 	public:
 
+		Torrent();
+
 		State state = State::Stopped;
 		bool checking = false;
 		Status lastError = Status::Success;
