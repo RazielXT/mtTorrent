@@ -267,7 +267,7 @@ bool mtt::Torrent::start()
 	if (lastError != mtt::Status::Success)
 		return false;
 
-	service.start(2);
+	service.start(4);
 
 	state = State::Started;
 	stateChanged = true;
@@ -280,7 +280,7 @@ bool mtt::Torrent::start()
 	return true;
 }
 
-void mtt::Torrent::stop()
+void mtt::Torrent::stop(bool saveStopped)
 {
 	if (checking)
 	{
@@ -306,6 +306,11 @@ void mtt::Torrent::stop()
 	}
 
 	service.stop();
+
+	if(saveStopped)
+		state = State::Stopped;
+
+	save();
 
 	state = State::Stopped;
 	lastError = Status::Success;
