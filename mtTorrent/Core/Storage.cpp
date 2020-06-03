@@ -297,7 +297,7 @@ mtt::Status mtt::Storage::flush(File& file)
 			for (auto& p : filePieces)
 			{
 				auto pieceDataPos = file.startPieceIndex == p->index ? file.startPiecePos : 0;
-				auto fileDataPos = file.startPieceIndex == p->index ? 0 : (pieceSize - file.startPiecePos + (p->index - file.startPieceIndex - 1) * pieceSize);
+				uint64_t fileDataPos = file.startPieceIndex == p->index ? 0 : (pieceSize - file.startPiecePos + (p->index - file.startPieceIndex - 1) * (uint64_t)pieceSize);
 				auto pieceDataSize = std::min(file.size, (uint64_t)p->data.size() - pieceDataPos);
 
 				if (file.endPieceIndex == p->index)
