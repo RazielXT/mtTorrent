@@ -156,7 +156,7 @@ std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addFile(const char* filename)
 	if (!std::filesystem::exists(dir) || std::filesystem::file_size(dir) > maxSize)
 		return { mtt::Status::E_InvalidPath, nullptr };
 
-	std::ifstream file(filename, std::ios_base::binary);
+	std::ifstream file(dir, std::ios_base::binary);
 
 	if (!file.good())
 		return { mtt::Status::E_FileReadError, nullptr };

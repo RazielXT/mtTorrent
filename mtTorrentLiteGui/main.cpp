@@ -29,16 +29,18 @@ uint8_t firstSelectedHash[20];
 bool selectionChanged = false;
 bool forceRefresh = true;
 
-const char* getStringPtr(System::String^ str)
+std::string getUtf8String(System::String^ str)
 {
-	return (const char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(str).ToPointer();
+	array<Byte>^ encodedBytes = System::Text::Encoding::UTF8->GetBytes(str + "\0");
+	pin_ptr<Byte> pinnedBytes = &encodedBytes[0];
+	return reinterpret_cast<char*>(pinnedBytes);
 }
 
 void applySettings(GuiLite::SettingsForm^ form)
 {
 	mtBI::SettingsInfo info;
 	info.dhtEnabled = form->checkBoxDht->Checked;
-	info.directory = getStringPtr(form->directoryTextBox->Text);
+	info.directory = getUtf8String(form->directoryTextBox->Text);
 	info.maxConnections = (unsigned int)form->maxConnectionsNumeric->Value;
 	info.udpPort = (unsigned int)form->udpPortNumeric->Value;
 	info.tcpPort = (unsigned int)form->tcpPortNumeric->Value;
@@ -492,7 +494,7 @@ void handleTorrentAddResponse(mtt::Status status, uint8_t* hash)
 		auto name = getTorrentName(hash);
 
 		std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> conv_utf8_w;
-		std::wstring unicode_codepoints = conv_utf8_w.from_bytes(getStringPtr(name));
+		std::wstring unicode_codepoints = conv_utf8_w.from_bytes(getUtf8String(name));
 
 		if (status == mtt::Status::I_AlreadyExists)
 			::MessageBox(NULL, L"Torrent already exists", unicode_codepoints.data(), MB_OK);
@@ -517,9 +519,10 @@ void addTorrent()
 
 	if (openFileDialog->ShowDialog() == System::Windows::Forms::DialogResult::OK)
 	{
-		auto filenamePtr = getStringPtr(openFileDialog->FileName);
-	
-		addTorrentFromFile(filenamePtr);
+		array<Byte>^ encodedBytes = System::Text::Encoding::UTF8->GetBytes(openFileDialog->FileName + "\0");
+		pin_ptr<Byte> pinnedBytes = &encodedBytes[0];
+		auto utf8Bytes = reinterpret_cast<char*>(pinnedBytes);
+		addTorrentFromFile(utf8Bytes);
 	}
 }
 
@@ -738,7 +741,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 	{
 		mtBI::AddPeerRequest request;
 		memcpy(request.hash, firstSelectedHash, 20);
-		request.addr = getStringPtr(param);
+		request.addr = getUtf8String(param);
 
 		IoctlFunc(mtBI::MessageId::AddPeer, &request, nullptr);
 	}
@@ -756,7 +759,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 			}
 			catch (Exception^ ex)
 			{
-				::MessageBoxA(NULL, getStringPtr(ex->Message), "Error", MB_OK);
+				::MessageBoxA(NULL, getUtf8String(ex->Message).data(), "Error", MB_OK);
 			}
 		}
 	}
@@ -885,7 +888,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 		if (param)
 		{
 			mtBI::SourceId info;
-			info.name = getStringPtr(param);
+			info.name = getUtf8String(param);
 			memcpy(info.hash, firstSelectedHash, 20);
 			IoctlFunc(mtBI::MessageId::RefreshSource, &info, nullptr);
 		}
@@ -907,8 +910,8 @@ void onButtonClick(ButtonId id, System::String^ param)
 				if (magnet.magnetLinkSequence > 1)
 					return;
 
-				auto magnetPtr = getStringPtr(GuiLite::MagnetInputForm::instance->textBoxMagnet->Text);
-				auto status = addTorrentFromMetadata(magnetPtr);
+				auto magnetStr = getUtf8String(GuiLite::MagnetInputForm::instance->textBoxMagnet->Text);
+				auto status = addTorrentFromMetadata(magnetStr.data());
 
 				if (status == mtt::Status::Success)
 				{
@@ -948,7 +951,7 @@ void onButtonClick(ButtonId id, System::String^ param)
 			{
 				mtBI::TorrentSetPathRequest path;
 				memcpy(path.hash, fileSelection.hash, 20);
-				path.path = getStringPtr(form->textBoxPath->Text);
+				path.path = getUtf8String(form->textBoxPath->Text);
 				if (IoctlFunc(mtBI::MessageId::SetTorrentPath, &path, nullptr) != mtt::Status::Success)
 				{
 					form->labelError->Text = "Error setting location path";
