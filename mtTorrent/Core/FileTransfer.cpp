@@ -51,6 +51,7 @@ void mtt::FileTransfer::start()
 	);
 
 	refreshTimer->schedule(1);
+	evaluateCurrentPeers();
 }
 
 void mtt::FileTransfer::stop()
