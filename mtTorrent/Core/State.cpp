@@ -62,7 +62,8 @@ bool mtt::TorrentState::load(const std::string& name)
 		started = root->getInt("started");
 		if (auto pItem = root->getTxtItem("pieces"))
 		{
-			pieces.assign(pItem->data, pItem->data + pItem->size);
+			if(pieces.size() == pItem->size)
+				pieces.assign(pItem->data, pItem->data + pItem->size);
 		}
 		if (auto fList = root->getListItem("selection"))
 		{
