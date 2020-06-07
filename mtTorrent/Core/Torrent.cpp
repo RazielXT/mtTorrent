@@ -183,11 +183,15 @@ bool mtt::Torrent::loadSavedTorrentFile(const std::string& hash, DataBuffer& out
 	return !out.empty();
 }
 
-void mtt::Torrent::downloadMetadata(std::function<void(Status, MetadataDownloadState&)> callback)
+void mtt::Torrent::downloadMetadata()
 {
+	service.start(4);
 	state = State::DownloadUtm;
-	utmDl = std::make_shared<MetadataDownload>(*peers);
-	utmDl->start([this, callback](Status s, MetadataDownloadState& state)
+
+	if(!utmDl)
+		utmDl = std::make_shared<MetadataDownload>(*peers);
+
+	utmDl->start([this](Status s, MetadataDownloadState& state)
 	{
 		if (s == Status::Success && state.finished)
 		{
@@ -207,7 +211,11 @@ void mtt::Torrent::downloadMetadata(std::function<void(Status, MetadataDownloadS
 				this->state = State::Stopped;
 		}
 
-		callback(s, state);
+		if (s == Status::Success && state.finished)
+		{
+			saveTorrentFileFromUtm();
+			checkFiles();
+		}
 	}
 	, service.io);
 }
@@ -232,6 +240,12 @@ bool mtt::Torrent::start()
 	if (state == State::DownloadUtm)
 	{
 		state = State::Started;
+		return true;
+	}
+
+	if (utmDl && !utmDl->state.finished)
+	{
+		downloadMetadata();
 		return true;
 	}
 

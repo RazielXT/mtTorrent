@@ -25,7 +25,7 @@ namespace mtt
 		static TorrentPtr fromFile(mtt::TorrentFileInfo& fileInfo);
 		static TorrentPtr fromMagnetLink(std::string link);
 		static TorrentPtr fromSavedState(std::string name);
-		void downloadMetadata(std::function<void(Status, MetadataDownloadState&)> callback);
+		void downloadMetadata();
 
 		bool start();
 		enum class StopReason { Deinit, Manual, Internal };

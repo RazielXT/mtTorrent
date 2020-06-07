@@ -208,16 +208,7 @@ std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addMagnet(const char* magnet)
 			return { mtt::Status::I_AlreadyExists, t };
 	}
 
-	auto onMetadataUpdate = [this, torrent](Status s, mtt::MetadataDownloadState& state)
-	{
-		if (s == Status::Success && state.finished)
-		{
-			torrent->saveTorrentFileFromUtm();
-			torrent->checkFiles();
-		}
-	};
-
-	torrent->downloadMetadata(onMetadataUpdate);
+	torrent->downloadMetadata();
 	torrents.push_back(torrent);
 	saveTorrentList(torrents);
 
