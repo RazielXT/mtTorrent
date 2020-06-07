@@ -1,7 +1,7 @@
 #include "AlertsManager.h"
 #include "Torrent.h"
 
-mtt::AlertsManager* ptr = nullptr;
+mtt::AlertsManager instance;
 
 void mtt::AlertsManager::torrentAlert(AlertId id, const uint8_t* hash)
 {
@@ -42,15 +42,9 @@ void mtt::AlertsManager::configAlert(AlertId id, config::ValueType type)
 	alerts.push_back(std::move(alert));
 }
 
-
-mtt::AlertsManager::AlertsManager()
-{
-	ptr = this;
-}
-
 mtt::AlertsManager& mtt::AlertsManager::Get()
 {
-	return *ptr;
+	return instance;
 }
 
 void mtt::AlertsManager::registerAlerts(uint32_t m)

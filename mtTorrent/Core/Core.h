@@ -2,7 +2,6 @@
 
 #include "Torrent.h"
 #include "Api/Core.h"
-#include "AlertsManager.h"
 #include "utils/ScheduledTimer.h"
 
 class TcpAsyncServer;
@@ -48,7 +47,6 @@ namespace mtt
 		Status removeTorrent(const uint8_t* hash, bool deleteFiles);
 		Status removeTorrent(const char* hash, bool deleteFiles);
 
-		AlertsManager alerts;
 		std::unique_ptr<GlobalBandwidth> bandwidth;
 	};
 }

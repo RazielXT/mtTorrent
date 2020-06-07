@@ -2,6 +2,7 @@
 
 #include "Core.h"
 #include "IncomingPeersListener.h"
+#include "AlertsManager.h"
 
 std::shared_ptr<mttApi::Core> mttApi::Core::create()
 {
@@ -75,10 +76,10 @@ mtt::Status mttApi::Core::removeTorrent(const char* hash, bool deleteFiles)
 
 void mttApi::Core::registerAlerts(uint32_t alertMask)
 {
-	static_cast<mtt::Core*>(this)->alerts.registerAlerts(alertMask);
+	mtt::AlertsManager::Get().registerAlerts(alertMask);
 }
 
 std::vector<std::unique_ptr<mtt::AlertMessage>> mttApi::Core::popAlerts()
 {
-	return static_cast<mtt::Core*>(this)->alerts.popAlerts();
+	return mtt::AlertsManager::Get().popAlerts();
 }

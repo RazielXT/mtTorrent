@@ -15,6 +15,7 @@
 #include "FileTransfer.h"
 #include "utils/HexEncoding.h"
 #include <iostream>
+#include "AlertsManager.h"
 
 using namespace mtt;
 
@@ -671,23 +672,32 @@ const char* magnetLite = "magnet:?xt=urn:btih:CWPX2WK3PNDMJQYRT4KQ4L62Q4ABDPWA&t
 const char* tempLink = "magnet:?xt=urn:btih:HMSXZ6DMI56OOTADFNV5R77O34WK4S65&tr=http://nyaa.tracker.wf:7777/announce&tr=udp://tracker.coppersurfer.tk:6969/announce&tr=udp://tracker.internetwarriors.net:1337/announce&tr=udp://tracker.leechersparadise.org:6969/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://open.stealth.si:80/announce&tr=udp://p4p.arenabg.com:1337/announce&tr=udp://mgtracker.org:6969/announce&tr=udp://tracker.tiny-vps.com:6969/announce&tr=udp://peerfect.org:6969/announce&tr=http://share.camoe.cn:8080/announce&tr=http://t.nyaatracker.com:80/announce&tr=https://open.kickasstracker.com:443/announce";
 void TorrentTest::idealMagnetLinkTest()
 {
-	bool finished = false;
-	auto onMetadataUpdate = [&finished](Status s, mtt::MetadataDownloadState& state)
-	{
-		if (state.finished)
-			finished = true;
-
-		TEST_LOG("UTM status " << (int)s << ", parts: " << state.receivedParts << "/" << state.partsCount);
-	};
+	auto& alerts = mtt::AlertsManager::Get();
+	alerts.registerAlerts((uint32_t)AlertCategory::Metadata);
 
 	TorrentPtr torrent = Torrent::fromMagnetLink(tempLink);
 
 	if (!torrent)
 		return;
 
-	torrent->downloadMetadata(onMetadataUpdate);
+	torrent->downloadMetadata();
 
-	WAITFOR(finished);
+	while (true)
+	{
+		auto newAlerts = alerts.popAlerts();
+		for (auto& a : newAlerts)
+		{
+			if (a->id == AlertId::MetadataUpdated)
+			{
+				TEST_LOG("Metadata updated\n");
+			}
+			else if (a->id == AlertId::MetadataFinished)
+			{
+				TEST_LOG("Metadata finished\n");
+				break;
+			}
+		}
+	}
 
 	TEST_LOG(torrent->name() << "\n");
 

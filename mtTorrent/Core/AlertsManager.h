@@ -7,8 +7,6 @@ namespace mtt
 	{
 	public:
 
-		AlertsManager();
-
 		static AlertsManager& Get();
 		void torrentAlert(AlertId id, const uint8_t* hash);
 		void metadataAlert(AlertId id, const uint8_t* hash);
