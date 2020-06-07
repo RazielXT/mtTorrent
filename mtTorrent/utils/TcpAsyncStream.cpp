@@ -2,7 +2,7 @@
 #include "Logging.h"
 
 #define TCP_LOG(x) WRITE_LOG(LogTypeTcp, getHostname() << " " << x)
-#define TCP_LOG_BUFFER(x) WRITE_LOG(LogTypeTcp, "Buffer " << x)
+#define TCP_LOG_BUFFER(x) WRITE_LOG(LogTypeTcp, "Buffer " << std::to_string(reinterpret_cast<int>(this)) << " " << x)
 
 TcpAsyncStream::TcpAsyncStream(asio::io_service& io) : io_service(io), socket(io), timeoutTimer(io)
 {
@@ -440,7 +440,7 @@ void TcpAsyncStream::startReceive()
 	uint32_t bytes = wantedTransfer();
 	requestBandwidth(bytes);
 
-	if (waiting_for_data)
+	if (waiting_for_data || waiting_for_bw)
 		return;
 
 	uint32_t max_receive = bw_quota;
@@ -478,7 +478,6 @@ void TcpAsyncStream::ReadBuffer::advanceBuffer(size_t size)
 {
 	pos += size;
 	receivedCounter += size;
-
 	TCP_LOG_BUFFER("advance " << size << " - Buffer pos " << pos << ", reserved " << reserved() << ", fullsize " << data.size());
 }
 
