@@ -142,7 +142,7 @@ GetPeersResponse mtt::dht::Query::GetPeers::parseGetPeersResponse(DataBuffer& me
 		parser.parse(message.data(), message.size());
 		auto root = parser.getRoot();
 
-		if (root->isMap())
+		if (root && root->isMap())
 		{
 			if (auto type = root->getTxtItem("y"))
 			{
@@ -462,7 +462,7 @@ mtt::dht::FindNodeResponse mtt::dht::Query::FindNode::parseFindNodeResponse(Data
 		parser.parse(message.data(), message.size());
 		auto root = parser.getRoot();
 
-		if (root->isMap())
+		if (root && root->isMap())
 		{
 			if (auto type = root->getTxtItem("y"))
 			{
