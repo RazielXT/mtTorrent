@@ -61,6 +61,9 @@ mtt::Status mtt::Storage::setPath(std::string p, bool moveFiles)
 						newPathF += '\\' + f.path[i];
 					}
 
+					if (!std::filesystem::exists(originalPathF, ec))
+						continue;
+
 					std::filesystem::rename(originalPathF, newPathF, ec);
 
 					if (ec)
