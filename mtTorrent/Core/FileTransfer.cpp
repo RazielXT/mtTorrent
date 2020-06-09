@@ -104,12 +104,7 @@ void mtt::FileTransfer::messageReceived(PeerCommunication* p, PeerMessage& msg)
 		auto status = downloader.pieceBlockReceived(msg.piece);
 
 		std::lock_guard<std::mutex> guard(peersMutex);
-		downloader.removeBlockRequests(activePeers, msg.piece, status, p);
-
-		if (auto peer = getActivePeer(p))
-		{
-			peer->lastActivityTime = (uint32_t)time(0);
-		}
+		downloader.refreshPeerBlockRequests(activePeers, msg.piece, status, p);
 	}
 	else if (msg.id == Unchoke)
 	{

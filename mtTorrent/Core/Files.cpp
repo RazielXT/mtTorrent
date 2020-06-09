@@ -15,10 +15,15 @@ void mtt::Files::init(TorrentInfo& info)
 
 mtt::Status mtt::Files::addPiece(DownloadedPiece& piece)
 {
-	progress.addPiece(piece.index);
-	freshPieces.push_back(piece.index);
+	auto s = storage.storePiece(piece);
 
-	return storage.storePiece(piece);
+	if (s == Status::Success)
+	{
+		freshPieces.push_back(piece.index);
+		progress.addPiece(piece.index);
+	}
+
+	return s;
 }
 
 void mtt::Files::select(DownloadSelection& s)

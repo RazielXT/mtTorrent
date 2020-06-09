@@ -24,6 +24,7 @@ namespace mtt
 
 		void addPiece(uint32_t index);
 		bool hasPiece(uint32_t index);
+		void removePiece(uint32_t index);
 		bool selectedPiece(uint32_t index);
 		bool wantedPiece(uint32_t index);
 		uint32_t firstEmptyPiece();

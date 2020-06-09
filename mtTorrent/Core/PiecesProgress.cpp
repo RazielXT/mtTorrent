@@ -134,6 +134,18 @@ bool mtt::PiecesProgress::hasPiece(uint32_t index)
 	return pieces[index] & HasFlag;
 }
 
+void mtt::PiecesProgress::removePiece(uint32_t index)
+{
+	if (hasPiece(index))
+	{
+		if (wantedPiece(index))
+			selectedReceivedPiecesCount--;
+
+		pieces[index] &= ~HasFlag;
+		receivedPiecesCount--;
+	}
+}
+
 bool mtt::PiecesProgress::selectedPiece(uint32_t index)
 {
 	return (pieces[index] & UnselectedFlag) == 0;

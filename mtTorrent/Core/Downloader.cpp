@@ -126,20 +126,23 @@ mtt::Downloader::PieceStatus mtt::Downloader::pieceBlockReceived(PieceBlock& blo
 					finished = true;
 					valid = r.piece->isValid(torrent->infoFile.info.pieces[r.pieceIdx].hash);
 
+					auto pieceData = std::move(r.piece);
+					requests.erase(it);
+
 					if (valid)
 					{
-						DL_LOG("Request finished piece " << r->pieceIdx);
-						auto piecePtr = r.piece;
-						requests.erase(it);
+						torrent->files.progress.addPiece(block.info.index);
+						DL_LOG("Request finished piece " << block.info.index);
 
-						torrent->service.io.post([this, valid, finished, piecePtr]()
+						torrent->service.io.post([this, valid, finished, pieceData]()
 							{
-								auto s = torrent->files.addPiece(*piecePtr);
+								auto s = torrent->files.addPiece(*pieceData);
 
 								if (s != Status::Success)
 								{
 									torrent->lastError = s;
 									torrent->stop(Torrent::StopReason::Internal);
+									torrent->files.progress.removePiece(pieceData->index);
 								}
 								else if (valid && finished && torrent->selectionFinished())
 									onFinish();
@@ -157,7 +160,7 @@ mtt::Downloader::PieceStatus mtt::Downloader::pieceBlockReceived(PieceBlock& blo
 		return Ok;
 }
 
-void mtt::Downloader::removeBlockRequests(std::vector<mtt::ActivePeer>& peers, PieceBlock& block, PieceStatus status, PeerCommunication* source)
+void mtt::Downloader::refreshPeerBlockRequests(std::vector<mtt::ActivePeer>& peers, PieceBlock& block, PieceStatus status, PeerCommunication* source)
 {
 	for (auto& peer : peers)
 	{
@@ -167,6 +170,8 @@ void mtt::Downloader::removeBlockRequests(std::vector<mtt::ActivePeer>& peers, P
 				peer.invalidPieces++;
 			else
 				peer.receivedBlocks++;
+
+			peer.lastActivityTime = (uint32_t)time(0);
 		}
 
 		for (auto it = peer.requestedPieces.begin(); it != peer.requestedPieces.end(); it++)
@@ -371,9 +376,12 @@ bool mtt::Downloader::hasWantedPieces(ActivePeer* p)
 {
 	std::lock_guard<std::mutex> guard(priorityMutex);
 
+	if (p->comm->info.pieces.pieces.size() != torrent->files.progress.pieces.size())
+		return false;
+
 	for (uint32_t idx = 0; idx < p->comm->info.pieces.pieces.size(); idx++)
 	{
-		if (torrent->files.progress.wantedPiece(idx))
+		if (p->comm->info.pieces.hasPiece(idx) && torrent->files.progress.wantedPiece(idx))
 			return true;
 	}
 
@@ -382,5 +390,10 @@ bool mtt::Downloader::hasWantedPieces(ActivePeer* p)
 
 void mtt::Downloader::onFinish()
 {
+	{
+		std::lock_guard<std::mutex> guard(requestsMutex);
+		requests.clear();
+	}
+
 	torrent->files.storage.flush();
 }

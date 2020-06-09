@@ -38,7 +38,7 @@ namespace mtt
 
 		enum PieceStatus {Ok, Invalid, Finished};
 		PieceStatus pieceBlockReceived(PieceBlock& block);
-		void removeBlockRequests(std::vector<ActivePeer>& peers, PieceBlock& block, PieceStatus status, PeerCommunication* source);
+		void refreshPeerBlockRequests(std::vector<ActivePeer>& peers, PieceBlock& block, PieceStatus status, PeerCommunication* source);
 		void evaluateNextRequests(ActivePeer*);
 		void unchokePeer(ActivePeer*);
 
