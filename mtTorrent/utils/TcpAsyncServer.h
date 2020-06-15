@@ -20,5 +20,5 @@ private:
 	tcp::endpoint endpoint;
 
 	asio::ip::tcp::acceptor acceptor_;
-
+	asio::io_service& service;
 };
