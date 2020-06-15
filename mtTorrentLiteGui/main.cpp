@@ -1196,7 +1196,7 @@ void refreshUi()
 					
 					uint64_t leftBytes = ((uint64_t)(info.downloaded / info.selectionProgress)) - info.downloaded;
 					uint64_t leftSeconds = leftBytes / info.downloadSpeed;
-					if (leftSeconds > 0)
+					if (leftSeconds > 0 && leftSeconds < long::MaxValue)
 					{
 						TimeSpan time = System::TimeSpan::FromSeconds((double)leftSeconds);
 						speedInfo += " (";
