@@ -43,16 +43,19 @@ void mtt::HttpTrackerComm::init(std::string host, std::string port, std::string 
 void mtt::HttpTrackerComm::initializeStream()
 {
 	tcpComm = std::make_shared<TcpAsyncStream>(torrent->service.io);
-	tcpComm->onConnectCallback = std::bind(&HttpTrackerComm::onTcpConnected, this);
+	tcpComm->onConnectCallback = std::bind(&HttpTrackerComm::onTcpConnected, shared_from_this());
 	tcpComm->onCloseCallback = [this](int code) {onTcpClosed(code); };
-	tcpComm->onReceiveCallback = std::bind(&HttpTrackerComm::onTcpReceived, this, std::placeholders::_1);
+	tcpComm->onReceiveCallback = std::bind(&HttpTrackerComm::onTcpReceived, shared_from_this(), std::placeholders::_1);
 
 	tcpComm->init(info.hostname, info.port);
 }
 
 void mtt::HttpTrackerComm::fail()
 {
-	tcpComm.reset();
+	{
+		std::lock_guard<std::mutex> guard(commMutex);
+		tcpComm.reset();
+	}
 
 	if (info.state == TrackerState::Announcing || info.state == TrackerState::Reannouncing)
 	{

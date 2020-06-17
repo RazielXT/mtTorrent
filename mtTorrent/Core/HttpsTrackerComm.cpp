@@ -23,8 +23,6 @@ mtt::HttpsTrackerComm::~HttpsTrackerComm()
 
 void mtt::HttpsTrackerComm::deinit()
 {
-	std::lock_guard<std::mutex> guard(commMutex);
-	socket.reset();
 }
 
 void mtt::HttpsTrackerComm::init(std::string host, std::string port, std::string path, TorrentPtr t)
@@ -39,12 +37,18 @@ void mtt::HttpsTrackerComm::init(std::string host, std::string port, std::string
 
 bool mtt::HttpsTrackerComm::initializeStream()
 {
-	ctx.set_default_verify_paths();
-	socket = std::make_shared<ssl_socket>(torrent->service.io, ctx);
+	{
+		std::lock_guard<std::mutex> guard(commMutex);
+		ctx.set_default_verify_paths();
+		socket = std::make_shared<ssl_socket>(torrent->service.io, ctx);
 
-	tcp::resolver resolver(torrent->service.io);
+		tcp::resolver resolver(torrent->service.io);
 
-	if (!openSslSocket(*socket, resolver, info.hostname.data()))
+		if (!openSslSocket(*socket, resolver, info.hostname.data()))
+			socket.reset();
+	}
+
+	if(!socket)
 	{
 		fail();
 		return false;
@@ -114,8 +118,6 @@ void mtt::HttpsTrackerComm::announce()
 			else
 				info.state = TrackerState::Announcing;
 
-			std::lock_guard<std::mutex> guard(commMutex);
-
 			if (!initializeStream())
 				return;
 
@@ -125,11 +127,18 @@ void mtt::HttpsTrackerComm::announce()
 			std::ostream request_stream(&buffer);
 			request_stream.write((char*)request.data(), request.size());
 
-			auto response = sendHttpsRequest(*socket, buffer);
+			std::string response;
+			{
+				std::lock_guard<std::mutex> guard(commMutex);
+
+				if (socket)
+				{
+					response = sendHttpsRequest(*socket, buffer);
+					socket.reset();
+				}
+			}
 
 			onTcpReceived(response);
-
-			socket.reset();
 		});
 }
 

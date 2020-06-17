@@ -15,7 +15,7 @@ namespace mtt
 
 	};
 
-	class HttpTrackerComm : public HttpTracker
+	class HttpTrackerComm : public HttpTracker, public std::enable_shared_from_this<HttpTrackerComm>
 	{
 	public:
 
