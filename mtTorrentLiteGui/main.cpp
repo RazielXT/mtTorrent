@@ -1426,6 +1426,9 @@ void refreshUi()
 
 void ProcessProgramArgument(System::String^ arg)
 {
+	if(HWND windowHandle = (HWND)GuiLite::MainForm::instance->Handle.ToInt64())
+		SetFocus(windowHandle);
+
 	auto inputPtr = (char*)System::Runtime::InteropServices::Marshal::StringToHGlobalAnsi(arg).ToPointer();
 	if (addTorrentFromMetadata(inputPtr) != mtt::Status::E_InvalidInput)
 		return;
