@@ -1,8 +1,11 @@
 #include "Dht/Communication.h"
 #include "Configuration.h"
 #include <fstream>
+#include "utils/HexEncoding.h"
 
 mtt::dht::Communication* comm;
+
+#define DHT_LOG(x) WRITE_LOG(LogTypeDht, x)
 
 mtt::dht::Communication::Communication() : responder(*this)
 {
@@ -25,6 +28,8 @@ mtt::dht::Communication& mtt::dht::Communication::get()
 
 void mtt::dht::Communication::start()
 {
+	DHT_LOG("Start, my ID " << hexToString(mtt::config::getInternal().hashId, 20));
+
 	service.start(2);
 
 	load();
@@ -82,6 +87,8 @@ bool operator== (std::shared_ptr<mtt::dht::Query::DhtQuery> query, const uint8_t
 
 void mtt::dht::Communication::findPeers(const uint8_t* hash, ResultsListener* listener)
 {
+	DHT_LOG("Start findPeers ID " << hexToString(hash, 20));
+
 	{
 		std::lock_guard<std::mutex> guard(peersQueriesMutex);
 
@@ -115,12 +122,16 @@ void mtt::dht::Communication::stopFindingPeers(const uint8_t* hash)
 
 void mtt::dht::Communication::findNode(const uint8_t* hash)
 {
+	DHT_LOG("Start findNode ID " << hexToString(hash, 20));
+
 	auto q = std::make_shared<Query::FindNode>();
 	q->start(hash, table, this);
 }
 
 void mtt::dht::Communication::pingNode(Addr& addr)
 {
+	DHT_LOG("Start pingNode addr " << addr.toString());
+
 	auto q = std::make_shared<Query::PingNodes>();
 	q->start(addr, table, this);
 }
@@ -143,6 +154,8 @@ uint32_t mtt::dht::Communication::onFoundPeers(const uint8_t* hash, std::vector<
 
 void mtt::dht::Communication::findingPeersFinished(const uint8_t* hash, uint32_t count)
 {
+	DHT_LOG("FindingPeersFinished ID " << hexToString(hash, 20));
+
 	std::lock_guard<std::mutex> guard(peersQueriesMutex);
 
 	for (auto it = peersQueries.begin(); it != peersQueries.end(); it++)
@@ -199,6 +212,8 @@ void mtt::dht::Communication::loadDefaultRoots()
 
 void mtt::dht::Communication::refreshTable()
 {
+	DHT_LOG("Start refreshTable");
+
 	responder.refresh();
 
 	auto inactive = table->getInactiveNodes();
@@ -233,7 +248,7 @@ void mtt::dht::Communication::load()
 
 void mtt::dht::Communication::announceTokenReceived(const uint8_t* hash, std::string& token, udp::endpoint& source)
 {
-	//Query::AnnouncePeer(hash, token, source, this);
+	Query::AnnouncePeer(hash, token, source, this);
 }
 
 bool mtt::dht::Communication::onUnknownUdpPacket(udp::endpoint& e, DataBuffer& data)

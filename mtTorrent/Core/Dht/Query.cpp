@@ -2,6 +2,7 @@
 #include "utils/PacketHelper.h"
 #include "Configuration.h"
 #include "utils/BencodeParser.h"
+#include "utils/HexEncoding.h"
 
 #define DHT_LOG(x) WRITE_LOG(LogTypeDht, x)
 
@@ -225,15 +226,16 @@ GetPeersResponse mtt::dht::Query::GetPeers::parseGetPeersResponse(DataBuffer& me
 
 bool mtt::dht::Query::GetPeers::onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request)
 {
-	bool handled = false;
+	bool isResponse = false;
 
 	if (data)
 	{
 		auto resp = parseGetPeersResponse(*data);
+		isResponse = resp.transaction == request.transactionId;
 
-		if (resp.transaction == request.transactionId && request.node.id == resp.id)
+		if (isResponse && request.node.id == resp.id)
 		{
-			handled = true;
+			DHT_LOG("GetPeers response from " << hexToString(resp.id, 20) << " nodes: " << resp.nodes.size() << ", values: " << resp.values.size());
 
 			if (!resp.values.empty())
 			{
@@ -253,7 +255,7 @@ bool mtt::dht::Query::GetPeers::onResponse(UdpRequest comm, DataBuffer* data, Re
 					if (newMinDistance.length() < minDistance.length())
 					{
 						minDistance = newMinDistance;
-						DHT_LOG("min distance " << (int)minDistance.length());
+						DHT_LOG("GetPeers new min distance " << (int)minDistance.length());
 					}
 				}
 			}
@@ -265,11 +267,14 @@ bool mtt::dht::Query::GetPeers::onResponse(UdpRequest comm, DataBuffer* data, Re
 		}
 		else
 		{
-			DHT_LOG("invalid get peers response, tid " << request.transactionId << "/" << resp.transaction);
+			DHT_LOG("GetPeers BAD response " << comm->getEndpoint().address().to_string() << ", id: " << hexToString(resp.id, 20) << ", oid: " << hexToString(request.node.id.data, 20) << ", tr: " << resp.transaction << ", otr: " << request.transactionId);
 		}
 	}
 	else
+	{
+		DHT_LOG("GetPeers NO RESPONSE " << comm->getEndpoint().address().to_string() << ", id: " << hexToString(request.node.id.data, 20));
 		table->nodeNotResponded(request.node);
+	}
 
 	{
 		std::lock_guard<std::mutex> guard(requestsMutex);
@@ -309,7 +314,7 @@ bool mtt::dht::Query::GetPeers::onResponse(UdpRequest comm, DataBuffer* data, Re
 			listener->findingPeersFinished(targetId.data, foundCount);
 	}
 
-	return handled;
+	return isResponse;
 }
 
 DataBuffer mtt::dht::Query::GetPeers::createRequest(const uint8_t* hash, bool bothProtocols, uint16_t transactionId)
@@ -349,6 +354,8 @@ void mtt::dht::Query::FindNode::startOne(const uint8_t* hash, Addr& addr, std::s
 
 DataBuffer mtt::dht::Query::FindNode::createRequest(const uint8_t* hash, bool bothProtocols, uint16_t transactionId)
 {
+	DHT_LOG("CreateRequest FindNode id " << hexToString(hash, 20));
+
 	PacketBuilder packet(128);
 	packet.add("d1:ad2:id20:", 12);
 	packet.add(mtt::config::getInternal().hashId, 20);
@@ -358,8 +365,9 @@ DataBuffer mtt::dht::Query::FindNode::createRequest(const uint8_t* hash, bool bo
 	if (bothProtocols)
 		packet.add("4:wantl2:n42:n6e", 16);
 
-	packet.add("e1:q9:find_node1:v4:", 20);
-	packet.add(MT_NAME_SHORT, 4);
+	packet.add("e1:q9:find_node", 15);
+// 	packet.add("1:v4:", 5);
+// 	packet.add(MT_NAME_SHORT, 4);
 	packet.add("1:t2:", 5);
 	packet.add(reinterpret_cast<char*>(&transactionId), 2);
 	packet.add("1:y1:qe", 7);
@@ -369,15 +377,16 @@ DataBuffer mtt::dht::Query::FindNode::createRequest(const uint8_t* hash, bool bo
 
 bool mtt::dht::Query::FindNode::onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request)
 {
-	bool handled = false;
+	bool isResponse = false;
 
 	if (data)
 	{
 		auto resp = parseFindNodeResponse(*data);
 
-		DHT_LOG(comm->getName() << " find node response id " << resp.id);
+		DHT_LOG("FindNode response " << comm->getName() << ", id " << hexToString(resp.id, 20));
 
-		if (resp.transaction == request.transactionId && request.node.id == resp.id)
+		isResponse = resp.transaction == request.transactionId;
+		if (isResponse && request.node.id == resp.id)
 		{
 			if (!resp.nodes.empty() && findClosest)
 			{
@@ -393,23 +402,26 @@ bool mtt::dht::Query::FindNode::onResponse(UdpRequest comm, DataBuffer* data, Re
 				if (nexMinL < minL && nexMinL != 0)
 				{
 					minDistance = newMinDistance;
-					DHT_LOG("min distance " << (int)nexMinL);
+					DHT_LOG("FindNode new min distance " << (int)nexMinL);
 				}
 
-				DHT_LOG("find nodes response nodes count " << resp.nodes.size() << " current distance " << (int)minL << " received distance " << (int)nexMinL << " source distance" << request.minDistance << ", nodes todo count " << receivedNodes.size());
+				DHT_LOG("FindNode response nodes count " << resp.nodes.size() << ", current distance " << (int)minL << ", received distance " << (int)nexMinL << ", source distance " << (int)request.minDistance << ", nodes todo " << receivedNodes.size());
 				resultCount++;
 			}
 
 			table->nodeResponded(request.node);
-			handled = true;
 		}
 		else
 		{
-			DHT_LOG("invalid find nodes response, tid " << request.transactionId << "/" << resp.transaction);
+			DHT_LOG("FindNode BAD response " << comm->getEndpoint().address().to_string() << ", id: " << hexToString(resp.id, 20) << ", oid: " << hexToString(request.node.id.data, 20) << ", tr: " << resp.transaction << ", otr: " << request.transactionId);
 		}
 	}
 	else
+	{
+		DHT_LOG("FindNode NO RESPONSE " << comm->getEndpoint().address().to_string() << ", id: " << hexToString(request.node.id.data, 20));
+
 		table->nodeNotResponded(request.node);
+	}
 
 	{
 		std::lock_guard<std::mutex> guard(requestsMutex);
@@ -437,17 +449,19 @@ bool mtt::dht::Query::FindNode::onResponse(UdpRequest comm, DataBuffer* data, Re
 		}
 	}
 
-	return handled;
+	return isResponse;
 }
 
 void mtt::dht::Query::FindNode::sendRequest(Addr& addr, DataBuffer& data, RequestInfo& info)
 {
+	DHT_LOG("FindNode send to " << addr.toString() << ", id " << hexToString(info.node.id.data, 20));
 	auto req = listener->sendMessage(addr, data, std::bind(&FindNode::onResponse, shared_from_this(), std::placeholders::_1, std::placeholders::_2, info));
 	requests.push_back(req);
 }
 
 void mtt::dht::Query::GetPeers::sendRequest(Addr& addr, DataBuffer& data, RequestInfo& info)
 {
+	DHT_LOG("GetPeers send to " << addr.toString() << ", id " << hexToString(info.node.id.data, 20));
 	auto req = listener->sendMessage(addr, data, std::bind(&GetPeers::onResponse, shared_from_this(), std::placeholders::_1, std::placeholders::_2, info));
 	requests.push_back(req);
 }
@@ -481,7 +495,6 @@ mtt::dht::FindNodeResponse mtt::dht::Query::FindNode::parseFindNodeResponse(Data
 				if (auto nodes = resp->getTxtItem("nodes"))
 				{
 					auto& receivedNodes = response.nodes;
-
 					for (int pos = 0; pos < nodes->size;)
 					{
 						NodeInfo info;
@@ -576,8 +589,6 @@ DataBuffer mtt::dht::Query::PingNodes::createRequest(uint16_t transactionId)
 
 bool mtt::dht::Query::PingNodes::onResponse(UdpRequest comm, DataBuffer* data, PingInfo request)
 {
-	DHT_LOG(comm->getEndpoint().address().to_string() << " Ping handling, data: " << (data ? data->size() : 0) << ", tr: " << request.transactionId);
-
 	if (data)
 	{
 		auto resp = parseResponse(*data);
@@ -590,10 +601,18 @@ bool mtt::dht::Query::PingNodes::onResponse(UdpRequest comm, DataBuffer* data, P
 		if (resp.transaction == request.transactionId && request.node.id == resp.id)
 		{
 			table->nodeResponded(request.node);
+			DHT_LOG("Ping response " << comm->getEndpoint().address().to_string() << ", id: " << hexToString(resp.id, 20));
 		}
+		else
+			DHT_LOG("Ping BAD response " << comm->getEndpoint().address().to_string() << ", id: " << hexToString(resp.id, 20) << ", oid: " << hexToString(request.node.id.data, 20) << ", tr: " << resp.transaction << ", otr: " << request.transactionId);
 	}
-	else if(!request.unknown)
-		table->nodeNotResponded(request.node);
+	else
+	{
+		DHT_LOG("Ping NO RESPONSE " << comm->getEndpoint().address().to_string() << ", id: " << hexToString(request.node.id.data, 20));
+
+		if (!request.unknown)
+			table->nodeNotResponded(request.node);
+	}
 
 	std::lock_guard<std::mutex> guard(requestsMutex);
 
@@ -664,12 +683,15 @@ void mtt::dht::Query::PingNodes::sendRequest(NodeInfo& node, bool unknown)
 {
 	PingInfo info = { createTransactionId(), node, unknown };
 	auto dataReq = createRequest(info.transactionId);
+	DHT_LOG("Ping node " << hexToString(node.id.data, 20));
 	auto req = listener->sendMessage(node.addr, dataReq, std::bind(&PingNodes::onResponse, shared_from_this(), std::placeholders::_1, std::placeholders::_2, info));
 	requests.push_back(req);
 }
 
 void mtt::dht::Query::AnnouncePeer(const uint8_t* infohash, std::string& token, udp::endpoint& target, DataListener* dhtListener)
 {
+	DHT_LOG("AnnouncePeer infohash " << hexToString(infohash, 20) << " to " << target.address().to_string());
+
 	PacketBuilder packet(64);
 	packet.add("d1:ad2:id20:", 12);
 	packet.add(mtt::config::getInternal().hashId, 20);

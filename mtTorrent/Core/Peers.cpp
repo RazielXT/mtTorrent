@@ -543,6 +543,16 @@ void mtt::Peers::PeersListener::connectionClosed(mtt::PeerCommunication* p, int 
 
 void mtt::Peers::PeersListener::messageReceived(mtt::PeerCommunication* p, mtt::PeerMessage& m)
 {
+	if (m.id == Port && m.port)
+	{
+		if (mtt::config::getExternal().dht.enable)
+		{
+			Addr addr = p->getAddress();
+			addr.port = m.port;
+			dht::Communication::get().pingNode(addr);
+		}
+	}
+
 	std::lock_guard<std::mutex> guard(mtx);
 	if (target)
 		target->messageReceived(p, m);

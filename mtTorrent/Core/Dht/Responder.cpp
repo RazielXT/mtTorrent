@@ -2,6 +2,9 @@
 #include "utils\BencodeParser.h"
 #include "utils\PacketHelper.h"
 #include "Configuration.h"
+#include "utils\HexEncoding.h"
+
+#define DHT_LOG(x) WRITE_LOG(LogTypeDht, "REMOTE " << x)
 
 mtt::dht::Responder::Responder(DataListener& l) : listener(l)
 {
@@ -47,6 +50,8 @@ bool mtt::dht::Responder::handlePacket(udp::endpoint& endpoint, DataBuffer& data
 	response.add("1:y1:r", 6);
 	response.add("1:rd2:id20:", 11);
 	response.add(mtt::config::getInternal().hashId, 20);
+
+	DHT_LOG("Request: " << std::string(requestType->data, requestType->data + requestType->size) << " from " << hexToString((const uint8_t*)sourceId->data, sourceId->size));
 
 	if (requestType->equals("find_node", 9))
 	{
@@ -186,6 +191,8 @@ bool mtt::dht::Responder::writeValues(const char* infoHash, udp::endpoint& endpo
 
 void mtt::dht::Responder::announcedPeer(const char* infoHash, Addr& peer)
 {
+	DHT_LOG("announcedPeer " << peer.toString() << " infoHash " << hexToString((const uint8_t*)infoHash, 20));
+
 	NodeId id;
 	id.copy(infoHash);
 
