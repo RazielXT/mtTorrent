@@ -8,6 +8,7 @@
 
 mtt::MetadataDownload::MetadataDownload(Peers& p) : peers(p)
 {
+	pool.start(1);
 }
 
 void mtt::MetadataDownload::start(std::function<void(Status, MetadataDownloadState&)> f, asio::io_service& io)
@@ -116,7 +117,7 @@ void mtt::MetadataDownload::evalComms()
 	{
 		addEventLog(nullptr, EventInfo::Searching, (uint32_t)activeComms.size());
 		peers.connectNext(mtt::config::getExternal().connection.maxTorrentConnections);
-		//BT_UTM_LOG("searching for more peers");
+		BT_UTM_LOG("searching for more peers");
 	}
 }
 
@@ -178,7 +179,7 @@ void mtt::MetadataDownload::metadataPieceReceived(PeerCommunication* p, ext::UtM
 	{
 		std::lock_guard<std::mutex> guard(commsMutex);
 		addEventLog(p->info.id, EventInfo::Receive, msg.piece);
-		//BT_UTM_LOG("received piece idx " << msg.piece);
+		BT_UTM_LOG("received piece idx " << msg.piece);
 		metadata.addPiece(msg.metadata, msg.piece);
 		state.partsCount = metadata.pieces;
 		state.receivedParts++;
@@ -230,7 +231,7 @@ void mtt::MetadataDownload::requestPiece(std::shared_ptr<PeerCommunication> peer
 	{
 		uint32_t mdPiece = metadata.getMissingPieceIndex();
 		peer->ext.requestMetadataPiece(mdPiece);
-		//BT_UTM_LOG("requesting piece idx " << mdPiece);
+		BT_UTM_LOG("requesting piece idx " << mdPiece);
 		addEventLog(peer->info.id, EventInfo::Request, mdPiece);
 		onUpdate(Status::I_Requesting, state);
 		lastActivityTime = (uint32_t)time(0);

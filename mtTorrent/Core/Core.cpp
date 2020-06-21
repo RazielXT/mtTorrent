@@ -275,6 +275,7 @@ mtt::GlobalBandwidth::GlobalBandwidth()
 	BandwidthManager::Get().GetChannel("upload")->setLimit(mtt::config::getExternal().transfer.maxUploadSpeed);
 
 	uint32_t bwTick = mtt::config::getInternal().bandwidthUpdatePeriodMs;
+	bwPool.start(1);
 
 	bwTimer = ScheduledTimer::create(bwPool.io, [this, bwTick]()
 		{

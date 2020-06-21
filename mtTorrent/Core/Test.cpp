@@ -54,7 +54,7 @@ void TorrentTest::metadataPieceReceived(PeerCommunication*, mtt::ext::UtMetadata
 
 void TorrentTest::testAsyncDhtUdpRequest()
 {
-	ServiceThreadpool service;
+	ServiceThreadpool service(1);
 
 	std::string dhtRoot = "dht.transmissionbt.com";
 	std::string dhtRootPort = "6881";
@@ -104,7 +104,7 @@ void TorrentTest::connectionClosed(PeerCommunication*, int)
 
 void TorrentTest::testAsyncDhtGetPeers()
 {
-	ServiceThreadpool service;
+	ServiceThreadpool service(1);
 	mtt::dht::Communication dht;
 
 	//ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J	boku 26
@@ -269,7 +269,7 @@ void TorrentTest::testStorageCheck()
 	mtt::Storage storage(torrent.info);
 	storage.setPath("D:\\Torrent");
 
-	ServiceThreadpool pool;
+	ServiceThreadpool pool(1);
 
 	bool finished = false;
 	auto onFinish = [&](std::shared_ptr<PiecesCheck>) { finished = true; TEST_LOG("Finished"); };
@@ -467,7 +467,7 @@ void TorrentTest::bigTestGetTorrentFileByLink()
 	addr.push_back(Addr({ 185, 21, 217, 75 }, 55239));
 	addr.push_back(Addr({ 78,57,164,108 }, 8999));
 	addr.push_back(Addr({ 88,206,177,148 }, 63500));
-	ServiceThreadpool service;
+	ServiceThreadpool service(1);
 
 	std::vector<std::shared_ptr<PeerCommunication>> peers;
 
@@ -565,7 +565,7 @@ void TorrentTest::testMetadataReceive()
 {
 	auto torrent = parseTorrentFile("D:\\wifi.torrent");
 
-	ServiceThreadpool service;
+	ServiceThreadpool service(1);
 
 	PeerCommunication peer(torrent.info, *this, service.io);
 	peer.sendHandshake(Addr({ 127,0,0,1 }, 31132));

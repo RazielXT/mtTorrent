@@ -2,7 +2,6 @@
 
 ServiceThreadpool::ServiceThreadpool()
 {
-	start(1);
 }
 
 ServiceThreadpool::ServiceThreadpool(uint32_t startWorkers)
