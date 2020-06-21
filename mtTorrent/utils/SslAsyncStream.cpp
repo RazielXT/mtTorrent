@@ -3,7 +3,7 @@
 
 #ifdef MTT_WITH_SSL
 
-#define SSL_TCP_LOG(x) WRITE_LOG_FILE("SslTcp", info.host << " " << x)
+#define SSL_TCP_LOG(x) WRITE_LOG("SslTcp", info.host << " " << x)
 
 SslAsyncStream::SslAsyncStream(asio::io_service& io) : io_service(io), socket(io, ctx), ctx(asio::ssl::context::tls)
 {
