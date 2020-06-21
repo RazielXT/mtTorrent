@@ -12,7 +12,7 @@
 
 using namespace mtt;
 
-mtt::HttpsTrackerComm::HttpsTrackerComm() : ctx(asio::ssl::context::tls)
+mtt::HttpsTrackerComm::HttpsTrackerComm()
 {
 }
 
@@ -23,6 +23,9 @@ mtt::HttpsTrackerComm::~HttpsTrackerComm()
 
 void mtt::HttpsTrackerComm::deinit()
 {
+	std::lock_guard<std::mutex> guard(commMutex);
+
+	stream->stop();
 }
 
 void mtt::HttpsTrackerComm::init(std::string host, std::string port, std::string path, TorrentPtr t)
@@ -33,34 +36,13 @@ void mtt::HttpsTrackerComm::init(std::string host, std::string port, std::string
 	torrent = t;
 
 	info.state = TrackerState::Initialized;
-}
 
-bool mtt::HttpsTrackerComm::initializeStream()
-{
-	{
-		std::lock_guard<std::mutex> guard(commMutex);
-		ctx.set_default_verify_paths();
-		socket = std::make_shared<ssl_socket>(torrent->service.io, ctx);
-
-		tcp::resolver resolver(torrent->service.io);
-
-		if (!openSslSocket(*socket, resolver, info.hostname.data()))
-			socket.reset();
-	}
-
-	if(!socket)
-	{
-		fail();
-		return false;
-	}
-
-	return true;
+	stream = std::make_shared<SslAsyncStream>(torrent->service.io);
+	stream->init(host, "https");
 }
 
 void mtt::HttpsTrackerComm::fail()
 {
-	socket.reset();
-
 	if (info.state == TrackerState::Announcing || info.state == TrackerState::Reannouncing)
 	{
 		if (info.state == TrackerState::Reannouncing)
@@ -73,24 +55,22 @@ void mtt::HttpsTrackerComm::fail()
 	}
 }
 
-void mtt::HttpsTrackerComm::onTcpReceived(std::string& responseData)
+void mtt::HttpsTrackerComm::onTcpReceived(const BufferView& responseData)
 {
 	if (info.state == TrackerState::Announcing || info.state == TrackerState::Reannouncing)
 	{
 		mtt::AnnounceResponse announceResp;
-		auto msgSize = readAnnounceResponse(responseData.data(), responseData.size(), announceResp);
+		auto msgSize = readAnnounceResponse((const char*)responseData.data, responseData.size, announceResp);
 
 		if (msgSize == 0)
 			return;
 		else if (msgSize == -1)
 		{
-			//tcpComm->consumeData(respData.size());
 			fail();
 			return;
 		}
 		else
 		{
-			//tcpComm->consumeData(msgSize);
 			info.state = TrackerState::Announced;
 
 			info.leechers = announceResp.leechCount;
@@ -109,37 +89,24 @@ void mtt::HttpsTrackerComm::onTcpReceived(std::string& responseData)
 
 void mtt::HttpsTrackerComm::announce()
 {
-	torrent->service.io.post([this]()
-		{
-			HTTP_TRACKER_LOG("announcing");
+	HTTP_TRACKER_LOG("announcing");
 
-			if (info.state == TrackerState::Announced)
-				info.state = TrackerState::Reannouncing;
-			else
-				info.state = TrackerState::Announcing;
+	if (info.state == TrackerState::Announced)
+		info.state = TrackerState::Reannouncing;
+	else
+		info.state = TrackerState::Announcing;
 
-			if (!initializeStream())
-				return;
+	std::lock_guard<std::mutex> guard(commMutex);
 
-			auto request = createAnnounceRequest(info.path, info.hostname, info.port);
+	auto request = createAnnounceRequest(info.path, info.hostname, info.port);
 
-			asio::streambuf buffer;
-			std::ostream request_stream(&buffer);
-			request_stream.write((char*)request.data(), request.size());
-
-			std::string response;
-			{
-				std::lock_guard<std::mutex> guard(commMutex);
-
-				if (socket)
-				{
-					response = sendHttpsRequest(*socket, buffer);
-					socket.reset();
-				}
-			}
-
+	stream->write(request, [this](const BufferView& response)
+	{
+		if (response.size == 0)
+			fail();
+		else
 			onTcpReceived(response);
-		});
+	});
 }
 
 #endif // MTT_WITH_SSL

@@ -116,65 +116,6 @@ bool Addr::operator==(const Addr& r)
 
 	return memcmp(addrBytes, r.addrBytes, ipv6 ? 16 : 4) == 0;
 }
-#ifdef MTT_WITH_SSL
-bool openSslSocket(ssl_socket& sock, tcp::resolver& resolver, const char* hostname)
-{
-	SSL_set_tlsext_host_name(sock.native_handle(), hostname);
-
-	tcp::resolver::query query(hostname, "https");
-	asio::error_code ec;
-	auto resolveResult = resolver.resolve(query, ec);
-	if (ec)
-		return false;
-	asio::connect(sock.lowest_layer(), resolveResult, ec);
-	if (ec)
-		return false;
-
-	sock.lowest_layer().set_option(tcp::no_delay(true));
-
-	// Perform SSL handshake and verify the remote host's
-	// certificate.
-	//sock.set_verify_mode(ssl::verify_peer);
-	//sock.set_verify_callback(ssl::rfc2818_verification(server));
-
-	sock.set_verify_mode(asio::ssl::verify_none);
-	sock.handshake(ssl_socket::client, ec);
-
-	return ec.value() == 0;
-}
-
-std::string sendHttpsRequest(ssl_socket& socket, asio::streambuf& request)
-{
-	// Send the request.
-	asio::error_code error;
-	asio::write(socket, request, error);
-	if (error)
-		return "";
-
-	// Read the response status line. The response streambuf will automatically
-	// grow to accommodate the entire line. The growth may be limited by passing
-	// a maximum size to the streambuf constructor.
-	asio::streambuf response;
-	asio::read(socket, response, error);
-
-	std::string message;
-	auto dataResp = response.data();
-
-	if (dataResp.size() > 0)
-	{
-		message.append((const char*)dataResp.data(), dataResp.size());
-	}
-
-	return message;
-}
-
-std::string sendHttpsRequest(ssl_socket& socket, tcp::resolver& resolver, asio::streambuf& request, const char* hostname)
-{
-	openSslSocket(socket, resolver, hostname);
-
-	return sendHttpsRequest(socket, request);
-}
-#endif
 
 BufferView::BufferView()
 {

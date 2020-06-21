@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Interface.h"
-#include "utils\Network.h"
+#include "utils/SslAsyncStream.h"
 #include "HttpTrackerComm.h"
 
 #ifdef MTT_WITH_SSL
@@ -22,14 +22,12 @@ namespace mtt
 
 	private:
 
-		bool initializeStream();
 		void fail();
 
-		void onTcpReceived(std::string&);
+		void onTcpReceived(const BufferView&);
 
 		std::mutex commMutex;
-		std::shared_ptr<ssl_socket> socket;
-		asio::ssl::context ctx;
+		std::shared_ptr<SslAsyncStream> stream;
 	};
 }
 

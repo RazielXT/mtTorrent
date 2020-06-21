@@ -384,6 +384,7 @@
     <ClCompile Include="utils\HttpHeader.cpp" />
     <ClCompile Include="utils\NetAdaptersListWin.cpp" />
     <ClCompile Include="utils\SHA.cpp" />
+    <ClCompile Include="utils\SslAsyncStream.cpp" />
     <ClCompile Include="utils\TcpAsyncStream.cpp" />
     <ClCompile Include="utils\TorrentFileParser.cpp" />
     <ClCompile Include="utils\BencodeParser.cpp" />
@@ -458,6 +459,7 @@
     <ClInclude Include="utils\HttpHeader.h" />
     <ClInclude Include="utils\NetAdaptersList.h" />
     <ClInclude Include="utils\SHA.h" />
+    <ClInclude Include="utils\SslAsyncStream.h" />
     <ClInclude Include="utils\TcpAsyncStream.h" />
     <ClInclude Include="utils\TorrentFileParser.h" />
     <ClInclude Include="utils\BencodeParser.h" />

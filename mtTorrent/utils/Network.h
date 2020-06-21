@@ -51,10 +51,3 @@ struct Addr
 
 	bool operator==(const Addr& r);
 };
-
-#ifdef MTT_WITH_SSL
-typedef asio::ssl::stream<tcp::socket> ssl_socket;
-bool openSslSocket(ssl_socket& sock, tcp::resolver& resolver, const char* hostname);
-std::string sendHttpsRequest(ssl_socket& socket, tcp::resolver& resolver, asio::streambuf& request, const char* hostname);
-std::string sendHttpsRequest(ssl_socket& socket, asio::streambuf& request);
-#endif
