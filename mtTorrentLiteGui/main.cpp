@@ -1424,6 +1424,24 @@ void refreshUi()
 	forceRefresh = false;
 }
 
+void RegisterMagnetAssociation(long long parent)
+{
+	auto reg = Microsoft::Win32::RegistryKey::OpenBaseKey(Microsoft::Win32::RegistryHive::ClassesRoot, Microsoft::Win32::RegistryView::Registry64)->OpenSubKey("Magnet\\shell\\open\\command", true);
+
+	if (reg)
+	{
+		auto location = System::Reflection::Assembly::GetExecutingAssembly()->Location;
+
+		auto commandPath = gcnew String("\"");
+		commandPath += location;
+		commandPath += "\" \"%1\"";
+
+		reg->SetValue("", commandPath);
+
+		::MessageBox((HWND)parent, L"Magnet links will now be opened with mtTorrent", L"Magnet link associated", MB_OK);
+	}
+}
+
 void ProcessProgramArgument(System::String^ arg)
 {
 	if(HWND windowHandle = (HWND)GuiLite::MainForm::instance->Handle.ToInt64())

@@ -6,6 +6,7 @@ namespace GuiLite {
 
 extern void applySettings(GuiLite::SettingsForm^ form);
 extern System::String^ getUpnpInfo();
+extern void RegisterMagnetAssociation(long long parent);
 
 namespace GuiLite {
 
@@ -62,6 +63,10 @@ namespace GuiLite {
 	private:
 
 	public: System::Windows::Forms::NumericUpDown^ numericDlSpeed;
+	private: System::Windows::Forms::Button^ buttonMagnet;
+	public:
+
+	public:
 	private:
 
 
@@ -111,6 +116,7 @@ namespace GuiLite {
 			this->label6 = (gcnew System::Windows::Forms::Label());
 			this->numericUpSpeed = (gcnew System::Windows::Forms::NumericUpDown());
 			this->numericDlSpeed = (gcnew System::Windows::Forms::NumericUpDown());
+			this->buttonMagnet = (gcnew System::Windows::Forms::Button());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->tcpPortNumeric))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->udpPortNumeric))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->maxConnectionsNumeric))->BeginInit();
@@ -170,14 +176,14 @@ namespace GuiLite {
 			this->label4->Size = System::Drawing::Size(112, 17);
 			this->label4->TabIndex = 8;
 			this->label4->Text = L"Default directory";
-			this->buttonOk->Location = System::Drawing::Point(119, 326);
+			this->buttonOk->Location = System::Drawing::Point(119, 349);
 			this->buttonOk->Name = L"buttonOk";
 			this->buttonOk->Size = System::Drawing::Size(81, 27);
 			this->buttonOk->TabIndex = 9;
 			this->buttonOk->Text = L"OK";
 			this->buttonOk->UseVisualStyleBackColor = true;
 			this->buttonOk->Click += gcnew System::EventHandler(this, &SettingsForm::buttonOk_Click);
-			this->buttonCancel->Location = System::Drawing::Point(206, 326);
+			this->buttonCancel->Location = System::Drawing::Point(206, 349);
 			this->buttonCancel->Name = L"buttonCancel";
 			this->buttonCancel->Size = System::Drawing::Size(84, 27);
 			this->buttonCancel->TabIndex = 10;
@@ -224,12 +230,20 @@ namespace GuiLite {
 			this->numericUpSpeed->TabIndex = 14;
 			this->numericDlSpeed->Location = System::Drawing::Point(228, 177);
 			this->numericDlSpeed->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) { 65535, 0, 0, 0 });
-			this->numericDlSpeed->Name = L"numericUpSpeed";
+			this->numericDlSpeed->Name = L"numericDlSpeed";
 			this->numericDlSpeed->Size = System::Drawing::Size(120, 22);
 			this->numericDlSpeed->TabIndex = 13;
+			this->buttonMagnet->Location = System::Drawing::Point(59, 303);
+			this->buttonMagnet->Name = L"buttonMagnet";
+			this->buttonMagnet->Size = System::Drawing::Size(291, 27);
+			this->buttonMagnet->TabIndex = 17;
+			this->buttonMagnet->Text = L"Associate with magnet links";
+			this->buttonMagnet->UseVisualStyleBackColor = true;
+			this->buttonMagnet->Click += gcnew System::EventHandler(this, &SettingsForm::buttonMagnet_Click);
 			this->AutoScaleDimensions = System::Drawing::SizeF(8, 16);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(400, 365);
+			this->ClientSize = System::Drawing::Size(400, 388);
+			this->Controls->Add(this->buttonMagnet);
 			this->Controls->Add(this->label5);
 			this->Controls->Add(this->label6);
 			this->Controls->Add(this->numericUpSpeed);
@@ -295,5 +309,9 @@ private: System::Void dirButton_Click(System::Object^ sender, System::EventArgs^
 		directoryTextBox->Text = dialog.SelectedPath;
 	}
 }
+private: System::Void buttonMagnet_Click(System::Object^ sender, System::EventArgs^ e) {
+	RegisterMagnetAssociation(this->Handle.ToInt64());
+}
+
 };
 }
