@@ -183,7 +183,10 @@ void TcpAsyncStream::postFail(const char* place, const std::error_code& error)
 	try
 	{
 		if (socket.is_open())
-			socket.close();
+		{
+			asio::error_code ec;
+			socket.close(ec);
+		}
 	}
 	catch (...)
 	{
@@ -241,7 +244,8 @@ void TcpAsyncStream::handle_resolver_connect(const std::error_code& error, tcp::
 	{
 		TCP_LOG("connect resolved next");
 
-		socket.close();
+		asio::error_code ec;
+		socket.close(ec);
 		tcp::endpoint endpoint = *iterator;
 		socket.async_connect(endpoint, std::bind(&TcpAsyncStream::handle_resolver_connect, shared_from_this(), std::placeholders::_1, ++iterator, resolver));
 	}
