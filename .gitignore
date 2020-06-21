@@ -10,6 +10,8 @@ x64/
 Win32/
 mtTorrent/x64/
 mtTorrent/Win32/
+DebugStandalone/
+mtTorrent/DebugStandalone/
 .vs/
 test/
 SdkExample/x64/
