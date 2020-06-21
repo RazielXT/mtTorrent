@@ -12,6 +12,7 @@
 mtt::Peers::Peers(TorrentPtr t) : torrent(t), trackers(t), dht(*this, t)
 {
 	pexInfo.hostname = "PEX";
+	remoteInfo.hostname = "Remote";
 	trackers.addTrackers(t->infoFile.announceList);
 	peersListener = std::make_shared<PeersListener>(this);
 }
@@ -52,6 +53,7 @@ void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listen
 	}
 
 	pexInfo.state = TrackerState::Connected;
+	remoteInfo.state = TrackerState::Connected;
 }
 
 void mtt::Peers::stop()
@@ -88,6 +90,8 @@ void mtt::Peers::stop()
 
 	updateCallback = nullptr;
 	pexInfo.state = TrackerState::Clear;
+	remoteInfo.state = TrackerState::Clear;
+	remoteInfo.peers = 0;
 }
 
 void mtt::Peers::connectNext(uint32_t count)
@@ -205,6 +209,8 @@ size_t mtt::Peers::add(std::shared_ptr<TcpAsyncStream> stream, const BufferView&
 		peer.idx = (uint32_t)knownPeers.size() - 1;
 		activeConnections.push_back(peer);
 		addLogEvent(RemoteConnect, p.address, 0);
+
+		remoteInfo.peers++;
 	}
 
 	return peer.comm->fromStream(stream, data);
@@ -255,6 +261,8 @@ std::vector<mtt::TrackerInfo> mtt::Peers::getSourcesInfo()
 
 	if(mtt::config::getExternal().dht.enable)
 		out.push_back(dht.info);
+
+	out.push_back(remoteInfo);
 
 	return out;
 }

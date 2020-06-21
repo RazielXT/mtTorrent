@@ -112,6 +112,7 @@ namespace mtt
 		mtt::Peers::ActivePeer* mtt::Peers::getActivePeer(PeerCommunication* p);
 
 		TrackerInfo pexInfo;
+		TrackerInfo remoteInfo;
 
 		class DhtSource : public dht::ResultsListener
 		{
