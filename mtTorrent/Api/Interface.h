@@ -127,7 +127,7 @@ namespace mtt
 		bool active = false;
 		bool finished = false;
 		uint32_t receivedParts = 0;
-		uint32_t partsCount = 0;
+		uint32_t partsCount = 0;	//0 until first peer connection
 	};
 
 	struct ActivePeerInfo

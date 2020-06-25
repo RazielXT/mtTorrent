@@ -36,8 +36,8 @@ namespace mttApi
 		{
 			Inactive,				//correctly stopped and not making any work
 			Interrupted,			//stopped due to error, see getLastError
-			CheckingFiles,			//active and checking integrity of existing files
-			DownloadingMetadata,	//active and downloading metadata from magnet link
+			CheckingFiles,			//checking integrity of existing files, see checkingProgress
+			DownloadingMetadata,	//downloading metadata from magnet link, see getMagnetDownload
 			Downloading,			//active and connecting to peers to download selected files
 			Seeding,				//active and accepting incoming connection requests
 		};

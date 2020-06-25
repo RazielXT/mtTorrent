@@ -63,7 +63,10 @@ int main()
 				if (auto magnet = t->getMagnetDownload())
 				{
 					mtt::MetadataDownloadState utmState = magnet->getState();
-					printf("Metadata Progress: %u / %u, Connected peers: %u, Found peers: %u\n", utmState.receivedParts, utmState.partsCount, t->getPeers()->connectedCount(), t->getPeers()->receivedCount());
+					if(utmState.partsCount == 0)
+						printf("Metadata download getting peers... Connected peers: %u, Found peers: %u\n", t->getPeers()->connectedCount(), t->getPeers()->receivedCount());
+					else
+						printf("Metadata download progress: %u / %u, Connected peers: %u, Found peers: %u\n", utmState.receivedParts, utmState.partsCount, t->getPeers()->connectedCount(), t->getPeers()->receivedCount());
 
 					std::vector<std::string> logs;
 					if (auto count = magnet->getDownloadLog(logs, magnetProgressLogPos))
