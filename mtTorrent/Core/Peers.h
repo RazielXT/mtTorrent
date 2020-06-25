@@ -3,7 +3,6 @@
 #include "IPeerListener.h"
 #include "TrackerManager.h"
 #include "Dht/Listener.h"
-#include "LogFile.h"
 #include "Api/Peers.h"
 
 namespace mtt

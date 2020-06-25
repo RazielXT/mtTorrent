@@ -4,7 +4,6 @@
 #include "Configuration.h"
 #include "Dht/Communication.h"
 #include "Uploader.h"
-#include "LogFile.h"
 #include <fstream>
 
 #define PEERS_LOG(x) WRITE_LOG("Peers", x)

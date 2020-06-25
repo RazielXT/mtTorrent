@@ -6,7 +6,6 @@
 #include "Peers.h"
 #include "MetadataReconstruction.h"
 #include "Interface.h"
-#include "LogFile.h"
 #include "Api/MagnetDownload.h"
 
 namespace mtt

@@ -169,9 +169,6 @@
     <ClCompile Include="Core\IncomingPeersListener.cpp">
       <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClCompile>
-    <ClCompile Include="Core\LogFile.cpp">
-      <Filter>Source Files\Core\General</Filter>
-    </ClCompile>
     <ClCompile Include="Core\FileTransfer.cpp">
       <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClCompile>
@@ -380,9 +377,6 @@
     </ClInclude>
     <ClInclude Include="Core\Peers.h">
       <Filter>Source Files\Core\Torrent\Control</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\LogFile.h">
-      <Filter>Source Files\Core\General</Filter>
     </ClInclude>
     <ClInclude Include="Core\FileTransfer.h">
       <Filter>Source Files\Core\Torrent\Control</Filter>

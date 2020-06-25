@@ -5,7 +5,6 @@
 #include "Downloader.h"
 #include "Uploader.h"
 #include "utils/ScheduledTimer.h"
-#include "LogFile.h"
 #include "Api/FileTransfer.h"
 
 namespace mtt
@@ -94,7 +93,5 @@ namespace mtt
 		std::shared_ptr<Uploader> uploader;
 
 		TorrentPtr torrent;
-
-		LogFile log;
 	};
 }

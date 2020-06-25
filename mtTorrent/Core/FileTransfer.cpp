@@ -16,7 +16,6 @@ bool ipToCountryLoaded = false;
 mtt::FileTransfer::FileTransfer(TorrentPtr t) : downloader(t), torrent(t)
 {
 	uploader = std::make_shared<Uploader>(t);
-	log.init("download");
 
 	if (!ipToCountryLoaded)
 	{
