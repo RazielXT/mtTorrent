@@ -58,7 +58,6 @@ namespace mtt
 		virtual void progressUpdated(PeerCommunication*, uint32_t) override;
 
 		void requestPiece(std::shared_ptr<PeerCommunication> peer);
-		bool active = false;
 
 		std::vector<EventInfo> eventLog;
 		void addEventLog(uint8_t* id, EventInfo::Action action, uint32_t index);

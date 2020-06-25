@@ -78,7 +78,7 @@ extern "C"
 			{
 				auto t = torrents[i];
 				memcpy(resp->list[i].hash, t->getFileInfo().info.hash, 20);
-				resp->list[i].active = (t->getStatus() != mttApi::Torrent::State::Stopped);
+				resp->list[i].active = (t->getState() != mttApi::Torrent::State::Inactive);
 			}
 		}
 		else if (id == mtBI::MessageId::GetTorrentStateInfo)
@@ -99,10 +99,8 @@ extern "C"
 			resp->progress = torrent->currentProgress();
 			resp->selectionProgress = torrent->currentSelectionProgress();
 			resp->activeStatus = torrent->getLastError();
-			resp->started = torrent->getStatus() == mttApi::Torrent::State::Started;
-
-			auto utm = torrent->getMagnetDownload();
-			resp->utmActive = utm && !utm->getState().finished;
+			resp->started = torrent->getActiveState() == mttApi::Torrent::ActiveState::Started;
+			resp->utmActive = torrent->getState() == mttApi::Torrent::State::DownloadingMetadata;
 		}
 		else if (id == mtBI::MessageId::GetPeersInfo)
 		{

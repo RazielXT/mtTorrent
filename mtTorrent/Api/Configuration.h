@@ -12,6 +12,9 @@ namespace mtt
 {
 	namespace config
 	{
+		/*
+			External settings available usually to user
+		*/
 		struct External
 		{
 			External();
@@ -49,6 +52,9 @@ namespace mtt
 			API_EXPORT std::string toJson() const;
 		};
 
+		/*
+			Internal settings used by mtTorrent library
+		*/
 		struct Internal
 		{
 			Internal();

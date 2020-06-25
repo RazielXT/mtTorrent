@@ -760,7 +760,7 @@ void idealLocalTest()
 
 	torrent->peers->trackers.removeTrackers();
 
-	if (!torrent->start())
+	if (torrent->start() != mtt::Status::Success)
 		return;
 
 	torrent->peers->connect(Addr({ 127,0,0,1 }, 31132));

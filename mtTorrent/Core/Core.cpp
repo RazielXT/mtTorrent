@@ -226,14 +226,6 @@ mtt::TorrentPtr mtt::Core::getTorrent(const uint8_t* hash)
 	return nullptr;
 }
 
-mtt::TorrentPtr mtt::Core::getTorrent(const char* hash)
-{
-	uint8_t hexa[20];
-	decodeHexa(hash, hexa);
-
-	return getTorrent(hexa);
-}
-
 mtt::Status mtt::Core::removeTorrent(const uint8_t* hash, bool deleteFiles)
 {
 	for (auto it = torrents.begin(); it != torrents.end(); it++)

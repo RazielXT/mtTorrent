@@ -3,6 +3,7 @@
 #include "Api\Interface.h"
 #include "utils\Network.h"
 #include "Public\Status.h"
+#include <atomic>
 #include "Logging.h"
 
 #define MT_NAME "mtTorrent 0.9"
@@ -15,6 +16,23 @@ namespace mtt
 {
 	class Torrent;
 	using TorrentPtr = std::shared_ptr<Torrent>;
+
+	struct PiecesCheck
+	{
+		uint32_t piecesCount = 0;
+		std::atomic<uint32_t> piecesChecked = 0;
+		bool rejected = false;
+		std::vector<uint8_t> pieces;
+	};
+
+	enum class PeerSource
+	{
+		Tracker,
+		Pex,
+		Dht,
+		Manual,
+		Remote
+	};
 
 	struct PieceBlock
 	{

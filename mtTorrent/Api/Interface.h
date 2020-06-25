@@ -3,7 +3,6 @@
 #include <vector>
 #include "Public\Status.h"
 #include "Public\Alerts.h"
-#include <atomic>
 #include "Api\Configuration.h"
 
 #ifdef ASIO_STANDALONE
@@ -125,26 +124,10 @@ namespace mtt
 
 	struct MetadataDownloadState
 	{
+		bool active = false;
 		bool finished = false;
 		uint32_t receivedParts = 0;
 		uint32_t partsCount = 0;
-	};
-
-	struct PiecesCheck
-	{
-		uint32_t piecesCount = 0;
-		std::atomic<uint32_t> piecesChecked = 0;
-		bool rejected = false;
-		std::vector<uint8_t> pieces;
-	};
-
-	enum class PeerSource
-	{
-		Tracker,
-		Pex,
-		Dht,
-		Manual,
-		Remote
 	};
 
 	struct ActivePeerInfo

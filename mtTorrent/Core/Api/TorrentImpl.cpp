@@ -3,7 +3,7 @@
 #include "FileTransfer.h"
 #include "MetadataDownload.h"
 
-bool mttApi::Torrent::start()
+mtt::Status mttApi::Torrent::start()
 {
 	return static_cast<mtt::Torrent*>(this)->start();
 }
@@ -13,9 +13,14 @@ void mttApi::Torrent::stop()
 	static_cast<mtt::Torrent*>(this)->stop();
 }
 
-mttApi::Torrent::State mttApi::Torrent::getStatus()
+mttApi::Torrent::ActiveState mttApi::Torrent::getActiveState()
 {
 	return static_cast<mtt::Torrent*>(this)->state;
+}
+
+mttApi::Torrent::State mttApi::Torrent::getState()
+{
+	return static_cast<mtt::Torrent*>(this)->getState();
 }
 
 mtt::Status mttApi::Torrent::getLastError()
@@ -58,7 +63,7 @@ mtt::Status mttApi::Torrent::setLocationPath(const std::string& path)
 	return static_cast<mtt::Torrent*>(this)->setLocationPath(path);
 }
 
-std::string mttApi::Torrent::name()
+const std::string& mttApi::Torrent::name()
 {
 	return static_cast<mtt::Torrent*>(this)->name();
 }
@@ -81,11 +86,6 @@ uint64_t mttApi::Torrent::downloaded()
 uint64_t mttApi::Torrent::uploaded()
 {
 	return static_cast<mtt::Torrent*>(this)->uploaded();
-}
-
-uint64_t mttApi::Torrent::dataLeft()
-{
-	return static_cast<mtt::Torrent*>(this)->dataLeft();
 }
 
 bool mttApi::Torrent::finished()

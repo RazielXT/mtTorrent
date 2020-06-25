@@ -8,20 +8,19 @@
 
 mtt::MetadataDownload::MetadataDownload(Peers& p) : peers(p)
 {
-	pool.start(1);
 }
 
 void mtt::MetadataDownload::start(std::function<void(Status, MetadataDownloadState&)> f, asio::io_service& io)
 {
 	onUpdate = f;
-	active = true;
+	state.active = true;
 
 	//peers.trackers.removeTrackers();
 
 	peers.start([this](Status s, mtt::PeerSource source)
 	{
 		std::lock_guard<std::mutex> guard(commsMutex);
-		if (s == Status::Success && active)
+		if (s == Status::Success && state.active)
 		{
 			evalComms();
 		}
@@ -34,7 +33,7 @@ void mtt::MetadataDownload::start(std::function<void(Status, MetadataDownloadSta
 	retryTimer = ScheduledTimer::create(io, [this]()
 		{
 			auto currentTime = (uint32_t) time(0);
-			if (active && !state.finished && lastActivityTime + 5 < currentTime)
+			if (state.active && !state.finished && lastActivityTime + 5 < currentTime)
 			{
 				std::lock_guard<std::mutex> guard(commsMutex);
 				for (auto a : activeComms)
@@ -61,10 +60,10 @@ void mtt::MetadataDownload::stop()
 
 	addEventLog(nullptr, EventInfo::End, 0);
 
-	if(!state.finished && active)
+	if(!state.finished && state.active)
 		onUpdate(Status::I_Stopped, state);
 
-	active = false;
+	state.active = false;
 	{
 		std::lock_guard<std::mutex> guard(commsMutex);
 		activeComms.clear();
@@ -184,7 +183,7 @@ void mtt::MetadataDownload::metadataPieceReceived(PeerCommunication* p, ext::UtM
 		state.partsCount = metadata.pieces;
 		state.receivedParts++;
 
-		if (metadata.finished() && active)
+		if (metadata.finished() && state.active)
 		{
 			state.finished = true;
 		}
@@ -227,7 +226,7 @@ void mtt::MetadataDownload::progressUpdated(PeerCommunication*, uint32_t)
 
 void mtt::MetadataDownload::requestPiece(std::shared_ptr<PeerCommunication> peer)
 {
-	if (active && !state.finished)
+	if (state.active && !state.finished)
 	{
 		uint32_t mdPiece = metadata.getMissingPieceIndex();
 		peer->ext.requestMetadataPiece(mdPiece);

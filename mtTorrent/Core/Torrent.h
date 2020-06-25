@@ -18,7 +18,7 @@ namespace mtt
 
 		Torrent();
 
-		State state = State::Stopped;
+		ActiveState state = ActiveState::Stopped;
 		bool checking = false;
 		Status lastError = Status::Success;
 
@@ -26,8 +26,9 @@ namespace mtt
 		static TorrentPtr fromMagnetLink(std::string link);
 		static TorrentPtr fromSavedState(std::string name);
 		void downloadMetadata();
+		State getState();
 
-		bool start();
+		mtt::Status start();
 		enum class StopReason { Deinit, Manual, Internal };
 		void stop(StopReason reason = StopReason::Manual);
 
@@ -39,7 +40,7 @@ namespace mtt
 		void setFilesPriority(const std::vector<mtt::Priority>&);
 		mtt::Status setLocationPath(const std::string& path);
 
-		std::string name();
+		const std::string& name();
 		float currentProgress();
 		float currentSelectionProgress();
 		uint64_t downloaded();

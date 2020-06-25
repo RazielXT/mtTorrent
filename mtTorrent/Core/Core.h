@@ -37,12 +37,11 @@ namespace mtt
 		void init();
 		void deinit();
 
-		std::pair<mtt::Status,TorrentPtr> addFile(const char* filename);
+		std::pair<mtt::Status, TorrentPtr> addFile(const char* filename);
 		std::pair<mtt::Status, TorrentPtr> addFile(const uint8_t* data, size_t size);
 		std::pair<mtt::Status, TorrentPtr> addMagnet(const char* magnet);
 
 		TorrentPtr getTorrent(const uint8_t* hash);
-		TorrentPtr getTorrent(const char* hash);
 
 		Status removeTorrent(const uint8_t* hash, bool deleteFiles);
 		Status removeTorrent(const char* hash, bool deleteFiles);

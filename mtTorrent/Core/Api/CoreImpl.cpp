@@ -54,22 +54,12 @@ mttApi::TorrentPtr mttApi::Core::getTorrent(const uint8_t* hash)
 	return static_cast<mtt::Core*>(this)->getTorrent(hash);
 }
 
-mttApi::TorrentPtr mttApi::Core::getTorrent(const char* hash)
-{
-	return static_cast<mtt::Core*>(this)->getTorrent(hash);
-}
-
 std::shared_ptr<mttApi::Listener> mttApi::Core::getListener()
 {
 	return static_cast<mtt::Core*>(this)->listener;
 }
 
 mtt::Status mttApi::Core::removeTorrent(const uint8_t* hash, bool deleteFiles)
-{
-	return static_cast<mtt::Core*>(this)->removeTorrent(hash, deleteFiles);
-}
-
-mtt::Status mttApi::Core::removeTorrent(const char* hash, bool deleteFiles)
 {
 	return static_cast<mtt::Core*>(this)->removeTorrent(hash, deleteFiles);
 }
