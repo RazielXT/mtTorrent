@@ -501,12 +501,26 @@ mtt::Status mtt::Storage::validatePath(DownloadSelection& selection)
 {
 	std::filesystem::path dlPath = std::filesystem::u8path(path);
 
-	if(!dlPath.has_root_path())
-		return Status::E_InvalidPath;
-
-	auto root = dlPath.root_path();
+	bool exists = false;
 	std::error_code ec;
-	if (!std::filesystem::exists(root, ec))
+
+	if (!dlPath.has_root_path())
+	{
+		if (dlPath.is_relative())
+		{
+			if (std::filesystem::exists(dlPath, ec))
+				exists = true;
+		}
+	}
+	else
+	{
+		auto root = dlPath.root_path();
+
+		if (!std::filesystem::exists(root, ec))
+			return Status::E_InvalidPath;
+	}
+
+	if (!exists)
 		return Status::E_InvalidPath;
 
 	uint64_t fullsize = 0;
@@ -518,7 +532,7 @@ mtt::Status mtt::Storage::validatePath(DownloadSelection& selection)
 		}
 	}
 
-	auto spaceInfo = std::filesystem::space(root, ec);
+	auto spaceInfo = std::filesystem::space(dlPath, ec);
 	if (spaceInfo.available < fullsize)
 		return Status::E_NotEnoughSpace;
 
