@@ -98,6 +98,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.\Forms;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies />
@@ -110,6 +111,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.\Forms;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies />
@@ -122,6 +124,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.\Forms;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies />
@@ -133,6 +136,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.\Forms;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies />
@@ -152,53 +156,74 @@
   <ItemGroup>
     <ClCompile Include="..\mtTorrent\Public\ModuleString.cpp" />
     <ClCompile Include="..\mtTorrent\utils\HexEncoding.cpp" />
-    <ClCompile Include="AddPeerForm.cpp" />
-    <ClCompile Include="FileSelectionForm.cpp" />
-    <ClCompile Include="MagnetInputForm.cpp" />
+    <ClCompile Include="AppCore.cpp" />
+    <ClCompile Include="AppCoreCallbacks.cpp" />
+    <ClCompile Include="Elements\FileSelection.cpp" />
+    <ClCompile Include="Elements\MagnetProgress.cpp" />
+    <ClCompile Include="Elements\PiecesProgress.cpp" />
+    <ClCompile Include="Elements\Scheduler.cpp" />
+    <ClCompile Include="Elements\Settings.cpp" />
+    <ClCompile Include="Elements\SpeedChart.cpp" />
+    <ClCompile Include="Elements\TorrentsView.cpp" />
+    <ClCompile Include="Forms\AddPeerForm.cpp" />
+    <ClCompile Include="Forms\FileSelectionForm.cpp" />
+    <ClCompile Include="Forms\MagnetInputForm.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="MainForm.cpp" />
-    <ClCompile Include="ScheduleForm.cpp" />
-    <ClCompile Include="SettingsForm.cpp" />
+    <ClCompile Include="Forms\MainForm.cpp" />
+    <ClCompile Include="Forms\ScheduleForm.cpp" />
+    <ClCompile Include="Forms\SettingsForm.cpp" />
+    <ClCompile Include="Utils\Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AddPeerForm.h">
+    <ClInclude Include="AppCore.h" />
+    <ClInclude Include="CrossProcessComm.h" />
+    <ClInclude Include="Elements\FileSelection.h" />
+    <ClInclude Include="Elements\MagnetProgress.h" />
+    <ClInclude Include="Elements\PiecesProgress.h" />
+    <ClInclude Include="Elements\Scheduler.h" />
+    <ClInclude Include="Elements\Settings.h" />
+    <ClInclude Include="Elements\SpeedChart.h" />
+    <ClInclude Include="Elements\TorrentsView.h" />
+    <ClInclude Include="Forms\AddPeerForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
-    <ClInclude Include="Buttons.h" />
-    <ClInclude Include="FileSelectionForm.h">
+    <ClInclude Include="AppCoreCallbacks.h" />
+    <ClInclude Include="Forms\FileSelectionForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
-    <ClInclude Include="MagnetInputForm.h">
+    <ClInclude Include="Forms\MagnetInputForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
-    <ClInclude Include="MainForm.h">
+    <ClInclude Include="Forms\MainForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
-    <ClInclude Include="ScheduleForm.h">
+    <ClInclude Include="Forms\ScheduleForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
-    <ClInclude Include="SettingsForm.h">
+    <ClInclude Include="Forms\SettingsForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
+    <ClInclude Include="MttLibrary.h" />
+    <ClInclude Include="Utils\Utils.h" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="AddPeerForm.resx">
-      <DependentUpon>AddPeerForm.h</DependentUpon>
+    <EmbeddedResource Include="Forms\AddPeerForm.resx">
+      <DependentUpon>Forms\AddPeerForm.h</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileSelectionForm.resx">
-      <DependentUpon>FileSelectionForm.h</DependentUpon>
+    <EmbeddedResource Include="Forms\FileSelectionForm.resx">
+      <DependentUpon>Forms\FileSelectionForm.h</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="MagnetInputForm.resx">
-      <DependentUpon>MagnetInputForm.h</DependentUpon>
+    <EmbeddedResource Include="Forms\MagnetInputForm.resx">
+      <DependentUpon>Forms\MagnetInputForm.h</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="MainForm.resx">
-      <DependentUpon>MainForm.h</DependentUpon>
+    <EmbeddedResource Include="Forms\MainForm.resx">
+      <DependentUpon>Forms\MainForm.h</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ScheduleForm.resx">
-      <DependentUpon>ScheduleForm.h</DependentUpon>
+    <EmbeddedResource Include="Forms\ScheduleForm.resx">
+      <DependentUpon>Forms\ScheduleForm.h</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingsForm.resx">
-      <DependentUpon>SettingsForm.h</DependentUpon>
+    <EmbeddedResource Include="Forms\SettingsForm.resx">
+      <DependentUpon>Forms\SettingsForm.h</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

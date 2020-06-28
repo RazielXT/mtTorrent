@@ -1,10 +1,6 @@
 #pragma once
 
-#include "Buttons.h"
-#include <vector>
-extern void fillFilesSelectionForm();
-extern void fileSelectionChanged(int id, bool selected);
-extern void filePriorityChanged(const std::vector<int>&, System::String^);
+#include "../AppCoreCallbacks.h"
 
 namespace GuiLite {
 

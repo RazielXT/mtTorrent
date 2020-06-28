@@ -1,11 +1,6 @@
 #pragma once
 
-namespace GuiLite {
-	ref class SettingsForm;
-}
-
-extern void applySettings(GuiLite::SettingsForm^ form);
-extern System::String^ getUpnpInfo();
+#include "../AppCoreCallbacks.h"
 extern void RegisterMagnetAssociation(long long parent);
 
 namespace GuiLite {

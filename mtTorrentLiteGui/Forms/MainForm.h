@@ -1,8 +1,6 @@
 ﻿#pragma once
 
-#include "Buttons.h"
-
-extern void refreshUi();
+#include "../AppCoreCallbacks.h"
 
 namespace GuiLite {
 
@@ -31,11 +29,6 @@ namespace GuiLite {
 
 			instance = this;
 
-			updateTimer = gcnew System::Windows::Forms::Timer();
-			updateTimer->Tick += gcnew EventHandler(TimerUpdateFunc);
-			updateTimer->Interval = 100;
-			updateTimer->Start();
-
 			try
 			{
 				this->Icon = gcnew System::Drawing::Icon("data/mttIcon.ico");// (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
@@ -45,7 +38,8 @@ namespace GuiLite {
 			}
 		}
 
-		static System::Windows::Forms::Timer^ scheduleTimer;
+		static System::Windows::Forms::Timer^ schedulerTimer;
+		static System::Windows::Forms::Timer^ updateTimer;
 
 	private: System::Windows::Forms::DataGridView^  peersGridView;
 	public: System::Windows::Forms::TextBox^  torrentInfoLabel;
@@ -136,13 +130,6 @@ namespace GuiLite {
 	private: System::Windows::Forms::SplitContainer^  splitContainer2;
 public: System::Windows::Forms::Button^  buttonAddTorrent;
 	private: System::Windows::Forms::DataGridView^  torrentsGrid;
-
-		static System::Windows::Forms::Timer^ updateTimer;
-
-		static void TimerUpdateFunc(System::Object^ myObject, System::EventArgs^ myEventArgs)
-		{
-			refreshUi();
-		}
 
 	protected:
 		/// <summary>

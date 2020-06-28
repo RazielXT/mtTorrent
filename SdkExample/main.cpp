@@ -95,6 +95,7 @@ int main()
 		}
 	}
 
+	//optional, stopped automatically in core destructor
 	for (auto t : core->getTorrents())
 	{
 		t->stop();

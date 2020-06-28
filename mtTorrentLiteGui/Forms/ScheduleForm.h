@@ -1,6 +1,6 @@
 #pragma once
 
-extern void scheduleTorrent(int seconds);
+#include "../AppCoreCallbacks.h"
 
 namespace mtTorrentLiteGui {
 
@@ -118,11 +118,7 @@ namespace mtTorrentLiteGui {
 	}
 	private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) {
 
-		System::DateTime time = timePicker->Value;
-		System::DateTime now = System::DateTime::Now;
-		auto span = time.Subtract(now);
-
-		scheduleTorrent((int)span.TotalSeconds);
+		scheduleTorrent(timePicker->Value);
 		Close();
 	}
 	};
