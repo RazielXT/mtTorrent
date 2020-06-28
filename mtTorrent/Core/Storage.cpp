@@ -500,16 +500,14 @@ void mtt::Storage::createPath(const std::filesystem::path& path)
 mtt::Status mtt::Storage::validatePath(DownloadSelection& selection)
 {
 	std::filesystem::path dlPath = std::filesystem::u8path(path);
-
-	bool exists = false;
 	std::error_code ec;
 
 	if (!dlPath.has_root_path())
 	{
 		if (dlPath.is_relative())
 		{
-			if (std::filesystem::exists(dlPath, ec))
-				exists = true;
+			if (!std::filesystem::exists(dlPath, ec))
+				return Status::E_InvalidPath;
 		}
 	}
 	else
@@ -519,9 +517,6 @@ mtt::Status mtt::Storage::validatePath(DownloadSelection& selection)
 		if (!std::filesystem::exists(root, ec))
 			return Status::E_InvalidPath;
 	}
-
-	if (!exists)
-		return Status::E_InvalidPath;
 
 	uint64_t fullsize = 0;
 	for (auto& f : selection.files)
