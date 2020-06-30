@@ -10,7 +10,8 @@ namespace mtt
 	public:
 
 		void startMap();
-		void startRawMapItem(const char* text);
+		void startMap(const char* name);
+		void startRawMap(const char* text);
 		void endMap();
 
 		void startArray();
@@ -23,6 +24,7 @@ namespace mtt
 
 		void addItem(const char* name, uint64_t number);
 		void addItem(const char* name, const char* text);
+		void addItem(const char* name, const std::string& text);
 		void addItemFromBuffer(const char* name, const char* buffer, size_t size);
 
 		void addRawItem(const char* name, uint64_t number);

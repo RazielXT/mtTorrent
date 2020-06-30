@@ -1,4 +1,0 @@
-"D:\Hobby\mtTorrent\x64\Debug\mtTorrentGuiLite.exe" "%1"
-"C:\Program Files\BiglyBT\BiglyBT.exe" "%1"
-
-Computer\HKEY_CLASSES_ROOT\Magnet\shell\open\command

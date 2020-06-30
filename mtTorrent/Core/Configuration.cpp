@@ -3,10 +3,11 @@
 #include <mutex>
 #include <filesystem>
 #include <fstream>
-#include "rapidjson/document.h"
-#include "rapidjson/writer.h"
 #include "utils/HexEncoding.h"
 #include "AlertsManager.h"
+#include "Api/Configuration.h"
+#include "utils/BencodeWriter.h"
+#include "utils/BencodeParser.h"
 
 namespace mtt
 {
@@ -15,12 +16,14 @@ namespace mtt
 		External external;
 		Internal internal_;
 
+		bool dirty = true;
 		std::mutex cbMutex;
 		std::map<int, std::pair<ValueType, std::function<void()>>> callbacks;
 		int registerCounter = 1;
 
 		static void triggerChange(ValueType type)
 		{
+			dirty = true;
 			AlertsManager::Get().configAlert(AlertId::ConfigChanged, type);
 
 			std::lock_guard<std::mutex> guard(cbMutex);
@@ -90,110 +93,6 @@ namespace mtt
 			}
 		}
 
-		static void fromJson(rapidjson::Value& externalSettings)
-		{
-			auto conn = externalSettings.FindMember("connection");
-			if (conn != externalSettings.MemberEnd())
-			{
-				if (conn->value.HasMember("tcpPort"))
-					external.connection.tcpPort = (uint16_t)conn->value["tcpPort"].GetUint();
-				if (conn->value.HasMember("udpPort"))
-					external.connection.udpPort = (uint16_t)conn->value["udpPort"].GetUint();
-				if (conn->value.HasMember("maxConn"))
-					external.connection.maxTorrentConnections = conn->value["maxConn"].GetUint();
-				if (conn->value.HasMember("upnp"))
-					external.connection.upnpPortMapping = conn->value["upnp"].GetBool();
-			}
-
-			auto dht = externalSettings.FindMember("dht");
-			if (dht != externalSettings.MemberEnd())
-			{
-				if (dht->value.HasMember("enabled"))
-					external.dht.enable = dht->value["enabled"].GetBool();
-			}
-
-			auto tran = externalSettings.FindMember("transfer");
-			if (tran != externalSettings.MemberEnd())
-			{
-				if (tran->value.HasMember("maxDownloadSpeed"))
-					external.transfer.maxDownloadSpeed = (uint32_t)tran->value["maxDownloadSpeed"].GetUint();
-				if (tran->value.HasMember("maxUploadSpeed"))
-					external.transfer.maxUploadSpeed = (uint32_t)tran->value["maxUploadSpeed"].GetUint();
-			}
-
-			auto files = externalSettings.FindMember("files");
-			if (files != externalSettings.MemberEnd())
-			{
-				if (files->value.HasMember("directory"))
-					external.files.defaultDirectory = files->value["directory"].GetString();
-			}
-		}
-
-		bool fromJson(const char* js)
-		{
-			rapidjson::Document doc;
-			doc.Parse(js);
-
-			if(doc.IsObject())
-				fromJson(doc);
-
-			return doc.IsObject();
-		}
-
-		void fromInternalJson(rapidjson::Value& internalSettings)
-		{
-			auto item = internalSettings.FindMember("hashId");
-			if (item != internalSettings.MemberEnd() && item->value.GetStringLength() == 40)
-				decodeHexa(item->value.GetString(), internal_.hashId);
-
-			item = internalSettings.FindMember("maxPeersPerTrackerRequest");
-			if (item != internalSettings.MemberEnd())
-				internal_.maxPeersPerTrackerRequest = item->value.GetUint();
-
-			auto dhtSettings = internalSettings.FindMember("dht");
-			if (dhtSettings != internalSettings.MemberEnd())
-			{
-				item = dhtSettings->value.FindMember("peersCheckInterval");
-				if (item != dhtSettings->value.MemberEnd())
-					internal_.dht.peersCheckInterval = item->value.GetUint();
-
-				item = dhtSettings->value.FindMember("maxStoredAnnouncedPeers");
-				if (item != dhtSettings->value.MemberEnd())
-					internal_.dht.maxStoredAnnouncedPeers = item->value.GetUint();
-
-				item = dhtSettings->value.FindMember("maxPeerValuesResponse");
-				if (item != dhtSettings->value.MemberEnd())
-					internal_.dht.maxPeerValuesResponse = item->value.GetUint();
-
-				auto rootHosts = dhtSettings->value.FindMember("defaultRootHosts");
-				if (rootHosts != dhtSettings->value.MemberEnd() && rootHosts->value.IsArray())
-				{
-					internal_.dht.defaultRootHosts.clear();
-					for (auto& host : rootHosts->value.GetArray())
-					{
-						size_t portStart = host.GetStringLength();
-						auto str = host.GetString();
-						while (portStart > 0)
-							if (str[portStart] == ':')
-								break;
-							else
-								portStart--;
-
-						if(portStart && portStart < host.GetStringLength())
-							internal_.dht.defaultRootHosts.push_back({ std::string(str, portStart) , std::string(str + portStart + 1) });
-					}
-				}
-			}
-
-			item = internalSettings.FindMember("programFolderPath");
-			if (item != internalSettings.MemberEnd())
-				internal_.programFolderPath = item->value.GetString();
-
-			item = internalSettings.FindMember("stateFolder");
-			if (item != internalSettings.MemberEnd())
-				internal_.stateFolder = item->value.GetString();
-		}
-
 		int registerOnChangeCallback(ValueType v, std::function<void()> cb)
 		{
 			std::lock_guard<std::mutex> guard(cbMutex);
@@ -229,103 +128,132 @@ namespace mtt
 				std::string data((std::istreambuf_iterator<char>(file)),
 					std::istreambuf_iterator<char>());
 
-				rapidjson::Document doc;
-				doc.Parse(data.data(), data.length());
-
-				if (!doc.IsObject())
+				mtt::BencodeParser parser;
+				if (!parser.parse((const uint8_t*)data.data(), data.size()))
 					return;
 
-				auto internalSettings = doc.FindMember("internal");
-				if (internalSettings != doc.MemberEnd())
+				dirty = false;
+				auto root = parser.getRoot();
+
+				if (auto internalSettings = root->getDictItem("internal"))
 				{
-					fromInternalJson(internalSettings->value);
+					auto id = internalSettings->getTxt("hashId");
+					if (id.length() == 40)
+						decodeHexa(id, internal_.hashId);
+
+					if (auto i = internalSettings->getIntItem("maxPeersPerTrackerRequest"))
+						internal_.maxPeersPerTrackerRequest = (uint32_t)i->getBigInt();
+
+					if (auto dhtSettings = internalSettings->getDictItem("dht"))
+					{
+						if (auto i = dhtSettings->getIntItem("peersCheckInterval"))
+							internal_.dht.peersCheckInterval = (uint32_t)i->getBigInt();
+						if (auto i = dhtSettings->getIntItem("maxStoredAnnouncedPeers"))
+							internal_.dht.maxStoredAnnouncedPeers = (uint32_t)i->getBigInt();
+						if (auto i = dhtSettings->getIntItem("maxPeerValuesResponse"))
+							internal_.dht.maxPeerValuesResponse = (uint32_t)i->getBigInt();
+
+						if (auto rootHosts = dhtSettings->getListItem("defaultRootHosts"))
+						{
+							internal_.dht.defaultRootHosts.clear();
+							for (auto& host : *rootHosts)
+							{
+								auto str = host.getTxt();
+								size_t portStart = str.find_last_of(':');
+								if (portStart != std::string::npos)
+									internal_.dht.defaultRootHosts.push_back({ str.substr(0, portStart) , str.substr(portStart + 1) });
+							}
+						}
+					}
 				}
 
-				auto externalSettings = doc.FindMember("external");
-				if (externalSettings != doc.MemberEnd())
+				if (auto externalSettings = root->getDictItem("external"))
 				{
-					fromJson(externalSettings->value);
+					if (auto cSettings = externalSettings->getDictItem("connection"))
+					{
+						if (auto i = cSettings->getIntItem("tcpPort"))
+							external.connection.tcpPort = (uint16_t)i->getBigInt();
+						if (auto i = cSettings->getIntItem("udpPort"))
+							external.connection.udpPort = (uint16_t)i->getBigInt();
+						if (auto i = cSettings->getIntItem("maxTorrentConnections"))
+							external.connection.maxTorrentConnections = (uint32_t)i->getBigInt();
+						if (auto i = cSettings->getIntItem("upnpPortMapping"))
+							external.connection.upnpPortMapping = (bool)i->getBigInt();
+					}
+					if (auto dhtSettings = externalSettings->getDictItem("dht"))
+					{
+						if (auto i = dhtSettings->getIntItem("enabled"))
+							external.dht.enable = (bool)i->getBigInt();
+					}
+					if (auto tSettings = externalSettings->getDictItem("transfer"))
+					{
+						if (auto i = tSettings->getIntItem("maxDownloadSpeed"))
+							external.transfer.maxDownloadSpeed = (uint32_t)i->getBigInt();
+						if (auto i = tSettings->getIntItem("maxUploadSpeed"))
+							external.transfer.maxUploadSpeed = (uint32_t)i->getBigInt();
+					}
+					if (auto fSettings = externalSettings->getDictItem("files"))
+					{
+						if (auto i = fSettings->getTxtItem("directory"))
+							external.files.defaultDirectory = std::string(i->data, i->size);
+					}
 				}
 			}
 		}
 
 		void save()
 		{
+			if (!dirty)
+				return;
+
 			std::ofstream file(mtt::config::getInternal().programFolderPath + "\\cfg", std::ios::binary);
 
 			if (file)
 			{
-				rapidjson::StringBuffer s;
-				rapidjson::Writer<rapidjson::StringBuffer> writer(s);
+				mtt::BencodeWriter writer;
+				writer.startMap();
 
-				writer.StartObject();
-
-				writer.Key("internal");
 				{
-					writer.StartObject();
-					writer.Key("hashId"); writer.String(hexToString(internal_.hashId, 20).data());
-					writer.EndObject();
+					writer.startMap("internal");
+					writer.addItem("hashId", hexToString(internal_.hashId, 20));
+					writer.endMap();
 				}
 
-				writer.Key("external");
 				{
-					auto extJson = external.toJson();
-					writer.RawValue(extJson.data(), extJson.length(), rapidjson::Type::kObjectType);
+					writer.startMap("external");
+
+					writer.startMap("connection");
+					writer.addItem("tcpPort", external.connection.tcpPort);
+					writer.addItem("udpPort", external.connection.udpPort);
+					writer.addItem("maxTorrentConnections", external.connection.maxTorrentConnections);
+					writer.addItem("upnpPortMapping", external.connection.upnpPortMapping);
+					writer.endMap();
+
+					writer.startMap("dht");
+					writer.addItem("enabled", (uint32_t)external.dht.enable);
+					writer.endMap();
+
+					writer.startMap("transfer");
+					writer.addItem("maxDownloadSpeed", external.transfer.maxDownloadSpeed);
+					writer.addItem("maxUploadSpeed", external.transfer.maxUploadSpeed);
+					writer.endMap();
+
+					writer.startMap("files");
+					writer.addItem("directory", external.files.defaultDirectory);
+					writer.endMap();
+
+					writer.endMap();
 				}
 
-				writer.EndObject();
+				writer.endMap();
 
-				file << s.GetString();
+				file << writer.data;
 			}
 		}
 
 		External::External()
 		{
-			files.defaultDirectory = "E:\\";
-		}
-
-		std::string External::toJson() const
-		{
-			rapidjson::StringBuffer s;
-			rapidjson::Writer<rapidjson::StringBuffer> writer(s);
-
-			writer.StartObject();
-
-			writer.Key("connection");
-			{
-				writer.StartObject();
-				writer.Key("tcpPort"); writer.Uint(connection.tcpPort);
-				writer.Key("udpPort"); writer.Uint(connection.udpPort);
-				writer.Key("maxConn"); writer.Uint(connection.maxTorrentConnections);
-				writer.Key("upnp"); writer.Bool(connection.upnpPortMapping);
-				writer.EndObject();
-			}
-
-			writer.Key("dht");
-			{
-				writer.StartObject();
-				writer.Key("enabled"); writer.Bool(dht.enable);
-				writer.EndObject();
-			}
-
-			writer.Key("transfer");
-			{
-				writer.StartObject();
-				writer.Key("maxDownloadSpeed"); writer.Uint(transfer.maxDownloadSpeed);
-				writer.Key("maxUploadSpeed"); writer.Uint(transfer.maxUploadSpeed);
-				writer.EndObject();
-			}
-
-			writer.Key("files");
-			{
-				writer.StartObject();
-				writer.Key("directory"); writer.String(files.defaultDirectory.data());
-				writer.EndObject();
-			}
-
-			writer.EndObject();
-
-			return s.GetString();
+			files.defaultDirectory = ".\\";
 		}
 
 		Internal::Internal()
@@ -342,11 +270,5 @@ namespace mtt
 
 			dht.defaultRootHosts = { { "dht.transmissionbt.com", "6881" },{ "router.bittorrent.com" , "6881" } };
 		}
-
-		void Internal::fromJson(const char* js)
-		{
-
-		}
-
 	}
 }

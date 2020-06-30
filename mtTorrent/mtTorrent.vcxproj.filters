@@ -193,9 +193,6 @@
     <ClCompile Include="utils\SHA.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="Core\JsonInterfaceHandler.cpp">
-      <Filter>Source Files\Core</Filter>
-    </ClCompile>
     <ClCompile Include="Public\ModuleString.cpp">
       <Filter>Source Files\Public</Filter>
     </ClCompile>
@@ -403,9 +400,6 @@
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="Public\ModuleString.h">
-      <Filter>Source Files\Public</Filter>
-    </ClInclude>
-    <ClInclude Include="Public\JsonInterface.h">
       <Filter>Source Files\Public</Filter>
     </ClInclude>
     <ClInclude Include="utils\UpnpDiscovery.h">

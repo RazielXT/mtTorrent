@@ -5,7 +5,13 @@ void mtt::BencodeWriter::startMap()
 	data.append(1, 'd');
 }
 
-void mtt::BencodeWriter::startRawMapItem(const char* text)
+void mtt::BencodeWriter::startMap(const char* name)
+{
+	addText(name);
+	startMap();
+}
+
+void mtt::BencodeWriter::startRawMap(const char* text)
 {
 	data.append(text);
 	startMap();
@@ -36,6 +42,12 @@ void mtt::BencodeWriter::addItem(const char* name, uint64_t number)
 {
 	addText(name);
 	addNumber(number);
+}
+
+void mtt::BencodeWriter::addItem(const char* name, const std::string& text)
+{
+	addText(name);
+	addText(text);
 }
 
 void mtt::BencodeWriter::addItem(const char* name, const char* text)

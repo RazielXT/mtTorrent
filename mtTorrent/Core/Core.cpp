@@ -10,8 +10,6 @@
 #include "utils/HexEncoding.h"
 #include "utils/TorrentFileParser.h"
 
-mtt::Core core;
-
 extern void InitLogTime();
 
 #ifdef WINAPI

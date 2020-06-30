@@ -163,7 +163,7 @@ std::string mtt::TorrentFileInfo::createTorrentFileData(const uint8_t* infoData,
 
 	if (!infoData)
 	{
-		writer.startRawMapItem("4:info");
+		writer.startRawMap("4:info");
 
 		if (info.files.size() > 1)
 		{

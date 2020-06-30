@@ -48,8 +48,6 @@ namespace mtt
 				std::string defaultDirectory;
 			}
 			files;
-
-			API_EXPORT std::string toJson() const;
 		};
 
 		/*
@@ -78,8 +76,6 @@ namespace mtt
 			std::string stateFolder;
 
 			uint32_t bandwidthUpdatePeriodMs = 250;
-
-			API_EXPORT void fromJson(const char* js);
 		};
 
 		const API_EXPORT External& getExternal();
@@ -90,6 +86,5 @@ namespace mtt
 		API_EXPORT void setValues(const External::Dht& val);
 		API_EXPORT void setValues(const External::Files& val);
 		API_EXPORT void setValues(const External::Transfer& val);
-		API_EXPORT bool fromJson(const char* js);
 	}
 }
