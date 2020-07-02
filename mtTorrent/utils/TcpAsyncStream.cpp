@@ -430,7 +430,7 @@ void TcpAsyncStream::requestBandwidth(uint32_t bytes)
 
 	bytes -= bw_quota;
 
-	uint32_t ret = BandwidthManager::Get().requestBandwidth(shared_from_this(), bytes, priority, bwChannels, bwChannelsCount);
+	uint32_t ret = bwChannelsCount ? BandwidthManager::Get().requestBandwidth(shared_from_this(), bytes, priority, bwChannels, bwChannelsCount) : bytes;
 	TCP_LOG("request_bandwidth returned " << ret << " bytes");
 
 	if (ret == 0)
