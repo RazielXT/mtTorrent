@@ -11,9 +11,9 @@ TorrentsView::TorrentsView(AppCore& c) : core(c), piecesProgress(c)
 
 void TorrentsView::update()
 {
-	refreshSelection();
-
 	refreshTorrentsGrid();
+
+	refreshSelection();
 
 	if (core.selectionChanged)
 		refreshTorrentInfo(core.firstSelectedHash);
