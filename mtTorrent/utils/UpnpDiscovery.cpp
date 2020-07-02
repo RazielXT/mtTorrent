@@ -1,9 +1,8 @@
 #include "UpnpDiscovery.h"
 #include "NetAdaptersList.h"
 
-#define PUGIXML_HEADER_ONLY
-#include "pugixml.hpp"
 #include "UdpAsyncComm.h"
+#include "XmlParser.h"
 
 UpnpDiscovery::UpnpDiscovery(asio::io_service& io_service) : io(io_service)
 {
@@ -159,50 +158,44 @@ void UpnpDiscovery::queryNext()
 	stream->connect(upnpLocation.adapter.gateway, upnpLocation.port);
 }
 
-static void parseDevicesNode(pugi::xml_node node, std::string& name, std::map<std::string, std::string>& services)
+static void parseDevicesNode(const mtt::xml::Element* node, std::string& name, std::map<std::string, std::string>& services)
 {
-	auto deviceNode = node.child("device");
+	auto deviceNode = node->firstNode("device");
 	while (deviceNode)
 	{
 		if (name.empty())
-			name = deviceNode.child("friendlyName").child_value();
+			name = deviceNode->value("friendlyName");
 
-		auto servicesNode = deviceNode.child("serviceList");
-		if (servicesNode)
+		if (auto servicesNode = deviceNode->firstNode("serviceList"))
 		{
-			auto sNode = servicesNode.child("service");
+			auto sNode = servicesNode->firstNode("service");
 			while (sNode)
 			{
-				std::string type = sNode.child("serviceType").child_value();
-				std::string controlUrl = sNode.child("controlURL").child_value();
+				std::string type = std::string(sNode->value("serviceType"));
+				std::string controlUrl = std::string(sNode->value("controlURL"));
 
 				if (!type.empty() && !controlUrl.empty())
 					services[type] = controlUrl;
 
-				sNode = sNode.next_sibling("service");
+				sNode = sNode->nextSibling("service");
 			}
 		}
-	
-		auto devicesNode = deviceNode.child("deviceList");
-		if (devicesNode)
+
+		if (auto devicesNode = deviceNode->firstNode("deviceList"))
 		{
 			parseDevicesNode(devicesNode, name, services);
 		}
 
-		deviceNode = deviceNode.next_sibling("device");
+		deviceNode = deviceNode->nextSibling("device");
 	}
 }
 
 void UpnpDiscovery::onRootXmlReceive(const char* xml, uint32_t size, DeviceInfo info)
 {
-	pugi::xml_document doc;
-	pugi::xml_parse_result result = doc.load_buffer(xml, size);
-
-	if (result.status == pugi::status_ok)
+	mtt::xml::Document doc;
+	if (doc.parse(xml, size))
 	{
-		for(auto child : doc.children())
-			parseDevicesNode(child, info.name, info.services);
-
+		parseDevicesNode(doc.getRoot(), info.name, info.services);
 		onNewDevice(info);
 	}
 }
