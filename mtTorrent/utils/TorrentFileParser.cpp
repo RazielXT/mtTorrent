@@ -6,11 +6,11 @@
 
 using namespace mtt;
 
-bool generateInfoHash(BencodeParser& parsed, TorrentFileInfo&);
+bool generateInfoHash(BencodeParser& parsed, TorrentFileInfo&, TorrentFileParser::ParsedInfo*);
 void loadTorrentFileInfo(BencodeParser& parsed, TorrentFileInfo&);
 TorrentInfo parseTorrentInfo(const BencodeParser::Object* info);
 
-TorrentFileInfo TorrentFileParser::parse(const uint8_t* data, size_t length)
+TorrentFileInfo TorrentFileParser::parse(const uint8_t* data, size_t length, ParsedInfo* info)
 {
 	TorrentFileInfo out;
 	BencodeParser parser;
@@ -19,7 +19,7 @@ TorrentFileInfo TorrentFileParser::parse(const uint8_t* data, size_t length)
 		return out;
 	
 	loadTorrentFileInfo(parser, out);
-	generateInfoHash(parser, out);
+	generateInfoHash(parser, out, info);
 
 	return out;
 }
@@ -80,7 +80,7 @@ void loadTorrentFileInfo(BencodeParser& parser, TorrentFileInfo& fileInfo)
 	}
 }
 
-bool generateInfoHash(BencodeParser& parser, TorrentFileInfo& fileInfo)
+bool generateInfoHash(BencodeParser& parser, TorrentFileInfo& fileInfo, TorrentFileParser::ParsedInfo* info)
 {
 	const char* infoStart = nullptr;
 	const char* infoEnd = nullptr;
@@ -132,8 +132,11 @@ bool generateInfoHash(BencodeParser& parser, TorrentFileInfo& fileInfo)
 
 	if (infoStart && infoEnd)
 	{
-		fileInfo.file.infoStart = infoStart;
-		fileInfo.file.infoSize = infoEnd - infoStart;
+		if (info)
+		{
+			info->infoStart = infoStart;
+			info->infoSize = infoEnd - infoStart;
+		}
 
 		_SHA1((const unsigned char*)infoStart, infoEnd - infoStart, (unsigned char*)&fileInfo.info.hash[0]);
 

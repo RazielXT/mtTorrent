@@ -74,13 +74,6 @@ namespace mtt
 		}
 		about;
 
-		struct  
-		{
-			const char* infoStart = nullptr;
-			size_t infoSize = 0;
-		}
-		file;
-
 		API_EXPORT Status parseMagnetLink(std::string link);
 		API_EXPORT std::string createTorrentFileData(const uint8_t* info = nullptr, size_t infoSize = 0);
 	};

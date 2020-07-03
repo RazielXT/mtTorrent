@@ -155,11 +155,12 @@ bool mtt::Torrent::importTrackers(const mtt::TorrentFileInfo& otherFileInfo)
 		DataBuffer buffer;
 		if (loadSavedTorrentFile(hashString(), buffer))
 		{
-			auto loadedFile = mtt::TorrentFileParser::parse(buffer.data(), buffer.size());
+			TorrentFileParser::ParsedInfo parseInfo;
+			auto loadedFile = mtt::TorrentFileParser::parse(buffer.data(), buffer.size(), &parseInfo);
 			
 			if (!loadedFile.info.name.empty())
 			{
-				auto newFile = infoFile.createTorrentFileData((const uint8_t*)loadedFile.file.infoStart, loadedFile.file.infoSize);
+				auto newFile = infoFile.createTorrentFileData((const uint8_t*)parseInfo.infoStart, parseInfo.infoSize);
 				saveTorrentFile(newFile.data(), newFile.size());
 			}
 		}
