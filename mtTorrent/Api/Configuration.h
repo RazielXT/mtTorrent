@@ -79,7 +79,7 @@ namespace mtt
 		};
 
 		const API_EXPORT External& getExternal();
-		API_EXPORT Internal& getInternal();
+		const API_EXPORT Internal& getInternal();
 
 		enum class ValueType { Connection, Dht, Files, Transfer };
 		API_EXPORT void setValues(const External::Connection& val);

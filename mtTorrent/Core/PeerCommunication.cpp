@@ -12,7 +12,7 @@ namespace mtt
 {
 	namespace bt
 	{
-		DataBuffer createHandshake(uint8_t* torrentHash, uint8_t* clientHash)
+		DataBuffer createHandshake(uint8_t* torrentHash, const uint8_t* clientHash)
 		{
 			PacketBuilder packet(70);
 			packet.add(19);

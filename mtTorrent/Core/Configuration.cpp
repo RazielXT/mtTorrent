@@ -40,7 +40,7 @@ namespace mtt
 			return external;
 		}
 
-		mtt::config::Internal& getInternal()
+		const mtt::config::Internal& getInternal()
 		{
 			return internal_;
 		}

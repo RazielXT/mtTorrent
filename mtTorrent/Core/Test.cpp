@@ -26,13 +26,6 @@ using namespace mtt;
 
 void testInit()
 {
-	for (size_t i = 0; i < 20; i++)
-	{
-		mtt::config::getInternal().hashId[i] = (uint8_t)rand();
-	}
-
-	mtt::config::getInternal().dht.defaultRootHosts = { { "dht.transmissionbt.com", "6881" },{ "router.bittorrent.com" , "6881" } };
-
 	auto filesSettings = mtt::config::getExternal().files;
 	filesSettings.defaultDirectory = "E:\\";
 	mtt::config::setValues(filesSettings);
