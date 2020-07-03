@@ -126,26 +126,6 @@ extern "C"
 					out.country = peer.country;
 				}
 			}
-
-			if (resp->peers.empty() && torrent->getMagnetDownload())
-			{
-				auto utm = torrent->getMagnetDownload();
-
-				auto peers = utm->getPeersInfo();
-				resp->peers.resize(peers.size());
-
-				for (size_t i = 0; i < peers.size(); i++)
-				{
-					auto& peer = peers[i];
-					auto& out = resp->peers[i];
-					out.addr = peer.address;
-					out.progress = peer.percentage;
-					out.dlSpeed = peer.downloadSpeed;
-					out.upSpeed = peer.uploadSpeed;
-					out.client = peer.client;
-					out.country = peer.country;
-				}
-			}
 		}
 		else if (id == mtBI::MessageId::GetTorrentInfo)
 		{

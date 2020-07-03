@@ -22,8 +22,3 @@ size_t mttApi::MagnetDownload::getDownloadLogSize()
 {
 	return static_cast<mtt::MetadataDownload*>(this)->getEventsCount();
 }
-
-std::vector<mtt::ActivePeerInfo> mttApi::MagnetDownload::getPeersInfo()
-{
-	return static_cast<mtt::MetadataDownload*>(this)->getPeersInfo();
-}

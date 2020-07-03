@@ -34,8 +34,6 @@ namespace mtt
 		std::vector<EventInfo> getEvents(size_t startIndex = 0);
 		size_t getEventsCount();
 
-		std::vector<ActivePeerInfo> getPeersInfo();
-
 	private:
 
 		std::mutex commsMutex;
