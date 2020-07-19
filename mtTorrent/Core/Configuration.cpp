@@ -261,10 +261,16 @@ namespace mtt
 			programFolderPath = ".\\data\\";
 			stateFolder = programFolderPath + "state";
 
-			srand(0);
-			for (size_t i = 0; i < 20; i++)
+			srand((int)::time(NULL));
+			
+			memcpy(hashId, MT_HASH_NAME, std::size(MT_HASH_NAME));
+
+			static char const printable[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+				"abcdefghijklmnopqrstuvwxyz-_.!~*()";
+
+			for (size_t i = std::size(MT_HASH_NAME) - 1; i < 20; i++)
 			{
-				hashId[i] = (uint8_t)rand();
+				hashId[i] = (uint8_t)printable[rand() % strlen(printable)];
 			}
 			trackerKey = (uint32_t)rand();
 
