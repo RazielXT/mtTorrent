@@ -33,11 +33,11 @@ mtt::Status mtt::Storage::setPath(std::string p, bool moveFiles)
 	{
 		std::lock_guard<std::mutex> guard(storageMutex);
 
-		if (files.size() >= 1)
+		if (moveFiles && !files.empty())
 		{
-			std::error_code ec;
 			auto originalPath = path + files.back().path.front();
-			if (std::filesystem::exists(originalPath, ec) && moveFiles)
+			std::error_code ec;
+			if (std::filesystem::exists(originalPath, ec))
 			{
 				if (!std::filesystem::exists(p, ec))
 					return mtt::Status::E_InvalidPath;
@@ -73,9 +73,9 @@ mtt::Status mtt::Storage::setPath(std::string p, bool moveFiles)
 				if (files.size() > 1)
 					std::filesystem::remove(originalPath, ec);
 			}
-
-			path = p;
 		}
+
+		path = p;
 	}
 
 	return Status::Success;
