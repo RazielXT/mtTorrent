@@ -6,5 +6,4 @@ Bittorrent protocol implementation including DHT using Asio
 Including basic UI to showcase functionality
 ![mttscreen](https://user-images.githubusercontent.com/378856/81855283-71afcd80-955f-11ea-8b1d-05426bd21da5.png)
 
-Simplified architecture:
-![mttGeneral](https://user-images.githubusercontent.com/378856/81855285-72e0fa80-955f-11ea-8417-6246b894c438.png)
+For instructions and examples [see wiki](https://github.com/RazielXT/mtTorrent/wiki)
