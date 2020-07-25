@@ -16,6 +16,8 @@
 #include "utils/HexEncoding.h"
 #include <iostream>
 #include "AlertsManager.h"
+#include <chrono>
+#include "Utp/UtpManager.h"
 
 using namespace mtt;
 
@@ -829,7 +831,413 @@ void testBandwidthLimit()
 	std::cout << "sum: " << sum << " target: " << limit << std::endl;
 }
 
+namespace mtt
+{
+	namespace bt
+	{
+		DataBuffer createHandshake(uint8_t* torrentHash, const uint8_t* clientHash);
+	};
+};
+
+
+std::vector<DataBuffer> packets;
+std::mutex packetMutex;
+utp::TimePoint packetTime;
+
+extern void serializeFileLog();
+
+void serializePackets()
+{
+	packetMutex.lock();
+	std::ofstream file("utpPackets", std::ios_base::binary | std::ios_base::app);
+
+	for (auto& p : packets)
+	{
+		size_t size = p.size();
+		file.write((const char*)&size, sizeof(size));
+		file.write((const char*)p.data(), p.size());
+	}
+
+	packets.clear();
+	packetMutex.unlock();
+
+	serializeFileLog();
+}
+
+void recordUtpPacket(const BufferView& data)
+{
+	packetMutex.lock();
+	packets.push_back(DataBuffer(data.data, data.data + data.size));
+	packetMutex.unlock();
+}
+
+static bool idHigherThan(std::uint32_t lhs, std::uint32_t rhs)
+{
+	std::uint32_t dist_down = (lhs - rhs) & 0xFFFF;
+	std::uint32_t dist_up = (rhs - lhs) & 0xFFFF;
+
+	return dist_up > dist_down;
+}
+
+void testSerializedCommunication(TorrentInfo& torrentInfo)
+{
+	std::ifstream file("utpPackets", std::ios_base::binary);
+
+	DataBuffer receiveBuffer;
+	receiveBuffer.reserve(10000000);
+	uint16_t seq = 0;
+	bool first = true;
+	std::map<uint16_t, DataBuffer> outOfOrder;
+	std::vector<uint16_t> duplicates;
+	size_t dataFull = 0;
+
+	while (!file.eof())
+	{
+		size_t size = 0;
+		file.read((char*)&size, sizeof(size));
+
+		DataBuffer packet;
+		packet.resize(size);
+		file.read((char*)packet.data(), size);
+
+		dataFull += sizeof(size) + size;
+
+		if (size < 20)
+			break;
+
+		const utp::MessageHeader* utpHeader = (const utp::MessageHeader*)packet.data();
+		auto headerSize = utp::parseHeaderSize(utpHeader, size);
+		uint16_t headerSeq = utpHeader->seq_nr;
+
+		if (first)
+		{
+			seq = headerSeq - 1;
+			first = false;
+		}
+
+		if (utpHeader->getType() == utp::MessageType::ST_DATA)
+		{
+			auto dataSize = size - headerSize;
+
+			uint16_t next = seq;
+			next += 1;
+
+			if (headerSeq == next)
+			{
+				receiveBuffer.insert(receiveBuffer.end(), packet.data() + headerSize, packet.data() + size);
+				seq++;
+
+				while (true)
+				{
+					auto it = outOfOrder.find(next);
+					if (it != outOfOrder.end())
+					{
+						receiveBuffer.insert(receiveBuffer.end(), it->second.begin(), it->second.end());
+						seq++;
+						outOfOrder.erase(it);
+					}
+					else
+						break;
+				}
+			}
+			else if (idHigherThan(headerSeq,seq))
+			{
+				outOfOrder[headerSeq] = DataBuffer(packet.data() + headerSize, packet.data() + size);
+			}
+			else
+				duplicates.push_back(headerSeq);
+		}
+	}
+
+	std::cout << "Total datasize: " << receiveBuffer.size();
+
+	size_t bufferPos = 0;
+	auto readNextMessage = [&]()
+	{
+		PeerMessage msg({ receiveBuffer.data() + bufferPos, receiveBuffer.size() - bufferPos });
+
+		if (msg.id != Invalid)
+			bufferPos += msg.messageSize;
+		else if (!msg.messageSize)
+			bufferPos = receiveBuffer.size();
+
+		return std::move(msg);
+	};
+
+	auto message = readNextMessage();
+
+	std::map<uint32_t, DownloadedPiece> pieces;
+
+	std::vector<mtt::PeerMessageId> messages;
+
+	while (message.id != Invalid)
+	{
+		if (message.id == Piece)
+		{
+// 			if (message.piece.info.index == 1099)
+// 			{
+// 				std::cout << "piece " << message.piece.info.begin << ", " << message.piece.info.length << "\n";
+// 			}
+
+			auto idx = message.piece.info.index;
+			if (pieces.find(idx) == pieces.end())
+			{
+				uint32_t blocksCount = torrentInfo.getPieceBlocksCount(idx);
+				pieces[idx].init(idx, torrentInfo.getPieceSize(idx), blocksCount);
+			}
+
+			auto pieceIt = pieces.find(idx);
+			pieceIt->second.addBlock(message.piece);
+
+			if (pieceIt->second.remainingBlocks == 0)
+			{
+				if (pieceIt->second.isValid(torrentInfo.pieces[idx].hash))
+				{
+					std::cout << "Valid piece " << idx << "\n";
+				}
+				else
+				{
+					std::cout << "Invalid piece " << idx << "\n";
+				}
+
+				pieces.erase(pieceIt);
+			}
+		}
+		else
+			messages.push_back(message.id);
+
+		message = readNextMessage();
+	}
+
+	messages.clear();
+}
+
+void testUtpLocalConnection()
+{
+	auto torrent = parseTorrentFile("D:\\hero83.torrent");
+	TorrentInfo& torrentInfo = torrent.info;
+
+	//testSerializedCommunication(torrentInfo);
+	//return;
+
+	std::remove("utpPackets");
+	std::remove("fileLogger");
+
+	packets.reserve(1000000);
+	bool requestTest = false;
+
+	ServiceThreadpool pool(2);
+
+	int handledCount = 0;
+	mtt::utp::Manager utpMgr;
+	utpMgr.start(mtt::config::getExternal().connection.udpPort);
+
+	auto udpReceiver = std::make_shared<UdpAsyncReceiver>(pool.io, mtt::config::getExternal().connection.udpPort, false);
+	udpReceiver->receiveCallback = [&](udp::endpoint& e, std::vector<DataBuffer*>& d)
+	{
+		if (utpMgr.onUdpPacket(e, d))
+			handledCount++;
+	};
+	udpReceiver->listen();
+
+	//decodeHexa("6DEB1179339B447DC3A44A6ED9EEFE2565871116", torrentInfo.hash);
+
+	mtt::Storage storage(torrentInfo);
+	storage.setPath("C:\\Torrent\\mtt", false);
+
+	class TestPeerListener : public BasicPeerListener
+	{
+	public:
+		TestPeerListener(mtt::Storage& s) : storage(s) {}
+		virtual void messageReceived(PeerCommunication* p, PeerMessage& msg) override
+		{
+			if (msg.id == Piece)
+			{
+				piece.addBlock(msg.piece);
+				askNext = true;
+			}
+			if (msg.id == Request)
+			{
+				mtt::PieceBlock block = storage.getPieceBlock(msg.request);
+				if(block.info.begin == 0)
+					std::cout << "Send piece " << block.info.index << " block start " << block.info.begin << std::endl;
+				p->sendPieceBlock(block);
+				requests++;
+			}
+			if (msg.id == Interested)
+			{
+				p->setChoke(false);
+			}
+		}
+
+		int requests = 0;
+		mtt::DownloadedPiece piece;
+		bool askNext = {};
+		mtt::Storage& storage;
+	}
+	peerListener(storage);
+
+	auto peer = std::make_shared<PeerCommunication>(torrentInfo, peerListener, pool.io);
+	peer->sendHandshake(Addr("127.0.0.1:34062"));
+
+	WAITFOR(peer->isEstablished());
+
+	if (requestTest)
+	{
+		peer->setInterested(true);
+
+		WAITFOR(!peer->state.peerChoking);
+
+		uint32_t pieceIdx = 0;
+		uint32_t blocksCount = torrentInfo.getPieceBlocksCount(pieceIdx);
+		peerListener.piece.init(pieceIdx, torrentInfo.getPieceSize(pieceIdx), blocksCount);
+
+		while (peerListener.piece.remainingBlocks > 0)
+		{
+			peerListener.askNext = false;
+
+			auto blockIdx = blocksCount - peerListener.piece.remainingBlocks;
+			auto block = torrentInfo.getPieceBlockInfo(pieceIdx, blockIdx);
+			peer->requestPieceBlock(block);
+
+			WAITFOR(peerListener.askNext);
+		}
+
+		auto success = peerListener.piece.isValid(torrentInfo.pieces[pieceIdx].hash);
+	}
+	else
+	{
+		DataBuffer bitfield;
+		bitfield.assign(torrentInfo.expectedBitfieldSize, 0xFF);
+		peer->sendBitfield(bitfield);
+
+		WAITFOR(!peer->state.amChoking);
+
+		size_t lastTimeoutsCount = 0;
+		auto checkTimeouts = [&]()
+		{
+			if (lastTimeoutsCount < utpMgr.getStream()->timeouts.size())
+			{
+				std::cout << "Timeout on sequence " << utpMgr.getStream()->timeouts[lastTimeoutsCount].seq << " packets marked for resend " << utpMgr.getStream()->timeouts[lastTimeoutsCount].packets;
+				lastTimeoutsCount++;
+			}
+		};
+
+		getchar();
+		getchar();
+	}
+
+	serializePackets();
+}
+
+std::mutex logMtx;
+#define SyncLog(x) { logMtx.lock();  std::cout << x << std::endl; logMtx.unlock(); }
+
+void testUtpLocalProtocol()
+{
+	bool requestTest = false;
+
+	ServiceThreadpool pool(2);
+	auto torrent = parseTorrentFile("D:\\hero83.torrent");
+	TorrentInfo& torrentInfo = torrent.info;
+	//decodeHexa("6DEB1179339B447DC3A44A6ED9EEFE2565871116", torrentInfo.hash);
+
+	class TestPeerListener : public BasicPeerListener
+	{
+	public:
+		TestPeerListener(ServiceThreadpool& pool, const char* filepath, TorrentInfo& info, uint16_t port) : torrentInfo(info)
+		{
+			storage.init(torrentInfo, filepath);
+
+			utpMgr.start(port);
+			udpReceiver = std::make_shared<UdpAsyncReceiver>(pool.io, port, false);
+			udpReceiver->receiveCallback = [&](udp::endpoint& e, std::vector<DataBuffer*>& d)
+			{
+				utpMgr.onUdpPacket(e, d);
+			};
+			udpReceiver->listen();
+		}
+		virtual void messageReceived(PeerCommunication* p, PeerMessage& msg) override
+		{
+			if (msg.id == Piece)
+			{
+				SyncLog("Receive piece " << msg.piece.info.index << " block start " << msg.piece.info.begin << " idx " << (msg.piece.info.begin + 1) / 16384);
+				pieces[msg.piece.info.index].addBlock(msg.piece);
+
+				if (pieces[msg.piece.info.index].remainingBlocks == 0)
+				{
+					auto piece = std::move(pieces[msg.piece.info.index]);
+					pieces.erase(msg.piece.info.index);
+
+					if (piece.isValid(torrentInfo.pieces[piece.index].hash))
+					{
+						SyncLog("Valid piece " << piece.index);
+					}
+					else
+					{
+						SyncLog("Invalid piece " << piece.index);
+						DebugBreak();
+					}
+				}
+			}
+			if (msg.id == Request)
+			{
+				mtt::PieceBlock block = storage.getPieceBlock(msg.request);
+				if (block.info.begin >= 0)
+					SyncLog("Send piece " << block.info.index << " block start " << block.info.begin << " idx " << (block.info.begin + 1) / 16384);
+				p->sendPieceBlock(block);
+			}
+			if (msg.id == Interested)
+			{
+				p->setChoke(false);
+			}
+		}
+
+		std::map<uint32_t,mtt::DownloadedPiece> pieces;
+		mtt::Storage storage;
+		TorrentInfo& torrentInfo;
+
+		mtt::utp::Manager utpMgr;
+		std::shared_ptr<UdpAsyncReceiver> udpReceiver;
+	};
+
+	TestPeerListener uploaderListener(pool, "C:\\Torrent\\mtt", torrentInfo, 57000);
+	TestPeerListener downloaderListener(pool, "C:\\Torrent\\mtt2", torrentInfo, 56000);
+
+	auto uploader = std::make_shared<PeerCommunication>(torrentInfo, uploaderListener, pool.io);
+	auto downloader = std::make_shared<PeerCommunication>(torrentInfo, downloaderListener, pool.io);
+
+	uploaderListener.utpMgr.onConnection = [&](utp::StreamPtr s)
+	{
+		downloader->fromStream(s, {});
+	};
+
+	uploader->sendHandshake(Addr("127.0.0.1:57000"));
+
+	WAITFOR(uploader->isEstablished());
+
+	{
+		uploader->setInterested(true);
+
+		WAITFOR(!uploader->state.peerChoking);
+
+		for (uint32_t idx = 0; idx < torrentInfo.pieceSize; idx++)
+		{
+			uint32_t blocksCount = torrentInfo.getPieceBlocksCount(idx);
+			downloaderListener.pieces[idx].init(idx, torrentInfo.getPieceSize(idx), blocksCount);
+
+			for (uint32_t i = 0; i < blocksCount; i++)
+			{
+				auto block = torrentInfo.getPieceBlockInfo(idx, i);
+				downloader->requestPieceBlock(block);
+			}
+
+			WAITFOR(downloaderListener.pieces.size() < 10);
+		}
+	}
+}
+
 void TorrentTest::start()
 {
-	testBandwidthLimit();
+	testUtpLocalConnection();
 }

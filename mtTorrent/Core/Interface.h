@@ -7,7 +7,7 @@
 #include "Logging.h"
 
 #define MT_NAME "mtTorrent 0.9"
-#define MT_HASH_NAME "MT-0-9-"
+#define MT_HASH_NAME "-mt0900-"
 #define MT_NAME_SHORT "mt09"
 
 const uint32_t BlockRequestMaxSize = 16 * 1024;

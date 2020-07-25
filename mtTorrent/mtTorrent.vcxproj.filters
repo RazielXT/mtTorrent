@@ -47,6 +47,9 @@
     <Filter Include="Source Files\Core\ApiImpl">
       <UniqueIdentifier>{c7d683c2-1022-4487-ac0d-bd49c73b000f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Core\Torrent\Utp">
+      <UniqueIdentifier>{e8c21228-3d42-4e96-8e25-28abafac7897}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\main.cpp">
@@ -240,6 +243,12 @@
     </ClCompile>
     <ClCompile Include="utils\XmlParser.cpp">
       <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Utp\UtpManager.cpp">
+      <Filter>Source Files\Core\Torrent\Utp</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Utp\UtpStream.cpp">
+      <Filter>Source Files\Core\Torrent\Utp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -458,6 +467,12 @@
     </ClInclude>
     <ClInclude Include="utils\XmlParser.h">
       <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Utp\UtpManager.h">
+      <Filter>Source Files\Core\Torrent\Utp</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Utp\UtpStream.h">
+      <Filter>Source Files\Core\Torrent\Utp</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

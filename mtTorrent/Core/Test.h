@@ -48,7 +48,6 @@ public:
 	void testTrackers();
 	void testStorageLoad();
 	void testStorageCheck();
-	void testGetCountry();
 	void testPeerListen();
 	void testDhtTable();
 	void testTorrentFileSerialization();

@@ -49,7 +49,8 @@ private:
 	UdpRequest findPendingConnection(UdpRequest);
 
 	void checkTimeout(UdpRequest, const asio::error_code& error);
-	void onUdpReceive(udp::endpoint&, DataBuffer&);
+	void onUdpReceiveBuffers(udp::endpoint&, std::vector<DataBuffer*>&);
+	bool onUdpReceive(udp::endpoint&, DataBuffer&);
 	void onUdpClose(UdpRequest);
 	UdpPacketCallback onUnhandledReceive;
 

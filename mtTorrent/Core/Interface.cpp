@@ -20,7 +20,7 @@ void mtt::DownloadedPiece::init(uint32_t idx, uint32_t pieceSize, uint32_t block
 {
 	data.resize(pieceSize);
 	remainingBlocks = blocksCount;
-	blocksTodo.resize(remainingBlocks, 0);
+	blocksTodo.assign(remainingBlocks, 0);
 	index = idx;
 }
 

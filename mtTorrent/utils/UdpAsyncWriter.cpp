@@ -40,7 +40,7 @@ void UdpAsyncWriter::setAddress(const std::string& host, const std::string& p, b
 	resolver->async_resolve(query, std::bind(&UdpAsyncWriter::handle_resolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2, resolver));
 }
 
-void UdpAsyncWriter::setAddress(udp::endpoint& addr)
+void UdpAsyncWriter::setAddress(const udp::endpoint& addr)
 {
 	target_endpoint = addr;
 
@@ -61,12 +61,33 @@ void UdpAsyncWriter::close()
 
 void UdpAsyncWriter::write(const DataBuffer& data)
 {
-	io_service.post(std::bind(&UdpAsyncWriter::do_write, shared_from_this(), data));
+	std::lock_guard<std::mutex> guard(stateMutex);
+
+	messageBuffer.store(data.data(), data.size());
+
+	io_service.post(std::bind(&UdpAsyncWriter::do_write, shared_from_this()));
 }
 
 void UdpAsyncWriter::write()
 {
 	io_service.post(std::bind(&UdpAsyncWriter::do_rewrite, shared_from_this()));
+}
+
+extern void recordUtpPacket(const BufferView& data);
+
+void UdpAsyncWriter::write(const BufferView& data, WriteOption option)
+{
+	//recordUtpPacket(data);
+
+	//std::lock_guard<std::mutex> guard(stateMutex);
+
+	if (state == Connected)
+		send_message(data, option);
+	else
+	{
+		messageBuffer = data;
+		io_service.post(std::bind(&UdpAsyncWriter::do_write, shared_from_this()));
+	}
 }
 
 void UdpAsyncWriter::handle_resolve(const std::error_code& error, udp::resolver::iterator iterator, std::shared_ptr<udp::resolver> resolver)
@@ -78,7 +99,7 @@ void UdpAsyncWriter::handle_resolve(const std::error_code& error, udp::resolver:
 		target_endpoint = *iterator;
 		state = Initialized;
 
-		if (!messageBuffer.empty())
+		if (messageBuffer.size)
 			send_message();
 	}
 	else
@@ -140,11 +161,9 @@ void UdpAsyncWriter::do_rewrite()
 		send_message();
 }
 
-void UdpAsyncWriter::do_write(DataBuffer data)
+void UdpAsyncWriter::do_write()
 {
 	std::lock_guard<std::mutex> guard(stateMutex);
-
-	messageBuffer = data;
 
 	if (state != Clear)
 	{
@@ -178,26 +197,56 @@ void UdpAsyncWriter::send_message()
 	}
 	else if (state == Connected)
 	{
-		if (!messageBuffer.empty())
+		if (messageBuffer.size)
 		{
-			UDP_LOG("writing " << messageBuffer.size() << " bytes");
-
-			socket.async_send_to(asio::buffer(messageBuffer.data(), messageBuffer.size()), target_endpoint,
-				std::bind(&UdpAsyncWriter::handle_write, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
+			send_message(messageBuffer);
 		}
 	}
 }
 
-void UdpAsyncWriter::handle_write(const std::error_code& error, size_t sz)
+struct dont_fragment
+{
+	explicit dont_fragment(bool val) : m_value(val) {}
+	template<class Protocol>
+	int level(Protocol const&) const { return IPPROTO_IP; }
+	template<class Protocol>
+	int name(Protocol const&) const	{ return IP_DONTFRAGMENT; }
+	template<class Protocol>
+	int const* data(Protocol const&) const { return &m_value; }
+	template<class Protocol>
+	size_t size(Protocol const&) const { return sizeof(m_value); }
+	int m_value;
+};
+
+void UdpAsyncWriter::send_message(const BufferView& buffer, WriteOption opt)
 {
 	std::lock_guard<std::mutex> guard(stateMutex);
 
-	if (error)
+	if (opt == WriteOption::DontFragment)
 	{
-		postFail("Write", error);
+		std::error_code ec;
+		socket.set_option(dont_fragment(true), ec);
+	}
+
+	send_message(buffer);
+
+	if (opt == WriteOption::DontFragment)
+	{
+		std::error_code ec;
+		socket.set_option(dont_fragment(false), ec);
 	}
 }
 
+void UdpAsyncWriter::send_message(const BufferView& buffer)
+{
+	UDP_LOG("writing " << buffer.size << " bytes");
+
+	std::error_code ec;
+	socket.send_to(asio::buffer(buffer.data, buffer.size), target_endpoint, {}, ec);
+
+	if (ec)
+		postFail("Write", ec);
+}
 
 std::string UdpAsyncWriter::getName()
 {

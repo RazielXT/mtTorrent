@@ -39,7 +39,7 @@ namespace mtt
 		protected:
 
 			UdpCommPtr udp;
-			bool onUnknownUdpPacket(udp::endpoint&, DataBuffer&);
+			bool onUnknownUdpPacket(udp::endpoint&, std::vector<DataBuffer*>&);
 
 			virtual uint32_t onFoundPeers(const uint8_t* hash, std::vector<Addr>& values) override;
 			virtual void findingPeersFinished(const uint8_t* hash, uint32_t count) override;
