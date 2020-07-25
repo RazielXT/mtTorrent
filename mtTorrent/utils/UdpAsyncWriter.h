@@ -22,7 +22,7 @@ public:
 	~UdpAsyncWriter();
 
 	void setAddress(Addr& addr);
-	void setAddress(udp::endpoint& addr);
+	void setAddress(const udp::endpoint& addr);
 	void setAddress(const std::string& hostname, const std::string& port);
 	void setAddress(const std::string& hostname, const std::string& port, bool ipv6);
 	void setBindPort(uint16_t port);
@@ -30,6 +30,8 @@ public:
 	std::string getName();
 	udp::endpoint& getEndpoint();
 
+	enum class WriteOption { None, DontFragment };
+	void write(const BufferView& data, WriteOption opt = WriteOption::None );
 	void write(const DataBuffer& data);
 	void write();
 	void close();
@@ -46,14 +48,17 @@ protected:
 	void handle_resolve(const std::error_code& error, udp::resolver::iterator iterator, std::shared_ptr<udp::resolver> resolver);
 	void handle_connect(const std::error_code& err);
 	
-	void do_write(DataBuffer data);
+	void do_write();
 	void do_rewrite();
 	void do_close();
 
-	DataBuffer messageBuffer;
+	BufferView messageBuffer;
 
 	void send_message();
-	void handle_write(const std::error_code& error, size_t sz);
+	void send_message(const BufferView&);
+	void send_message(const BufferView&, WriteOption opt);
+
+	void handle_write(const std::error_code& error, size_t sz, WriteOption opt);
 
 	uint16_t bindPort = 0;
 

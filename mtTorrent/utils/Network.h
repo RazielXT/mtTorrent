@@ -15,10 +15,11 @@ using DataBuffer = std::vector<uint8_t>;
 struct BufferView
 {
 	BufferView();
+	BufferView(const DataBuffer&);
 	BufferView(const uint8_t* data, size_t size);
 
-	const uint8_t* data;
-	size_t size;
+	const uint8_t* data = nullptr;
+	size_t size = 0;
 
 	void store(const uint8_t* data, size_t size);
 private:

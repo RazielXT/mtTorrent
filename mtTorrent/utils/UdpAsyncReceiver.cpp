@@ -10,14 +10,13 @@ UdpAsyncReceiver::UdpAsyncReceiver(asio::io_service& io_service, uint16_t port, 
 	socket_.open(myEndpoint.protocol(), ec);
 	socket_.set_option(asio::socket_base::reuse_address(true), ec);
 	socket_.bind(myEndpoint, ec);
+	socket_.non_blocking(true, ec);
 }
 
 void UdpAsyncReceiver::listen()
 {
 	active = true;
-	buffer.resize(BufferSize);
-	socket_.async_receive_from(asio::buffer(buffer.data(), buffer.size()), remote_endpoint_,	
-		std::bind(&UdpAsyncReceiver::handle_receive, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
+	socket_.async_receive(asio::null_buffers(), std::bind(&UdpAsyncReceiver::handle_receive, shared_from_this(), std::placeholders::_1));
 }
 
 void UdpAsyncReceiver::stop()
@@ -26,22 +25,63 @@ void UdpAsyncReceiver::stop()
 	socket_.cancel();
 }
 
-void UdpAsyncReceiver::handle_receive(const std::error_code& error, std::size_t bytes_transferred)
+void UdpAsyncReceiver::handle_receive(const std::error_code& error)
 {
 	if (!active)
 		return;
 
-	UDP_LOG(remote_endpoint_.address().to_string() << " sent bytes " << bytes_transferred);
-
-	//if (!bytes_transferred && error.value() != 10054)
-	//	return;
-
-	if (bytes_transferred && receiveCallback)
-	{
-		buffer.resize(bytes_transferred);
-		receiveCallback(remote_endpoint_, buffer);
-	}
+	if (!error)
+		readSocket();
 
 	listen();
 }
 
+void UdpAsyncReceiver::readSocket()
+{
+	size_t bufferStart = 0;
+	size_t buffer = 0;
+	udp::endpoint lastEndpoint;
+	tmp.dataVec.clear();
+
+	for (size_t i = 0; i < MaxReadIterations; i++)
+	{
+		std::error_code ec;
+		//auto av = socket_.available(ec);
+		tmp.data[buffer].resize(ListenBufferSize);
+		size_t transferred = socket_.receive_from(asio::buffer(tmp.data[buffer]), tmp.endpoint, 0, ec);
+
+		if (ec)
+		{
+			if (ec == asio::error::interrupted)
+				continue;
+
+			if (ec != asio::error::would_block)
+				UDP_LOG("receive_from error: " << ec.message());
+
+			break;
+		}
+
+		if (transferred)
+		{
+			tmp.data[buffer].resize(transferred);
+			tmp.dataVec.push_back(&tmp.data[buffer]);
+
+			if (buffer > 0 && lastEndpoint != tmp.endpoint)
+			{
+				if (receiveCallback)
+					receiveCallback(tmp.endpoint, tmp.dataVec);
+
+				bufferStart = buffer;
+				tmp.dataVec.clear();
+			}
+
+			buffer++;
+			lastEndpoint = tmp.endpoint;
+		}
+	}
+
+	if (buffer && receiveCallback)
+		receiveCallback(tmp.endpoint, tmp.dataVec);
+
+	UDP_LOG("readSocket completed " << buffer << " receive_from calls");
+}

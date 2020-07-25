@@ -127,6 +127,12 @@ BufferView::BufferView(const uint8_t* d, size_t s)
 	size = s;
 }
 
+BufferView::BufferView(const DataBuffer& d)
+{
+	data = d.data();
+	size = d.size();
+}
+
 void BufferView::store(const uint8_t* d, size_t s)
 {
 	localbuffer.resize(s);

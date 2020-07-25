@@ -70,28 +70,49 @@ class FileLogger
 {
 public:
 	std::vector<std::string> logStrings;
+	std::vector<std::string> prevLogStrings;
 
-	~FileLogger()
+	void serialize(bool append)
 	{
 		if (logStrings.empty())
 			return;
 
-		std::ofstream file("fileLogger");
+		std::ofstream file("fileLogger", append ? std::ios_base::app : std::ios_base::out);
 
 		for (auto& s : logStrings)
 		{
 			file << s << "\n";
 		}
+
+		if(append)
+			logStrings.clear();
+	}
+
+	~FileLogger()
+	{
+		serialize(false);
 	}
 };
 
 FileLogger fileLogger;
+
+void serializeFileLog()
+{
+	LockLog();
+	fileLogger.serialize(true);
+	UnlockLog();
+}
 
 void WriteLogFileImplementation(const char* const type, std::stringstream& ss)
 {
 	LockLog();
 
 	fileLogger.logStrings.push_back(GetLogTime() + " (" + type + "): " + ss.str());
+	if (fileLogger.logStrings.size() > 50000)
+	{
+		std::swap(fileLogger.logStrings, fileLogger.prevLogStrings);
+		fileLogger.logStrings.clear();
+	}
 
 	UnlockLog();
 }

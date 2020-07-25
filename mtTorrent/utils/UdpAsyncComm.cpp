@@ -158,7 +158,21 @@ UdpRequest UdpAsyncComm::findPendingConnection(UdpRequest source)
 	return c;
 }
 
-void UdpAsyncComm::onUdpReceive(udp::endpoint& source, DataBuffer& data)
+void UdpAsyncComm::onUdpReceiveBuffers(udp::endpoint& source, std::vector<DataBuffer*>& buffers)
+{
+	std::vector<DataBuffer*> unhandled;
+
+	for (auto data : buffers)
+	{
+		if (!onUdpReceive(source, *data))
+			unhandled.push_back(data);
+	}
+
+	if (buffers.size() && onUnhandledReceive)
+		onUnhandledReceive(source, unhandled);
+}
+
+bool UdpAsyncComm::onUdpReceive(udp::endpoint& source, DataBuffer& data)
 {
 	std::vector<std::shared_ptr<ResponseRetryInfo>> foundPendingResponses;
 
@@ -200,8 +214,7 @@ void UdpAsyncComm::onUdpReceive(udp::endpoint& source, DataBuffer& data)
 		}
 	}
 
-	if (!handled && onUnhandledReceive)
-		onUnhandledReceive(source, data);
+	return handled;
 }
 
 void UdpAsyncComm::onUdpClose(UdpRequest source)
@@ -238,7 +251,7 @@ void UdpAsyncComm::onUdpClose(UdpRequest source)
 void UdpAsyncComm::startListening()
 {
 	listener = std::make_shared<UdpAsyncReceiver>(pool.io, bindPort, false);
-	listener->receiveCallback = std::bind(&UdpAsyncComm::onUdpReceive, this, std::placeholders::_1, std::placeholders::_2);
+	listener->receiveCallback = std::bind(&UdpAsyncComm::onUdpReceiveBuffers, this, std::placeholders::_1, std::placeholders::_2);
 	listener->listen();
 }
 

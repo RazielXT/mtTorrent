@@ -5,6 +5,7 @@
 #include "ExtensionProtocol.h"
 #include "IPeerListener.h"
 #include "PiecesProgress.h"
+#include "Utp/UtpManager.h"
 
 namespace mtt
 {
@@ -50,11 +51,12 @@ namespace mtt
 		~PeerCommunication();
 
 		size_t fromStream(std::shared_ptr<TcpAsyncStream> stream, const BufferView& streamData);
+		size_t fromStream(utp::StreamPtr stream, const BufferView& streamData);
 
 		PeerInfo info;
 		PeerCommunicationState state;
 
-		void sendHandshake(Addr& address);
+		void sendHandshake(const Addr& address);
 		void sendHandshake();
 
 		void setInterested(bool enabled);
@@ -81,6 +83,8 @@ namespace mtt
 
 	protected:
 
+		void write(const DataBuffer&);
+
 		enum LogEvent : uint8_t { Msg, Start, End, Request, Want, RespPiece };
 #ifdef PEER_DIAGNOSTICS
 		struct LogEventParams
@@ -104,6 +108,7 @@ namespace mtt
 		TorrentInfo& torrent;
 
 		std::shared_ptr<TcpAsyncStream> stream;
+		utp::StreamPtr utpStream;
 
 		void handleMessage(PeerMessage& msg);
 
@@ -111,9 +116,10 @@ namespace mtt
 		size_t dataReceived(const BufferView& buffer);
 		void connectionClosed(int);
 
-		void initializeBandwidth();
 		void initializeCallbacks();
 		void resetState();
+
+		void initializeTcpStream();
 	};
 
 }

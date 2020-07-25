@@ -2,6 +2,7 @@
 #include "utils/BencodeParser.h"
 #include "utils/TcpAsyncStream.h"
 #include <map>
+#include "Utp/UtpManager.h"
 
 namespace mtt
 {
@@ -83,6 +84,9 @@ namespace mtt
 			DataBuffer createExtendedHandshakeMessage(bool enablePex = true, uint16_t metadataSize = 0);
 
 			std::shared_ptr<TcpAsyncStream> stream;
+			utp::StreamPtr utpStream;
+			void write(const DataBuffer& data);
+
 			std::map<int, MessageType> messageIds;
 		};
 	}

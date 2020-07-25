@@ -220,9 +220,17 @@ bool mtt::ext::ExtensionProtocol::isSupported(MessageType type)
 void mtt::ext::ExtensionProtocol::sendHandshake()
 {
 	if(!state.sentHandshake)
-		stream->write(createExtendedHandshakeMessage());
+		write(createExtendedHandshakeMessage());
 
 	state.sentHandshake = true;
+}
+
+void mtt::ext::ExtensionProtocol::write(const DataBuffer& data)
+{
+	if (utpStream)
+		utpStream->write(data);
+	else if (stream)
+		stream->write(data);
 }
 
 bool mtt::ext::ExtensionProtocol::requestMetadataPiece(uint32_t index)
@@ -230,7 +238,7 @@ bool mtt::ext::ExtensionProtocol::requestMetadataPiece(uint32_t index)
 	if (!state.enabled || utm.size == 0)
 		return false;
 
-	stream->write(utm.createMetadataRequest(index));
+	write(utm.createMetadataRequest(index));
 
 	return true;
 }

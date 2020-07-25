@@ -448,6 +448,8 @@
     <ClCompile Include="Core\TrackerManager.cpp" />
     <ClCompile Include="Core\UdpTrackerComm.cpp" />
     <ClCompile Include="Core\Uploader.cpp" />
+    <ClCompile Include="Core\Utp\UtpManager.cpp" />
+    <ClCompile Include="Core\Utp\UtpStream.cpp" />
     <ClCompile Include="Public\ModuleString.cpp" />
     <ClCompile Include="utils\Bandwidth.cpp" />
     <ClCompile Include="utils\Base32.cpp" />
@@ -517,6 +519,8 @@
     <ClInclude Include="Core\TrackerManager.h" />
     <ClInclude Include="Core\UdpTrackerComm.h" />
     <ClInclude Include="Core\Uploader.h" />
+    <ClInclude Include="Core\Utp\UtpManager.h" />
+    <ClInclude Include="Core\Utp\UtpStream.h" />
     <ClInclude Include="Public\BinaryInterface.h" />
     <ClInclude Include="Public\Alerts.h" />
     <ClInclude Include="Public\ModuleAllocator.h" />

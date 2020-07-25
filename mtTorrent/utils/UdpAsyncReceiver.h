@@ -1,6 +1,8 @@
+#pragma once
+
 #include "UdpAsyncWriter.h"
 
-using UdpPacketCallback = std::function<void(udp::endpoint&, DataBuffer&)>;
+using UdpPacketCallback = std::function<void(udp::endpoint&, std::vector<DataBuffer*>&)>;
 
 class UdpAsyncReceiver : public std::enable_shared_from_this<UdpAsyncReceiver>
 {
@@ -15,13 +17,21 @@ public:
 
 private:
 
-	void handle_receive(const std::error_code& error, std::size_t bytes_transferred);
+	void handle_receive(const std::error_code& error);
 
 	bool active = false;
 	udp::socket socket_;
-	udp::endpoint remote_endpoint_;
 
-	const size_t BufferSize = 2 * 1024;
-	DataBuffer buffer;
+	void readSocket();
 
+	static constexpr size_t MaxReadIterations = 30;
+	struct
+	{
+		udp::endpoint endpoint;
+		DataBuffer data[MaxReadIterations];
+		std::vector<DataBuffer*> dataVec;
+	}
+	tmp;
+
+	static constexpr size_t ListenBufferSize = 2048;
 };
