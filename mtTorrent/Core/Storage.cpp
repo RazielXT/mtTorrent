@@ -367,7 +367,7 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 
 			if (fileIn)
 			{
-				uint64_t existingSize = std::filesystem::file_size(fullpath);
+				uint64_t existingSize = std::filesystem::file_size(fullpath, ec);
 
 				if (existingSize == currentFile->size)
 				{
@@ -376,6 +376,7 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 
 					fileIn.read((char*)readBuffer.data() + readBufferPos, readSize);
 
+					//all pieces in files with correct size
 					while (fileIn && !checkState.rejected && currentPieceIdx <= currentFile->endPieceIndex)
 					{
 						_SHA1(readBuffer.data(), pieceSize, shaBuffer);
@@ -385,6 +386,7 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 						checkState.piecesChecked = (uint32_t)++currentPieceIdx;
 					}
 
+					//end of last file
 					if (currentPieceIdx == currentFile->endPieceIndex && currentFile == lastFile)
 					{
 						_SHA1(readBuffer.data(), currentFile->endPiecePos, shaBuffer);
@@ -398,13 +400,16 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 					auto endPieceSize = currentFile->endPiecePos;
 					auto tempFileSize = startPieceSize + endPieceSize;
 
+					//temporary file (not selected but sharing piece data)
 					if (existingSize == tempFileSize || existingSize == startPieceSize)
 					{
+						//start piece ending
 						fileIn.read((char*)readBuffer.data() + currentFile->startPiecePos, startPieceSize);
 
 						_SHA1(readBuffer.data(), pieceSize, shaBuffer);
 						checkState.pieces[currentFile->startPieceIndex] = memcmp(shaBuffer, piecesInfo[currentFile->startPieceIndex].hash, 20) == 0;
 
+						//end piece starting
 						if(existingSize == tempFileSize)
 							fileIn.read((char*)readBuffer.data(), endPieceSize);
 					}
@@ -449,9 +454,16 @@ mtt::Status mtt::Storage::preallocate(File& file)
 {
 	auto fullpath = getFullpath(file);
 	createPath(fullpath);
-	if (!std::filesystem::exists(fullpath) || std::filesystem::file_size(fullpath) != file.size)
+
+	std::error_code ec;
+	bool exists = std::filesystem::exists(fullpath, ec);
+	auto existingSize = exists ? std::filesystem::file_size(fullpath, ec) : 0;
+
+	if (ec)
+		return Status::E_InvalidPath;
+
+	if (existingSize != file.size)
 	{
-		std::error_code ec;
 		auto spaceInfo = std::filesystem::space(path, ec);
 		if (ec)
 			return Status::E_InvalidPath;
@@ -459,9 +471,28 @@ mtt::Status mtt::Storage::preallocate(File& file)
 		if (spaceInfo.available < file.size)
 			return Status::E_NotEnoughSpace;
 
-		std::ofstream fileOut(fullpath, std::ios_base::binary);
-		fileOut.seekp(file.size - 1);
-		fileOut.put(0);
+		std::fstream fileOut(fullpath, std::ios_base::binary | std::ios_base::out | (exists ? std::ios_base::in : 0));
+		if(!fileOut.good())
+			return Status::E_InvalidPath;
+
+		auto startPieceSize = pieceSize - file.startPiecePos;
+		auto endPieceSize = file.endPiecePos;
+		auto tempFileSize = startPieceSize + file.endPiecePos;
+
+		//move temporary file end piece
+		if (exists && existingSize == tempFileSize && endPieceSize)
+		{
+			std::vector<char> buffer(endPieceSize);
+			fileOut.seekp(startPieceSize);
+			fileOut.read(buffer.data(), endPieceSize);
+			fileOut.seekp(file.size - 1);
+			fileOut.write(buffer.data(), buffer.size());
+		}
+		else
+		{
+			fileOut.seekp(file.size - 1);
+			fileOut.put(0);
+		}
 
 		if (fileOut.fail())
 			return Status::E_AllocationProblem;
