@@ -6,8 +6,9 @@
 
 #define UTP_LOG(x) WRITE_LOG("UtpStream", x)
 
-const uint16_t MTU_PROBE_IDLE_ID = 0;
-const uint32_t MaxDuplicateAckBeforeResend = 2;
+constexpr uint16_t MTU_PROBE_IDLE_ID = 0;
+constexpr uint32_t MaxDuplicateAckBeforeResend = 2;
+constexpr uint32_t MaxStreamTimeout = 30000;
 
 //handle 16 bit sequence overflow comparison
 static bool idLowerThan(std::uint32_t lhs, std::uint32_t rhs)
@@ -81,6 +82,8 @@ void mtt::utp::Stream::connect(const udp::endpoint& e, uint16_t bindPort)
 	writer->setBindPort(bindPort);
 
 	sendSyn();
+	connection.lastReceive = TimeClock::now();
+	connection.nextTimeout = connection.lastReceive + std::chrono::milliseconds(packetTimeout());
 }
 
 void mtt::utp::Stream::connect(const udp::endpoint& e, uint16_t bindPort, const MessageHeader& header)
@@ -96,6 +99,8 @@ void mtt::utp::Stream::connect(const udp::endpoint& e, uint16_t bindPort, const 
 	writer->setBindPort(bindPort);
 
 	sendState();
+	connection.lastReceive = TimeClock::now();
+	connection.nextTimeout = connection.lastReceive + std::chrono::milliseconds(packetTimeout());
 }
 
 void mtt::utp::Stream::write(const DataBuffer& data)
@@ -115,10 +120,10 @@ void mtt::utp::Stream::write(const DataBuffer& data)
 			size_t currentPreparedSize = sending.prepared.buffer.size();
 			if (dataSizeLeft + currentPreparedSize > sending.prepared.buffer.capacity())
 			{
-				std::swap(sending.prepared.buffer, sending.prepared.tmp);
+				std::swap(sending.prepared.buffer, sending.prepared.buffer2);
 				currentPreparedSize -= sending.prepared.bufferPos;
 				sending.prepared.buffer.resize(currentPreparedSize + dataSizeLeft);
-				memcpy(sending.prepared.buffer.data(), sending.prepared.tmp.data() + sending.prepared.bufferPos, currentPreparedSize);
+				memcpy(sending.prepared.buffer.data(), sending.prepared.buffer2.data() + sending.prepared.bufferPos, currentPreparedSize);
 				sending.prepared.bufferPos = 0;
 			}
 			else
@@ -185,27 +190,43 @@ void mtt::utp::Stream::readFinish()
 	receiving.state.appended = false;
 }
 
-void mtt::utp::Stream::refresh(TimePoint now)
+bool mtt::utp::Stream::refresh(TimePoint now)
 {
 	std::lock_guard<std::mutex> guard(state.mutex);
 
-	if (connection.lastReceive + std::chrono::milliseconds(packetTimeout()) < now)
+	if (connection.nextTimeout < now)
 	{
-		if (sending.sentDataWithoutAckSize > 0)
+		if (connection.lastReceive + std::chrono::milliseconds(MaxStreamTimeout) < now || state.step >= StateType::CLOSING)
+			close();
+		else if (sending.sentDataWithoutAckSize > 0)
 		{
 			for (auto& s : sending.sentData)
-			{
-				s.resent = false;
 				s.needResend = true;
-			}
 
 			UTP_LOG("Timeout detected, sent data marked for resend: " << sending.sentData.size());
 			if (!sending.sentData.empty())
 				resendPackets(sending.sentData.front().sequence);
-
-			connection.timeoutCount++;
 		}
+		else if (state.step == StateType::SYN_SEND)
+		{
+			if (connection.timeoutCount > 0)
+				close();
+			else
+				sendSyn();
+		}
+		else if (state.step == StateType::SYN_RECV)
+		{
+			if (connection.timeoutCount > 0)
+				close();
+			else
+				sendState();
+		}
+
+		connection.timeoutCount++;
+		connection.nextTimeout = now + std::chrono::milliseconds(packetTimeout());
 	}
+
+	return state.step != StateType::CLOSED;
 }
 
 uint16_t mtt::utp::Stream::getId()
@@ -227,15 +248,11 @@ void mtt::utp::Stream::close()
 		if (onCloseCallback)
 			onCloseCallback(0);
 	}
-
-	//deinit
-	//remove from mgr
 }
 
 void mtt::utp::Stream::sendSyn()
 {
 	sending.stateBuffer.resize(20);
-	memset(sending.stateBuffer.data(), 0, 20);
 
 	utp::MessageHeader& header = (utp::MessageHeader&) * sending.stateBuffer.data();
 	header.setType(ST_SYN);
@@ -245,37 +262,35 @@ void mtt::utp::Stream::sendSyn()
 
 	header.wnd_size = connection.wnd_size;
 	header.timestamp_microseconds = timestampMicro();
-	header.timestamp_difference_microseconds = connection.last_reply_delay;
+	header.timestamp_difference_microseconds = 0;
 
 	UTP_LOG("Send ST_SYN, conn id: " << state.id_send);
 	writer->write(sending.stateBuffer);
-
-	connection.lastReceive = TimeClock::now();
 }
 
 void mtt::utp::Stream::sendState()
 {
-	createHeader(sending.stateBuffer, ST_STATE);
+	prepareStateHeader(ST_STATE);
 	writer->write(sending.stateBuffer);
 	UTP_LOG("Send ST_STATE, seq " << state.sequence << ",  ack " << state.ack);
 }
 
 void mtt::utp::Stream::sendFin()
 {
-	createHeader(sending.stateBuffer, ST_FIN);
+	prepareStateHeader(ST_FIN);
 	((utp::MessageHeader*) sending.stateBuffer.data())->ack_nr = connection.eof_ack;
 	writer->write(sending.stateBuffer);
 	UTP_LOG("Send ST_FIN, seq " << state.sequence << ",  ack " << connection.eof_ack);
 }
 
-void mtt::utp::Stream::createHeader(DataBuffer& buffer, MessageType type)
+void mtt::utp::Stream::prepareStateHeader(MessageType type)
 {
 	const size_t headerSize = sizeof(utp::MessageHeader);
 
-	buffer.resize(headerSize);
-	memset(buffer.data(), 0, headerSize);
+	sending.stateBuffer.resize(headerSize);
+	memset(sending.stateBuffer.data(), 0, headerSize);
 
-	utp::MessageHeader& header = (utp::MessageHeader&) * buffer.data();
+	utp::MessageHeader& header = (utp::MessageHeader&) * sending.stateBuffer.data();
 	header.setType(type);
 	header.seq_nr = state.sequence;
 	header.ack_nr = state.ack;
@@ -325,14 +340,13 @@ void mtt::utp::Stream::flushSendData()
 		}
 		else
 		{
-//			sending.prepared.buffer.erase(sending.prepared.buffer.begin(), sending.prepared.buffer.begin() + preparedBufferPos);
-			constexpr uint32_t SendBufferLeftoverLimit = 200000;	//we dont want to move data in buffer after each packet
+			constexpr uint32_t SendBufferLeftoverLimit = 100000;	//we dont want to move data in buffer after each packet
 			if (preparedBufferPos > SendBufferLeftoverLimit)
 			{
 				size_t dataLeft = sending.prepared.buffer.size() - preparedBufferPos;
-				std::swap(sending.prepared.buffer, sending.prepared.tmp);
+				std::swap(sending.prepared.buffer, sending.prepared.buffer2);
 				sending.prepared.buffer.resize(dataLeft);
-				memcpy(sending.prepared.buffer.data(), sending.prepared.tmp.data() + preparedBufferPos, dataLeft);
+				memcpy(sending.prepared.buffer.data(), sending.prepared.buffer2.data() + preparedBufferPos, dataLeft);
 
 				sending.prepared.bufferPos = 0;
 			}
@@ -359,6 +373,7 @@ bool mtt::utp::Stream::updateState(const MessageHeader& header)
 		ackSentDataBuffer(header);
 
 		connection.last_reply_delay = header.timestamp_microseconds - timestampMicro();
+		connection.peer_wnd_size = header.wnd_size;
 
 		if (state.step < StateType::CONNECTED)
 		{
@@ -385,6 +400,7 @@ bool mtt::utp::Stream::updateState(const MessageHeader& header)
 		flushSendData();
 
 		connection.lastReceive = TimeClock::now();
+		connection.nextTimeout = connection.lastReceive + std::chrono::milliseconds(packetTimeout());
 	}
 
 	if (connected && onConnectCallback)
@@ -424,21 +440,6 @@ void mtt::utp::Stream::handleDataMessage(const MessageHeader& header, const Buff
 		return;
 	}
 
-// 	if (onReceiveCallback)
-// 	{
-// 		size_t consumed = onReceiveCallback({ receiving.receiveBuffer });
-// 
-// 		if (consumed < receiving.receiveBuffer.size())
-// 		{
-// 			auto tmp = DataBuffer(receiving.receiveBuffer.begin() + consumed, receiving.receiveBuffer.end());
-// 			receiving.receiveBuffer.resize(tmp.size());
-// 			memcpy(receiving.receiveBuffer.data(), tmp.data(), tmp.size());
-// 		}
-// 		else
-// 			receiving.receiveBuffer.clear();
-// 	}
-// 
-// 	sendState();
 	receiving.state.received = true;
 
 	if (state.step == StateType::CLOSING)
@@ -499,7 +500,7 @@ std::pair<DataBuffer&, uint16_t> mtt::utp::Stream::createDataBuffer(size_t size)
 
 uint32_t mtt::utp::Stream::packetTimeout() const
 {
-	if (state.step != StateType::CONNECTED)
+	if (state.step < StateType::CONNECTED)
 		return 3000;
 
 	uint32_t timeout = (int)std::max(500, m_rtt.mean() + m_rtt.avg_deviation() * 2);
@@ -507,8 +508,8 @@ uint32_t mtt::utp::Stream::packetTimeout() const
 	if (connection.timeoutCount > 0)
 		timeout += (1 << (connection.timeoutCount - 1)) * 1000;
 
-	if (timeout > 60000)
-		timeout = 60000;
+	if (timeout > MaxStreamTimeout)
+		timeout = MaxStreamTimeout;
 
 	return timeout;
 }
@@ -658,7 +659,7 @@ void mtt::utp::Stream::resendPackets(uint16_t lastIdx)
 		if(idHigherThan(packet.sequence, lastIdx))
 			break;
 
-		if(packet.resent)
+		if(packet.resent && !packet.needResend)
 			continue;
 
 		packet.resent = true;

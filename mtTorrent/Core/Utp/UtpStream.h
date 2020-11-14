@@ -36,7 +36,7 @@ namespace mtt
 			bool readUdpPacket(const MessageHeader& header, const BufferView&);
 			void readFinish();
 
-			void refresh(TimePoint now);
+			bool refresh(TimePoint now);
 
 			uint16_t getId();
 			const udp::endpoint& getEndpoint();
@@ -48,7 +48,7 @@ namespace mtt
 			void sendSyn();
 			void sendState();
 			void sendFin();
-			void createHeader(DataBuffer&, MessageType);
+			void prepareStateHeader(MessageType);
 			void flushSendData();
 
 			bool updateState(const MessageHeader& msg);
@@ -77,6 +77,8 @@ namespace mtt
 			struct
 			{
 				uint32_t wnd_size = 0x100000;
+				uint32_t peer_wnd_size = 0x100000;
+
 				uint32_t last_reply_delay = 0;
 
 				//rtt
@@ -85,22 +87,13 @@ namespace mtt
 				uint16_t last_ack = 0;
 				uint16_t eof_ack = 0;
 
-				std::chrono::milliseconds timeout;
 				uint32_t timeoutCount = 0;
+				TimePoint nextTimeout;
 				TimePoint lastReceive;
 			}
 			connection;
 			
 			uint32_t packetTimeout() const;
-
-			//mtx - callback to peer
-			//read buffer
-
-			//mtx - receive from mgr - maybe chunk?
-			//read ordered packets
-			//last_ack_nr 
-
-			//write ordered, ack
 
 			struct Sending
 			{
@@ -121,7 +114,7 @@ namespace mtt
 				struct
 				{
 					DataBuffer buffer;
-					DataBuffer tmp;
+					DataBuffer buffer2;
 					uint32_t bufferPos = 0;
 				}
 				prepared;

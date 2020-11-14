@@ -148,9 +148,12 @@ void mtt::utp::Manager::refresh()
 	std::lock_guard<std::mutex> guard(streamsMutex);
 
 	TimePoint now = TimeClock::now();
-	for (auto s : streams)
+	for (auto it = streams.begin(); it != streams.end();)
 	{
-		s.second->refresh(now);
+		if (!it->second->refresh(now))
+			it = streams.erase(it);
+		else
+			it++;
 	}
 }
 
