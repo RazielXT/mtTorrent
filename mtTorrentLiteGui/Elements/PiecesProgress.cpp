@@ -87,7 +87,7 @@ void PiecesProgress::updatePiecesChart()
 		}
 		else
 		{
-			for (uint32_t i = piecesHighlight.from; i <= piecesHighlight.to; i++)
+			for (uint32_t i = piecesHighlight.from; i < piecesHighlight.to; i++)
 			{
 				chart->Series["Request"]->Points->AddXY(getProgressChartIndex(i), 0);
 			}

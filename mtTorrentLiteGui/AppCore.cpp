@@ -200,6 +200,19 @@ void AppCore::update()
 	forceRefresh = false;
 }
 
+void AppCore::stopRunningTorrents()
+{
+	auto selection = core.torrentsView.getAllSelectedTorrents();
+
+	for (auto s : selection)
+	{
+		if (core.IoctlFunc(mtBI::MessageId::Stop, s.hash, nullptr) == mtt::Status::Success)
+			core.forceRefresh = true;
+
+		core.scheduler.stopSchedule(s.hash);
+	}
+}
+
 void AppCore::onButtonClick(ButtonId id, System::String^ param)
 {
 	if (id == ButtonId::AddPeerMenu)
@@ -306,16 +319,12 @@ void AppCore::onButtonClick(ButtonId id, System::String^ param)
 	{
 		if (selected)
 		{
-			auto selection = torrentsView.getAllSelectedTorrents();
-
-			for (auto s : selection)
-			{
-				if (IoctlFunc(mtBI::MessageId::Stop, s.hash, nullptr) == mtt::Status::Success)
-					forceRefresh = true;
-
-				scheduler.stopSchedule(s.hash);
-			}
+			System::Threading::Thread^ newThread = gcnew System::Threading::Thread(gcnew System::Threading::ThreadStart(&stopRunningTorrents));
+			newThread->SetApartmentState(System::Threading::ApartmentState::STA);
+			newThread->Start();
 		}
+
+		forceRefresh = true;
 	}
 	else if (id == ButtonId::Settings)
 	{

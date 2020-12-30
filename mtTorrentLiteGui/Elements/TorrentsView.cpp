@@ -184,6 +184,8 @@ void TorrentsView::refreshTorrentsGrid()
 					activeStatus += ")";
 				}
 			}
+			else if (info.stopping)
+				activeStatus = "Stopping";
 			else
 				activeStatus = "Active";
 

@@ -45,3 +45,4 @@ extern void scheduleTorrent(System::DateTime time);
 extern void fillFilesSelectionForm();
 extern void fileSelectionChanged(int id, bool selected);
 extern void filePriorityChanged(const std::vector<int>& ids, System::String^ priority);
+extern System::String^ fileSelectionValidatePath(System::String^ path);

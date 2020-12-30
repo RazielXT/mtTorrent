@@ -34,7 +34,11 @@ public:
 
 	void onButtonClick(ButtonId id);
 
+	System::String^ validatePath(System::String^ path);
+
 private:
+
+	std::vector<uint64_t> currentAllocation;
 
 	struct
 	{

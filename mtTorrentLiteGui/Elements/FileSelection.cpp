@@ -35,8 +35,6 @@ void FileSelection::updateSelectionFormFooter()
 	txt += ")";
 
 	GuiLite::FileSelectionForm::instance->infoLabel->Text = txt;
-
-	GuiLite::FileSelectionForm::instance->requiredSize = selectedSize;
 	GuiLite::FileSelectionForm::instance->validate();
 }
 
@@ -95,8 +93,11 @@ void FileSelection::fillFilesSelectionForm()
 	auto form = GuiLite::FileSelectionForm::instance;
 	auto& info = state.info;
 
-	if (core.IoctlFunc(mtBI::MessageId::GetTorrentInfo, state.hash, &info) != mtt::Status::Success || info.files.empty())
+	mtBI::TorrentInfo tmp;
+	if (core.IoctlFunc(mtBI::MessageId::GetTorrentInfo, state.hash, &tmp) != mtt::Status::Success || tmp.files.empty())
 		return;
+
+	info = tmp;
 
 	auto list = form->filesGridView;
 	list->Rows->Add((int)info.files.size());
@@ -124,6 +125,12 @@ void FileSelection::fillFilesSelectionForm()
 	form->labelError->Visible = false;
 	form->checkBoxStart->Visible = state.added;
 	state.priorityChanged = false;
+
+	mtBI::FilesAllocation tmp2;
+	if (core.IoctlFunc(mtBI::MessageId::GetFilesAllocation, state.hash, &tmp2) != mtt::Status::Success || tmp2.files.size() != state.info.files.size())
+		return;
+
+	currentAllocation.assign(tmp2.files.data(), tmp2.files.data() + tmp2.files.size());
 
 	updateSelectionFormFooter();
 }
@@ -225,4 +232,42 @@ void FileSelection::onButtonClick(ButtonId id)
 	{
 		setSelectionForAllFiles(false);
 	}
+}
+
+System::String^ FileSelection::validatePath(System::String^ path)
+{
+	if (!path->Contains(":"))
+		return "Invalid path";
+
+	System::IO::DriveInfo^ drive = nullptr;
+	System::IO::FileInfo^ file = gcnew System::IO::FileInfo(path);
+	if (!file->Directory)
+		drive = gcnew System::IO::DriveInfo(path);
+	else
+		drive = gcnew System::IO::DriveInfo(file->Directory->Root->FullName);
+
+	if (!drive->IsReady)
+		return "Invalid drive";
+
+	uint64_t neededFreeSize = 0;
+	for (size_t i = 0; i < currentAllocation.size(); i++)
+	{
+		auto& file = state.info.files[i];
+		if (file.selected && file.size > currentAllocation[i])
+		{
+			neededFreeSize += file.size - currentAllocation[i];
+		}
+	}
+
+	if ((uint64_t)drive->AvailableFreeSpace < neededFreeSize)
+	{
+		auto txt = gcnew System::String("Not enough space, Available: ");
+		txt += formatBytes((uint64_t)drive->AvailableFreeSpace);
+		txt += ", Needed: ";
+		txt += formatBytes((uint64_t)neededFreeSize);
+
+		return txt;
+	}
+
+	return "";
 }

@@ -50,6 +50,8 @@ public:
 
 private:
 
+	static void stopRunningTorrents();
+
 	System::String^ getTorrentName(uint8_t* hash);
 
 	mtt::Status addTorrentFromFile(const char* filepath);
