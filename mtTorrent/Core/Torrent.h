@@ -78,5 +78,8 @@ namespace mtt
 		uint64_t lastStateTime = 0;
 		bool stateChanged = false;
 		void init();
+
+		std::mutex stateMutex;
+		bool stopping = false;
 	};
 }

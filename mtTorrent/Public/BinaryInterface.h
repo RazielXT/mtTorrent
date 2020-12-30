@@ -36,6 +36,7 @@ namespace mtBI
 		RegisterAlerts,	//RegisterAlertsRequest, null
 		PopAlerts,		//null, AlertsList
 		CheckFiles,		//hash, null
+		GetFilesAllocation,		//hash, FilesAllocation
 	};
 
 	struct SourceId
@@ -151,6 +152,7 @@ namespace mtBI
 		uint32_t foundPeers;
 		uint32_t connectedPeers;
 		bool started;
+		bool stopping;
 		bool utmActive;
 		bool checking;
 		float checkingProgress;
@@ -221,5 +223,10 @@ namespace mtBI
 	struct TorrentFilesProgress
 	{
 		mtt::array<TorrentFileProgress> files;
+	};
+
+	struct FilesAllocation
+	{
+		mtt::array<uint64_t> files;
 	};
 };

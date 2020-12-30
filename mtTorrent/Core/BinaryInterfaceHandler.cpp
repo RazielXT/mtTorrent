@@ -100,6 +100,7 @@ extern "C"
 			resp->selectionProgress = torrent->currentSelectionProgress();
 			resp->activeStatus = torrent->getLastError();
 			resp->started = torrent->getActiveState() == mttApi::Torrent::ActiveState::Started;
+			resp->stopping = torrent->getState() == mttApi::Torrent::State::Stopping;
 			resp->utmActive = torrent->getState() == mttApi::Torrent::State::DownloadingMetadata;
 		}
 		else if (id == mtBI::MessageId::GetPeersInfo)
@@ -361,6 +362,17 @@ extern "C"
 				return mtt::Status::E_InvalidInput;
 
 			return torrent->setLocationPath(info->path.data);
+		}
+		else if (id == mtBI::MessageId::GetFilesAllocation)
+		{
+			auto t = core->getTorrent((const uint8_t*)request);
+
+			if (!t)
+				return mtt::Status::E_InvalidInput;
+
+			auto sizes = t->getFilesAllocatedSize();
+			auto response = (mtBI::FilesAllocation*)output;
+			response->files.assign(sizes.data(), sizes.size());
 		}
 		else if (id == mtBI::MessageId::RegisterAlerts)
 		{

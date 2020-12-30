@@ -40,6 +40,7 @@ namespace mttApi
 			DownloadingMetadata,	//downloading metadata from magnet link, see getMagnetDownload
 			Downloading,			//active and connecting to peers to download selected files
 			Seeding,				//active and accepting incoming connection requests
+			Stopping,				//active and in process of stopping
 		};
 
 		API_EXPORT State getState();
@@ -65,6 +66,10 @@ namespace mttApi
 			get current progress of files, sorted by order in torrent file
 		*/
 		API_EXPORT std::vector<float> getFilesProgress();
+		/*
+			get current allocated sizes on disk in bytes, sorted by order in torrent file
+		*/
+		API_EXPORT std::vector<uint64_t> getFilesAllocatedSize();
 		/*
 			select/deselect files to download, sorted by order in torrent file
 		*/

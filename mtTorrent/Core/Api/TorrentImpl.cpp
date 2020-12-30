@@ -171,3 +171,9 @@ std::vector<float> mttApi::Torrent::getFilesProgress()
 
 	return out;
 }
+
+std::vector<uint64_t> mttApi::Torrent::getFilesAllocatedSize()
+{
+	return static_cast<mtt::Torrent*>(this)->files.storage.getAllocatedSize();
+}
+

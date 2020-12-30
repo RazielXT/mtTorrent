@@ -76,6 +76,11 @@ mtt::TorrentPtr mtt::Torrent::fromSavedState(std::string name)
 			else
 				ptr->files.progress.removeReceived();
 
+			ptr->fileTransfer->getUploadSum() = state.uploaded;
+
+			if (checked)
+				ptr->fileTransfer->addUnfinishedPieces(state.unfinishedPieces);
+
 			if (state.started)
 				ptr->start();
 		}
@@ -97,6 +102,10 @@ void mtt::Torrent::save()
 	saveState.downloadPath = files.storage.getPath();
 	saveState.lastStateTime = lastStateTime = files.storage.getLastModifiedTime();
 	saveState.started = state == ActiveState::Started;
+	saveState.uploaded = fileTransfer->getUploadSum();
+
+	if (fileTransfer)
+		saveState.unfinishedPieces = std::move(fileTransfer->getUnfinishedPiecesState());
 
 	for (auto& f : files.selection.files)
 		saveState.files.push_back({ f.selected, f.priority });
@@ -218,6 +227,8 @@ mttApi::Torrent::State mtt::Torrent::getState()
 {
 	if (checking)
 		return mttApi::Torrent::State::CheckingFiles;
+	else if (stopping)
+		return mttApi::Torrent::State::Stopping;
 	else if (utmDl && utmDl->state.active)
 		return mttApi::Torrent::State::DownloadingMetadata;
 	else if (state == mttApi::Torrent::ActiveState::Stopped)
@@ -236,6 +247,8 @@ void mtt::Torrent::init()
 
 mtt::Status mtt::Torrent::start()
 {
+	std::unique_lock<std::mutex> guard(stateMutex);
+
 #ifdef PEER_DIAGNOSTICS
 	std::filesystem::path logDir = std::filesystem::u8path(".\\logs\\" + name());
 	if (!std::filesystem::exists(logDir))
@@ -286,6 +299,7 @@ mtt::Status mtt::Torrent::start()
 
 	if (lastError != mtt::Status::Success)
 	{
+		guard.unlock();
 		stop(StopReason::Internal);
 		return lastError;
 	}
@@ -303,6 +317,11 @@ mtt::Status mtt::Torrent::start()
 
 void mtt::Torrent::stop(StopReason reason)
 {
+	if (stopping)
+		return;
+
+	std::lock_guard<std::mutex> guard(stateMutex);
+
 	if (checking)
 	{
 		std::lock_guard<std::mutex> guard(checkStateMutex);
@@ -319,7 +338,12 @@ void mtt::Torrent::stop(StopReason reason)
 	}
 
 	if (state == mttApi::Torrent::ActiveState::Stopped)
+	{
+		save();
 		return;
+	}
+
+	stopping = true;
 
 	if (fileTransfer)
 	{
@@ -338,6 +362,7 @@ void mtt::Torrent::stop(StopReason reason)
 	if(reason != StopReason::Internal)
 		lastError = Status::Success;
 	stateChanged = true;
+	stopping = false;
 }
 
 std::shared_ptr<mtt::PiecesCheck> mtt::Torrent::checkFiles(std::function<void(std::shared_ptr<PiecesCheck>)> onFinish)
@@ -375,9 +400,6 @@ std::shared_ptr<mtt::PiecesCheck> mtt::Torrent::checkFiles(std::function<void(st
 
 void mtt::Torrent::checkFiles()
 {
-	if(state == ActiveState::Stopped)
-		service.start(1);
-
 	if(!checking)
 		checkFiles([](std::shared_ptr<PiecesCheck>) {});
 }
@@ -409,7 +431,7 @@ bool mtt::Torrent::selectFiles(const std::vector<bool>& s)
 		lastError = files.prepareSelection();
 
 		if (fileTransfer)
-			fileTransfer->reevaluate();
+			fileTransfer->refreshSelection();
 
 		return lastError == Status::Success;
 	}
@@ -468,9 +490,6 @@ float mtt::Torrent::currentSelectionProgress()
 		if(files.progress.selectedPieces)
 			progress += unfinishedPieces / files.progress.selectedPieces;
 	}
-
-	if (progress > 1.0f)
-		__debugbreak();
 
 	return progress;
 }
