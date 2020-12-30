@@ -83,34 +83,26 @@ void mtt::PiecesProgress::select(DownloadSelection& selection)
 	init(selection.files.back().info.endPieceIndex + 1);
 	selectedPieces = 0;
 
-	uint32_t lastWantedPiece = -1;
-	for (auto& f : selection.files)
+	for (size_t i = 0; i < pieces.size(); i++)
 	{
-		uint32_t i = f.info.startPieceIndex;
-		if (lastWantedPiece == i)
-			i++;
+		bool selected = std::find_if(selection.files.begin(), selection.files.end(), [i](const FileSelectionInfo& f) 
+			{ return f.selected && f.info.startPieceIndex <= i && f.info.endPieceIndex >= i; }) != selection.files.end();
 
-		for (; i <= f.info.endPieceIndex; i++)
+		if (pieces[i] & HasFlag)
 		{
-			if (pieces[i] & HasFlag)
-			{
-				receivedPiecesCount++;
+			receivedPiecesCount++;
 
-				if (f.selected)
-					selectedReceivedPiecesCount++;
-			}
-				
-			if (f.selected)
-			{
-				selectedPieces++;
-				pieces[i] &= ~UnselectedFlag;
-			}
-			else
-				pieces[i] |= UnselectedFlag;
+			if (selected)
+				selectedReceivedPiecesCount++;
 		}
 
-		if(f.selected)
-			lastWantedPiece = f.info.endPieceIndex;
+		if (selected)
+		{
+			selectedPieces++;
+			pieces[i] &= ~UnselectedFlag;
+		}
+		else
+			pieces[i] |= UnselectedFlag;
 	}
 }
 

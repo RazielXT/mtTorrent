@@ -161,7 +161,7 @@ void mtt::Peers::connectNext(uint32_t count)
 	PEERS_LOG("connected " << (origCount - count));
 }
 
-std::shared_ptr<mtt::PeerCommunication> mtt::Peers::connect(Addr& addr)
+void mtt::Peers::connect(Addr& addr)
 {
 	auto peer = getActivePeer(addr);
 
@@ -170,23 +170,8 @@ std::shared_ptr<mtt::PeerCommunication> mtt::Peers::connect(Addr& addr)
 		auto idx = updateKnownPeers(addr, PeerSource::Manual);
 
 		std::lock_guard<std::mutex> guard(peersMutex);
-		return connect(idx);
+		connect(idx);
 	}
-
-	return peer;
-}
-
-std::shared_ptr<mtt::PeerCommunication> mtt::Peers::getPeer(PeerCommunication* p)
-{
-	std::lock_guard<std::mutex> guard(peersMutex);
-
-	for (auto& connection : activeConnections)
-	{
-		if (connection.comm.get() == p)
-			return connection.comm;
-	}
-
-	return nullptr;
 }
 
 size_t mtt::Peers::add(std::shared_ptr<TcpAsyncStream> stream, const BufferView& data)
@@ -378,7 +363,7 @@ uint32_t mtt::Peers::updateKnownPeers(Addr& addr, PeerSource source)
 	return (uint32_t)std::distance(knownPeers.begin(), it);
 }
 
-std::shared_ptr<mtt::PeerCommunication> mtt::Peers::connect(uint32_t idx)
+void mtt::Peers::connect(uint32_t idx)
 {
 	auto& knownPeer = knownPeers[idx];
 	if (knownPeer.lastQuality == PeerQuality::Unknown)
@@ -390,10 +375,9 @@ std::shared_ptr<mtt::PeerCommunication> mtt::Peers::connect(uint32_t idx)
 	peer.comm = std::make_shared<PeerCommunication>(torrent->infoFile.info, *peersListener, torrent->service.io);
 	peer.comm->sendHandshake(knownPeer.address);
 	peer.idx = idx;
-	activeConnections.push_back(peer);
-	addLogEvent(Connect, knownPeer.address, 0);
+	activeConnections.emplace_back(std::move(peer));
 
-	return peer.comm;
+	addLogEvent(Connect, knownPeer.address, 0);
 }
 
 std::shared_ptr<mtt::PeerCommunication> mtt::Peers::getActivePeer(Addr& addr)

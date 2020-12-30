@@ -9,7 +9,7 @@
 
 namespace mtt
 {
-	class FileTransfer : public mttApi::FileTransfer, public IPeerListener
+	class FileTransfer : public mttApi::FileTransfer, public IPeerListener, public DownloaderClient
 	{
 	public:
 
@@ -18,28 +18,20 @@ namespace mtt
 		void start();
 		void stop();
 
-		void reevaluate();
-
-		virtual void handshakeFinished(PeerCommunication*) override;
-		virtual void connectionClosed(PeerCommunication*, int code) override;
-		virtual void messageReceived(PeerCommunication*, PeerMessage&) override;
-		virtual void extHandshakeFinished(PeerCommunication*) override;
-		virtual void metadataPieceReceived(PeerCommunication*, ext::UtMetadata::Message&) override;
-		virtual void pexReceived(PeerCommunication*, ext::PeerExchange::Message&) override;
-		virtual void progressUpdated(PeerCommunication*, uint32_t) override;
+		void refreshSelection();
 
 		uint32_t getDownloadSpeed();
-		uint64_t getUploadSum();
+		uint64_t& getUploadSum();
 		uint32_t getUploadSpeed();
+
+		void addUnfinishedPieces(std::vector<mtt::DownloadedPieceState>& pieces);
+		std::vector<mtt::DownloadedPieceState> getUnfinishedPiecesState();
 
 		size_t getUnfinishedPiecesDownloadSize();
 
-		std::vector<ActivePeerInfo> getPeersInfo();
-
 		std::vector<uint32_t> getCurrentRequests();
-		uint32_t getCurrentRequestsCount();
 
-		void updatePiecesPriority();
+		std::vector<ActivePeerInfo> getPeersInfo();
 
 	private:
 
@@ -78,7 +70,6 @@ namespace mtt
 		void addPeer(PeerCommunication*);
 		void removePeer(PeerCommunication*);
 		void evaluateCurrentPeers();
-		void evaluateNextRequests(PeerCommunication*);
 
 		std::shared_ptr<ScheduledTimer> refreshTimer;
 
@@ -89,9 +80,26 @@ namespace mtt
 		void removePeers(std::vector<uint32_t> sortedIdx);
 		uint32_t peersEvalCounter = 0;
 
+		bool isWantedPiece(uint32_t idx) override;
+		void pieceFinished(std::shared_ptr<mtt::DownloadedPiece> piece) override;
+		std::shared_ptr<mtt::DownloadedPiece> loadUnfinishedPiece(uint32_t idx) override;
+		bool storeUnfinishedPiece(std::shared_ptr<mtt::DownloadedPiece> piece) override;
+		LockedPeers getPeers() override;
+
+		std::vector<uint32_t> freshPieces;
+		std::vector<mtt::DownloadedPieceState> unFinishedPieces;
+
 		Downloader downloader;
 		std::shared_ptr<Uploader> uploader;
 
 		TorrentPtr torrent;
+
+		virtual void handshakeFinished(PeerCommunication*) override;
+		virtual void connectionClosed(PeerCommunication*, int code) override;
+		virtual void messageReceived(PeerCommunication*, PeerMessage&) override;
+		virtual void extHandshakeFinished(PeerCommunication*) override;
+		virtual void metadataPieceReceived(PeerCommunication*, ext::UtMetadata::Message&) override;
+		virtual void pexReceived(PeerCommunication*, ext::PeerExchange::Message&) override;
+		virtual void progressUpdated(PeerCommunication*, uint32_t) override;
 	};
 }

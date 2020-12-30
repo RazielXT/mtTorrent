@@ -19,8 +19,3 @@ std::vector<uint32_t> mttApi::FileTransfer::getCurrentRequests()
 {
 	return static_cast<mtt::FileTransfer*>(this)->getCurrentRequests();
 }
-
-uint32_t mttApi::FileTransfer::getCurrentRequestsCount()
-{
-	return static_cast<mtt::FileTransfer*>(this)->getCurrentRequestsCount();
-}

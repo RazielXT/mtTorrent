@@ -18,12 +18,9 @@ namespace mtt
 		void stop();
 
 		void connectNext(uint32_t count);
-		std::shared_ptr<PeerCommunication> connect(Addr& addr);
-		std::shared_ptr<PeerCommunication> getPeer(PeerCommunication*);
+		void connect(Addr& addr);
 		size_t add(std::shared_ptr<TcpAsyncStream> peer, const BufferView& data);
 		std::shared_ptr<PeerCommunication> disconnect(PeerCommunication*);
-
-		bool active = false;
 
 		std::vector<TrackerInfo> getSourcesInfo();
 		void refreshSource(const std::string& name);
@@ -99,7 +96,7 @@ namespace mtt
 		std::vector<KnownPeer> knownPeers;
 		std::mutex peersMutex;
 
-		std::shared_ptr<PeerCommunication> connect(uint32_t idx);
+		void connect(uint32_t idx);
 		std::shared_ptr<PeerCommunication> getActivePeer(Addr&);
 		struct ActivePeer
 		{

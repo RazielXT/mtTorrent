@@ -23,9 +23,5 @@ namespace mttApi
 			Get list of currently requested pieces
 		*/
 		API_EXPORT std::vector<uint32_t> getCurrentRequests();
-		/*
-			Get count of currently requested pieces
-		*/
-		API_EXPORT uint32_t getCurrentRequestsCount();
 	};
 }

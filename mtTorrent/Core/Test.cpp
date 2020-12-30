@@ -269,30 +269,31 @@ void TorrentTest::testStorageCheck()
 	bool finished = false;
 	auto onFinish = [&](std::shared_ptr<PiecesCheck>) { finished = true; TEST_LOG("Finished"); };
 
-	auto checking = storage.checkStoredPiecesAsync(torrent.info.pieces, pool.io, onFinish);
-
-	WAITFOR2(finished, TEST_LOG(checking->piecesChecked << "/" << checking->piecesCount));
-
-	WAITFOR(false);
+// 	auto checking = storage.checkStoredPiecesAsync(torrent.info.pieces, pool.io, onFinish);
+// 
+// 	WAITFOR2(finished, TEST_LOG(checking->piecesChecked << "/" << checking->piecesCount));
+// 
+// 	WAITFOR(false);
 }
 
 void TorrentTest::testStorageLoad()
 {
-	auto torrent = parseTorrentFile("D:\\wifi.torrent");
+	auto torrent = parseTorrentFile("C:\\test\\wifi.torrent");
 
 	DownloadSelection selection;
 	for (auto&f : torrent.info.files)
 		selection.files.push_back({ true, Priority::Normal, f });
 
 	mtt::Storage storage(torrent.info);
-	storage.setPath("D:\\test");
+	storage.setPath("C:\\test");
 	storage.preallocateSelection(selection);
 
 	mtt::Storage outStorage(torrent.info);
-	outStorage.setPath("D:\\test\\out");
+	outStorage.setPath("C:\\test\\out");
 	outStorage.preallocateSelection(selection);
 
 	mtt::DownloadedPiece piece;
+	DataBuffer buffer;
 
 	for (uint32_t i = 0; i < torrent.info.pieces.size(); i++)
 	{
@@ -300,15 +301,23 @@ void TorrentTest::testStorageLoad()
 		piece.init(i, torrent.info.pieceSize, (uint32_t)blocksInfo.size());
 
 		for (auto& blockInfo : blocksInfo)
-		{
-			auto block = storage.getPieceBlock(blockInfo);		
-			memcpy(piece.data.data() + block.info.begin, block.buffer.data, block.info.length);
+		{		
+			storage.loadPieceBlock(blockInfo, buffer);		
+			memcpy(piece.data.data() + blockInfo.begin, buffer.data(), buffer.size());
 		}
 
 		outStorage.storePiece(piece);
 	}
 
-	outStorage.flush();
+	mtt::PiecesCheck checkResults;
+	outStorage.checkStoredPieces(checkResults, torrent.info.pieces);
+	for (auto r : checkResults.pieces)
+	{
+		if (r != 1)
+		{
+			std::cout << "Invalid piece copy!" << std::endl;
+		}
+	}
 }
 
 void TorrentTest::testPeerListen()
@@ -323,8 +332,11 @@ void TorrentTest::testPeerListen()
 	storage.setPath("D:\\test");
 	storage.preallocateSelection(selection);
 
+	mtt::PiecesCheck check;
+	storage.checkStoredPieces(check, torrent.info.pieces);
+
 	mtt::PiecesProgress progress;
-	progress.fromList(storage.checkStoredPieces(torrent.info.pieces));
+	progress.fromList(check.pieces);
 
 	ServiceThreadpool service(2);
 
@@ -361,12 +373,15 @@ void TorrentTest::testPeerListen()
 			}
 			else if (msg.id == Request)
 			{
-				PieceBlockInfo blockInfo;
-				blockInfo.begin = msg.request.begin;
-				blockInfo.index = msg.request.index;
-				blockInfo.length = msg.request.length;
+				PieceBlock block;
+				block.info.begin = msg.request.begin;
+				block.info.index = msg.request.index;
+				block.info.length = msg.request.length;
 
-				auto block = storage->getPieceBlock(blockInfo);
+				DataBuffer buffer;
+				storage->loadPieceBlock(block.info, buffer);
+
+				block.buffer = buffer;
 				comm->sendPieceBlock(block);
 			}
 		}
@@ -1058,8 +1073,14 @@ void testUtpLocalConnection()
 			}
 			if (msg.id == Request)
 			{
-				mtt::PieceBlock block = storage.getPieceBlock(msg.request);
-				if(block.info.begin == 0)
+				DataBuffer buffer;
+				storage.loadPieceBlock(msg.request, buffer);
+
+				PieceBlock block;
+				block.info = msg.request;
+				block.buffer = buffer;
+
+				if (block.info.begin == 0)
 					std::cout << "Send piece " << block.info.index << " block start " << block.info.begin << std::endl;
 				p->sendPieceBlock(block);
 				requests++;
@@ -1078,7 +1099,7 @@ void testUtpLocalConnection()
 	peerListener(storage);
 
 	auto peer = std::make_shared<PeerCommunication>(torrentInfo, peerListener, pool.io);
-	peer->sendHandshake(Addr("127.0.0.1:34062"));
+	peer->sendHandshake(Addr("127.0.0.1:34000"));
 
 	WAITFOR(peer->isEstablished());
 
@@ -1112,16 +1133,6 @@ void testUtpLocalConnection()
 		peer->sendBitfield(bitfield);
 
 		WAITFOR(!peer->state.amChoking);
-
-		size_t lastTimeoutsCount = 0;
-		auto checkTimeouts = [&]()
-		{
-			if (lastTimeoutsCount < utpMgr.getStream()->timeouts.size())
-			{
-				std::cout << "Timeout on sequence " << utpMgr.getStream()->timeouts[lastTimeoutsCount].seq << " packets marked for resend " << utpMgr.getStream()->timeouts[lastTimeoutsCount].packets;
-				lastTimeoutsCount++;
-			}
-		};
 
 		getchar();
 		getchar();
@@ -1182,7 +1193,13 @@ void testUtpLocalProtocol()
 			}
 			if (msg.id == Request)
 			{
-				mtt::PieceBlock block = storage.getPieceBlock(msg.request);
+				DataBuffer buffer;
+				storage.loadPieceBlock(msg.request, buffer);
+
+				PieceBlock block;
+				block.info = msg.request;
+				block.buffer = buffer;
+
 				if (block.info.begin >= 0)
 					SyncLog("Send piece " << block.info.index << " block start " << block.info.begin << " idx " << (block.info.begin + 1) / 16384);
 				p->sendPieceBlock(block);
@@ -1239,5 +1256,6 @@ void testUtpLocalProtocol()
 
 void TorrentTest::start()
 {
-	testUtpLocalConnection();
+	testStorageLoad();
+	//testUtpLocalConnection();
 }

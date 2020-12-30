@@ -2,6 +2,7 @@
 #include "Base32.h"
 #include <array>
 #include <cctype>
+#include <iterator>
 
 std::string base32decode(std::string& s)
 {

@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
-#include "Api/Interface.h"
+#include "Interface.h"
 
 namespace mtt
 {
@@ -21,6 +21,10 @@ namespace mtt
 		std::vector<uint8_t>& pieces;
 		int64_t lastStateTime = 0;
 		bool started = false;
+
+		std::vector<DownloadedPieceState> unfinishedPieces;
+
+		uint64_t uploaded = 0;
 
 		void save(const std::string& name);
 		bool load(const std::string& name);

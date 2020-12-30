@@ -166,12 +166,7 @@ void mtt::MetadataDownload::metadataPieceReceived(PeerCommunication* p, ext::UtM
 		}
 		else
 		{
-			auto peer = peers.getPeer(p);
-
-			if (peer)
-			{
-				requestPiece(peer);
-			}
+			requestPiece(p->shared_from_this());
 		}
 	}
 
@@ -186,7 +181,7 @@ void mtt::MetadataDownload::metadataPieceReceived(PeerCommunication* p, ext::UtM
 void mtt::MetadataDownload::extHandshakeFinished(PeerCommunication* peer)
 {
 	if (peer->ext.isSupported(ext::MessageType::UtMetadataEx))
-		addToBackup(peers.getPeer(peer));
+		addToBackup(peer->shared_from_this());
 	else
 	{
 		peers.disconnect(peer);

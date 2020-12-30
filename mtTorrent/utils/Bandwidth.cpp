@@ -121,9 +121,9 @@ void BandwidthManager::close()
 	}
 }
 
-int BandwidthManager::queueSize() const
+uint32_t BandwidthManager::queueSize() const
 {
-	return int(requestsQueue.size());
+	return uint32_t(requestsQueue.size());
 }
 
 std::int64_t BandwidthManager::getQueuedBytes() const
@@ -131,7 +131,7 @@ std::int64_t BandwidthManager::getQueuedBytes() const
 	return queuedBytes;
 }
 
-int BandwidthManager::requestBandwidth(std::shared_ptr<BandwidthUser> peer, int const amount, int const priority, BandwidthChannel** chan, int const num_channels)
+uint32_t BandwidthManager::requestBandwidth(std::shared_ptr<BandwidthUser> peer, uint32_t amount, uint32_t priority, BandwidthChannel** chan, uint32_t num_channels)
 {
 	if (abort)
 		return 0;
@@ -141,9 +141,9 @@ int BandwidthManager::requestBandwidth(std::shared_ptr<BandwidthUser> peer, int 
 
 	std::lock_guard<std::mutex> guard(requestMutex);
 
-	int k = 0;
+	uint32_t k = 0;
 	BandwidthRequest bwr(std::move(peer), amount, priority);
-	for (int i = 0; i < num_channels && chan[i]; ++i)
+	for (uint32_t i = 0; i < num_channels && chan[i]; ++i)
 	{
 		if (chan[i]->needQueueing(amount))
 			bwr.channel[k++] = chan[i];
@@ -156,7 +156,7 @@ int BandwidthManager::requestBandwidth(std::shared_ptr<BandwidthUser> peer, int 
 	return 0;
 }
 
-void BandwidthManager::updateQuotas(int dt)
+void BandwidthManager::updateQuotas(uint32_t dt)
 {
 	if (abort) return;
 	if (requestsQueue.empty()) return;

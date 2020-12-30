@@ -20,21 +20,19 @@ void mtt::DownloadedPiece::init(uint32_t idx, uint32_t pieceSize, uint32_t block
 {
 	data.resize(pieceSize);
 	remainingBlocks = blocksCount;
-	blocksTodo.assign(remainingBlocks, 0);
+	blocksState.assign(remainingBlocks, 0);
 	index = idx;
 }
 
-bool DownloadedPiece::addBlock(PieceBlock& block)
+void DownloadedPiece::addBlock(const PieceBlock& block)
 {
 	auto blockIdx = (block.info.begin + 1)/ BlockRequestMaxSize;
 
-	if (blockIdx < blocksTodo.size() && blocksTodo[blockIdx] == 0)
+	if (blockIdx < blocksState.size() && blocksState[blockIdx] == 0)
 	{
 		memcpy(&data[0] + block.info.begin, block.buffer.data, block.info.length);
-		blocksTodo[blockIdx] = 1;
+		blocksState[blockIdx] = 1;
 		remainingBlocks--;
-		return true;
+		downloadedSize += block.info.length;
 	}
-
-	return false;
 }

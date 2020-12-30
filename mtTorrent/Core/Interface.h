@@ -40,22 +40,20 @@ namespace mtt
 		BufferView buffer;
 	};
 
-	struct PieceDownloadInfo
+	struct DownloadedPieceState
 	{
-		std::vector<PieceBlockInfo> blocksLeft;
-		size_t blocksCount = 0;
-		uint32_t index;
+		std::vector<uint8_t> blocksState;
+		uint32_t remainingBlocks = 0;
+		uint32_t downloadedSize = 0;
+		uint32_t index = -1;
 	};
 
-	struct DownloadedPiece
+	struct DownloadedPiece : public DownloadedPieceState
 	{
 		DataBuffer data;
-		uint32_t index = -1;
-		uint32_t remainingBlocks = 0;
-		std::vector<uint8_t> blocksTodo;
 
 		void init(uint32_t idx, uint32_t pieceSize, uint32_t blocksCount);
-		bool addBlock(PieceBlock& block);
+		void addBlock(const PieceBlock& block);
 		bool isValid(const uint8_t* expectedHash);
 	};
 

@@ -13,13 +13,15 @@ void mtt::Uploader::isInterested(PeerCommunication* p)
 	p->setChoke(false);
 }
 
-void mtt::Uploader::pieceRequest(PeerCommunication* p, PieceBlockInfo& info)
+void mtt::Uploader::pieceRequest(PeerCommunication* p, const PieceBlockInfo& info)
 {
 	std::lock_guard<std::mutex> guard(requestsMutex);
 	
 	requestBytes(info.length);
-	pendingRequests.push_back({p->shared_from_this(), info});
-	sendRequests();
+	pendingRequests.push_back({ p->shared_from_this(), info });
+
+	if (!requestingBytes)
+		torrent->service.io.post([this]() { sendRequests(); });
 }
 
 void mtt::Uploader::assignBandwidth(int amount)
@@ -29,7 +31,7 @@ void mtt::Uploader::assignBandwidth(int amount)
 	requestingBytes = false;
 	availableBytes += amount;
 
-	sendRequests();
+	torrent->service.io.post([this]() { sendRequests(); });
 }
 
 void mtt::Uploader::requestBytes(uint32_t amount)
@@ -38,7 +40,7 @@ void mtt::Uploader::requestBytes(uint32_t amount)
 		return;
 	amount -= availableBytes;
 
-	int returned = BandwidthManager::Get().requestBandwidth(shared_from_this(), amount, 1, &globalBw, 1);
+	uint32_t returned = BandwidthManager::Get().requestBandwidth(shared_from_this(), amount, 1, &globalBw, 1);
 
 	if (returned == 0)
 		requestingBytes = true;
@@ -53,31 +55,45 @@ bool mtt::Uploader::isActive()
 
 void mtt::Uploader::sendRequests()
 {
+	std::lock_guard<std::mutex> guard(requestsMutex);
+
 	uint32_t wantedBytes = 0;
-	std::vector<UploadRequest> delayedRequests;
+	size_t delayedCount = 0;
 
-	for (auto it = pendingRequests.begin(); it != pendingRequests.end(); it++)
+	for (size_t i = 0; i < pendingRequests.size(); i++)
 	{
-		if (it->peer->isEstablished())
-		{
-			if (availableBytes >= it->block.length)
-			{
-				auto block = torrent->files.storage.getPieceBlock(it->block);
-				it->peer->sendPieceBlock(block);
-				uploaded += it->block.length;
-				availableBytes -= it->block.length;
+		auto& r = pendingRequests[i];
 
-				handledRequests.push_back({ it->peer.get(), it->block.length });
+		if (r.peer->isEstablished())
+		{
+			if (availableBytes >= r.block.length)
+			{
+				DataBuffer buffer;
+				torrent->files.storage.loadPieceBlock(r.block, buffer);
+
+				PieceBlock block;
+				block.info = r.block;
+				block.buffer = buffer;
+
+				r.peer->sendPieceBlock(block);
+				uploaded += r.block.length;
+				availableBytes -= r.block.length;
+
+				handledRequests[r.peer.get()] += r.block.length;
 			}
 			else
 			{
-				wantedBytes += it->block.length;
-				delayedRequests.push_back(std::move(*it));
+				wantedBytes += r.block.length;
+
+				if (delayedCount < i)
+					pendingRequests[delayedCount] = std::move(r);
+
+				delayedCount++;
 			}
 		}
 	}
 
-	pendingRequests = std::move(delayedRequests);
+	pendingRequests.resize(delayedCount);
 
 	if (wantedBytes > 0)
 		requestBytes(wantedBytes);
@@ -96,7 +112,7 @@ void mtt::Uploader::refreshRequest()
 	}
 }
 
-std::vector<std::pair<mtt::PeerCommunication*, uint32_t>> mtt::Uploader::popHandledRequests()
+std::map<mtt::PeerCommunication*, uint32_t> mtt::Uploader::popHandledRequests()
 {
 	std::lock_guard<std::mutex> guard(requestsMutex);
 

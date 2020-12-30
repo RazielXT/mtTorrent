@@ -21,6 +21,7 @@ namespace mtt
 		E_InvalidPath,
 		E_NoData,
 		E_FileReadError,
+		E_FileWriteError,
 
 		E_NetworkError = 2000,
 		E_ConnectionClosed

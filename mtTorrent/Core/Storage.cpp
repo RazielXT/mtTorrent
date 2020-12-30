@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include "utils/ServiceThreadpool.h"
+#include "Configuration.h"
 #include "utils/SHA.h"
 
 mtt::Storage::Storage(TorrentInfo& info)
@@ -11,7 +12,6 @@ mtt::Storage::Storage(TorrentInfo& info)
 
 mtt::Storage::~Storage()
 {
-	flush();
 }
 
 void mtt::Storage::init(TorrentInfo& info, const std::string& locationPath)
@@ -78,7 +78,7 @@ mtt::Status mtt::Storage::setPath(std::string p, bool moveFiles)
 		path = p;
 	}
 
-	return Status::Success;
+	return mtt::Status::Success;
 }
 
 std::string mtt::Storage::getPath()
@@ -86,102 +86,101 @@ std::string mtt::Storage::getPath()
 	return path;
 }
 
-mtt::Status mtt::Storage::storePiece(DownloadedPiece& piece)
+static bool FileContainsPiece(const mtt::File& f, uint32_t pieceIdx)
+{
+	return f.startPieceIndex <= pieceIdx && f.endPieceIndex >= pieceIdx;
+}
+
+mtt::Status mtt::Storage::storePiece(const DownloadedPiece& piece)
 {
 	std::lock_guard<std::mutex> guard(storageMutex);
 
-	unsavedPieces.getNext() = piece;
-
-	if (unsavedPieces.count == unsavedPieces.data.size())
-		return flushAllFiles();
-
-	return Status::Success;
-}
-
-mtt::PieceBlock mtt::Storage::getPieceBlock(PieceBlockInfo& block)
-{
-	PieceBlock out;
-	out.info = block;
-
-	std::lock_guard<std::mutex> guard(cacheMutex);
-
-	auto& piece = loadPiece(block.index);
-
-	if (piece.data.size() >= block.begin + block.length)
+	Status status = Status::Success;
+	auto it = std::lower_bound(files.begin(), files.end(), piece.index, [](const File& f, uint32_t index) { return f.endPieceIndex < index; });
+	
+	for (; it != files.end(); it++)
 	{
-		out.buffer.store(piece.data.data() + block.begin, block.length);
+		if (status != Status::Success || !FileContainsPiece(*it, piece.index))
+			break;
+
+		status = storePiece(*it, piece);
 	}
 
-	return out;
+	return status;
 }
 
-mtt::Storage::CachedPiece& mtt::Storage::loadPiece(uint32_t pieceId)
+mtt::Status mtt::Storage::loadPieceBlock(const PieceBlockInfo& block, DataBuffer& buffer)
 {
+	Status status = Status::Success;
+	buffer.resize(block.length);
+	auto it = std::lower_bound(files.begin(), files.end(), block.index, [](const File& f, uint32_t index) { return f.endPieceIndex < index; });
+
+	for (; it != files.end(); it++)
 	{
-		std::lock_guard<std::mutex> guard(storageMutex);
+		if (status != Status::Success || !FileContainsPiece(*it, block.index))
+			break;
 
-		for (uint32_t i = 0; i < unsavedPieces.count; i++)
+		status = loadPieceBlock(*it, block, buffer);
+	}
+
+	return status; 
+}
+
+mtt::Status mtt::Storage::loadPieceBlock(const File& file, const PieceBlockInfo& block, DataBuffer& buffer)
+{
+	uint32_t blockDataPos = 0;
+	uint32_t dataSize = block.length;
+	size_t fileDataPos = {};
+
+	const auto blockEndPos = block.begin + block.length;
+
+	if (file.startPieceIndex == block.index)
+	{
+		if (file.startPiecePos > blockEndPos)
+			return Status::Success;
+
+		if (file.startPiecePos > block.begin)
 		{
-			auto& p = unsavedPieces.data[i];
+			blockDataPos = file.startPiecePos - block.begin;
+			dataSize -= blockDataPos;
+		}
+		else
+			fileDataPos = block.begin - file.startPiecePos;
+	}
+	else
+	{
+		fileDataPos = pieceSize - file.startPiecePos + block.begin;
+		if (block.index > file.startPieceIndex + 1)
+			fileDataPos += (block.index - file.startPieceIndex - 1) * (size_t)pieceSize;
+	}
 
-			if (p.index == pieceId)
-			{
-				auto& c = cachedPieces.getNext();
-				c.data = p.data;
-				c.index = p.index;
-			}
+	if (file.endPieceIndex == block.index)
+	{
+		if (file.endPiecePos < block.begin)
+			return Status::Success;
+
+		if (file.endPiecePos < blockEndPos)
+		{
+			dataSize -= blockEndPos - file.endPiecePos;
 		}
 	}
-
-	for (uint32_t i = 0; i < cachedPieces.count; i++)
-	{
-		if (cachedPieces.data[i].index == pieceId)
-			return cachedPieces.data[i];
-	}
-
-	auto& piece = cachedPieces.getNext();
-	piece.index = pieceId;
-	piece.data.resize(pieceSize);
-
-	for (auto& f : files)
-	{
-		if (f.startPieceIndex <= piece.index && f.endPieceIndex >= piece.index)
-		{
-			loadPiece(f, piece);
-		}
-	}
-
-	if(files.back().endPieceIndex == pieceId)
-		piece.data.resize(files.back().endPiecePos);
-
-	return piece;
-}
-
-void mtt::Storage::loadPiece(File& file, CachedPiece& piece)
-{
-	size_t fileDataPos = (piece.index == file.startPieceIndex) ? 0 : pieceSize - file.startPiecePos;
-	if (piece.index > file.startPieceIndex + 1)
-		fileDataPos += (piece.index - file.startPieceIndex - 1)*(size_t)pieceSize;
-
-	uint32_t bufferDataPos = (piece.index == file.startPieceIndex) ? file.startPiecePos : 0;
-
-	auto dataSize = (uint32_t)std::min((uint64_t)pieceSize, file.size);
-	if (file.startPieceIndex == piece.index)
-		dataSize = std::min(pieceSize - file.startPiecePos, dataSize);
-	else if (file.endPieceIndex == piece.index)
-		dataSize = std::min(file.endPiecePos, dataSize);
 
 	if (dataSize > 0)
 	{
 		auto path = getFullpath(file);
 		std::ifstream fileOut(path, std::ios_base::binary | std::ios_base::in);
 
+		if (!fileOut)
+			return Status::E_FileReadError;
+
 		fileOut.seekg(fileDataPos);
-		fileOut.read((char*)piece.data.data() + bufferDataPos, dataSize);
+		fileOut.read((char*)buffer.data() + blockDataPos, dataSize);
 	}
+
+	return Status::Success;
 }
 
-mtt::Status mtt::Storage::preallocateSelection(DownloadSelection& selection)
+mtt::Status mtt::Storage::preallocateSelection(const DownloadSelection& selection)
 {
 	{
 		std::lock_guard<std::mutex> guard(storageMutex);
@@ -201,20 +200,26 @@ mtt::Status mtt::Storage::preallocateSelection(DownloadSelection& selection)
 		}
 	}
 
-	{
-		std::lock_guard<std::mutex> guard(cacheMutex);
-
-		cachedPieces.reset();
-	}
-
 	return Status::Success;
 }
 
-mtt::Status mtt::Storage::flush()
+std::vector<uint64_t> mtt::Storage::getAllocatedSize()
 {
-	std::lock_guard<std::mutex> guard(storageMutex);
+	std::vector<uint64_t> sizes;
+	sizes.reserve(files.size());
 
-	return flushAllFiles();
+	for (auto& f : files)
+	{
+		auto path = getFullpath(f);
+		std::error_code ec;
+
+		if (std::filesystem::exists(path, ec))
+			sizes.push_back(std::filesystem::file_size(path, ec));
+		else
+			sizes.push_back(0);
+	}
+
+	return std::move(sizes);
 }
 
 mtt::Status mtt::Storage::deleteAll()
@@ -254,32 +259,8 @@ int64_t mtt::Storage::getLastModifiedTime()
 	return time;
 }
 
-mtt::Status mtt::Storage::flushAllFiles()
+mtt::Status mtt::Storage::storePiece(const File& file, const DownloadedPiece& piece)
 {
-	for (auto& f : files)
-	{
-		auto s = flush(f);
-		if (s != Status::Success)
-			return s;
-	}
-
-	unsavedPieces.reset();
-	return Status::Success;
-}
-
-mtt::Status mtt::Storage::flush(File& file)
-{
-	std::vector<DownloadedPiece*> filePieces;
-	for (uint32_t i = 0; i < unsavedPieces.count; i++)
-	{
-		auto& piece = unsavedPieces.data[i];
-		if (file.startPieceIndex <= piece.index && file.endPieceIndex >= piece.index)
-			filePieces.push_back(&piece);
-	}
-
-	if (filePieces.empty())
-		return Status::Success;
-
 	auto path = getFullpath(file);
 	createPath(path);
 
@@ -296,52 +277,41 @@ mtt::Status mtt::Storage::flush(File& file)
 	{
 		std::ofstream fileOut(path, std::ios_base::binary | std::ios_base::in);
 
-		if (fileOut)
-			for (auto& p : filePieces)
-			{
-				auto pieceDataPos = file.startPieceIndex == p->index ? file.startPiecePos : 0;
-				uint64_t fileDataPos = file.startPieceIndex == p->index ? 0 : (pieceSize - file.startPiecePos + (p->index - file.startPieceIndex - 1) * (uint64_t)pieceSize);
-				auto pieceDataSize = std::min(file.size, (uint64_t)p->data.size() - pieceDataPos);
+		if (!fileOut)
+			return Status::E_FileWriteError;
 
-				if (file.endPieceIndex == p->index)
-					pieceDataSize = std::min(pieceDataSize, (uint64_t)file.endPiecePos);
+		auto pieceDataPos = file.startPieceIndex == piece.index ? file.startPiecePos : 0;
+		uint64_t fileDataPos = file.startPieceIndex == piece.index ? 0 : (pieceSize - file.startPiecePos + (piece.index - file.startPieceIndex - 1) * (uint64_t)pieceSize);
+		auto pieceDataSize = std::min(file.size, (uint64_t)piece.data.size() - pieceDataPos);
 
-				fileOut.seekp(fileDataPos);
-				fileOut.write((const char*)p->data.data() + pieceDataPos, pieceDataSize);
-			}
+		if (file.endPieceIndex == piece.index)
+			pieceDataSize = std::min(pieceDataSize, (uint64_t)file.endPiecePos);
+
+		fileOut.seekp(fileDataPos);
+		fileOut.write((const char*)piece.data.data() + pieceDataPos, pieceDataSize);
 	}
 	else
 	{
 		std::ofstream tempFileOut(path, fileExists ? (std::ios_base::binary | std::ios_base::in) : std::ios_base::binary);
 
-		if (tempFileOut)
-			for (auto& p : filePieces)
-			{
-				if (p->index == file.startPieceIndex)
-				{
-					tempFileOut.write((const char*)p->data.data() + file.startPiecePos, std::min(file.size, (uint64_t)p->data.size() - file.startPiecePos));
-				}
-				else if (p->index == file.endPieceIndex)
-				{
-					tempFileOut.seekp(pieceSize - file.startPiecePos);
-					tempFileOut.write((const char*)p->data.data(), file.endPiecePos);
-				}
+		if (!tempFileOut)
+			return fileExists ? Status::E_FileWriteError : Status::E_InvalidPath;
 
-			}
-		else
-			return fileExists ? Status::E_FileReadError : Status::E_InvalidPath;
+		if (piece.index == file.startPieceIndex)
+		{
+			tempFileOut.write((const char*)piece.data.data() + file.startPiecePos, std::min(file.size, (uint64_t)piece.data.size() - file.startPiecePos));
+		}
+		else if (piece.index == file.endPieceIndex)
+		{
+			tempFileOut.seekp(pieceSize - file.startPiecePos);
+			tempFileOut.write((const char*)piece.data.data(), file.endPiecePos);
+		}
 	}
+
 	return Status::Success;
 }
 
-DataBuffer mtt::Storage::checkStoredPieces(std::vector<PieceInfo>& piecesInfo)
-{
-	PiecesCheck check;
-	checkStoredPieces(check, piecesInfo);
-	return check.pieces;
-}
-
-void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<PieceInfo>& piecesInfo)
+void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<PieceInfo>& piecesInfo, uint32_t workersCount, uint32_t workerIdx)
 {
 	checkState.pieces.resize(piecesInfo.size());
 	size_t currentPieceIdx = 0;
@@ -374,24 +344,38 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 					auto readSize = pieceSize - currentFile->startPiecePos;
 					auto readBufferPos = currentFile->startPiecePos;
 
-					fileIn.read((char*)readBuffer.data() + readBufferPos, readSize);
+					if (currentPieceIdx % workersCount == workerIdx)
+						fileIn.read((char*)readBuffer.data() + readBufferPos, readSize);
+					else
+						fileIn.seekg(readSize, std::ios_base::beg);
 
 					//all pieces in files with correct size
-					while (fileIn && !checkState.rejected && currentPieceIdx <= currentFile->endPieceIndex)
+					while (fileIn && (uint64_t)fileIn.tellg() <= currentFile->size && !checkState.rejected && currentPieceIdx <= currentFile->endPieceIndex)
 					{
-						_SHA1(readBuffer.data(), pieceSize, shaBuffer);
-						checkState.pieces[currentPieceIdx] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
-						fileIn.read((char*)readBuffer.data(), pieceSize);
-
+						if (currentPieceIdx % workersCount == workerIdx)
+						{
+							_SHA1(readBuffer.data(), pieceSize, shaBuffer);
+							checkState.pieces[currentPieceIdx] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
+						}
+						
 						checkState.piecesChecked = (uint32_t)++currentPieceIdx;
+
+						if (currentPieceIdx % workersCount == workerIdx)
+							fileIn.read((char*)readBuffer.data(), pieceSize);
+						else
+							fileIn.seekg(pieceSize, std::ios_base::cur);
 					}
 
 					//end of last file
 					if (currentPieceIdx == currentFile->endPieceIndex && currentFile == lastFile)
 					{
-						_SHA1(readBuffer.data(), currentFile->endPiecePos, shaBuffer);
-						checkState.pieces[currentPieceIdx] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
-						++currentPieceIdx;
+						if (currentPieceIdx % workersCount == workerIdx)
+						{
+							_SHA1(readBuffer.data(), currentFile->endPiecePos, shaBuffer);
+							checkState.pieces[currentPieceIdx] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
+						}
+
+						currentPieceIdx++;
 					}
 				}
 				else
@@ -404,14 +388,20 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 					if (existingSize == tempFileSize || existingSize == startPieceSize)
 					{
 						//start piece ending
-						fileIn.read((char*)readBuffer.data() + currentFile->startPiecePos, startPieceSize);
+						if (currentFile->startPieceIndex % workersCount == workerIdx)
+						{
+							fileIn.read((char*)readBuffer.data() + currentFile->startPiecePos, startPieceSize);
 
-						_SHA1(readBuffer.data(), pieceSize, shaBuffer);
-						checkState.pieces[currentFile->startPieceIndex] = memcmp(shaBuffer, piecesInfo[currentFile->startPieceIndex].hash, 20) == 0;
+							_SHA1(readBuffer.data(), pieceSize, shaBuffer);
+							checkState.pieces[currentFile->startPieceIndex] = memcmp(shaBuffer, piecesInfo[currentFile->startPieceIndex].hash, 20) == 0;
+						}
+						else
+							fileIn.seekg(startPieceSize, std::ios_base::cur);
 
 						//end piece starting
 						if(existingSize == tempFileSize)
-							fileIn.read((char*)readBuffer.data(), endPieceSize);
+							if (currentFile->endPieceIndex % workersCount == workerIdx)
+								fileIn.read((char*)readBuffer.data(), endPieceSize);
 					}
 				}
 			}
@@ -435,22 +425,7 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 	}
 }
 
-std::shared_ptr<mtt::PiecesCheck> mtt::Storage::checkStoredPiecesAsync(std::vector<PieceInfo>& piecesInfo, asio::io_service& io, std::function<void(std::shared_ptr<PiecesCheck>)> onFinish)
-{
-	auto request = std::make_shared<mtt::PiecesCheck>();
-	request->piecesCount = (uint32_t)piecesInfo.size();
-
-	io.post([piecesInfo, onFinish, request, this]()
-	{
-		checkStoredPieces(*request.get(), piecesInfo);
-
-		onFinish(request);
-	});
-
-	return request;
-}
-
-mtt::Status mtt::Storage::preallocate(File& file)
+mtt::Status mtt::Storage::preallocate(const File& file)
 {
 	auto fullpath = getFullpath(file);
 	createPath(fullpath);
@@ -464,6 +439,12 @@ mtt::Status mtt::Storage::preallocate(File& file)
 
 	if (existingSize != file.size)
 	{
+		if (existingSize > file.size)
+		{
+			std::filesystem::resize_file(fullpath, file.size, ec);
+			return ec ? Status::E_FileWriteError : Status::Success;
+		}
+
 		auto spaceInfo = std::filesystem::space(path, ec);
 		if (ec)
 			return Status::E_InvalidPath;
@@ -501,7 +482,7 @@ mtt::Status mtt::Storage::preallocate(File& file)
 	return Status::Success;
 }
 
-std::filesystem::path mtt::Storage::getFullpath(File& file)
+std::filesystem::path mtt::Storage::getFullpath(const File& file)
 {
 	std::string filePath;
 
@@ -528,7 +509,7 @@ void mtt::Storage::createPath(const std::filesystem::path& path)
 	}
 }
 
-mtt::Status mtt::Storage::validatePath(DownloadSelection& selection)
+mtt::Status mtt::Storage::validatePath(const DownloadSelection& selection)
 {
 	std::filesystem::path dlPath = std::filesystem::u8path(path);
 	std::error_code ec;
@@ -549,17 +530,22 @@ mtt::Status mtt::Storage::validatePath(DownloadSelection& selection)
 			return Status::E_InvalidPath;
 	}
 
-	uint64_t fullsize = 0;
+	uint64_t fullSize = 0;
 	for (auto& f : selection.files)
 	{
 		if (f.selected)
 		{
-			fullsize += f.info.size;
+			auto fullpath = getFullpath(f.info);
+			bool exists = std::filesystem::exists(fullpath, ec);
+			auto existingSize = exists ? std::filesystem::file_size(fullpath, ec) : 0;
+
+			if (existingSize < f.info.size)
+				fullSize += f.info.size - existingSize;
 		}
 	}
 
 	auto spaceInfo = std::filesystem::space(dlPath, ec);
-	if (spaceInfo.available < fullsize)
+	if (spaceInfo.available < fullSize)
 		return Status::E_NotEnoughSpace;
 
 	return Status::Success;

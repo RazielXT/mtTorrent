@@ -1,13 +1,12 @@
 #pragma once
 
-#include "Storage.h"
-#include "IPeerListener.h"
+#include "PeerCommunication.h"
 
 namespace mtt
 {
 	struct ActivePeer
 	{
-		PeerCommunication * comm;
+		PeerCommunication* comm;
 
 		uint32_t connectionTime = 0;
 		uint32_t lastActivityTime = 0;
@@ -29,30 +28,72 @@ namespace mtt
 		uint32_t invalidPieces = 0;
 	};
 
+	struct LockedPeers
+	{
+		LockedPeers(std::vector<ActivePeer>& dt, std::mutex& mtx) : data(dt), mutex(mtx) { mutex.lock(); }
+		~LockedPeers() { mutex.unlock(); }
+
+		std::vector<ActivePeer>& get() { return data; }
+
+		ActivePeer* get(PeerCommunication* p)
+		{
+			for (auto& peer : data)
+				if (peer.comm == p)
+					return &peer;
+
+			return nullptr;
+		}
+
+	private:
+		std::vector<ActivePeer>& data;
+		std::mutex& mutex;
+
+		LockedPeers& operator=(const LockedPeers& temp_obj) = delete;
+	};
+
+	class DownloaderClient
+	{
+	public:
+		virtual bool isWantedPiece(uint32_t idx) = 0;
+		virtual std::shared_ptr<mtt::DownloadedPiece> loadUnfinishedPiece(uint32_t idx) = 0;
+		virtual bool storeUnfinishedPiece(std::shared_ptr<mtt::DownloadedPiece> piece) = 0;
+		virtual void pieceFinished(std::shared_ptr<mtt::DownloadedPiece> piece) = 0;
+
+		virtual LockedPeers getPeers() = 0;
+	};
+
 	class Downloader
 	{
 	public:
 
-		Downloader(TorrentPtr);
+		Downloader(TorrentInfo& torrentInfo, DownloaderClient& client);
 
-		enum PieceStatus {Ok, Invalid, Finished};
-		PieceStatus pieceBlockReceived(PieceBlock& block);
-		void refreshPeerBlockRequests(std::vector<ActivePeer>& peers, PieceBlock& block, PieceStatus status, PeerCommunication* source);
-		void evaluateNextRequests(ActivePeer*);
-		void unchokePeer(ActivePeer*);
-
-		void reset();
-		void sortPriorityByAvailability(const std::vector<uint32_t>& availability);
-		void sortPriority(const std::vector<Priority>& priority);
-
-		std::vector<uint32_t> getCurrentRequests();
-		uint32_t getCurrentRequestsCount();
+		std::vector<mtt::DownloadedPieceState> stop();
 
 		size_t getUnfinishedPiecesDownloadSize();
+		std::vector<uint32_t> getCurrentRequests();
+
+		void peerAdded(ActivePeer*);
+		void messageReceived(PeerCommunication*, PeerMessage&);
+		void progressUpdated(PeerCommunication*, uint32_t idx);
+
+		void sortPriority(const std::vector<Priority>& priority, const std::vector<uint32_t>& availability);
+
+		void refreshSelection(std::vector<uint32_t> selectedPieces);
 
 	private:
 
-		std::vector<uint32_t> piecesPriority;
+		void unchokePeer(ActivePeer*);
+		void evaluateNextRequests(ActivePeer*);
+
+		void pieceBlockReceived(PieceBlock& block, PeerCommunication* source);
+
+		enum class PieceStatus { Ok, Invalid, Finished };
+		void refreshPeerBlockRequests(std::vector<ActivePeer>& peers, PieceBlock& block, PieceStatus status, PeerCommunication* source);
+
+		std::vector<uint32_t> selectedPieces;
+		std::vector<uint32_t> sortedPieces;
+
 		std::mutex priorityMutex;
 
 		struct RequestInfo
@@ -61,7 +102,7 @@ namespace mtt
 			std::shared_ptr<DownloadedPiece> piece;
 			uint16_t nextBlockRequestIdx = 0;
 			uint16_t blocksCount = 0;
-			uint32_t receivedSize = 0;
+			uint32_t lastActivityTime = 0;
 		};
 		std::vector<RequestInfo> requests;
 		std::mutex requestsMutex;
@@ -71,8 +112,7 @@ namespace mtt
 		uint32_t sendPieceRequests(ActivePeer*,ActivePeer::RequestedPiece*, RequestInfo*, uint32_t max);
 		bool hasWantedPieces(ActivePeer*);
 
-		TorrentPtr torrent;
-
-		void onFinish();
+		TorrentInfo& torrentInfo;
+		DownloaderClient& client;
 	};
 }

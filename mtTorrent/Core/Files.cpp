@@ -13,19 +13,6 @@ void mtt::Files::init(TorrentInfo& info)
 	progress.init(info.pieces.size());
 }
 
-mtt::Status mtt::Files::addPiece(DownloadedPiece& piece)
-{
-	auto s = storage.storePiece(piece);
-
-	if (s == Status::Success)
-	{
-		freshPieces.push_back(piece.index);
-		progress.addPiece(piece.index);
-	}
-
-	return s;
-}
-
 void mtt::Files::select(DownloadSelection& s)
 {
 	selection = s;

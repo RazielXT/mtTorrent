@@ -107,14 +107,14 @@ struct BandwidthManager
 
 	void close();
 
-	int queueSize() const;
+	uint32_t queueSize() const;
 	std::int64_t getQueuedBytes() const;
 
 	// returns the number of bytes to assign to the peer, or 0
 	// if the peer's 'assign_bandwidth' callback will be called later
-	int requestBandwidth(std::shared_ptr<BandwidthUser> peer, int blk, int priority, BandwidthChannel** chan, int num_channels);
+	uint32_t requestBandwidth(std::shared_ptr<BandwidthUser> peer, uint32_t blk, uint32_t priority, BandwidthChannel** chan, uint32_t num_channels);
 
-	void updateQuotas(int dt);
+	void updateQuotas(uint32_t dt);
 
 private:
 

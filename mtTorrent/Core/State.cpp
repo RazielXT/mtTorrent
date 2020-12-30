@@ -20,11 +20,25 @@ void mtt::TorrentState::save(const std::string& name)
 
 	BencodeWriter writer;
 
-	writer.startArray();
+	writer.startMap();
+
 	writer.addRawItem("12:downloadPath", downloadPath);
 	writer.addRawItemFromBuffer("6:pieces", (const char*)pieces.data(), pieces.size());
 	writer.addRawItem("13:lastStateTime", lastStateTime);
 	writer.addRawItem("7:started", started);
+	writer.addRawItem("8:uploaded", uploaded);
+
+	writer.startRawArrayItem("10:unfinished");
+	for (auto& p : unfinishedPieces)
+	{
+		writer.startMap();
+		writer.addRawItemFromBuffer("6:blocks", (const char*)p.blocksState.data(), p.blocksState.size());
+		writer.addRawItem("9:remaining", p.remainingBlocks);
+		writer.addRawItem("5:index", p.index);
+		writer.addRawItem("10:downloaded", p.downloadedSize);
+		writer.endMap();
+	}
+	writer.endArray();
 
 	writer.startRawArrayItem("9:selection");
 	for (auto& f : files)
@@ -35,7 +49,8 @@ void mtt::TorrentState::save(const std::string& name)
 		writer.endArray();
 	}
 	writer.endArray();
-	writer.endArray();
+
+	writer.endMap();
 
 	file << writer.data;
 }
@@ -60,10 +75,34 @@ bool mtt::TorrentState::load(const std::string& name)
 		downloadPath = root->getTxt("downloadPath");
 		lastStateTime = (int64_t)root->getBigInt("lastStateTime");
 		started = root->getInt("started");
+		uploaded = root->getBigInt("uploaded");
+
 		if (auto pItem = root->getTxtItem("pieces"))
 		{
 			if(pieces.size() == pItem->size)
 				pieces.assign(pItem->data, pItem->data + pItem->size);
+		}
+		if (auto uList = root->getListItem("unfinished"))
+		{
+			unfinishedPieces.clear();
+			for (auto& u : *uList)
+			{
+				if (u.isMap())
+				{
+					if (auto todoItem = u.getTxtItem("blocks"))
+					{
+						mtt::DownloadedPieceState state;
+
+						state.index = (uint32_t)u.getInt("index");
+						state.remainingBlocks = (uint32_t)u.getInt("remaining");
+						state.downloadedSize = (uint32_t)u.getInt("downloaded");
+						state.blocksState.assign(todoItem->data, todoItem->data + todoItem->size);
+
+						if (!state.blocksState.empty() && state.downloadedSize)
+							unfinishedPieces.emplace_back(std::move(state));
+					}
+				}
+			}
 		}
 		if (auto fList = root->getListItem("selection"))
 		{

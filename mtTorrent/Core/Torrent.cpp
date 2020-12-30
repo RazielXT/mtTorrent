@@ -367,7 +367,10 @@ void mtt::Torrent::stop(StopReason reason)
 
 std::shared_ptr<mtt::PiecesCheck> mtt::Torrent::checkFiles(std::function<void(std::shared_ptr<PiecesCheck>)> onFinish)
 {
-	auto checkFunc = [this, onFinish](std::shared_ptr<PiecesCheck> check)
+	auto request = std::make_shared<mtt::PiecesCheck>();
+	request->piecesCount = (uint32_t)infoFile.info.pieces.size();
+
+	auto localOnFinish = [this, onFinish, request]()
 	{
 		{
 			std::lock_guard<std::mutex> guard(checkStateMutex);
@@ -376,11 +379,12 @@ std::shared_ptr<mtt::PiecesCheck> mtt::Torrent::checkFiles(std::function<void(st
 
 		checking = false;
 
-		if (!check->rejected)
+		if (!request->rejected)
 		{
-			files.progress.fromList(check->pieces);
+			files.progress.fromList(request->pieces);
 			files.progress.select(files.selection);
 			lastStateTime = files.storage.getLastModifiedTime();
+			stateChanged = true;
 
 			if (state == ActiveState::Started)
 				start();
@@ -388,13 +392,30 @@ std::shared_ptr<mtt::PiecesCheck> mtt::Torrent::checkFiles(std::function<void(st
 				stop();
 		}
 
-		onFinish(check);
+		onFinish(request);
 	};
 
 	checking = true;
 	lastError = Status::Success;
+
+	const uint32_t WorkersCount = 4;
+	if (state == ActiveState::Stopped)
+		service.start(WorkersCount);
+
+	auto finished = std::make_shared<uint32_t>(0);
+
+	for (uint32_t i = 0; i < WorkersCount; i++)
+		service.io.post([WorkersCount, i, finished, localOnFinish, request, this]()
+			{
+				files.storage.checkStoredPieces(*request.get(), infoFile.info.pieces, WorkersCount, i);
+
+				if (++(*finished) == WorkersCount)
+					localOnFinish();
+			});
+
 	std::lock_guard<std::mutex> guard(checkStateMutex);
-	checkState = files.storage.checkStoredPiecesAsync(infoFile.info.pieces, service.io, checkFunc);
+	checkState = request;
+
 	return checkState;
 }
 
@@ -530,7 +551,7 @@ void mtt::Torrent::setFilesPriority(const std::vector<mtt::Priority>& priority)
 	}
 
 	if (fileTransfer)
-		fileTransfer->updatePiecesPriority();
+		fileTransfer->refreshSelection();
 
 	stateChanged = true;
 }

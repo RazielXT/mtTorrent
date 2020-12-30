@@ -13,7 +13,7 @@ bool ipToCountryLoaded = false;
 
 #define TRANSFER_LOG(x) WRITE_LOG("Transfer", x)
 
-mtt::FileTransfer::FileTransfer(TorrentPtr t) : downloader(t), torrent(t)
+mtt::FileTransfer::FileTransfer(TorrentPtr t) : downloader(t->infoFile.info, *this), torrent(t)
 {
 	uploader = std::make_shared<Uploader>(t);
 
@@ -27,8 +27,7 @@ mtt::FileTransfer::FileTransfer(TorrentPtr t) : downloader(t), torrent(t)
 void mtt::FileTransfer::start()
 {
 	piecesAvailability.resize(torrent->infoFile.info.pieces.size());
-	updatePiecesPriority();
-	downloader.reset();
+	refreshSelection();
 
 	torrent->peers->start([this](Status s, mtt::PeerSource)
 		{
@@ -60,23 +59,38 @@ void mtt::FileTransfer::stop()
 	{
 		std::lock_guard<std::mutex> guard(peersMutex);
 		activePeers.clear();
+		freshPieces.clear();
 	}
 
 	torrent->peers->stop();
-	downloader.reset();
-	torrent->files.storage.flush();
+	unFinishedPieces = downloader.stop();
 
-	if(refreshTimer)
+	if (refreshTimer)
 		refreshTimer->disable();
 }
 
-void mtt::FileTransfer::reevaluate()
+void mtt::FileTransfer::addUnfinishedPieces(std::vector<mtt::DownloadedPieceState>& pieces)
 {
-	TRANSFER_LOG("reevaluate");
+	unFinishedPieces = std::move(pieces);
+}
 
-	std::lock_guard<std::mutex> guard(peersMutex);
-	for(auto& p : activePeers)
-		downloader.evaluateNextRequests(&p);
+void mtt::FileTransfer::refreshSelection()
+{
+	piecesPriority.resize(torrent->infoFile.info.pieces.size(), Priority(0));
+	std::vector<uint32_t> selected;
+
+	for (auto& f : torrent->files.selection.files)
+	{
+		for (size_t i = f.info.startPieceIndex; i <= f.info.endPieceIndex; i++)
+		{
+			piecesPriority[i] = std::max(piecesPriority[i], f.priority);
+
+			if (f.selected && (selected.empty() || i != selected.back()))
+				selected.push_back((uint32_t)i);
+		}
+	}
+
+	downloader.refreshSelection(std::move(selected));
 }
 
 void mtt::FileTransfer::handshakeFinished(PeerCommunication* p)
@@ -98,23 +112,7 @@ void mtt::FileTransfer::messageReceived(PeerCommunication* p, PeerMessage& msg)
 {
 	TRANSFER_LOG("msg " << msg.id << " " << p->getAddressName());
 
-	if (msg.id == Piece)
-	{
-		auto status = downloader.pieceBlockReceived(msg.piece);
-
-		std::lock_guard<std::mutex> guard(peersMutex);
-		downloader.refreshPeerBlockRequests(activePeers, msg.piece, status, p);
-	}
-	else if (msg.id == Unchoke)
-	{
-		std::lock_guard<std::mutex> guard(peersMutex);
-		if (auto peer = getActivePeer(p))
-		{
-			downloader.unchokePeer(peer);
-			peer->lastActivityTime = (uint32_t)time(0);
-		}
-	}
-	else if (msg.id == Interested)
+	if (msg.id == Interested)
 	{
 		uploader->isInterested(p);
 	}
@@ -122,6 +120,8 @@ void mtt::FileTransfer::messageReceived(PeerCommunication* p, PeerMessage& msg)
 	{
 		uploader->pieceRequest(p, msg.request);
 	}
+	else
+		downloader.messageReceived(p, msg);
 }
 
 void mtt::FileTransfer::extHandshakeFinished(PeerCommunication*)
@@ -138,23 +138,25 @@ void mtt::FileTransfer::pexReceived(PeerCommunication*, ext::PeerExchange::Messa
 
 void mtt::FileTransfer::progressUpdated(PeerCommunication* p, uint32_t idx)
 {
-	if (idx != -1)
+	if (idx < piecesAvailability.size())
 		piecesAvailability[idx]++;
 	else
 	{
 		auto& peerPieces = p->info.pieces.pieces;
 
-		for(size_t i = 0; i < piecesAvailability.size(); i++)
+		for (size_t i = 0; i < piecesAvailability.size(); i++)
 		{
 			piecesAvailability[i] += peerPieces[i] ? 1 : 0;
 		}
 	}
 
-	if(!torrent->selectionFinished())
-		evaluateNextRequests(p);
+	if (!torrent->selectionFinished())
+	{
+		downloader.progressUpdated(p, idx);
+	}
 }
 
-uint64_t mtt::FileTransfer::getUploadSum()
+uint64_t& mtt::FileTransfer::getUploadSum()
 {
 	return uploader->uploaded;
 }
@@ -181,9 +183,19 @@ uint32_t mtt::FileTransfer::getUploadSpeed()
 	return sum;
 }
 
+std::vector<mtt::DownloadedPieceState> mtt::FileTransfer::getUnfinishedPiecesState()
+{
+	return unFinishedPieces;
+}
+
 size_t mtt::FileTransfer::getUnfinishedPiecesDownloadSize()
 {
-	return downloader.getUnfinishedPiecesDownloadSize();
+	size_t sz = downloader.getUnfinishedPiecesDownloadSize();
+
+	for (const auto& u : unFinishedPieces)
+		sz += u.downloadedSize;
+
+	return sz;
 }
 
 std::vector<mtt::ActivePeerInfo> mtt::FileTransfer::getPeersInfo()
@@ -225,24 +237,6 @@ std::vector<uint32_t> mtt::FileTransfer::getCurrentRequests()
 	return downloader.getCurrentRequests();
 }
 
-uint32_t mtt::FileTransfer::getCurrentRequestsCount()
-{
-	return downloader.getCurrentRequestsCount();
-}
-
-void mtt::FileTransfer::updatePiecesPriority()
-{
-	piecesPriority.resize(torrent->infoFile.info.pieces.size(), Priority(0));
-
-	for (auto& f : torrent->files.selection.files)
-	{
-		for (size_t i = f.info.startPieceIndex; i < f.info.endPieceIndex; i++)
-		{
-			piecesPriority[i] = std::max(piecesPriority[i], f.priority);
-		}
-	}
-}
-
 mtt::ActivePeer* mtt::FileTransfer::getActivePeer(PeerCommunication* p)
 {
 	for (auto& peer : activePeers)
@@ -255,32 +249,16 @@ mtt::ActivePeer* mtt::FileTransfer::getActivePeer(PeerCommunication* p)
 void mtt::FileTransfer::addPeer(PeerCommunication* p)
 {
 	std::lock_guard<std::mutex> guard(peersMutex);
-	bool found = false;
-	for (auto& peer : activePeers)
-	{
-		if (peer.comm == p)
-		{
-			found = true;
-			break;
-		}
-	}
 
-	if (!found)
+	if (std::find_if(activePeers.begin(), activePeers.end(), [p](const mtt::ActivePeer& peer) { return peer.comm == p; }) == activePeers.end())
 	{
 		activePeers.push_back({ p,{} });
 		activePeers.back().connectionTime = activePeers.back().lastActivityTime = (uint32_t)time(0);
-		downloader.evaluateNextRequests(&activePeers.back());
+		downloader.peerAdded(&activePeers.back());
 	}
 }
 
-void mtt::FileTransfer::evaluateNextRequests(PeerCommunication* p)
-{
-	std::lock_guard<std::mutex> guard(peersMutex);
-	if (auto peer = getActivePeer(p))
-		downloader.evaluateNextRequests(peer);
-}
-
-void mtt::FileTransfer::removePeer(PeerCommunication * p)
+void mtt::FileTransfer::removePeer(PeerCommunication* p)
 {
 	{
 		std::lock_guard<std::mutex> guard(peersMutex);
@@ -304,6 +282,66 @@ void mtt::FileTransfer::removePeers(std::vector<uint32_t> sortedIdx)
 	{
 		TRANSFER_LOG("remove " << (activePeers.begin() + *it)->comm->getAddressName());
 		activePeers.erase(activePeers.begin() + *it);
+	}
+}
+
+bool mtt::FileTransfer::isWantedPiece(uint32_t idx)
+{
+	return torrent->files.progress.wantedPiece(idx);
+}
+
+bool mtt::FileTransfer::storeUnfinishedPiece(std::shared_ptr<mtt::DownloadedPiece> piece)
+{
+	return torrent->files.storage.storePiece(*piece) == Status::Success;
+}
+
+mtt::LockedPeers mtt::FileTransfer::getPeers()
+{
+	return std::move(mtt::LockedPeers(activePeers, peersMutex));
+}
+
+std::shared_ptr<mtt::DownloadedPiece> mtt::FileTransfer::loadUnfinishedPiece(uint32_t idx)
+{
+	for (auto& u : unFinishedPieces)
+	{
+		if (u.index == idx && u.downloadedSize)
+		{
+			auto p = std::make_shared< mtt::DownloadedPiece>();
+			(mtt::DownloadedPieceState&)*p = std::move(u);
+			u.downloadedSize = 0;
+
+			mtt::PieceBlockInfo info;
+			info.begin = 0;
+			info.index = idx;
+			info.length = torrent->infoFile.info.getPieceSize(idx);
+
+			if (torrent->files.storage.loadPieceBlock(info, p->data) == Status::Success)
+				return p;
+		}
+	}
+	return nullptr;
+}
+
+void mtt::FileTransfer::pieceFinished(std::shared_ptr<mtt::DownloadedPiece> piece)
+{
+	torrent->files.progress.addPiece(piece->index);
+
+	auto torrentPtr = torrent;
+	torrent->service.io.post([torrentPtr, piece]()
+		{
+			auto status = torrentPtr->files.storage.storePiece(*piece);
+
+			if (status != Status::Success)
+			{
+				torrentPtr->files.progress.removePiece(piece->index);
+				torrentPtr->lastError = status;
+				torrentPtr->stop(Torrent::StopReason::Internal);
+			}
+		});
+
+	{
+		std::lock_guard<std::mutex> guard(peersMutex);
+		freshPieces.push_back(piece->index);
 	}
 }
 
@@ -358,7 +396,7 @@ void mtt::FileTransfer::evalCurrentPeers()
 		}
 
 		const uint32_t minPeersTimeChance = 10;
-		
+
 		auto minTimeToEval = currentTime - minPeersTimeChance;
 
 		const uint32_t minPeersPiecesTimeChance = 20;
@@ -414,7 +452,7 @@ void mtt::FileTransfer::evalCurrentPeers()
 
 		if (!currentUploads.empty())
 		{
-			std::sort(currentUploads.begin(), currentUploads.end(), [&](const auto & l, const auto & r) { return activePeers[l].uploadSpeed > activePeers[r].uploadSpeed; });
+			std::sort(currentUploads.begin(), currentUploads.end(), [&](const auto& l, const auto& r) { return activePeers[l].uploadSpeed > activePeers[r].uploadSpeed; });
 			currentUploads.resize(std::min((uint32_t)currentUploads.size(), maxUploads));
 
 			for (auto idx : currentUploads)
@@ -437,14 +475,13 @@ void mtt::FileTransfer::evalCurrentPeers()
 
 void mtt::FileTransfer::updateMeasures()
 {
-	auto& freshPieces = torrent->files.freshPieces;
 	std::vector<std::pair<PeerCommunication*, std::pair<uint64_t, uint64_t>>> currentMeasure;
 
 	{
 		std::lock_guard<std::mutex> guard(peersMutex);
 
 		auto finishedUploadRequests = uploader->popHandledRequests();
-		for(auto& r : finishedUploadRequests)
+		for (const auto& r : finishedUploadRequests)
 		{
 			if (auto peer = getActivePeer(r.first))
 				peer->uploaded += r.second;
@@ -470,18 +507,19 @@ void mtt::FileTransfer::updateMeasures()
 				}
 			}
 
-			for (auto& piece : freshPieces)
-				if (peer.comm->isEstablished())
+			if (peer.comm->isEstablished())
+				for (auto& piece : freshPieces)
 					peer.comm->sendHave(piece);
 		}
+
+		freshPieces.clear();
 	}
-	freshPieces.clear();
+
 	lastSpeedMeasure = currentMeasure;
 
 	if (!torrent->selectionFinished())
 	{
-		downloader.sortPriorityByAvailability(piecesAvailability);
-		downloader.sortPriority(piecesPriority);
+		downloader.sortPriority(piecesPriority, piecesAvailability);
 	}
 }
 
@@ -510,7 +548,7 @@ void mtt::FileTransfer::saveLogEvents()
 		{
 			auto& peerLog = logEvalPeers[i];
 
-			file << peerLog.addr.toString() << " Action:" << (int)peerLog.action << " dl:" << peerLog.dl/1024.f << " up:" << peerLog.up/ 1024.f << " dead:" << peerLog.activityTime << "\n";
+			file << peerLog.addr.toString() << " Action:" << (int)peerLog.action << " dl:" << peerLog.dl / 1024.f << " up:" << peerLog.up / 1024.f << " dead:" << peerLog.activityTime << "\n";
 		}
 
 		logIndex += eval.count;

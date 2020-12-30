@@ -13,12 +13,12 @@ namespace mtt
 		Uploader(TorrentPtr);
 
 		void isInterested(PeerCommunication* p);
-		void pieceRequest(PeerCommunication* p, PieceBlockInfo& info);
+		void pieceRequest(PeerCommunication* p, const PieceBlockInfo& info);
 		void refreshRequest();
 
 		uint64_t uploaded = 0;
 
-		std::vector<std::pair<PeerCommunication*, uint32_t>> popHandledRequests();
+		std::map<PeerCommunication*, uint32_t> popHandledRequests();
 
 	private:
 
@@ -40,7 +40,7 @@ namespace mtt
 		uint32_t availableBytes = 0;
 		BandwidthChannel* globalBw;
 
-		std::vector<std::pair<PeerCommunication*, uint32_t>> handledRequests;
+		std::map<PeerCommunication*, uint32_t> handledRequests;
 
 		TorrentPtr torrent;
 	};
