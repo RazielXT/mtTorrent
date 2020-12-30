@@ -5,7 +5,7 @@ Addr::Addr()
 	memset(addrBytes, 0, 16);
 }
 
-Addr::Addr(DataBuffer ip, uint16_t port)
+Addr::Addr(const DataBuffer& ip, uint16_t port)
 {
 	set(ip, port);
 }
@@ -15,12 +15,12 @@ Addr::Addr(uint32_t ip, uint16_t port)
 	set(ip, port);
 }
 
-Addr::Addr(uint8_t* ip, uint16_t port, bool isIpv6)
+Addr::Addr(const uint8_t* ip, uint16_t port, bool isIpv6)
 {
 	set(ip, port, isIpv6);
 }
 
-Addr::Addr(uint8_t* buffer, bool v6)
+Addr::Addr(const uint8_t* buffer, bool v6)
 {
 	parse(buffer, v6);
 }
@@ -44,7 +44,7 @@ Addr::Addr(const char* str)
 	set(a, (uint16_t)strtoul(str + portStart + 1, 0, 10));
 }
 
-void Addr::set(uint8_t* ip, uint16_t p, bool isIpv6)
+void Addr::set(const uint8_t* ip, uint16_t p, bool isIpv6)
 {
 	memcpy(addrBytes, ip, isIpv6 ? 16 : 4);
 	port = p;
@@ -58,7 +58,7 @@ void Addr::set(uint32_t ip, uint16_t p)
 	ipv6 = false;
 }
 
-void Addr::set(DataBuffer ip, uint16_t p)
+void Addr::set(const DataBuffer& ip, uint16_t p)
 {
 	memcpy(addrBytes, ip.data(), ip.size());
 	port = p;
@@ -82,7 +82,7 @@ void Addr::set(const asio::ip::address& addr, uint16_t port_num)
 	}
 }
 
-int Addr::parse(uint8_t* buffer, bool v6)
+int Addr::parse(const uint8_t* buffer, bool v6)
 {
 	ipv6 = v6;
 	int addrSize = v6 ? 16 : 4;
@@ -97,6 +97,13 @@ asio::ip::udp::endpoint Addr::toUdpEndpoint() const
 	return ipv6 ?
 		udp::endpoint(asio::ip::address_v6(*reinterpret_cast<const asio::ip::address_v6::bytes_type*>(addrBytes)), port) :
 		udp::endpoint(asio::ip::address_v4(*reinterpret_cast<const asio::ip::address_v4::bytes_type*>(addrBytes)), port);
+}
+
+asio::ip::tcp::endpoint Addr::toTcpEndpoint() const
+{
+	return ipv6 ?
+		tcp::endpoint(asio::ip::address_v6(*reinterpret_cast<const asio::ip::address_v6::bytes_type*>(addrBytes)), port) :
+		tcp::endpoint(asio::ip::address_v4(*reinterpret_cast<const asio::ip::address_v4::bytes_type*>(addrBytes)), port);
 }
 
 std::string Addr::toString() const

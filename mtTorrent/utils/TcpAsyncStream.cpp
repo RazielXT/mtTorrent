@@ -18,17 +18,14 @@ void TcpAsyncStream::connect(const uint8_t* ip, uint16_t port, bool ipv6)
 	if (state != Disconnected)
 		return;
 
-	info.endpoint = ipv6 ? tcp::endpoint(asio::ip::address_v6(*reinterpret_cast<const asio::ip::address_v6::bytes_type*>(ip)), port) :
-		tcp::endpoint(asio::ip::address_v4(*reinterpret_cast<const asio::ip::address_v4::bytes_type*>(ip)), port);
-	info.endpointInitialized = true;
-
-	info.host = info.endpoint.address().to_string();
-	info.port = port;
+	info.address.set(ip, port, ipv6); 
+	info.addressResolved = true;
+	info.host = info.address.toString();
 
 	timeoutTimer.expires_from_now(std::chrono::seconds(10));
 	timeoutTimer.async_wait(std::bind(&TcpAsyncStream::checkTimeout, shared_from_this(), std::placeholders::_1));
 
-	connectEndpoint();
+	connectByAddress();
 }
 
 void TcpAsyncStream::connect(const std::string& ip, uint16_t port)
@@ -36,19 +33,17 @@ void TcpAsyncStream::connect(const std::string& ip, uint16_t port)
 	if (state != Disconnected)
 		return;
 
-	info.endpoint = tcp::endpoint(asio::ip::address::from_string(ip), port);
-	info.endpointInitialized = true;
-
+	info.address.set(asio::ip::address::from_string(ip), port);
+	info.addressResolved = true;
 	info.host = ip;
-	info.port = port;
 
-	connectEndpoint();
+	connectByAddress();
 }
 
 void TcpAsyncStream::init(const std::string& hostname, const std::string& port)
 {
 	info.host = hostname;
-	info.port = (uint16_t)strtoul(port.data(), NULL, 10);
+	info.address.port = (uint16_t)strtoul(port.data(), NULL, 10);
 }
 
 void TcpAsyncStream::close(bool immediate)
@@ -71,19 +66,14 @@ void TcpAsyncStream::write(const DataBuffer& data)
 	io_service.post(std::bind(&TcpAsyncStream::do_write, shared_from_this(), data));
 }
 
-uint16_t TcpAsyncStream::getPort()
-{
-	return info.port;
-}
-
 std::string& TcpAsyncStream::getHostname()
 {
 	return info.host;
 }
 
-tcp::endpoint& TcpAsyncStream::getEndpoint()
+Addr& TcpAsyncStream::getAddress()
 {
-	return info.endpoint;
+	return info.address;
 }
 
 uint64_t TcpAsyncStream::getReceivedDataCount()
@@ -119,28 +109,29 @@ void TcpAsyncStream::connectByHostname()
 
 	state = Connecting;
 
-	tcp::resolver::query query(info.host, std::to_string(info.port));
+	tcp::resolver::query query(info.host, std::to_string(info.address.port));
 
 	auto resolver = std::make_shared<tcp::resolver>(io_service);
 	resolver->async_resolve(query, std::bind(&TcpAsyncStream::handle_resolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2, resolver));
 }
 
-void TcpAsyncStream::connectEndpoint()
+void TcpAsyncStream::connectByAddress()
 {
 	TCP_LOG("connecting");
 
 	state = Connecting;
 
-	socket.async_connect(info.endpoint, std::bind(&TcpAsyncStream::handle_connect, shared_from_this(), std::placeholders::_1));
+	socket.async_connect(info.address.toTcpEndpoint(), std::bind(&TcpAsyncStream::handle_connect, shared_from_this(), std::placeholders::_1));
 }
 
 void TcpAsyncStream::setAsConnected()
 {
 	state = Connected;
-	info.endpoint = socket.remote_endpoint();
-	info.endpointInitialized = true;
-	info.host = info.endpoint.address().to_string();
-	info.port = info.endpoint.port();
+
+	auto endpoint = socket.remote_endpoint();
+	info.address.set(endpoint.address(), endpoint.port());
+	info.addressResolved = true;
+	info.host = endpoint.address().to_string();
 
 	TCP_LOG("connected");
 
@@ -254,8 +245,6 @@ void TcpAsyncStream::handle_resolver_connect(const std::error_code& error, tcp::
 		if (!error)
 		{
 			TCP_LOG("resolved connected");
-			info.endpoint = socket.remote_endpoint();
-			info.endpointInitialized = true;
 		}
 
 		handle_connect(error);
@@ -288,9 +277,9 @@ void TcpAsyncStream::do_write(DataBuffer data)
 	}
 	else if (state != Connecting)
 	{
-		if (info.endpointInitialized)
+		if (info.addressResolved)
 		{
-			connectEndpoint();
+			connectByAddress();
 		}
 		else if (!info.host.empty())
 		{

@@ -29,10 +29,10 @@ private:
 struct Addr
 {
 	Addr();
-	Addr(uint8_t* buffer, bool v6);
-	Addr(uint8_t* ip, uint16_t port, bool isIpv6);
+	Addr(const uint8_t* buffer, bool v6);
+	Addr(const uint8_t* ip, uint16_t port, bool isIpv6);
 	Addr(uint32_t ip, uint16_t port);
-	Addr(DataBuffer ip, uint16_t port);
+	Addr(const DataBuffer& ip, uint16_t port);
 	Addr(const asio::ip::address& addr, uint16_t port_num);
 	Addr(const char* str);
 
@@ -40,13 +40,14 @@ struct Addr
 	uint16_t port = 0;
 	bool ipv6;
 
-	void set(uint8_t* ip, uint16_t port, bool isIpv6);
-	void set(DataBuffer ip, uint16_t port);
+	void set(const uint8_t* ip, uint16_t port, bool isIpv6);
+	void set(const DataBuffer& ip, uint16_t port);
 	void set(uint32_t ip, uint16_t port);
 	void set(const asio::ip::address& addr, uint16_t port_num);
 
-	int parse(uint8_t* buffer, bool v6);
+	int parse(const uint8_t* buffer, bool v6);
 	asio::ip::udp::endpoint toUdpEndpoint() const;
+	asio::ip::tcp::endpoint toTcpEndpoint() const;
 	std::string toString() const;
 	uint32_t toUint();
 

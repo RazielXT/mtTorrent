@@ -33,9 +33,8 @@ public:
 	std::function<size_t(const BufferView&)> onReceiveCallback;
 	std::function<void(int)> onCloseCallback;
 
-	uint16_t getPort();
 	std::string& getHostname();
-	tcp::endpoint& getEndpoint();
+	Addr& getAddress();
 
 	uint64_t getReceivedDataCount();
 
@@ -46,7 +45,7 @@ public:
 protected:
 
 	void connectByHostname();
-	void connectEndpoint();
+	void connectByAddress();
 	void setAsConnected();
 
 	void postFail(const char* place, const std::error_code& error);
@@ -90,9 +89,8 @@ protected:
 	struct  
 	{
 		std::string host;
-		uint16_t port;
-		tcp::endpoint endpoint;
-		bool endpointInitialized = false;
+		Addr address;
+		bool addressResolved = false;
 	}
 	info;
 
