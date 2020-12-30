@@ -32,7 +32,7 @@ namespace mtt
 
 			struct Dht
 			{
-				bool enable = false;
+				bool enabled = false;
 			}
 			dht;
 

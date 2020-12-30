@@ -61,7 +61,7 @@ namespace mtt
 
 		void setValues(const External::Dht& val)
 		{
-			bool changed = val.enable != external.dht.enable;
+			bool changed = val.enabled != external.dht.enabled;
 
 			if (changed)
 			{
@@ -183,7 +183,7 @@ namespace mtt
 					if (auto dhtSettings = externalSettings->getDictItem("dht"))
 					{
 						if (auto i = dhtSettings->getIntItem("enabled"))
-							external.dht.enable = (bool)i->getBigInt();
+							external.dht.enabled = (bool)i->getBigInt();
 					}
 					if (auto tSettings = externalSettings->getDictItem("transfer"))
 					{
@@ -230,7 +230,7 @@ namespace mtt
 					writer.endMap();
 
 					writer.startMap("dht");
-					writer.addItem("enabled", (uint32_t)external.dht.enable);
+					writer.addItem("enabled", (uint32_t)external.dht.enabled);
 					writer.endMap();
 
 					writer.startMap("transfer");

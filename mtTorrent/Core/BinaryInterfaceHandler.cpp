@@ -271,7 +271,7 @@ extern "C"
 		{
 			auto resp = (mtBI::SettingsInfo*) output;
 			auto& settings = mtt::config::getExternal();
-			resp->dhtEnabled = settings.dht.enable;
+			resp->dhtEnabled = settings.dht.enabled;
 			resp->directory = settings.files.defaultDirectory;
 			resp->maxConnections = settings.connection.maxTorrentConnections;
 			resp->tcpPort = settings.connection.tcpPort;
@@ -285,7 +285,7 @@ extern "C"
 			auto info = (mtBI::SettingsInfo*) request;
 			auto settings = mtt::config::getExternal();
 
-			settings.dht.enable = info->dhtEnabled;
+			settings.dht.enabled = info->dhtEnabled;
 			settings.files.defaultDirectory = info->directory.data;
 			settings.connection.maxTorrentConnections = info->maxConnections;
 			settings.connection.tcpPort = info->tcpPort;

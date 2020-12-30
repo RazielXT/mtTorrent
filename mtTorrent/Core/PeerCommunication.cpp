@@ -21,7 +21,7 @@ namespace mtt
 			uint8_t reserved_byte[8] = { 0 };
 			reserved_byte[5] |= 0x10;	//Extension Protocol
 
-			if (mtt::config::getExternal().dht.enable)
+			if (mtt::config::getExternal().dht.enabled)
 				reserved_byte[7] |= 0x80;
 
 			packet.add(reserved_byte, 8);
@@ -469,7 +469,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 				if (info.supportsExtensions())
 					ext.sendHandshake();
 
-				if (info.supportsDht() && mtt::config::getExternal().dht.enable)
+				if (info.supportsDht() && mtt::config::getExternal().dht.enabled)
 					sendPort(mtt::config::getExternal().connection.udpPort);
 
 				listener.handshakeFinished(this);

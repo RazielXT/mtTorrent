@@ -68,7 +68,7 @@ void mtt::Core::init()
 
 	dht = std::make_shared<dht::Communication>();
 
-	if(mtt::config::getExternal().dht.enable)
+	if(mtt::config::getExternal().dht.enabled)
 		dht->start();
 
 	bandwidth = std::make_unique<GlobalBandwidth>();
@@ -98,7 +98,7 @@ void mtt::Core::init()
 
 	config::registerOnChangeCallback(config::ValueType::Dht, [this]()
 		{
-			if (mtt::config::getExternal().dht.enable)
+			if (mtt::config::getExternal().dht.enabled)
 				dht->start();
 			else
 				dht->stop();

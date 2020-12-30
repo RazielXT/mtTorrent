@@ -258,7 +258,7 @@ std::vector<mtt::TrackerInfo> mtt::Peers::getSourcesInfo()
 
 	out.push_back(pexInfo);
 
-	if(mtt::config::getExternal().dht.enable)
+	if(mtt::config::getExternal().dht.enabled)
 		out.push_back(dht.info);
 
 	out.push_back(remoteInfo);
@@ -487,7 +487,7 @@ void mtt::Peers::DhtSource::stop()
 
 void mtt::Peers::DhtSource::findPeers()
 {
-	if (mtt::config::getExternal().dht.enable && info.state != TrackerState::Announcing)
+	if (mtt::config::getExternal().dht.enabled && info.state != TrackerState::Announcing)
 	{
 		info.state = TrackerState::Announcing;
 		dht::Communication::get().findPeers(torrent->hash(), this);
@@ -544,7 +544,7 @@ void mtt::Peers::PeersListener::messageReceived(mtt::PeerCommunication* p, mtt::
 {
 	if (m.id == Port && m.port)
 	{
-		if (mtt::config::getExternal().dht.enable)
+		if (mtt::config::getExternal().dht.enabled)
 		{
 			Addr addr = p->getAddress();
 			addr.port = m.port;
