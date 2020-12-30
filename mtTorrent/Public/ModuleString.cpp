@@ -17,8 +17,14 @@ void mtt::string::assign(const char* str, size_t l)
 		allocator->deallocate(data);
 
 	length = l;
-	data = (char*)allocator->allocate(length + 1);
-	memcpy(data, str, length + 1);
+
+	if (str)
+	{
+		data = (char*)allocator->allocate(length + 1);
+		memcpy(data, str, length + 1);
+	}
+	else
+		data = nullptr;
 }
 
 void mtt::string::append(const string& str)
@@ -46,6 +52,13 @@ mtt::string & mtt::string::operator=(const char* str)
 mtt::string& mtt::string::operator=(const std::string & str)
 {
 	assign(str.data(), str.length());
+
+	return *this;
+}
+
+mtt::string& mtt::string::operator=(const string& str)
+{
+	assign(str.data, str.length);
 
 	return *this;
 }

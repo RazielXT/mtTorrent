@@ -15,6 +15,7 @@ namespace mtt
 
 		string& operator=(const std::string& str);
 		string& operator=(const char* str);
+		string& operator=(const string& str);
 
 		void assign(const char* str, size_t length);
 		void append(const string& str);

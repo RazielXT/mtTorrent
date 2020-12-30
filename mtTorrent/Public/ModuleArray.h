@@ -71,7 +71,7 @@ namespace mtt
 			return buffer[idx];
 		}
 
-		void add(T& item)
+		void add(const T& item)
 		{
 			reserve(currentSize + 1);
 			buffer[currentSize] = item;
@@ -146,6 +146,18 @@ namespace mtt
 			rhs.buffer = nullptr;
 			rhs.currentSize = 0;
 			rhs.allocatedSize = 0;
+
+			return *this;
+		}
+
+		array& operator=(const array& rhs) noexcept {
+
+			resize(rhs.currentSize);
+
+			for (size_t i = 0; i < currentSize; i++)
+			{
+				buffer[i] = rhs.buffer[i];
+			}
 
 			return *this;
 		}
