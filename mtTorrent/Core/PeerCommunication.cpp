@@ -260,11 +260,9 @@ void mtt::PeerCommunication::stop()
 	}
 }
 
-Addr mtt::PeerCommunication::getAddress()
+const Addr& mtt::PeerCommunication::getAddress()
 {
-	Addr out;
-	out.set(stream->getEndpoint().address(), stream->getEndpoint().port());
-	return out;
+	return stream->getAddress();
 }
 
 std::string mtt::PeerCommunication::getAddressName()

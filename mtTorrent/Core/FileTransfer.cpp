@@ -210,11 +210,13 @@ std::vector<mtt::ActivePeerInfo> mtt::FileTransfer::getPeersInfo()
 	uint32_t i = 0;
 	for (auto& comm : allPeers)
 	{
-		auto addr = comm->getAddress();
+		auto& addr = comm->getAddress();
 		out[i].address = addr.toString();
-		out[i].country = addr.ipv6 ? "" : ipToCountry.GetCountry(_byteswap_ulong(*reinterpret_cast<uint32_t*>(addr.addrBytes)));
+		out[i].country = addr.ipv6 ? "" : ipToCountry.GetCountry(_byteswap_ulong(*reinterpret_cast<const uint32_t*>(addr.addrBytes)));
 		out[i].percentage = comm->info.pieces.getPercentage();
 		out[i].client = comm->ext.state.client;
+		out[i].connected = comm->isEstablished();
+		out[i].choking = out[i].connected && comm->state.amInterested && comm->state.amChoking;
 
 		for (auto& active : activePeers)
 		{
@@ -297,7 +299,7 @@ bool mtt::FileTransfer::storeUnfinishedPiece(std::shared_ptr<mtt::DownloadedPiec
 
 mtt::LockedPeers mtt::FileTransfer::getPeers()
 {
-	return std::move(mtt::LockedPeers(activePeers, peersMutex));
+	return { activePeers, peersMutex };
 }
 
 std::shared_ptr<mtt::DownloadedPiece> mtt::FileTransfer::loadUnfinishedPiece(uint32_t idx)

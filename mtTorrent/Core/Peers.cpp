@@ -186,7 +186,7 @@ size_t mtt::Peers::add(std::shared_ptr<TcpAsyncStream> stream, const BufferView&
 		std::lock_guard<std::mutex> guard(peersMutex);
 
 		KnownPeer p;
-		p.address = Addr(stream->getEndpoint().address(), stream->getEndpoint().port());
+		p.address = stream->getAddress();
 		p.source = PeerSource::Remote;
 		knownPeers.push_back(p);
 

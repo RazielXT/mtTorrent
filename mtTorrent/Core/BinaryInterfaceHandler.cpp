@@ -120,6 +120,8 @@ extern "C"
 					auto& peer = peers[i];
 					auto& out = resp->peers[i];
 					out.addr = peer.address;
+					out.connected = peer.connected;
+					out.choking = peer.choking;
 					out.progress = peer.percentage;
 					out.dlSpeed = peer.downloadSpeed;
 					out.upSpeed = peer.uploadSpeed;

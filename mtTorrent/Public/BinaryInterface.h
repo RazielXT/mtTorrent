@@ -162,6 +162,8 @@ namespace mtBI
 	struct PeerInfo
 	{
 		float progress;
+		bool connected;
+		bool choking;
 		uint32_t dlSpeed;
 		uint32_t upSpeed;
 		mtt::string addr;

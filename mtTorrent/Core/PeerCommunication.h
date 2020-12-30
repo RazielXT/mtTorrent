@@ -76,7 +76,7 @@ namespace mtt
 
 		ext::ExtensionProtocol ext;
 
-		Addr getAddress();
+		const Addr& getAddress();
 		std::string getAddressName();
 
 		uint64_t getReceivedDataCount();

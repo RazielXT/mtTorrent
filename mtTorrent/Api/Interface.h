@@ -130,6 +130,8 @@ namespace mtt
 		uint32_t uploadSpeed = 0;
 		uint32_t downloadSpeed = 0;
 		float percentage = 0;
+		bool connected = false;
+		bool choking = false;
 		std::string country;
 	};
 

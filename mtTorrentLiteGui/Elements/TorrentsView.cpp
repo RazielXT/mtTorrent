@@ -292,8 +292,9 @@ void TorrentsView::refreshPeers()
 		auto& peerInfo = peersInfo.peers[i];
 		auto peerRow = gcnew cli::array< System::String^  >(8) {
 			gcnew System::String(peerInfo.addr.data),
-				formatBytesSpeed(peerInfo.dlSpeed), int(peerInfo.dlSpeed).ToString(), formatBytesSpeed(peerInfo.upSpeed), int(peerInfo.upSpeed).ToString(),
-				float(peerInfo.progress).ToString("P"), gcnew System::String(peerInfo.client.data, 0, (int)peerInfo.client.length, System::Text::Encoding::UTF8),
+				peerInfo.dlSpeed == 0 && peerInfo.choking ? "Requesting" : formatBytesSpeed(peerInfo.dlSpeed), int(peerInfo.dlSpeed).ToString(),
+				formatBytesSpeed(peerInfo.upSpeed), int(peerInfo.upSpeed).ToString(),
+				float(peerInfo.progress).ToString("P"), peerInfo.connected ? gcnew System::String(peerInfo.client.data, 0, (int)peerInfo.client.length, System::Text::Encoding::UTF8) : "Connecting",
 				gcnew System::String(peerInfo.country.data)
 		};
 
