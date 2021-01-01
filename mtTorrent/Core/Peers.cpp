@@ -78,7 +78,7 @@ void mtt::Peers::stop()
 
 				addLogEvent(Remove, peer.address, (char)peer.lastQuality);
 
-				c.comm->stop();
+				c.comm->close();
 			}
 
 			i++;
@@ -215,7 +215,7 @@ std::shared_ptr<mtt::PeerCommunication> mtt::Peers::disconnect(PeerCommunication
 				peer.lastQuality = Peers::PeerQuality::Offline;
 			else
 			{
-				p->stop();
+				p->close();
 				peer.lastQuality = Peers::PeerQuality::Closed;
 			}
 
@@ -436,7 +436,12 @@ void mtt::Peers::DhtSource::start()
 		uint32_t nextUpdate = info.announceInterval;
 
 		if (info.nextAnnounce <= currentTime)
-			findPeers();
+		{
+			if (torrent->selectionFinished())
+				info.nextAnnounce = currentTime + info.announceInterval;
+			else
+				findPeers();
+		}
 		else
 			nextUpdate = info.nextAnnounce - currentTime;
 

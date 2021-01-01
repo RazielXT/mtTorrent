@@ -278,11 +278,12 @@ void mtt::FileTransfer::removePeer(PeerCommunication* p)
 	evaluateCurrentPeers();
 }
 
-void mtt::FileTransfer::removePeers(std::vector<uint32_t> sortedIdx)
+void mtt::FileTransfer::disconnectPeers(const std::vector<uint32_t>& positions)
 {
-	for (auto it = sortedIdx.rbegin(); it != sortedIdx.rend(); it++)
+	for (auto it = positions.rbegin(); it != positions.rend(); it++)
 	{
-		TRANSFER_LOG("remove " << (activePeers.begin() + *it)->comm->getAddressName());
+		TRANSFER_LOG("disconnect " << activePeers[*it].comm->getAddressName());
+		torrent->peers->disconnect(activePeers[*it].comm);
 		activePeers.erase(activePeers.begin() + *it);
 	}
 }
@@ -454,7 +455,10 @@ void mtt::FileTransfer::evalCurrentPeers()
 
 		if (!currentUploads.empty())
 		{
-			std::sort(currentUploads.begin(), currentUploads.end(), [&](const auto& l, const auto& r) { return activePeers[l].uploadSpeed > activePeers[r].uploadSpeed; });
+			std::sort(currentUploads.begin(), currentUploads.end(), [&](const auto& l, const auto& r)
+			{ return activePeers[l].uploadSpeed > activePeers[r].uploadSpeed || 
+				(activePeers[l].uploadSpeed == activePeers[r].uploadSpeed && activePeers[l].uploaded > activePeers[r].uploaded); });
+
 			currentUploads.resize(std::min((uint32_t)currentUploads.size(), maxUploads));
 
 			for (auto idx : currentUploads)
@@ -469,7 +473,7 @@ void mtt::FileTransfer::evalCurrentPeers()
 			}
 		}
 
-		removePeers(removedPeers);
+		disconnectPeers(removedPeers);
 	}
 
 	evaluateCurrentPeers();

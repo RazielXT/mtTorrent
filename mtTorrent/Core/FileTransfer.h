@@ -77,7 +77,7 @@ namespace mtt
 		std::vector<std::pair<PeerCommunication*, std::pair<uint64_t, uint64_t>>> lastSpeedMeasure;
 
 		void evalCurrentPeers();
-		void removePeers(std::vector<uint32_t> sortedIdx);
+		void disconnectPeers(const std::vector<uint32_t>& positions);
 		uint32_t peersEvalCounter = 0;
 
 		bool isWantedPiece(uint32_t idx) override;
