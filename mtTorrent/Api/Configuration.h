@@ -86,5 +86,7 @@ namespace mtt
 		API_EXPORT void setValues(const External::Dht& val);
 		API_EXPORT void setValues(const External::Files& val);
 		API_EXPORT void setValues(const External::Transfer& val);
+
+		API_EXPORT void save();
 	}
 }
