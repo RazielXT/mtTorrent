@@ -9,6 +9,42 @@
 #include "utils/BencodeWriter.h"
 #include "utils/BencodeParser.h"
 
+#ifdef _WIN32
+#include <Shlobj.h>
+#pragma comment (lib, "Shell32.lib")
+#pragma comment (lib, "ole32.lib")
+#endif
+
+std::string getDefaultDirectory()
+{
+#ifdef _WIN32
+	// this will work for X86 and X64 if the matching 'bitness' client has been installed
+	PWSTR pszPath = NULL;
+	if (SHGetKnownFolderPath(FOLDERID_Downloads, KF_FLAG_CREATE, NULL, &pszPath) != S_OK)
+		return "";
+
+	std::wstring path = pszPath;
+	CoTaskMemFree(pszPath);
+
+	if (!path.empty())
+	{
+		int requiredSize = WideCharToMultiByte(CP_UTF8, 0, path.data(), (int)path.size(), NULL, 0, NULL, NULL);
+
+		if (requiredSize > 0)
+		{
+			std::string utf8String;
+			utf8String.resize(requiredSize);
+			WideCharToMultiByte(CP_UTF8, 0, path.data(), (int)path.size(), utf8String.data(), requiredSize, NULL, NULL);
+			utf8String += "\\mtTorrent\\";
+			return utf8String;
+		}
+	}
+#endif
+
+	return "";
+}
+
+
 namespace mtt
 {
 	namespace config
@@ -199,6 +235,9 @@ namespace mtt
 					}
 				}
 			}
+
+			if (external.files.defaultDirectory.empty())
+				external.files.defaultDirectory = getDefaultDirectory();
 		}
 
 		void save()
@@ -253,7 +292,6 @@ namespace mtt
 
 		External::External()
 		{
-			files.defaultDirectory = ".\\";
 		}
 
 		Internal::Internal()
