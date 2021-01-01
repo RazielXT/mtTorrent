@@ -6,6 +6,7 @@
 #include "IPeerListener.h"
 #include "PiecesProgress.h"
 #include "Utp/UtpManager.h"
+#include "Diagnostics/Diagnostics.h"
 
 namespace mtt
 {
@@ -72,7 +73,7 @@ namespace mtt
 
 		void sendPort(uint16_t port);
 
-		void stop();
+		void close();
 
 		ext::ExtensionProtocol ext;
 
@@ -81,27 +82,13 @@ namespace mtt
 
 		uint64_t getReceivedDataCount();
 
+#ifdef MTT_DIAGNOSTICS
+		Diagnostics::Peer diagnostics;
+#endif
+
 	protected:
 
 		void write(const DataBuffer&);
-
-		enum LogEvent : uint8_t { Msg, Start, End, Request, Want, RespPiece };
-#ifdef PEER_DIAGNOSTICS
-		struct LogEventParams
-		{
-			LogEvent e;
-			char info;
-			uint16_t idx;
-			long time;
-		};
-		std::vector<LogEventParams> logevents;
-		std::mutex logmtx;
-		void addLogEvent(LogEvent e, uint16_t idx, char info = 0);
-		void saveLogEvents();
-#else
-		void addLogEvent(LogEvent, uint16_t, char info = 0) {}
-		void saveLogEvents() {}
-#endif
 
 		IPeerListener& listener;
 

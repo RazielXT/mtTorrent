@@ -6,6 +6,17 @@
 
 #define BT_LOG(x) WRITE_LOG(LogTypeBt, "(" << getAddressName() << ") " << x)
 #define LOG_MGS(x) BT_LOG(x)//{std::stringstream ss; ss << x; LogMsg(ss);}
+
+#ifdef MTT_DIAGNOSTICS
+#define DIAGNOSTICS(type, a) { diagnostics.addSnapshotEvent({Diagnostics::PeerEventType::##type, (uint32_t)a}); }
+#define DIAGNOSTICS_3(type, a, b) { diagnostics.addSnapshotEvent({Diagnostics::PeerEventType::##type, (uint32_t)a, (uint32_t)b}); }
+#define DIAGNOSTICS_4(type, a, b, c) { diagnostics.addSnapshotEvent({Diagnostics::PeerEventType::##type, (uint32_t)a, (uint32_t)b, (uint32_t)c}); }
+#else
+#define DIAGNOSTICS(x, a) {}
+#define DIAGNOSTICS_3(type, a, b) {}
+#define DIAGNOSTICS_4(type, a, b, c) {}
+#endif // MTT_DIAGNOSTICS
+
 using namespace mtt;
 
 namespace mtt
@@ -131,6 +142,11 @@ size_t mtt::PeerCommunication::fromStream(std::shared_ptr<TcpAsyncStream> s, con
 	initializeTcpStream();
 	initializeCallbacks();
 
+#ifdef MTT_DIAGNOSTICS
+	diagnostics.snapshot.name = getAddressName();
+	DIAGNOSTICS(RemoteConnected, state.action);
+#endif
+
 	return dataReceived(streamData);
 }
 
@@ -178,7 +194,10 @@ void mtt::PeerCommunication::initializeTcpStream()
 
 void PeerCommunication::sendHandshake(const Addr& address)
 {
-	addLogEvent(Start, (uint16_t)state.action);
+#ifdef MTT_DIAGNOSTICS
+	diagnostics.snapshot.name = address.toString();
+	DIAGNOSTICS(Connect, state.action);
+#endif
 
 	if (state.action != PeerCommunicationState::Disconnected)
 		resetState();
@@ -248,10 +267,12 @@ void PeerCommunication::connectionOpened()
 	initializeCallbacks();
 	state.action = PeerCommunicationState::Connected;
 
+	DIAGNOSTICS(Connected, state.action);
+
 	sendHandshake();
 }
 
-void mtt::PeerCommunication::stop()
+void mtt::PeerCommunication::close()
 {
 	if (state.action != PeerCommunicationState::Disconnected)
 	{
@@ -285,8 +306,7 @@ void mtt::PeerCommunication::write(const DataBuffer& data)
 
 void mtt::PeerCommunication::connectionClosed(int code)
 {
-	addLogEvent(End, (uint16_t)code);
-	saveLogEvents();
+	DIAGNOSTICS(Disconnect, code);
 
 	if (state.action != PeerCommunicationState::Disconnected)
 	{
@@ -309,7 +329,7 @@ void mtt::PeerCommunication::setInterested(bool enabled)
 		return;
 
 	LOG_MGS("Interested " << enabled);
-	addLogEvent(Want, 0);
+	DIAGNOSTICS(Interested, enabled);
 
 	state.amInterested = enabled;
 	write(mtt::bt::createStateMessage(enabled ? Interested : NotInterested));
@@ -323,7 +343,7 @@ void mtt::PeerCommunication::setChoke(bool enabled)
 	if (state.amChoking == enabled)
 		return;
 
-	addLogEvent(Want, 1);
+	DIAGNOSTICS(Choke, enabled);
 	LOG_MGS("Choke " << enabled);
 	state.amChoking = enabled;
 	write(mtt::bt::createStateMessage(enabled ? Choke : Unchoke));
@@ -334,7 +354,7 @@ void mtt::PeerCommunication::requestPieceBlock(PieceBlockInfo& pieceInfo)
 	if (!isEstablished())
 		return;
 
-	addLogEvent(Request, (uint16_t)pieceInfo.index, (char)((float)pieceInfo.begin / (16 * 1024.f)));
+	DIAGNOSTICS_4(RequestPiece, pieceInfo.index, pieceInfo.begin, pieceInfo.length);
 
 	LOG_MGS("Request " << pieceInfo.index);
 	write(mtt::bt::createBlockRequest(pieceInfo));
@@ -399,9 +419,9 @@ void mtt::PeerCommunication::sendPort(uint16_t port)
 void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 {
 	if(message.id == Piece)
-		addLogEvent(RespPiece, (uint16_t)message.piece.info.index, (char)(message.piece.info.begin / (16 * 1024.f)));
+		DIAGNOSTICS_4(Piece, message.piece.info.index, message.piece.info.begin, message.piece.info.length)
 	else
-		addLogEvent(Msg, (uint16_t)message.id);
+		DIAGNOSTICS_3(ReceiveMessage, message.id, message.id == Have ? message.havePieceIndex : 0);
 
 	LOG_MGS("Received MSG: " << message.id << ", size: " << message.messageSize);
 
@@ -479,38 +499,3 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 
 	listener.messageReceived(this, message);
 }
-
-#ifdef PEER_DIAGNOSTICS
-void mtt::PeerCommunication::addLogEvent(LogEvent e, uint16_t idx, char info /*= 0*/)
-{
-	std::lock_guard<std::mutex> guard(logmtx);
-	logevents.push_back({ e, info, idx, clock() });
-}
-
-extern std::string FormatLogTime(long);
-
-void mtt::PeerCommunication::saveLogEvents()
-{
-	std::lock_guard<std::mutex> guard(logmtx);
-
-	if (logevents.empty())
-		return;
-
-	std::ofstream file("logs\\" + torrent.name + "\\" + stream->getHostname() + ".log", std::ios::app);
-
-	if (!file)
-		return;
-
-	for (auto& l : logevents)
-	{
-		if (l.e == Msg)
-			file << FormatLogTime(l.time) << (int)l.e << " Msg:" << l.idx << "\n";
-		else if (l.e == Request || l.e == RespPiece)
-			file << FormatLogTime(l.time) << (int)l.e << " Idx:" << l.idx << " Block:" << (int)l.info << "\n";
-		else
-			file << FormatLogTime(l.time) << (int)l.e << " Info:" << l.idx << "\n";
-	}
-
-	file << "\n\n\n";
-}
-#endif

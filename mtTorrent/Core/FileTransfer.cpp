@@ -516,7 +516,16 @@ void mtt::FileTransfer::updateMeasures()
 			if (peer.comm->isEstablished())
 				for (auto& piece : freshPieces)
 					peer.comm->sendHave(piece);
+
+#ifdef MTT_DIAGNOSTICS
+			diagnostics.addPeer(peer.comm->diagnostics);
+#endif // MTT_DIAGNOSTICS
+
 		}
+
+#ifdef MTT_DIAGNOSTICS
+		diagnostics.flush();
+#endif // MTT_DIAGNOSTICS
 
 		freshPieces.clear();
 	}

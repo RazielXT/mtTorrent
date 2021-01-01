@@ -232,7 +232,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\asio-1.16.1\include;$(ProjectDir);$(ProjectDir)\Core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;ASIO_STANDALONE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;ASIO_STANDALONE;MTT_DIAGNOSTICS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -419,6 +419,7 @@
     <ClCompile Include="Core\Api\TorrentImpl.cpp" />
     <ClCompile Include="Core\BinaryInterfaceHandler.cpp" />
     <ClCompile Include="Core\Core.cpp" />
+    <ClCompile Include="Core\Diagnostics\Diagnostics.cpp" />
     <ClCompile Include="Core\Files.cpp" />
     <ClCompile Include="Core\FileTransfer.cpp" />
     <ClCompile Include="Core\HttpsTrackerComm.cpp" />
@@ -488,6 +489,7 @@
     <ClInclude Include="Core\AlertsManager.h" />
     <ClInclude Include="Core\Core.h" />
     <ClInclude Include="Core\Dht\Listener.h" />
+    <ClInclude Include="Core\Diagnostics\Diagnostics.h" />
     <ClInclude Include="Core\Files.h" />
     <ClInclude Include="Core\FileTransfer.h" />
     <ClInclude Include="Core\HttpsTrackerComm.h" />

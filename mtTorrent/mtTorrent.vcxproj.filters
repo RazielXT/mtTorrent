@@ -50,6 +50,9 @@
     <Filter Include="Source Files\Core\Torrent\Utp">
       <UniqueIdentifier>{e8c21228-3d42-4e96-8e25-28abafac7897}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Core\Diagnostics">
+      <UniqueIdentifier>{e974f9de-3184-4dd2-ad03-98eede434e59}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\main.cpp">
@@ -249,6 +252,9 @@
     </ClCompile>
     <ClCompile Include="Core\Utp\UtpStream.cpp">
       <Filter>Source Files\Core\Torrent\Utp</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Diagnostics\Diagnostics.cpp">
+      <Filter>Source Files\Core\Diagnostics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -473,6 +479,9 @@
     </ClInclude>
     <ClInclude Include="Core\Utp\UtpStream.h">
       <Filter>Source Files\Core\Torrent\Utp</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Diagnostics\Diagnostics.h">
+      <Filter>Source Files\Core\Diagnostics</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
