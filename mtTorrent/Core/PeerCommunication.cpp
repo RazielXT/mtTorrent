@@ -1,8 +1,8 @@
 #include "PeerCommunication.h"
 #include "utils/PacketHelper.h"
 #include "Configuration.h"
-#include <fstream>
 #include "utils/HexEncoding.h"
+#include <fstream>
 
 #define BT_LOG(x) WRITE_LOG(LogTypeBt, "(" << getAddressName() << ") " << x)
 #define LOG_MGS(x) BT_LOG(x)//{std::stringstream ss; ss << x; LogMsg(ss);}

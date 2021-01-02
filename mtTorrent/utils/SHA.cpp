@@ -1,7 +1,6 @@
 //original source https://github.com/vog/sha1
 
-#include <utils/SHA.h>
-
+#include "SHA.h"
 #include <cstdint>
 #include <iostream>
 #include <string>

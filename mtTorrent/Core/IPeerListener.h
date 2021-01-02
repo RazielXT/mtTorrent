@@ -1,4 +1,5 @@
 #pragma once
+
 #include "PeerMessage.h"
 #include "ExtensionProtocol.h"
 

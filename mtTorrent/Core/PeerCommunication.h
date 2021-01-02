@@ -1,5 +1,5 @@
 #pragma once
-#include <vector>
+
 #include "utils/TcpAsyncStream.h"
 #include "PeerMessage.h"
 #include "ExtensionProtocol.h"

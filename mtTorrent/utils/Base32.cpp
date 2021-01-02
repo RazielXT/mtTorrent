@@ -1,4 +1,3 @@
-#pragma once
 #include "Base32.h"
 #include <array>
 #include <cctype>

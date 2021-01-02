@@ -1,8 +1,8 @@
 #include "State.h"
-#include <fstream>
 #include "Configuration.h"
 #include "utils/BencodeWriter.h"
 #include "utils/BencodeParser.h"
+#include <fstream>
 
 mtt::TorrentState::TorrentState(std::vector<uint8_t>& p) : pieces(p)
 {

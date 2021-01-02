@@ -1,5 +1,5 @@
 #include "MetadataReconstruction.h"
-#include "utils\TorrentFileParser.h"
+#include "utils/TorrentFileParser.h"
 
 const uint32_t MetadataPieceSize = 16 * 1024;
 

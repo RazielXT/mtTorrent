@@ -1,7 +1,7 @@
 #include "Dht/Communication.h"
 #include "Configuration.h"
-#include <fstream>
 #include "utils/HexEncoding.h"
+#include <fstream>
 
 mtt::dht::Communication* comm;
 

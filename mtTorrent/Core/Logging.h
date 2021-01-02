@@ -1,4 +1,5 @@
 #pragma once
+
 #include <sstream>
 
 extern void WriteLogImplementation(const char * const,std::stringstream&);

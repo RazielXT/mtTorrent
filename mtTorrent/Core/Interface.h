@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Api\Interface.h"
-#include "utils\Network.h"
-#include "Public\Status.h"
-#include <atomic>
+#include "Api/Interface.h"
+#include "utils/Network.h"
+#include "Public/Status.h"
 #include "Logging.h"
+#include <atomic>
 
 #define MT_NAME "mtTorrent 0.9"
 #define MT_HASH_NAME "-mt0900-"

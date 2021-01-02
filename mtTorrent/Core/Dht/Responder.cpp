@@ -1,8 +1,8 @@
 #include "Responder.h"
-#include "utils\BencodeParser.h"
-#include "utils\PacketHelper.h"
+#include "utils/BencodeParser.h"
+#include "utils/PacketHelper.h"
 #include "Configuration.h"
-#include "utils\HexEncoding.h"
+#include "utils/HexEncoding.h"
 
 #define DHT_LOG(x) WRITE_LOG(LogTypeDht, "REMOTE " << x)
 

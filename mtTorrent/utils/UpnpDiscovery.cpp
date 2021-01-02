@@ -1,6 +1,5 @@
 #include "UpnpDiscovery.h"
 #include "NetAdaptersList.h"
-
 #include "UdpAsyncComm.h"
 #include "XmlParser.h"
 

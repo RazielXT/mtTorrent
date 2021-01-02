@@ -6,8 +6,8 @@
 #include "FileTransfer.h"
 #include "State.h"
 #include "utils/HexEncoding.h"
-#include <filesystem>
 #include "AlertsManager.h"
+#include <filesystem>
 
 mtt::Torrent::Torrent() : service(0)
 {

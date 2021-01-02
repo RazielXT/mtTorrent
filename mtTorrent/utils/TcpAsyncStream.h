@@ -1,13 +1,13 @@
 #pragma once
 
-#include "utils\Network.h"
+#include "Network.h"
+#include "Bandwidth.h"
 #include <mutex>
 #include <future>
 #include <memory>
 #include <array>
 #include <functional>
 #include <deque>
-#include "Bandwidth.h"
 
 class TcpAsyncServer;
 

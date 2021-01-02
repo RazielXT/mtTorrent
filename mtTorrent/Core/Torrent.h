@@ -3,8 +3,8 @@
 #include "Interface.h"
 #include "utils/ServiceThreadpool.h"
 #include "Files.h"
-#include <functional>
 #include "Api/Torrent.h"
+#include <functional>
 
 namespace mtt
 {

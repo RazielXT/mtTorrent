@@ -14,10 +14,10 @@
 #include "MetadataDownload.h"
 #include "FileTransfer.h"
 #include "utils/HexEncoding.h"
-#include <iostream>
 #include "AlertsManager.h"
-#include <chrono>
 #include "Utp/UtpManager.h"
+#include <iostream>
+#include <chrono>
 
 using namespace mtt;
 

@@ -2,8 +2,8 @@
 
 #include "Api/Torrent.h"
 #include "Api/Listener.h"
-#include <memory>
 #include "Public/ModuleArray.h"
+#include <memory>
 
 namespace mttApi
 {

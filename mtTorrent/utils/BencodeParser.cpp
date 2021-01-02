@@ -1,6 +1,6 @@
 #include "BencodeParser.h"
+#include "Core/Logging.h"
 #include <algorithm>
-#include "..\Core\Logging.h"
 
 #define PARSER_LOG(x) WRITE_LOG(LogTypeBencodeParser, x)
 
