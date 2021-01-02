@@ -13,8 +13,8 @@ namespace mtt
 		{
 			std::vector<NodeInfo> getClosestNodes(const uint8_t* id);
 
-			void nodeResponded(NodeInfo& node);
-			void nodeResponded(uint8_t bucketId, NodeInfo& node);
+			void nodeResponded(const NodeInfo& node);
+			void nodeResponded(uint8_t bucketId, const NodeInfo& node);
 
 			void nodeNotResponded(NodeInfo& node);
 			void nodeNotResponded(uint8_t bucketId, NodeInfo& node);
@@ -50,8 +50,8 @@ namespace mtt
 				uint32_t lastupdate = 0;
 				uint32_t lastcacheupdate = 0;
 
-				Node* find(NodeInfo& node);
-				Node* findCache(NodeInfo& node);
+				Node* find(const NodeInfo& node);
+				Node* findCache(const NodeInfo& node);
 			};
 
 			std::mutex tableMutex;

@@ -7,7 +7,7 @@
 #include "utils/SHA.h"
 
 
-static bool parseTorrentHash(std::string& from, uint8_t* to)
+static bool parseTorrentHash(std::string from, uint8_t* to)
 {
 	if (from.length() == 32)
 	{

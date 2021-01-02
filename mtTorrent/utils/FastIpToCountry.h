@@ -12,7 +12,7 @@ public:
 	void toFile(const std::string& folder);
 	void fromFile(const std::string& folder);
 
-	std::string GetCountry(const uint32_t integerIp) const;
+	std::string GetCountry(uint32_t integerIp) const;
 
 protected:
 
@@ -26,5 +26,5 @@ protected:
 		return address >> (3 * 8);
 	}
 
-	std::string GetCountryFromIndex(const uint32_t address, unsigned char index) const;
+	std::string GetCountryFromIndex(uint32_t address, unsigned char index) const;
 };

@@ -29,7 +29,7 @@ using namespace mtt;
 void testInit()
 {
 	auto filesSettings = mtt::config::getExternal().files;
-	filesSettings.defaultDirectory = "E:\\";
+	filesSettings.defaultDirectory = "./";
 	mtt::config::setValues(filesSettings);
 
 	auto connectionSettings = mtt::config::getExternal().connection;
@@ -655,7 +655,7 @@ static TorrentPtr torrentFromFile(const char* path)
 
 	DataBuffer buffer((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
 
-	return Torrent::fromFile(mtt::TorrentFileParser::parse(buffer.data(), buffer.size()));
+	return Torrent::fromFile(std::move(mtt::TorrentFileParser::parse(buffer.data(), buffer.size())));
 }
 
 void idealGeneralTest()
@@ -1187,7 +1187,6 @@ void testUtpLocalProtocol()
 					else
 					{
 						SyncLog("Invalid piece " << piece.index);
-						DebugBreak();
 					}
 				}
 			}

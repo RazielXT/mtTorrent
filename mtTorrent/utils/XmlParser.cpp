@@ -1,6 +1,7 @@
 #include "XmlParser.h"
 #include <functional>
 #include <cctype>
+#include <cstring>
 #include <algorithm>
 
 const mtt::xml::Element* mtt::xml::Document::getRoot()
@@ -9,7 +10,7 @@ const mtt::xml::Element* mtt::xml::Document::getRoot()
 }
 
 /*
-variation of parsing algorithm from libtorrent xml_parserXm
+variation of parsing algorithm from libtorrent xml_parserXml
 */
 bool mtt::xml::Document::parse(const char* input, uint32_t size)
 {

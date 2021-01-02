@@ -15,7 +15,11 @@ std::string UrlDecode(const std::string& str)
 				ret += str[i];
 		}
 		else {
+#ifdef _WIN32
 			sscanf_s(str.substr(i + 1, 2).c_str(), "%zx", &ii);
+#else
+			sscanf(str.substr(i + 1, 2).c_str(), "%zx", &ii);
+#endif
 			ch = static_cast<char>(ii);
 			ret += ch;
 			i = i + 2;

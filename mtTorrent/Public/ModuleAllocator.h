@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef _WIN32
+#	define __cdecl
+#endif
+
 namespace mtt
 {
 	typedef void* (__cdecl allocate_type)(size_t size);

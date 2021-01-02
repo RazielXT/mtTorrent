@@ -22,6 +22,6 @@ namespace mtt
 		void append(const string& str);
 
 	private:
-		const allocator* const allocator;
+		const allocator* const allocatorPtr;
 	};
 }

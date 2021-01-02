@@ -6,6 +6,7 @@
 
 #ifndef MTT_TEST_STANDALONE
 
+#ifdef _WIN32
 int __stdcall Main(HINSTANCE h, ULONG ulReason, PVOID pvReserved) {
 
 	switch (ulReason)
@@ -19,6 +20,7 @@ int __stdcall Main(HINSTANCE h, ULONG ulReason, PVOID pvReserved) {
 	}
 	return TRUE;
 }
+#endif
 
 #else
 

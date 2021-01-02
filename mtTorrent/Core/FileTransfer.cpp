@@ -212,7 +212,7 @@ std::vector<mtt::ActivePeerInfo> mtt::FileTransfer::getPeersInfo()
 	{
 		auto& addr = comm->getAddress();
 		out[i].address = addr.toString();
-		out[i].country = addr.ipv6 ? "" : ipToCountry.GetCountry(_byteswap_ulong(*reinterpret_cast<const uint32_t*>(addr.addrBytes)));
+		out[i].country = addr.ipv6 ? "" : ipToCountry.GetCountry(swap32(*reinterpret_cast<const uint32_t*>(addr.addrBytes)));
 		out[i].percentage = comm->info.pieces.getPercentage();
 		out[i].client = comm->ext.state.client;
 		out[i].connected = comm->isEstablished();

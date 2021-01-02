@@ -1,11 +1,16 @@
 #pragma once
+
 #include <string>
 #include <vector>
 
-#ifdef ASIO_STANDALONE
-#define API_EXPORT __declspec(dllexport)
+#ifdef _WIN32
+#	ifdef ASIO_STANDALONE
+#		define API_EXPORT __declspec(dllexport)
+#	else
+#		define API_EXPORT __declspec(dllimport)
+#	endif
 #else
-#define API_EXPORT __declspec(dllimport)
+#  define API_EXPORT
 #endif
 
 namespace mtt

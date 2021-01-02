@@ -1,15 +1,11 @@
 #pragma once
-#include <string>
-#include <vector>
+
 #include "Public/Status.h"
 #include "Public/Alerts.h"
 #include "Api/Configuration.h"
-
-#ifdef ASIO_STANDALONE
-#define API_EXPORT __declspec(dllexport)
-#else
-#define API_EXPORT __declspec(dllimport)
-#endif
+#include <string>
+#include <vector>
+#include <cstring>
 
 namespace mtt
 {

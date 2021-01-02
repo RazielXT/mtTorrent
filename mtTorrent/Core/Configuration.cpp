@@ -1,13 +1,14 @@
 #include "Configuration.h"
-#include <map>
-#include <mutex>
-#include <filesystem>
-#include <fstream>
 #include "utils/HexEncoding.h"
 #include "AlertsManager.h"
 #include "Api/Configuration.h"
 #include "utils/BencodeWriter.h"
 #include "utils/BencodeParser.h"
+#include "utils/Filesystem.h"
+#include <map>
+#include <mutex>
+#include <filesystem>
+#include <fstream>
 
 #ifdef _WIN32
 #include <Shlobj.h>
@@ -43,7 +44,6 @@ std::string getDefaultDirectory()
 
 	return "";
 }
-
 
 namespace mtt
 {
@@ -157,7 +157,7 @@ namespace mtt
 				std::filesystem::create_directory(dir, ec);
 			}
 
-			std::ifstream file(mtt::config::getInternal().programFolderPath + "\\cfg", std::ios::binary);
+			std::ifstream file(mtt::config::getInternal().programFolderPath + pathSeparator + "cfg", std::ios::binary);
 
 			if (file)
 			{
@@ -245,7 +245,7 @@ namespace mtt
 			if (!dirty)
 				return;
 
-			std::ofstream file(mtt::config::getInternal().programFolderPath + "\\cfg", std::ios::binary);
+			std::ofstream file(mtt::config::getInternal().programFolderPath + pathSeparator + "cfg", std::ios::binary);
 
 			if (file)
 			{
@@ -296,7 +296,7 @@ namespace mtt
 
 		Internal::Internal()
 		{
-			programFolderPath = ".\\data\\";
+			programFolderPath = std::string(".") + pathSeparator + "data" + pathSeparator;
 			stateFolder = programFolderPath + "state";
 
 			srand((int)::time(NULL));

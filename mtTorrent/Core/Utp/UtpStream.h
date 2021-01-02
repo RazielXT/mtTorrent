@@ -1,7 +1,7 @@
 #pragma once
 
 #include "utils/UdpAsyncWriter.h"
-#include "utils/PacketHelper.h"
+#include "utils/ByteSwap.h"
 #include <mutex>
 #include <chrono>
 
@@ -185,7 +185,12 @@ namespace mtt
 			T data;
 		};
 
+#ifdef _WIN32
 		using be_uint32 = BigEndian<unsigned long, swap32>;
+#else
+		using be_uint32 = BigEndian<uint32_t, swap32>;
+#endif
+
 		using be_uint16 = BigEndian<std::uint16_t, swap16>;
 
 		struct MessageHeader

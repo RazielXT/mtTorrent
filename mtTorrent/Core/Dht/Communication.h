@@ -30,7 +30,7 @@ namespace mtt
 
 			void findNode(const uint8_t* hash);
 
-			void pingNode(Addr& addr);
+			void pingNode(const Addr& addr);
 
 			void removeListener(ResultsListener* listener);
 
@@ -45,8 +45,8 @@ namespace mtt
 			virtual uint32_t onFoundPeers(const uint8_t* hash, std::vector<Addr>& values) override;
 			virtual void findingPeersFinished(const uint8_t* hash, uint32_t count) override;
 
-			virtual UdpRequest sendMessage(Addr&, DataBuffer&, UdpResponseCallback response) override;
-			virtual void sendMessage(udp::endpoint&, DataBuffer&) override;
+			virtual UdpRequest sendMessage(const Addr&, const DataBuffer&, UdpResponseCallback response) override;
+			virtual void sendMessage(const udp::endpoint&, const DataBuffer&) override;
 			virtual void stopMessage(UdpRequest r) override;
 
 			virtual void announceTokenReceived(const uint8_t* hash, std::string& token, udp::endpoint& source) override;

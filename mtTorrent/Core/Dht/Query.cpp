@@ -452,14 +452,14 @@ bool mtt::dht::Query::FindNode::onResponse(UdpRequest comm, DataBuffer* data, Re
 	return isResponse;
 }
 
-void mtt::dht::Query::FindNode::sendRequest(Addr& addr, DataBuffer& data, RequestInfo& info)
+void mtt::dht::Query::FindNode::sendRequest(const Addr& addr, const DataBuffer& data, RequestInfo& info)
 {
 	DHT_LOG("FindNode send to " << addr.toString() << ", id " << hexToString(info.node.id.data, 20));
 	auto req = listener->sendMessage(addr, data, std::bind(&FindNode::onResponse, shared_from_this(), std::placeholders::_1, std::placeholders::_2, info));
 	requests.push_back(req);
 }
 
-void mtt::dht::Query::GetPeers::sendRequest(Addr& addr, DataBuffer& data, RequestInfo& info)
+void mtt::dht::Query::GetPeers::sendRequest(const Addr& addr, const DataBuffer& data, RequestInfo& info)
 {
 	DHT_LOG("GetPeers send to " << addr.toString() << ", id " << hexToString(info.node.id.data, 20));
 	auto req = listener->sendMessage(addr, data, std::bind(&GetPeers::onResponse, shared_from_this(), std::placeholders::_1, std::placeholders::_2, info));
@@ -559,7 +559,7 @@ void mtt::dht::Query::PingNodes::start(std::vector<NodeInfo>& nodes, std::shared
 	}
 }
 
-void mtt::dht::Query::PingNodes::start(Addr& addr, std::shared_ptr<Table> t, DataListener* dhtListener)
+void mtt::dht::Query::PingNodes::start(const Addr& addr, std::shared_ptr<Table> t, DataListener* dhtListener)
 {
 	table = t;
 	listener = dhtListener;
@@ -679,7 +679,7 @@ mtt::dht::PingMessage mtt::dht::Query::PingNodes::parseResponse(DataBuffer& mess
 	return response;
 }
 
-void mtt::dht::Query::PingNodes::sendRequest(NodeInfo& node, bool unknown)
+void mtt::dht::Query::PingNodes::sendRequest(const NodeInfo& node, bool unknown)
 {
 	PingInfo info = { createTransactionId(), node, unknown };
 	auto dataReq = createRequest(info.transactionId);

@@ -1,26 +1,27 @@
 #include "ModuleString.h"
 #include "ModuleAllocator.h"
+#include <cstring>
 
-mtt::string::string() : allocator(&mtt::module_allocator<>::m_allocator)
+mtt::string::string() : allocatorPtr(&mtt::module_allocator<>::m_allocator)
 {
 }
 
 mtt::string::~string()
 {
 	if (data)
-		allocator->deallocate(data);
+		allocatorPtr->deallocate(data);
 }
 
 void mtt::string::assign(const char* str, size_t l)
 {
 	if (data)
-		allocator->deallocate(data);
+		allocatorPtr->deallocate(data);
 
 	length = l;
 
 	if (str)
 	{
-		data = (char*)allocator->allocate(length + 1);
+		data = (char*)allocatorPtr->allocate(length + 1);
 		memcpy(data, str, length + 1);
 	}
 	else
@@ -29,12 +30,12 @@ void mtt::string::assign(const char* str, size_t l)
 
 void mtt::string::append(const string& str)
 {
-	auto newData = (char*)allocator->allocate(length + str.length + 1);
+	auto newData = (char*)allocatorPtr->allocate(length + str.length + 1);
 
 	if (data)
 	{
 		memcpy(newData, data, length);
-		allocator->deallocate(data);
+		allocatorPtr->deallocate(data);
 	}
 
 	data = newData;

@@ -11,7 +11,7 @@ UdpAsyncWriter::~UdpAsyncWriter()
 {
 }
 
-void UdpAsyncWriter::setAddress(Addr& addr)
+void UdpAsyncWriter::setAddress(const Addr& addr)
 {
 	target_endpoint = addr.toUdpEndpoint();
 
@@ -206,13 +206,22 @@ void UdpAsyncWriter::send_message()
 
 struct dont_fragment
 {
+#ifdef _WIN32
 	explicit dont_fragment(bool val) : m_value(val) {}
 	template<class Protocol>
-	int level(Protocol const&) const { return IPPROTO_IP; }
-	template<class Protocol>
-	int name(Protocol const&) const	{ return IP_DONTFRAGMENT; }
+	int name(Protocol const&) const { return IP_DONTFRAGMENT; }
 	template<class Protocol>
 	int const* data(Protocol const&) const { return &m_value; }
+#else
+	explicit dont_fragment(bool val) { m_value = val ? IP_PMTUDISC_DO : IP_PMTUDISC_DONT; }
+	template<class Protocol>
+	int name(Protocol const&) const { return IP_MTU_DISCOVER; }
+	template<class Protocol>
+	int const* data(Protocol const&) const { return &m_value; }
+#endif
+
+	template<class Protocol>
+	int level(Protocol const&) const { return IPPROTO_IP; }
 	template<class Protocol>
 	size_t size(Protocol const&) const { return sizeof(m_value); }
 	int m_value;

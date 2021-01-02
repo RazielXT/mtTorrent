@@ -64,12 +64,12 @@ UdpRequest UdpAsyncComm::create(const std::string& host, const std::string& port
 	return c;
 }
 
-UdpRequest UdpAsyncComm::sendMessage(DataBuffer& data, const std::string& host, const std::string& port, UdpResponseCallback response, bool ipv6, uint32_t timeout, bool anySource)
+UdpRequest UdpAsyncComm::sendMessage(const DataBuffer& data, const std::string& host, const std::string& port, UdpResponseCallback response, bool ipv6, uint32_t timeout, bool anySource)
 {
 	UdpRequest c = std::make_shared<UdpAsyncWriter>(pool.io);
 
 	if (response)
-		addPendingResponse(data, c, response, timeout, anySource);
+		addPendingResponse(c, response, timeout, anySource);
 
 	c->setAddress(host, port, ipv6);
 	c->setBindPort(bindPort);
@@ -78,20 +78,20 @@ UdpRequest UdpAsyncComm::sendMessage(DataBuffer& data, const std::string& host, 
 	return c;
 }
 
-void UdpAsyncComm::sendMessage(DataBuffer& data, UdpRequest c, UdpResponseCallback response, uint32_t timeout)
+void UdpAsyncComm::sendMessage(const DataBuffer& data, UdpRequest c, UdpResponseCallback response, uint32_t timeout)
 {
 	if (response)
-		addPendingResponse(data, c, response, timeout);
+		addPendingResponse(c, response, timeout);
 
 	c->write(data);
 }
 
-UdpRequest UdpAsyncComm::sendMessage(DataBuffer& data, Addr& addr, UdpResponseCallback response)
+UdpRequest UdpAsyncComm::sendMessage(const DataBuffer& data, const Addr& addr, UdpResponseCallback response)
 {
 	UdpRequest c = std::make_shared<UdpAsyncWriter>(pool.io);
 
 	if(response)
-		addPendingResponse(data, c, response);
+		addPendingResponse(c, response);
 
 	c->setAddress(addr);
 	c->setBindPort(bindPort);
@@ -100,7 +100,7 @@ UdpRequest UdpAsyncComm::sendMessage(DataBuffer& data, Addr& addr, UdpResponseCa
 	return c;
 }
 
-void UdpAsyncComm::sendMessage(DataBuffer& data, udp::endpoint& endpoint)
+void UdpAsyncComm::sendMessage(const DataBuffer& data, const udp::endpoint& endpoint)
 {
 	UdpRequest c = std::make_shared<UdpAsyncWriter>(pool.io);
 	c->setAddress(endpoint);
@@ -123,7 +123,7 @@ void UdpAsyncComm::removeCallback(UdpRequest target)
 	}
 }
 
-void UdpAsyncComm::addPendingResponse(DataBuffer& data, UdpRequest c, UdpResponseCallback response, uint32_t timeout, bool anySource)
+void UdpAsyncComm::addPendingResponse(UdpRequest c, UdpResponseCallback response, uint32_t timeout, bool anySource)
 {
 	if (!listener)
 		startListening();

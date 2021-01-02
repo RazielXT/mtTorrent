@@ -84,7 +84,7 @@ namespace mtt
 			return packet.getBuffer();
 		}
 
-		DataBuffer createBitfield(DataBuffer& bitfield)
+		DataBuffer createBitfield(const DataBuffer& bitfield)
 		{
 			PacketBuilder packet(5 + (uint32_t)bitfield.size());
 			packet.add32(1 + (uint32_t)bitfield.size());
@@ -94,7 +94,7 @@ namespace mtt
 			return packet.getBuffer();
 		}
 
-		DataBuffer createPiece(PieceBlock& block)
+		DataBuffer createPiece(const PieceBlock& block)
 		{
 			uint32_t dataSize = 1 + 8 + (uint32_t)block.buffer.size;
 			PacketBuilder packet(4 + dataSize);
@@ -383,7 +383,7 @@ void mtt::PeerCommunication::sendHave(uint32_t pieceIdx)
 	write(mtt::bt::createHave(pieceIdx));
 }
 
-void mtt::PeerCommunication::sendPieceBlock(PieceBlock& block)
+void mtt::PeerCommunication::sendPieceBlock(const PieceBlock& block)
 {
 	if (!isEstablished())
 		return;
@@ -392,7 +392,7 @@ void mtt::PeerCommunication::sendPieceBlock(PieceBlock& block)
 	write(mtt::bt::createPiece(block));
 }
 
-void mtt::PeerCommunication::sendBitfield(DataBuffer& bitfield)
+void mtt::PeerCommunication::sendBitfield(const DataBuffer& bitfield)
 {
 	if (!isEstablished())
 		return;

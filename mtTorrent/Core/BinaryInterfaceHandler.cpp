@@ -5,11 +5,17 @@
 #include <algorithm>
 #include <time.h>
 
+#ifdef _WIN32
+#	define ABI_EXPORT __declspec(dllexport)
+#else
+#	define ABI_EXPORT
+#endif
+
 std::shared_ptr<mttApi::Core> core;
 
 extern "C"
 {
-	__declspec(dllexport) mtt::Status __cdecl Ioctl(mtBI::MessageId id, const void* request, void* output)
+	ABI_EXPORT mtt::Status __cdecl Ioctl(mtBI::MessageId id, const void* request, void* output)
 	{
 		if (id == mtBI::MessageId::Init)
 			core = mttApi::Core::create();

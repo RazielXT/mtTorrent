@@ -1,13 +1,15 @@
 #include "Diagnostics.h"
+#include "utils/Filesystem.h"
 #include <fstream>
 #include <filesystem>
 #include <limits>
+#include <cstring>
 
 #ifdef _WIN32
 #include <windows.h>
+#else
+#include <ctime>
 #endif
-
-
 
 void mtt::Diagnostics::Peer::serialize(Buffer& buffer) const
 {
@@ -60,9 +62,10 @@ void mtt::Diagnostics::Peer::clear()
 	snapshot.events.clear();
 }
 
+int64_t startCounterTime = 0;
+
 #ifdef _WIN32
 double PCFreq = 0.0;
-int64_t startCounterTime = 0;
 
 static int64_t getCounterTime()
 {
@@ -79,6 +82,16 @@ static void initCounterTime()
 
 	QueryPerformanceCounter(&li);
 	startCounterTime = li.QuadPart;
+}
+#else
+static int64_t getCounterTime()
+{
+	return ((int64_t) ::clock()) - startCounterTime;
+}
+
+static void initCounterTime()
+{
+	startCounterTime = getCounterTime();
 }
 #endif // _WIN32
 
@@ -107,7 +120,7 @@ mtt::Diagnostics::Storage::Storage()
 
 	timestart = (uint32_t)::time(0);
 
-	folder = ".\\Diagnostics\\";
+	folder = std::string(".") + pathSeparator + "Diagnostics" + pathSeparator;
 }
 
 void mtt::Diagnostics::Storage::addPeer(Peer& p)
@@ -121,7 +134,7 @@ void mtt::Diagnostics::Storage::flush()
 	if (buffer.empty())
 		return;
 
-	auto fullfolder = folder + std::to_string(timestart) + "\\";
+	auto fullfolder = folder + std::to_string(timestart) + pathSeparator;
 
 	std::filesystem::create_directories(fullfolder);
 
@@ -153,7 +166,7 @@ std::vector<mtt::Diagnostics::PeerSnapshot> mtt::Diagnostics::Storage::loadPeers
 	if (timestart == 0)
 		return {};
 
-	auto fullfolder = folder + std::to_string(timestart) + "\\";
+	auto fullfolder = folder + std::to_string(timestart) + pathSeparator;
 
 	std::ifstream file(fullfolder + "peers_" + std::to_string(index++), std::ios_base::binary);
 

@@ -1,5 +1,5 @@
-#include "Api\Core.h"
-#include "Api\Configuration.h"
+#include "Api/Core.h"
+#include "Api/Configuration.h"
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
 #include <iostream>
@@ -134,8 +134,6 @@ void example2()
 	}
 }
 
-#include <windows.h>
-
 int main()
 {
 	auto core = mttApi::Core::create();
@@ -159,7 +157,7 @@ int main()
 
 	//magnet test
 	size_t magnetProgressLogPos = 0;
-	auto addResult = core->addMagnet("60B101018A32FBDDC264C1A2EB7B7E9A99DBFB6A");
+	auto addResult = core->addMagnet("magnet:?xt=urn:btih:9b8d456ba5e2ce92023b069743e0d1051f199034&dn=%5BDameDesuYo%5D%20Shingeki%20no%20Kyojin%20%28The%20Final%20Season%29%20-%2063v0%20%281920x1080%2010bit%20AAC%29%20%5B098588E9%5D.mkv&tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce");
 	if (addResult.second)
 	{
 		addResult.second->start();
@@ -167,7 +165,7 @@ int main()
 
 	while(!addResult.second->finished())
 	{
-		Sleep(500);
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
 		auto alerts = core->popAlerts();
 

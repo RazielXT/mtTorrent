@@ -21,7 +21,7 @@ public:
 	UdpAsyncWriter(asio::io_service& io_service);
 	~UdpAsyncWriter();
 
-	void setAddress(Addr& addr);
+	void setAddress(const Addr& addr);
 	void setAddress(const udp::endpoint& addr);
 	void setAddress(const std::string& hostname, const std::string& port);
 	void setAddress(const std::string& hostname, const std::string& port, bool ipv6);

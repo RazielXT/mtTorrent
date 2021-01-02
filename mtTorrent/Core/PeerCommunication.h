@@ -67,9 +67,9 @@ namespace mtt
 		bool isEstablished();
 
 		void sendKeepAlive();
-		void sendBitfield(DataBuffer& bitfield);
+		void sendBitfield(const DataBuffer& bitfield);
 		void sendHave(uint32_t pieceIdx);
-		void sendPieceBlock(PieceBlock& block);
+		void sendPieceBlock(const PieceBlock& block);
 
 		void sendPort(uint16_t port);
 

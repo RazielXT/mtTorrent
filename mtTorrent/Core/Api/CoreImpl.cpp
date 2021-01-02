@@ -1,5 +1,3 @@
-#pragma once
-
 #include "Core.h"
 #include "IncomingPeersListener.h"
 #include "AlertsManager.h"

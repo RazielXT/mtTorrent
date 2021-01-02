@@ -1,6 +1,7 @@
 //original source https://github.com/vog/sha1
 
 #include "SHA.h"
+#include "ByteSwap.h"
 #include <cstdint>
 #include <iostream>
 #include <string>
@@ -292,7 +293,7 @@ void _SHA1(const unsigned char* d, size_t n, unsigned char* md)
 
 	for (int i = 0; i < 5; i++)
 	{
-		auto bd = _byteswap_ulong(sha.digest[i]);
+		auto bd = swap32(sha.digest[i]);
 		memcpy(md + i*4, &bd, 4);
 	}
 }

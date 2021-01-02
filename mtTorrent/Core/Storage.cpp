@@ -2,12 +2,13 @@
 #include "utils/ServiceThreadpool.h"
 #include "Configuration.h"
 #include "utils/SHA.h"
+#include "utils/Filesystem.h"
 #include <fstream>
 #include <iostream>
 
 mtt::Storage::Storage(TorrentInfo& info)
 {
-	init(info, ".//");
+	init(info, std::string(".") + pathSeparator);
 }
 
 mtt::Storage::~Storage()
@@ -20,14 +21,14 @@ void mtt::Storage::init(TorrentInfo& info, const std::string& locationPath)
 	files = info.files;
 	path = locationPath;
 
-	if (!path.empty() && path.back() != '\\')
-		path += '\\';
+	if (!path.empty() && path.back() != pathSeparator)
+		path += pathSeparator;
 }
 
 mtt::Status mtt::Storage::setPath(std::string p, bool moveFiles)
 {
-	if (!p.empty() && p.back() != '\\')
-		p += '\\';
+	if (!p.empty() && p.back() != pathSeparator)
+		p += pathSeparator;
 
 	if (path != p)
 	{
@@ -57,8 +58,8 @@ mtt::Status mtt::Storage::setPath(std::string p, bool moveFiles)
 								return mtt::Status::E_AllocationProblem;
 						}
 
-						originalPathF += '\\' + f.path[i];
-						newPathF += '\\' + f.path[i];
+						originalPathF += pathSeparator + f.path[i];
+						newPathF += pathSeparator + f.path[i];
 					}
 
 					if (!std::filesystem::exists(originalPathF, ec))
@@ -452,7 +453,7 @@ mtt::Status mtt::Storage::preallocate(const File& file)
 		if (spaceInfo.available < file.size)
 			return Status::E_NotEnoughSpace;
 
-		std::fstream fileOut(fullpath, std::ios_base::binary | std::ios_base::out | (exists ? std::ios_base::in : 0));
+		std::fstream fileOut(fullpath, std::ios_base::openmode(std::ios_base::binary | std::ios_base::out | (exists ? std::ios_base::in : 0)));
 		if(!fileOut.good())
 			return Status::E_InvalidPath;
 
@@ -489,7 +490,7 @@ std::filesystem::path mtt::Storage::getFullpath(const File& file)
 	for (auto& p : file.path)
 	{
 		if (!filePath.empty())
-			filePath += "\\";
+			filePath += pathSeparator;
 
 		filePath += p;
 	}

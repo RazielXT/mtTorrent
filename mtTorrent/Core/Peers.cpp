@@ -161,7 +161,7 @@ void mtt::Peers::connectNext(uint32_t count)
 	PEERS_LOG("connected " << (origCount - count));
 }
 
-void mtt::Peers::connect(Addr& addr)
+void mtt::Peers::connect(const Addr& addr)
 {
 	auto peer = getActivePeer(addr);
 
@@ -341,7 +341,7 @@ uint32_t mtt::Peers::updateKnownPeers(const std::vector<Addr>& peers, PeerSource
 	return (uint32_t)accepted.size();
 }
 
-uint32_t mtt::Peers::updateKnownPeers(Addr& addr, PeerSource source)
+uint32_t mtt::Peers::updateKnownPeers(const Addr& addr, PeerSource source)
 {
 	std::lock_guard<std::mutex> guard(peersMutex);
 
@@ -380,7 +380,7 @@ void mtt::Peers::connect(uint32_t idx)
 	addLogEvent(Connect, knownPeer.address, 0);
 }
 
-std::shared_ptr<mtt::PeerCommunication> mtt::Peers::getActivePeer(Addr& addr)
+std::shared_ptr<mtt::PeerCommunication> mtt::Peers::getActivePeer(const Addr& addr)
 {
 	std::lock_guard<std::mutex> guard(peersMutex);
 

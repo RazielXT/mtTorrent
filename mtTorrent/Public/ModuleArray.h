@@ -1,4 +1,5 @@
 #pragma once
+
 #include "ModuleAllocator.h"
 
 namespace mtt
@@ -6,7 +7,7 @@ namespace mtt
 	template <class T>
 	struct array
 	{
-		array() : allocator(&mtt::module_allocator<>::m_allocator)
+		array() : allocatorPtr(&mtt::module_allocator<>::m_allocator)
 		{
 		}
 
@@ -21,12 +22,12 @@ namespace mtt
 			if (wantedSize > allocatedSize)
 			{
 				auto old = buffer;
-				buffer = (T*)allocator->allocate(wantedSize);
+				buffer = (T*)allocatorPtr->allocate(wantedSize);
 
 				if (old)
 				{
 					memcpy(buffer, old, allocatedSize);
-					allocator->deallocate(old);
+					allocatorPtr->deallocate(old);
 				}
 
 				allocatedSize = wantedSize;
@@ -99,7 +100,7 @@ namespace mtt
 				buffer[i].~T();
 
 			if (buffer)
-				allocator->deallocate(buffer);
+				allocatorPtr->deallocate(buffer);
 
 			buffer = nullptr;
 			currentSize = 0;
@@ -163,7 +164,7 @@ namespace mtt
 		}
 
 	private:
-		const allocator* const allocator;
+		const allocator* const allocatorPtr;
 
 		T* buffer = nullptr;
 		size_t currentSize = 0;

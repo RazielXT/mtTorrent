@@ -1,4 +1,5 @@
 #include "Network.h"
+#include "ByteSwap.h"
 
 Addr::Addr()
 {
@@ -87,7 +88,7 @@ int Addr::parse(const uint8_t* buffer, bool v6)
 	ipv6 = v6;
 	int addrSize = v6 ? 16 : 4;
 	memcpy(addrBytes, buffer, addrSize);
-	port = _byteswap_ushort(*reinterpret_cast<const uint16_t*>(buffer + addrSize));
+	port = swap16(*reinterpret_cast<const uint16_t*>(buffer + addrSize));
 
 	return 2 + addrSize;
 }

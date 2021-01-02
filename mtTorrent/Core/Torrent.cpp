@@ -6,6 +6,7 @@
 #include "FileTransfer.h"
 #include "State.h"
 #include "utils/HexEncoding.h"
+#include "utils/Filesystem.h"
 #include "AlertsManager.h"
 #include <filesystem>
 
@@ -13,7 +14,7 @@ mtt::Torrent::Torrent() : service(0)
 {
 }
 
-mtt::TorrentPtr mtt::Torrent::fromFile(mtt::TorrentFileInfo& fileInfo)
+mtt::TorrentPtr mtt::Torrent::fromFile(mtt::TorrentFileInfo fileInfo)
 {
 	mtt::TorrentPtr torrent = std::make_shared<Torrent>();
 	torrent->infoFile = std::move(fileInfo);
@@ -47,7 +48,7 @@ mtt::TorrentPtr mtt::Torrent::fromSavedState(std::string name)
 	if (!Torrent::loadSavedTorrentFile(name, buffer))
 		return nullptr;
 
-	if (auto ptr = fromFile(mtt::TorrentFileParser::parse(buffer.data(), buffer.size())))
+	if (auto ptr = fromFile(std::move(mtt::TorrentFileParser::parse(buffer.data(), buffer.size()))))
 	{
 		TorrentState state(ptr->files.progress.pieces);
 		if (state.load(name))
@@ -117,7 +118,7 @@ void mtt::Torrent::save()
 
 void mtt::Torrent::saveTorrentFile(const char* data, size_t size)
 {
-	auto folderPath = mtt::config::getInternal().stateFolder + "\\" + hashString() + ".torrent";
+	auto folderPath = mtt::config::getInternal().stateFolder + pathSeparator + hashString() + ".torrent";
 
 	std::ofstream file(folderPath, std::ios::binary);
 
@@ -138,7 +139,7 @@ void mtt::Torrent::saveTorrentFileFromUtm()
 
 void mtt::Torrent::removeMetaFiles()
 {
-	auto path = mtt::config::getInternal().stateFolder + "\\" + hashString();
+	auto path = mtt::config::getInternal().stateFolder + pathSeparator + hashString();
 	std::remove((path + ".torrent").data());
 	std::remove((path + ".state").data());
 }
@@ -182,7 +183,7 @@ bool mtt::Torrent::importTrackers(const mtt::TorrentFileInfo& otherFileInfo)
 
 bool mtt::Torrent::loadSavedTorrentFile(const std::string& hash, DataBuffer& out)
 {
-	auto filename = mtt::config::getInternal().stateFolder + "\\" + hash + ".torrent";
+	auto filename = mtt::config::getInternal().stateFolder + pathSeparator + hash + ".torrent";
 	std::ifstream file(filename, std::ios_base::binary);
 
 	if (!file.good())

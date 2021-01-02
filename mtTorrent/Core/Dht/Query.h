@@ -78,7 +78,7 @@ namespace mtt
 				NodeId minDistance;
 
 				virtual DataBuffer createRequest(const uint8_t* hash, bool bothProtocols, uint16_t transactionId) = 0;
-				virtual void sendRequest(Addr& addr, DataBuffer& data, RequestInfo& info) = 0;
+				virtual void sendRequest(const Addr& addr, const DataBuffer& data, RequestInfo& info) = 0;
 				virtual bool onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request) = 0;
 
 				std::shared_ptr<Table> table;
@@ -93,7 +93,7 @@ namespace mtt
 				uint32_t foundCount = 0;
 
 				virtual DataBuffer createRequest(const uint8_t* hash, bool bothProtocols, uint16_t transactionId) override;
-				virtual void sendRequest(Addr& addr, DataBuffer& data, RequestInfo& info);
+				virtual void sendRequest(const Addr& addr, const DataBuffer& data, RequestInfo& info);
 				virtual bool onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request) override;
 				GetPeersResponse parseGetPeersResponse(DataBuffer& message);		
 			};
@@ -109,7 +109,7 @@ namespace mtt
 				bool findClosest = true;
 
 				virtual DataBuffer createRequest(const uint8_t* hash, bool bothProtocols, uint16_t transactionId) override;
-				virtual void sendRequest(Addr& addr, DataBuffer& data, RequestInfo& info);
+				virtual void sendRequest(const Addr& addr, const DataBuffer& data, RequestInfo& info);
 				virtual bool onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request) override;
 				FindNodeResponse parseFindNodeResponse(DataBuffer& message);
 			};
@@ -118,7 +118,7 @@ namespace mtt
 			{
 				~PingNodes();
 
-				void start(Addr& addr, std::shared_ptr<Table> table, DataListener* dhtListener);
+				void start(const Addr& addr, std::shared_ptr<Table> table, DataListener* dhtListener);
 				void start(std::vector<NodeInfo>& nodes, std::shared_ptr<Table> table, DataListener* dhtListener);
 				void stop();
 
@@ -134,7 +134,7 @@ namespace mtt
 				std::vector<NodeInfo> nodesLeft;
 
 				DataBuffer createRequest(uint16_t transactionId);
-				void sendRequest(NodeInfo&, bool unknown);
+				void sendRequest(const NodeInfo&, bool unknown);
 
 				struct PingInfo
 				{

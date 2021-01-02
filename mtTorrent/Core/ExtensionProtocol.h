@@ -77,11 +77,11 @@ namespace mtt
 
 			UtMetadata utm;
 
-		private:
+		//private:
 
 			void sendHandshake();
 
-			MessageType load(char id, DataBuffer& data);
+			MessageType load(char id, const DataBuffer& data);
 			DataBuffer createExtendedHandshakeMessage(bool enablePex = true, uint16_t metadataSize = 0);
 
 			std::shared_ptr<TcpAsyncStream> stream;

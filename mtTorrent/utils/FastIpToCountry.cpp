@@ -1,4 +1,6 @@
 #include "FastIpToCountry.h"
+#include "Filesystem.h"
+#include <algorithm>
 
 void FastIpToCountry::toFile(const std::string& folder)
 {
@@ -28,7 +30,7 @@ void FastIpToCountry::fromFile(const std::string& folder)
 	size_t bucket = 0;
 	bool countriesLoaded = false;
 
-	std::ifstream file(folder + "\\" + filename, std::ios::binary);
+	std::ifstream file(folder + pathSeparator + filename, std::ios::binary);
 	while (file.good() && !file.eof())
 	{
 		if (countriesLoaded)
@@ -64,12 +66,12 @@ void FastIpToCountry::fromFile(const std::string& folder)
 	}
 }
 
-std::string FastIpToCountry::GetCountry(const uint32_t integerIp) const
+std::string FastIpToCountry::GetCountry(uint32_t integerIp) const
 {
 	return GetCountryFromIndex(integerIp, GetIndexFromAddress(integerIp));
 }
 
-std::string FastIpToCountry::GetCountryFromIndex(const uint32_t address, unsigned char index) const
+std::string FastIpToCountry::GetCountryFromIndex(uint32_t address, unsigned char index) const
 {
 	const auto& list = buckets[index];
 	auto it = std::lower_bound(list.begin(), list.end(), address,

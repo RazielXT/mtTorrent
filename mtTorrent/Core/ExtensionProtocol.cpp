@@ -92,7 +92,7 @@ DataBuffer mtt::ext::UtMetadata::createMetadataRequest(uint32_t index)
 	return packet.getBuffer();
 }
 
-MessageType ExtensionProtocol::load(char id, DataBuffer& data)
+MessageType ExtensionProtocol::load(char id, const DataBuffer& data)
 {
 	if (id >= InvalidEx)
 		return InvalidEx;

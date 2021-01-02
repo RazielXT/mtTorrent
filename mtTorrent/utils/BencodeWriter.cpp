@@ -1,4 +1,5 @@
 #include "BencodeWriter.h"
+#include <cstring>
 
 void mtt::BencodeWriter::startMap()
 {

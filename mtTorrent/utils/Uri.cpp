@@ -1,4 +1,5 @@
 #include "Uri.h"
+#include <algorithm>
 
 Uri Uri::Parse(const std::string& uri)
 {

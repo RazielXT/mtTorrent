@@ -1,8 +1,16 @@
 #include "BencodeParser.h"
 #include "Core/Logging.h"
 #include <algorithm>
+#include <cstring>
 
 #define PARSER_LOG(x) WRITE_LOG(LogTypeBencodeParser, x)
+
+template <>
+std::string mtt::BencodeParser::Object::getValueOr(const char* name, std::string def) const
+{
+	auto item = getTxtItem(name);
+	return item ? std::string(item->data, item->size) : def;
+}
 
 bool mtt::BencodeParser::parse(const uint8_t* data, size_t length)
 {

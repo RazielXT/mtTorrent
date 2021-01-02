@@ -3,6 +3,7 @@
 #include <mutex>
 #include <vector>
 #include <fstream>
+#include <cstring>
 
 std::mutex logMutex;
 
@@ -27,7 +28,7 @@ std::string FormatLogTime(long time)
 {
 	clock_t t = time - startLogTime;
 	char buffer[10] = { 0 };
-	sprintf_s(buffer, 10, "%.3f ", ((float)t) / CLOCKS_PER_SEC);
+	snprintf(buffer, 10, "%.3f ", ((float)t) / CLOCKS_PER_SEC);
 
 	return buffer;
 }
@@ -38,7 +39,7 @@ std::string GetLogTime()
 
 	clock_t t = clock() - startTime;
 	char buffer[10] = { 0 };
-	sprintf_s(buffer, 10, "%.3f ", ((float)t) / CLOCKS_PER_SEC);
+	snprintf(buffer, 10, "%.3f ", ((float)t) / CLOCKS_PER_SEC);
 
 	return buffer;
 }

@@ -1,4 +1,5 @@
 #include "PiecesProgress.h"
+#include <math.h>
 
 const uint8_t ReadyValue = 0;
 const uint8_t HasFlag = 1;

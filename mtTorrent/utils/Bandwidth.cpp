@@ -1,6 +1,7 @@
 #include "Bandwidth.h"
 #include <algorithm>
 #include <map>
+#include <cstring>
 
 BandwidthChannel::BandwidthChannel()
 {}

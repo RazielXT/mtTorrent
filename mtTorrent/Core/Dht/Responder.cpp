@@ -189,7 +189,7 @@ bool mtt::dht::Responder::writeValues(const char* infoHash, udp::endpoint& endpo
 	return count > 0;
 }
 
-void mtt::dht::Responder::announcedPeer(const char* infoHash, Addr& peer)
+void mtt::dht::Responder::announcedPeer(const char* infoHash, const Addr& peer)
 {
 	DHT_LOG("announcedPeer " << peer.toString() << " infoHash " << hexToString((const uint8_t*)infoHash, 20));
 
@@ -252,14 +252,14 @@ bool mtt::dht::Responder::isValidToken(uint32_t token, udp::endpoint& e)
 	return false;
 }
 
-uint32_t mtt::dht::Responder::getAnnounceToken(udp::endpoint& e)
+uint32_t mtt::dht::Responder::getAnnounceToken(const udp::endpoint& e)
 {
 	std::lock_guard<std::mutex> guard(tokenMutex);
 
 	return getAnnounceToken(e.address().to_string(), tokenSecret[0]);
 }
 
-uint32_t mtt::dht::Responder::getAnnounceToken(std::string& addr, uint32_t secret)
+uint32_t mtt::dht::Responder::getAnnounceToken(const std::string& addr, uint32_t secret)
 {
 	uint32_t out = secret;
 	

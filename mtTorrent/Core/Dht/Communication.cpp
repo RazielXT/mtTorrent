@@ -1,6 +1,7 @@
 #include "Dht/Communication.h"
 #include "Configuration.h"
 #include "utils/HexEncoding.h"
+#include "utils/Filesystem.h"
 #include <fstream>
 
 mtt::dht::Communication* comm;
@@ -128,7 +129,7 @@ void mtt::dht::Communication::findNode(const uint8_t* hash)
 	q->start(hash, table, this);
 }
 
-void mtt::dht::Communication::pingNode(Addr& addr)
+void mtt::dht::Communication::pingNode(const Addr& addr)
 {
 	DHT_LOG("Start pingNode addr " << addr.toString());
 
@@ -169,7 +170,7 @@ void mtt::dht::Communication::findingPeersFinished(const uint8_t* hash, uint32_t
 		}
 }
 
-UdpRequest mtt::dht::Communication::sendMessage(Addr& addr, DataBuffer& data, UdpResponseCallback response)
+UdpRequest mtt::dht::Communication::sendMessage(const Addr& addr, const DataBuffer& data, UdpResponseCallback response)
 {
 	return udp->sendMessage(data, addr, response);
 }
@@ -179,7 +180,7 @@ void mtt::dht::Communication::stopMessage(UdpRequest r)
 	udp->removeCallback(r);
 }
 
-void mtt::dht::Communication::sendMessage(udp::endpoint& endpoint, DataBuffer& data)
+void mtt::dht::Communication::sendMessage(const udp::endpoint& endpoint, const DataBuffer& data)
 {
 	udp->sendMessage(data, endpoint);
 }
@@ -230,14 +231,14 @@ void mtt::dht::Communication::save()
 	auto saveFile = table->save();
 
 	{
-		std::ofstream out(mtt::config::getInternal().programFolderPath + "\\dht", std::ios_base::binary);
+		std::ofstream out(mtt::config::getInternal().programFolderPath + pathSeparator + "dht", std::ios_base::binary);
 		out << saveFile;
 	}
 }
 
 void mtt::dht::Communication::load()
 {
-	std::ifstream inFile(mtt::config::getInternal().programFolderPath + "\\dht", std::ios_base::binary | std::ios_base::in);
+	std::ifstream inFile(mtt::config::getInternal().programFolderPath + pathSeparator + "dht", std::ios_base::binary | std::ios_base::in);
 
 	if (inFile)
 	{

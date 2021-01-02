@@ -22,7 +22,7 @@ namespace mtt
 		bool checking = false;
 		Status lastError = Status::Success;
 
-		static TorrentPtr fromFile(mtt::TorrentFileInfo& fileInfo);
+		static TorrentPtr fromFile(mtt::TorrentFileInfo fileInfo);
 		static TorrentPtr fromMagnetLink(std::string link);
 		static TorrentPtr fromSavedState(std::string name);
 		void downloadMetadata();

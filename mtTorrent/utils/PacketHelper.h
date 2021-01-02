@@ -1,12 +1,9 @@
 #pragma once
 
+#include "ByteSwap.h"
 #include <stdint.h>
 #include <vector>
 #include <sstream>
-
-#define swap16 _byteswap_ushort
-#define swap32 _byteswap_ulong
-#define swap64 _byteswap_uint64
 
 struct PacketReader
 {
@@ -133,7 +130,7 @@ struct PacketBuilder
 		return *this;
 	}
 
-	PacketBuilder& operator<<(std::string& rhs)
+	PacketBuilder& operator<<(const std::string& rhs)
 	{
 		add(rhs.data(), rhs.length());
 		return *this;

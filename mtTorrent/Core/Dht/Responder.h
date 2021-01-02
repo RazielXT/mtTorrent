@@ -38,15 +38,15 @@ namespace mtt
 			std::mutex valuesMutex;
 			std::map<NodeId, std::vector<StoredValue>> values;
 
-			void announcedPeer(const char* infoHash, Addr& peer);
+			void announcedPeer(const char* infoHash, const Addr& peer);
 			void refreshStoredValues();
 
 			std::mutex tokenMutex;
 			uint32_t tokenSecret[2];
 
 			bool isValidToken(uint32_t token, udp::endpoint& e);
-			uint32_t getAnnounceToken(udp::endpoint& e);
-			uint32_t getAnnounceToken(std::string& addr, uint32_t secret);
+			uint32_t getAnnounceToken(const udp::endpoint& e);
+			uint32_t getAnnounceToken(const std::string& addr, uint32_t secret);
 		};
 	}
 }

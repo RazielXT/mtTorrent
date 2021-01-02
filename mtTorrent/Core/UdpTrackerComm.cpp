@@ -206,7 +206,7 @@ UdpTrackerComm::ConnectResponse UdpTrackerComm::getConnectResponse(DataBuffer& b
 {
 	ConnectResponse out;
 
-	if (buffer.size() >= sizeof ConnectResponse)
+	if (buffer.size() >= sizeof(ConnectResponse))
 	{
 		PacketReader packet(buffer);
 

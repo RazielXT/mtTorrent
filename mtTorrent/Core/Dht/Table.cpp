@@ -57,14 +57,14 @@ std::vector<NodeInfo> mtt::dht::Table::getClosestNodes(const uint8_t* id)
 	return out;
 }
 
-void mtt::dht::Table::nodeResponded(NodeInfo& node)
+void mtt::dht::Table::nodeResponded(const NodeInfo& node)
 {
 	auto i = getBucketId(node.id.data);
 
 	nodeResponded(i, node);
 }
 
-void mtt::dht::Table::nodeResponded(uint8_t bucketId, NodeInfo& node)
+void mtt::dht::Table::nodeResponded(uint8_t bucketId, const NodeInfo& node)
 {
 	std::lock_guard<std::mutex> guard(tableMutex);
 
@@ -153,7 +153,7 @@ void mtt::dht::Table::nodeNotResponded(uint8_t bucketId, NodeInfo& node)
 	}
 }
 
-mtt::dht::Table::Bucket::Node* mtt::dht::Table::Bucket::find(NodeInfo& node)
+mtt::dht::Table::Bucket::Node* mtt::dht::Table::Bucket::find(const NodeInfo& node)
 {
 	for (auto& n : nodes)
 		if (n.info.id == node.id)
@@ -162,7 +162,7 @@ mtt::dht::Table::Bucket::Node* mtt::dht::Table::Bucket::find(NodeInfo& node)
 	return nullptr;
 }
 
-mtt::dht::Table::Bucket::Node* mtt::dht::Table::Bucket::findCache(NodeInfo& node)
+mtt::dht::Table::Bucket::Node* mtt::dht::Table::Bucket::findCache(const NodeInfo& node)
 {
 	for (auto& n : cache)
 		if (n.info.id == node.id)
@@ -258,15 +258,16 @@ uint32_t mtt::dht::Table::load(const std::string& settings)
 		Bucket& b = buckets[id];
 
 		size_t nodesPos = 0;
+		std::string nodeEntry;
 		while (nodesPos < nodesLine.length())
 		{
 			Bucket::Node node;
 
-			auto& l = nodesLine.substr(nodesPos, 39);
-			memcpy(node.info.id.data, l.data(), 20);
-			memcpy(node.info.addr.addrBytes, l.data() + 20, 16);
-			memcpy(&node.info.addr.port, l.data() + 36, 2);
-			memcpy(&node.info.addr.ipv6, l.data() + 38, 1);
+			nodeEntry = nodesLine.substr(nodesPos, 39);
+			memcpy(node.info.id.data, nodeEntry.data(), 20);
+			memcpy(node.info.addr.addrBytes, nodeEntry.data() + 20, 16);
+			memcpy(&node.info.addr.port, nodeEntry.data() + 36, 2);
+			memcpy(&node.info.addr.ipv6, nodeEntry.data() + 38, 1);
 			b.nodes.push_back(node);
 
 			counter++;

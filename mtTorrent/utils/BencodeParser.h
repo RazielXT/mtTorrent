@@ -43,12 +43,6 @@ namespace mtt
 				auto o = getIntItem(name);
 				return o ? (T)o->getInt() : def;
 			}
-			template <>
-			std::string getValueOr(const char* name, std::string def) const
-			{
-				auto item = getTxtItem(name);
-				return item ? std::string(item->data, item->size) : def;
-			}
 
 			const Object* getFirstItem() const;
 			const Object* getNextSibling() const;
@@ -94,5 +88,4 @@ namespace mtt
 
 		void parseError(const char** body);
 	};
-
 }
