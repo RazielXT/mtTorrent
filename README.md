@@ -1,5 +1,5 @@
 # mtTorrent
-Bittorrent protocol implementation including DHT using Asio
+Cross platform Bittorrent protocol implementation including DHT using Asio
 
 [Windows binaries](https://docs.google.com/uc?export=download&id=1HZHLIXKXn51aPE81rgLhcV1iTImd-JM-)
 
