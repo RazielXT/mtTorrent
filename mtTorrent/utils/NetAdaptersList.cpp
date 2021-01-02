@@ -1,4 +1,7 @@
 #include "NetAdaptersList.h"
+
+#ifdef _WIN32
+
 #include <winsock2.h>
 #include <iphlpapi.h>
 #pragma comment(lib, "IPHLPAPI.lib")
@@ -39,3 +42,12 @@ std::vector<NetAdapters::NetAdapter> NetAdapters::getActiveNetAdapters()
 
 	return out;
 }
+
+#else
+
+std::vector<NetAdapters::NetAdapter> NetAdapters::getActiveNetAdapters()
+{
+	return {};
+}
+
+#endif // _WIN32
