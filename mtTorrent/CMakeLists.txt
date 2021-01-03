@@ -126,7 +126,7 @@ target_compile_features (mtTorrent
 
 add_compile_definitions (ASIO_STANDALONE)
 
-target_include_directories (mtTorrent PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../asio-1.16.1/include)
+target_include_directories (mtTorrent PUBLIC asio/asio/include)
 
 if (WIN32)
 	add_compile_definitions (_WIN32_WINNT=0x0601)

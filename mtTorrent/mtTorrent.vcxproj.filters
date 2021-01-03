@@ -184,9 +184,6 @@
     <ClCompile Include="utils\UpnpPortMapping.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="utils\NetAdaptersListWin.cpp">
-      <Filter>Source Files\Utils</Filter>
-    </ClCompile>
     <ClCompile Include="utils\HttpHeader.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
@@ -255,6 +252,9 @@
     </ClCompile>
     <ClCompile Include="Core\Diagnostics\Diagnostics.cpp">
       <Filter>Source Files\Core\Diagnostics</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\NetAdaptersList.cpp">
+      <Filter>Source Files\Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

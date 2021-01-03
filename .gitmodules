@@ -1,3 +1,6 @@
 [submodule "SdkGuiExample/imgui"]
 	path = SdkGuiExample/imgui
 	url = https://github.com/ocornut/imgui.git
+[submodule "mtTorrent/asio"]
+	path = mtTorrent/asio
+	url = https://github.com/chriskohlhoff/asio.git
