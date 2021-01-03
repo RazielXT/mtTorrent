@@ -6,6 +6,7 @@
 *.sdf
 *.cfg
 *.cachefile
+*.ini
 x64/
 Win32/
 mtTorrent/x64/

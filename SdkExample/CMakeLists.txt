@@ -12,8 +12,3 @@ target_compile_features (mtTorrentSdkExample
 target_link_libraries (mtTorrentSdkExample mtTorrent)
 
 target_include_directories (mtTorrentSdkExample PUBLIC ../mtTorrent/)
-
-target_compile_features (mtTorrentSdkExample
-	PUBLIC
-		cxx_std_17
-)
