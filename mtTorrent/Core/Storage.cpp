@@ -247,7 +247,7 @@ static int64_t getWriteTime(const std::filesystem::path& filepath)
 	return attrib.st_mtime;
 #else
 	std::error_code ec;
-	auto tm = std::filesystem::last_write_time(path, ec);
+	auto tm = std::filesystem::last_write_time(filepath, ec);
 	return ec ? 0 : tm.time_since_epoch().count();
 #endif
 }

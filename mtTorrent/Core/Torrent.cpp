@@ -259,6 +259,11 @@ mtt::Status mtt::Torrent::start()
 	}
 #endif
 
+	if (state == ActiveState::Started)
+	{
+		return Status::Success;
+	}
+
 	if (getState() == mttApi::Torrent::State::DownloadingMetadata)
 	{
 		state = ActiveState::Started;
