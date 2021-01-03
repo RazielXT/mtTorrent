@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<style>
+body {
+	font-family: Roboto, Arial, sans-serif;
+	background-color: #222222;
+}
+div {
+	margin: 5px;
+	background-color: #dedede;
+	border-radius: 5px;
+	padding: 5px;
+}
+.subdiv {
+}
+.eventsSelect {
+	min-width: 25%;
+	max-width: 50%;
+}
+.infoHeader {
+}
+.infoHeaderLine {
+	border: 0;
+    border-top: 1px solid #ddd;
+}
+</style>
+<script src="reportTypes.js"></script>
+<script src="report.js"></script>
+<script type="text/javascript">
+	var report;
+
+	function toggleHideElement(x, button, force)
+	{
+		if (x.style.display === "none" || force)
+			x.style.display = "block";
+		else
+			x.style.display = "none";
+			
+		if (button)
+			button.innerHTML = (x.style.display === "none") ? "Show" : "Hide";
+	}
+	function toggleHidePeerInfo(force)
+	{
+		toggleHideElement(document.getElementById("peerInfo"), document.getElementById("toggleHidePeerInfoButton"), force);
+	}
+	function fillPeersSelect(peers)
+	{
+		var select = document.getElementById("peersSelect");
+		
+		peers.forEach((element) => {
+			var option = document.createElement("option");
+			option.text = element.name;
+			select.add(option);
+		});
+	}
+	function getPeerEventInfo(e)
+	{
+		switch(e.t){
+		case PeerEvent.Connect:
+			return "Connect";
+		case PeerEvent.Connected:
+			return "Connected";
+		case PeerEvent.RemoteConnected:
+			return "RemoteConnected";
+		case PeerEvent.Disconnect:
+			return "Disconnect";
+		case PeerEvent.ReceiveMessage:
+			return "ReceiveMessage " + e.i;
+		case PeerEvent.Interested:
+			return "Interested";
+		case PeerEvent.Choke:
+			return "Choke";
+		case PeerEvent.RequestPiece:
+			return "RequestPiece " + e.i + ":" + e.b;
+		case PeerEvent.Piece:
+			return "Piece " + e.i + ":" + e.b;
+		}
+	}
+	function formatTimestamp(timestamp, offset)
+	{
+		var date = new Date(timestamp * 1000 + (offset ? offset : 0));
+		// Hours part from the timestamp
+		var hours = date.getHours();
+		// Minutes part from the timestamp
+		var minutes = "0" + date.getMinutes();
+		// Seconds part from the timestamp
+		var seconds = "0" + date.getSeconds();
+
+		var ms = date.getMilliseconds();
+		
+		if (ms > 0)
+			ms = '.' + ms;
+		else
+			ms = '';
+
+		// Will display time in 10:30:23 format
+		return hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2) + ms;
+	}
+	function getDownloadSum(peerInfo)
+	{
+		var sum = 0;
+		peerInfo.events.forEach((element) => {
+				if (element.t == PeerEvent.Piece)
+					sum += element.s;
+			});
+
+		return sum/(1024*1024) + " MB";
+	}
+	function peersSelectChanged()
+	{
+		var s = document.getElementById("peersSelect");
+		
+		var infoDiv = document.getElementById("peerInfo");
+		infoDiv.innerHTML = "";
+
+		const peerInfo = report.peers[s.selectedIndex - 1];
+		
+		{
+			var peerInfoHeader = document.createElement("div");
+			peerInfoHeader.className = "infoHeader";
+			peerInfoHeader.innerHTML = "Start at " + formatTimestamp(report.timeStart) + " downloaded: " + getDownloadSum(peerInfo);
+			infoDiv.appendChild(peerInfoHeader);
+		}
+		{
+			var line = document.createElement("hr");
+			line.className = "infoHeaderLine";
+			//infoDiv.appendChild(line);
+		}
+		{
+			var eventsSelect = document.createElement("select");
+			eventsSelect.className = "eventsSelect";
+			eventsSelect.size = 20;
+
+			peerInfo.events.forEach((element) => {
+				var option = document.createElement("option");
+			
+				option.text = formatTimestamp(report.timeStart, element.tm) + ": " + getPeerEventInfo(element);
+				eventsSelect.add(option);
+			});
+
+			infoDiv.appendChild(eventsSelect);
+		}
+
+		toggleHidePeerInfo(true);
+	}
+
+	function onLoadFunctions()
+	{
+		report = JSON.parse(input);
+		fillPeersSelect(report.peers);
+		toggleHidePeerInfo();
+	}
+	window.onload = onLoadFunctions;
+</script>
+<body>
+
+<div id="peersDiv">
+<label for="peersSelect"><b>Peer:</b></label>
+<select name="peersSelect" id="peersSelect" onchange="peersSelectChanged()">
+	<option value="" selected disabled hidden>Choose</option>
+</select>
+<button id="toggleHidePeerInfoButton" onclick="toggleHidePeerInfo()"></button>
+<div id="peerInfo" class="subdiv">
+</div>
+</div>
+
+</body>
+</html>
