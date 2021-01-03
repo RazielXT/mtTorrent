@@ -216,7 +216,7 @@ std::vector<mtt::ActivePeerInfo> mtt::FileTransfer::getPeersInfo()
 		out[i].percentage = comm->info.pieces.getPercentage();
 		out[i].client = comm->ext.state.client;
 		out[i].connected = comm->isEstablished();
-		out[i].choking = out[i].connected && comm->state.amInterested && comm->state.amChoking;
+		out[i].choking = comm->state.peerChoking;
 
 		for (auto& active : activePeers)
 		{
