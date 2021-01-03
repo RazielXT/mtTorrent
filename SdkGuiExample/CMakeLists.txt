@@ -19,6 +19,7 @@ list (TRANSFORM imgui_backends PREPEND "imgui/backends/")
 
 add_executable (mtTorrentSdkGuiExample
 	main
+	TorrentInstance
 	${imgui_sources}
 	${imgui_backends}
 )

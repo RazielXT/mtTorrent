@@ -45,6 +45,9 @@
     <ClCompile Include="imgui\backends\imgui_impl_opengl2.cpp">
       <Filter>Source Files\Imgui\backend</Filter>
     </ClCompile>
+    <ClCompile Include="TorrentInstance.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\backends\imgui_impl_glfw.h">
@@ -52,6 +55,9 @@
     </ClInclude>
     <ClInclude Include="imgui\backends\imgui_impl_opengl2.h">
       <Filter>Source Files\Imgui\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="TorrentInstance.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
