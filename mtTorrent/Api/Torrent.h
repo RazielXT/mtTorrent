@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Public/Status.h"
-#include "Api/Interface.h"
-#include "Api/FileTransfer.h"
-#include "Api/Peers.h"
-#include "Api/MagnetDownload.h"
+#include "../Public/Status.h"
+#include "Interface.h"
+#include "FileTransfer.h"
+#include "Peers.h"
+#include "MagnetDownload.h"
 #include <memory>
 
 

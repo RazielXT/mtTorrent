@@ -1,14 +1,119 @@
-#include "Api/Core.h"
-#include "Api/Configuration.h"
+#include "mtTorrent/Api/Core.h"
+#include "mtTorrent/Api/Configuration.h"
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
 #include <iostream>
+#include <tuple>
+
+int main()
+{
+	auto core = mttApi::Core::create();
+
+	auto settings = mtt::config::getExternal();
+	settings.files.defaultDirectory = "./";
+	mtt::config::setValues(settings.files);
+	settings.dht.enabled = true;
+	mtt::config::setValues(settings.dht);
+
+	core->registerAlerts((int) mtt::AlertId::MetadataFinished);
+
+	mtt::Status addStatus;
+	mttApi::TorrentPtr addedTorrent;
+
+	//magnet test
+	std::tie(addStatus, addedTorrent) = core->addMagnet("magnetLink");
+	
+	//file test
+	//std::tie(addStatus, addedTorrent) = core->addFile("path.torrent");
+
+	if (addedTorrent)
+	{
+		addedTorrent->start();
+	}
+	else
+	{
+		printf("Adding torrent failed, status %d", (int)addStatus);
+		return 0;
+	}
+
+	while(!addedTorrent->finished())
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+		auto alerts = core->popAlerts();
+
+		for (auto& a : alerts)
+		{
+			if (a->id == mtt::AlertId::MetadataFinished)
+			{
+				auto mdAlert = a->getAs<mtt::MetadataAlert>();
+				printf("Name: %s, Metadata download finished\n", core->getTorrent(mdAlert->hash)->name().c_str());
+			}
+		}
+
+		auto torrents = core->getTorrents();
+
+		for (auto t : torrents)
+		{
+			auto state = t->getState();
+
+			switch (state)
+			{
+			case mttApi::Torrent::State::CheckingFiles:
+				printf("Name: %s, checking files... %f%%\n", t->name().c_str(), t->checkingProgress() * 100);
+				break;
+			case mttApi::Torrent::State::DownloadingMetadata:
+			{
+				if (auto magnet = t->getMagnetDownload())
+				{
+					mtt::MetadataDownloadState utmState = magnet->getState();
+					if(utmState.partsCount == 0)
+						printf("Metadata download getting peers... Connected peers: %u, Found peers: %u\n", t->getPeers()->connectedCount(), t->getPeers()->receivedCount());
+					else
+						printf("Metadata download progress: %u / %u, Connected peers: %u, Found peers: %u\n", utmState.receivedParts, utmState.partsCount, t->getPeers()->connectedCount(), t->getPeers()->receivedCount());
+
+					std::vector<std::string> logs;
+					static size_t magnetProgressLogPos = 0;
+					if (auto count = magnet->getDownloadLog(logs, magnetProgressLogPos))
+					{
+						magnetProgressLogPos += count;
+
+						for (auto& l : logs)
+							printf("Metadata log: %s\n", l.data());
+					}
+				}
+				break;
+			}
+			case mttApi::Torrent::State::Downloading:
+				printf("Name: %s, Progress: %f%%, Speed: %u bps, Connected peers: %u, Found peers: %u\n", t->name().c_str(), t->currentProgress()*100, t->getFileTransfer()->getDownloadSpeed(), t->getPeers()->connectedCount(), t->getPeers()->receivedCount());
+				break;
+			case mttApi::Torrent::State::Seeding:
+				printf("Name: %s finished, upload speed: %u\n", t->name().c_str(), t->getFileTransfer()->getUploadSpeed());
+				break;
+			case mttApi::Torrent::State::Interrupted:
+				printf("Name: %s interrupted, problem code: %d\n", t->name().c_str(), (int)t->getLastError());
+				break;
+			case mttApi::Torrent::State::Inactive:
+			default:
+				break;
+			}
+		}
+	}
+
+	//optional, stopped automatically in core destructor
+	for (auto t : core->getTorrents())
+	{
+		t->stop();
+	}
+
+	return 0;
+}
 
 void example2()
 {
 	auto core = mttApi::Core::create();
 
-	auto[status, torrent] = core->addFile("path/to/torrent/file.torrent");
+	auto [status, torrent] = core->addFile("path/to/torrent/file.torrent");
 
 	if (torrent)
 	{
@@ -84,7 +189,7 @@ void example2()
 	{
 		mtt::MetadataDownloadState state = magnet->getState();
 
-		if(!state.finished && state.partsCount)
+		if (!state.finished && state.partsCount)
 			std::cout << "Metadata  progress " << state.receivedParts << "/" << state.partsCount << std::endl;
 
 		std::vector<std::string> logs;
@@ -104,7 +209,7 @@ void example2()
 		auto sources = peers->getSourcesInfo();
 		for (auto source : sources)
 		{
-			if(source.state >= mtt::TrackerState::Connected)
+			if (source.state >= mtt::TrackerState::Connected)
 				std::cout << source.hostname << " has " << source.peers << " peers" << std::endl;
 		}
 
@@ -132,105 +237,4 @@ void example2()
 			std::cout << core->getTorrent(hash)->name() << " added" << std::endl;
 		}
 	}
-}
-
-int main()
-{
-	auto core = mttApi::Core::create();
-
-	auto settings = mtt::config::getExternal();
-	settings.files.defaultDirectory = "./";
-	mtt::config::setValues(settings.files);
-	settings.dht.enabled = true;
-	mtt::config::setValues(settings.dht);
-
-	core->registerAlerts((int) mtt::AlertId::MetadataFinished);
-
-	//file test
-	/*
-	auto addResult = core->addFile("D:\\test.torrent");
-	if (addResult.second)
-	{
-		addResult.second->start();
-	}
-	*/
-
-	//magnet test
-	size_t magnetProgressLogPos = 0;
-	auto addResult = core->addMagnet("magnet:?xt=urn:btih:9b8d456ba5e2ce92023b069743e0d1051f199034&dn=%5BDameDesuYo%5D%20Shingeki%20no%20Kyojin%20%28The%20Final%20Season%29%20-%2063v0%20%281920x1080%2010bit%20AAC%29%20%5B098588E9%5D.mkv&tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce");
-	if (addResult.second)
-	{
-		addResult.second->start();
-	}
-
-	while(!addResult.second->finished())
-	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-		auto alerts = core->popAlerts();
-
-		for (auto& a : alerts)
-		{
-			if (a->id == mtt::AlertId::MetadataFinished)
-			{
-				auto mdAlert = a->getAs<mtt::MetadataAlert>();
-				printf("Name: %s, Metadata download finished\n", core->getTorrent(mdAlert->hash)->name().c_str());
-			}
-		}
-
-		auto torrents = core->getTorrents();
-
-		for (auto t : torrents)
-		{
-			auto state = t->getState();
-
-			switch (state)
-			{
-			case mttApi::Torrent::State::CheckingFiles:
-				printf("Name: %s, checking files... %f%%\n", t->name().c_str(), t->checkingProgress() * 100);
-				break;
-			case mttApi::Torrent::State::DownloadingMetadata:
-			{
-				if (auto magnet = t->getMagnetDownload())
-				{
-					mtt::MetadataDownloadState utmState = magnet->getState();
-					if(utmState.partsCount == 0)
-						printf("Metadata download getting peers... Connected peers: %u, Found peers: %u\n", t->getPeers()->connectedCount(), t->getPeers()->receivedCount());
-					else
-						printf("Metadata download progress: %u / %u, Connected peers: %u, Found peers: %u\n", utmState.receivedParts, utmState.partsCount, t->getPeers()->connectedCount(), t->getPeers()->receivedCount());
-
-					std::vector<std::string> logs;
-					if (auto count = magnet->getDownloadLog(logs, magnetProgressLogPos))
-					{
-						magnetProgressLogPos += count;
-
-						for (auto& l : logs)
-							printf("Metadata log: %s\n", l.data());
-					}
-				}
-				break;
-			}
-			case mttApi::Torrent::State::Downloading:
-				printf("Name: %s, Progress: %f%%, Speed: %u bps, Connected peers: %u, Found peers: %u\n", t->name().c_str(), t->currentProgress()*100, t->getFileTransfer()->getDownloadSpeed(), t->getPeers()->connectedCount(), t->getPeers()->receivedCount());
-				break;
-			case mttApi::Torrent::State::Seeding:
-				printf("Name: %s finished, upload speed: %u\n", t->name().c_str(), t->getFileTransfer()->getUploadSpeed());
-				break;
-			case mttApi::Torrent::State::Interrupted:
-				printf("Name: %s interrupted, problem code: %d\n", t->name().c_str(), (int)t->getLastError());
-				break;
-			case mttApi::Torrent::State::Inactive:
-			default:
-				break;
-			}
-		}
-	}
-
-	//optional, stopped automatically in core destructor
-	for (auto t : core->getTorrents())
-	{
-		t->stop();
-	}
-
-	return 0;
 }

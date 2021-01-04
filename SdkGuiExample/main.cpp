@@ -1,6 +1,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl2.h"
+#include "TorrentInstance.h"
 #include <stdio.h>
 
 #ifdef __APPLE__
@@ -12,8 +13,6 @@
 #if defined(_MSC_VER) && (_MSC_VER >= 1900) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
 #pragma comment(lib, "legacy_stdio_definitions")
 #endif
-
-#include "TorrentInstance.h"
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -47,7 +46,6 @@ int main(int, char**)
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 	TorrentInstance torrent;
-	torrent.start();
 
 	// Main loop
 	while (!glfwWindowShouldClose(window))

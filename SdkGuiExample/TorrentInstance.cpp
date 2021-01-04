@@ -1,8 +1,9 @@
 #include "TorrentInstance.h"
 #include "imgui.h"
-#include "Api/Configuration.h"
+#include "mtTorrent/Api/Configuration.h"
 #include <sstream>
 #include <chrono>
+#include <tuple>
 
 TorrentInstance::TorrentInstance()
 {
@@ -11,27 +12,22 @@ TorrentInstance::TorrentInstance()
 	auto settings = mtt::config::getExternal();
 	settings.files.defaultDirectory = "./";
 	mtt::config::setValues(settings.files);
-}
 
-void TorrentInstance::start()
-{
-	//magnet test
-	auto addResult = core->addMagnet("magnet:?xt=urn:btih:9b8d456ba5e2ce92023b069743e0d1051f199034&dn=%5BDameDesuYo%5D%20Shingeki%20no%20Kyojin%20%28The%20Final%20Season%29%20-%2063v0%20%281920x1080%2010bit%20AAC%29%20%5B098588E9%5D.mkv&tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce");
-	if (addResult.second)
-	{
-		torrentPtr = addResult.second;
-		torrentPtr->start();
-	}
+	auto torrents = core->getTorrents();
+
+	if (!torrents.empty())
+		torrentPtr = torrents.front();
 }
 
 void TorrentInstance::draw()
 {
-	if (!torrentPtr)
-		return;
-
 	drawInfoWindow();
-	drawSourcesWindow();
-	drawPeersWindow();
+
+	if (torrentPtr)
+	{
+		drawSourcesWindow();
+		drawPeersWindow();
+	}
 }
 
 static std::string formatBytes(uint64_t bytes)
@@ -79,6 +75,50 @@ void TorrentInstance::drawInfoWindow()
 	ImGui::SetNextWindowPos({ 8, 8 }, ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize({ 690, 200 }, ImGuiCond_FirstUseEver);
 	ImGui::Begin("Torrent info");
+
+	if (!torrentPtr)
+	{
+		static mtt::Status status = mtt::Status::Success;
+		static char input[1024] = "";
+
+		ImGui::SetNextItemWidth(ImGui::GetWindowWidth());
+		ImGui::InputText("", input, IM_ARRAYSIZE(input));
+
+		if (ImGui::Button("Add Magnet"))
+			std::tie(status, torrentPtr) = core->addMagnet(input);
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("Add Torrent File"))
+			std::tie(status, torrentPtr) = core->addFile(input);
+
+		if (status != mtt::Status::Success)
+			ImGui::Text("Adding error %d", (int)status);
+
+		ImGui::End();
+
+		return;
+	}
+
+	if (torrentPtr->getActiveState() == mttApi::Torrent::ActiveState::Started)
+	{
+		if (ImGui::Button("Stop"))
+			torrentPtr->stop();
+	}
+	else
+	{
+		if (ImGui::Button("Start"))
+			torrentPtr->start();
+	}
+
+	ImGui::SameLine();
+	if (ImGui::Button("Remove"))
+	{
+		core->removeTorrent(torrentPtr, true);
+		torrentPtr = nullptr;
+		ImGui::End();
+		return;
+	}
 
 	ImGui::Text(torrentPtr->name().data());
 	ImGui::Text("Total size %s", formatBytes(torrentPtr->getFileInfo().info.fullSize).data());

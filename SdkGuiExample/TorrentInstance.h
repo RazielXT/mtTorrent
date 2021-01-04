@@ -1,12 +1,10 @@
-#include "Api/Core.h"
+#include "mtTorrent/Api/Core.h"
 
 class TorrentInstance
 {
 public:
 
 	TorrentInstance();
-
-	void start();
 
 	void draw();
 

@@ -1,8 +1,7 @@
 #pragma once
 
-#include "Api/Torrent.h"
-#include "Api/Listener.h"
-#include "Public/ModuleArray.h"
+#include "Torrent.h"
+#include "Listener.h"
 #include <memory>
 
 namespace mttApi
@@ -52,6 +51,10 @@ namespace mttApi
 			Remove torrent and optionally all created torrent files
 		*/
 		API_EXPORT mtt::Status removeTorrent(const uint8_t* hash, bool deleteFiles);
+		/*
+			Remove torrent and optionally all created torrent files
+		*/
+		API_EXPORT mtt::Status removeTorrent(TorrentPtr torrent, bool deleteFiles);
 
 		/*
 			Register to alerts about specific events

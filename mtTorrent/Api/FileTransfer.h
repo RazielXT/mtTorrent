@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Api/Interface.h"
+#include "Interface.h"
 
 namespace mttApi
 {

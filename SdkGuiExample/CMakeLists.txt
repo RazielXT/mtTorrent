@@ -51,4 +51,4 @@ target_compile_features (mtTorrentSdkGuiExample
 
 target_link_libraries (mtTorrentSdkGuiExample mtTorrent)
 
-target_include_directories (mtTorrentSdkGuiExample PUBLIC ../mtTorrent/)
+target_include_directories (mtTorrentSdkGuiExample PUBLIC ../)

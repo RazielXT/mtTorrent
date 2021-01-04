@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Public/Status.h"
-#include "Public/Alerts.h"
-#include "Api/Configuration.h"
+#include "../Public/Status.h"
+#include "../Public/Alerts.h"
+#include "Configuration.h"
 #include <string>
 #include <vector>
 #include <cstring>
