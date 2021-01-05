@@ -49,7 +49,7 @@ protected:
 	void handle_resolve(const std::error_code& error, udp::resolver::iterator iterator, std::shared_ptr<udp::resolver> resolver);
 	void handle_connect(const std::error_code& err);
 	
-	void do_write();
+	void do_write(DataBuffer data);
 	void do_rewrite();
 	void do_close();
 
@@ -70,6 +70,9 @@ protected:
 	udp::endpoint target_endpoint;
 	udp::socket socket;
 	asio::io_service& io_service;
+
+	bool resolving = false;
+	void resolveHostname();
 
 	std::string hostname;
 	std::string port;

@@ -18,33 +18,31 @@ void UdpAsyncWriter::setAddress(const Addr& addr)
 	state = Initialized;
 }
 
-void UdpAsyncWriter::setAddress(const std::string& host, const std::string& p)
-{
-	hostname = host;
-	port = p;
-
-	udp::resolver::query query(hostname, port);
-
-	auto resolver = std::make_shared<udp::resolver>(io_service);
-	resolver->async_resolve(query, std::bind(&UdpAsyncWriter::handle_resolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2, resolver));
-}
-
-void UdpAsyncWriter::setAddress(const std::string& host, const std::string& p, bool ipv6)
-{
-	hostname = host;
-	port = p;
-
-	udp::resolver::query query(ipv6 ? udp::v6() : udp::v4(), hostname, port);
-
-	auto resolver = std::make_shared<udp::resolver>(io_service);
-	resolver->async_resolve(query, std::bind(&UdpAsyncWriter::handle_resolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2, resolver));
-}
-
 void UdpAsyncWriter::setAddress(const udp::endpoint& addr)
 {
 	target_endpoint = addr;
 
 	state = Initialized;
+}
+
+void UdpAsyncWriter::setAddress(const std::string& host, const std::string& p)
+{
+	UDP_LOG(host << " setAddress");
+
+	hostname = host;
+	port = p;
+
+	resolveHostname();
+}
+
+void UdpAsyncWriter::setAddress(const std::string& host, const std::string& p, bool ipv6)
+{
+	UDP_LOG(host << " setAddress");
+
+	hostname = host;
+	port = p;
+
+	resolveHostname();
 }
 
 void UdpAsyncWriter::setBindPort(uint16_t port)
@@ -62,11 +60,7 @@ void UdpAsyncWriter::close()
 
 void UdpAsyncWriter::write(const DataBuffer& data)
 {
-	std::lock_guard<std::mutex> guard(stateMutex);
-
-	messageBuffer.store(data.data(), data.size());
-
-	io_service.post(std::bind(&UdpAsyncWriter::do_write, shared_from_this()));
+	io_service.post(std::bind(&UdpAsyncWriter::do_write, shared_from_this(), data));
 }
 
 void UdpAsyncWriter::write()
@@ -86,14 +80,29 @@ void UdpAsyncWriter::write(const BufferView& data, WriteOption option)
 		send_message(data, option);
 	else
 	{
-		messageBuffer = data;
-		io_service.post(std::bind(&UdpAsyncWriter::do_write, shared_from_this()));
+		io_service.post(std::bind(&UdpAsyncWriter::do_write, shared_from_this(), DataBuffer(data.data, data.data + data.size)));
 	}
+}
+
+void UdpAsyncWriter::resolveHostname()
+{
+	if (resolving || hostname.empty())
+		return;
+
+	UDP_LOG("resolveHostname");
+
+	resolving = true;
+	udp::resolver::query query(hostname, port);
+
+	auto resolver = std::make_shared<udp::resolver>(io_service);
+	resolver->async_resolve(query, std::bind(&UdpAsyncWriter::handle_resolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2, resolver));
 }
 
 void UdpAsyncWriter::handle_resolve(const std::error_code& error, udp::resolver::iterator iterator, std::shared_ptr<udp::resolver> resolver)
 {
 	std::lock_guard<std::mutex> guard(stateMutex);
+
+	UDP_LOG("handle_resolve");
 
 	if (!error)
 	{
@@ -107,6 +116,8 @@ void UdpAsyncWriter::handle_resolve(const std::error_code& error, udp::resolver:
 	{
 		postFail("Resolve", error);
 	}
+
+	resolving = false;
 }
 
 void UdpAsyncWriter::postFail(std::string place, const std::error_code& error)
@@ -123,14 +134,19 @@ void UdpAsyncWriter::postFail(std::string place, const std::error_code& error)
 
 void UdpAsyncWriter::handle_connect(const std::error_code& error)
 {
+	UDP_LOG("handle_connect");
+
 	std::lock_guard<std::mutex> guard(stateMutex);
 
 	if (!error)
 	{
-		state = Connected;
-
-		if (onResponse)
+		if (onResponse && state != Connected)
+		{
+			UDP_LOG("call async_receive");
 			socket.async_receive(asio::null_buffers(), std::bind(&UdpAsyncWriter::handle_receive, shared_from_this(), std::placeholders::_1));
+		}
+
+		state = Connected;
 
 		send_message();
 	}
@@ -167,9 +183,11 @@ void UdpAsyncWriter::do_rewrite()
 		send_message();
 }
 
-void UdpAsyncWriter::do_write()
+void UdpAsyncWriter::do_write(DataBuffer data)
 {
 	std::lock_guard<std::mutex> guard(stateMutex);
+
+	messageBuffer.store(data.data(), data.size());
 
 	if (state != Clear)
 	{
@@ -177,7 +195,7 @@ void UdpAsyncWriter::do_write()
 	}
 	else if (!hostname.empty())
 	{
-		setAddress(hostname, port);
+		resolveHostname();
 	}
 }
 
@@ -276,12 +294,16 @@ udp::endpoint& UdpAsyncWriter::getEndpoint()
 
 void UdpAsyncWriter::handle_receive(const std::error_code& error)
 {
+	std::lock_guard<std::mutex> guard(stateMutex);
+
 	UDP_LOG("handle_receive status: " << error.message());
 
 	if (error || state != Connected)
 		return;
 
 	readSocket();
+
+	UDP_LOG("call async_receive");
 	socket.async_receive(asio::null_buffers(), std::bind(&UdpAsyncWriter::handle_receive, shared_from_this(), std::placeholders::_1));
 }
 
@@ -310,8 +332,9 @@ void UdpAsyncWriter::readSocket()
 
 		if (transferred)
 		{
+			receiveBuffer.resize(transferred);
 			onResponse(shared_from_this(), &receiveBuffer);
-			UDP_LOG("readSocket received " << receiveBuffer.size());
+			UDP_LOG("readSocket received " << transferred);
 		}
 	}
 }
