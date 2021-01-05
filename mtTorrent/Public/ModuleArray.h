@@ -128,8 +128,7 @@ namespace mtt
 		iterator begin() const { return iterator(buffer); };
 		iterator end() const { return iterator(buffer + currentSize); };
 
-		// Move constructor
-		array(array&& other) noexcept : allocator(other.allocator)
+		array(array&& other) noexcept : allocatorPtr(other.allocatorPtr)
 		{
 			buffer = other.buffer;
 			currentSize = other.currentSize;
@@ -137,18 +136,6 @@ namespace mtt
 			other.buffer = nullptr;
 			other.currentSize = 0;
 			other.allocatedSize = 0;
-		}
-
-		array& operator=(array&& rhs) noexcept {
-
-			buffer = rhs.buffer;
-			currentSize = rhs.currentSize;
-			allocatedSize = rhs.allocatedSize;
-			rhs.buffer = nullptr;
-			rhs.currentSize = 0;
-			rhs.allocatedSize = 0;
-
-			return *this;
 		}
 
 		array& operator=(const array& rhs) noexcept {
