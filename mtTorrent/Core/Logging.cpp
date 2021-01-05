@@ -56,9 +56,6 @@ bool isBtType(const char* t)
 
 void WriteLogImplementation(const char * const type, std::stringstream& ss)
 {
-	if (type != LogTypeBtUtm && type != LogTypeTest)
-		return;
-
 	LockLog();
 
 	std::cout << GetLogTime() << type << ": " << ss.str() << "\n";

@@ -292,7 +292,12 @@ mtt::Status mtt::Torrent::start()
 	if (files.selection.files.empty())
 		lastError = Status::E_InvalidInput;
 	else if (!checking)
+	{
 		lastError = files.prepareSelection();
+
+		if (lastError == mtt::Status::Success)
+			lastStateTime = files.storage.getLastModifiedTime();
+	}
 
 	if (lastError != mtt::Status::Success)
 	{

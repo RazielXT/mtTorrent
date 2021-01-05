@@ -175,7 +175,7 @@ std::vector<mtt::Diagnostics::PeerSnapshot> mtt::Diagnostics::Storage::loadPeers
 		file.seekg(0, std::ios::end);
 		std::streamsize size = file.tellg();
 		file.seekg(0, std::ios::beg);
-		buffer.resize(size);
+		buffer.resize((size_t)size);
 		file.read((char*)buffer.data(), size);
 
 		const uint8_t* ptr = buffer.data();
