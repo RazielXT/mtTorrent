@@ -7,13 +7,13 @@
 
 int main()
 {
-	auto core = mttApi::Core::create();
-
 	auto settings = mtt::config::getExternal();
 	settings.files.defaultDirectory = "./";
 	mtt::config::setValues(settings.files);
 	settings.dht.enabled = true;
 	mtt::config::setValues(settings.dht);
+
+	auto core = mttApi::Core::create();
 
 	core->registerAlerts((int) mtt::AlertId::MetadataFinished);
 

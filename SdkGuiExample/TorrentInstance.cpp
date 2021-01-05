@@ -7,11 +7,13 @@
 
 TorrentInstance::TorrentInstance()
 {
-	core = mttApi::Core::create();
-
 	auto settings = mtt::config::getExternal();
 	settings.files.defaultDirectory = "./";
 	mtt::config::setValues(settings.files);
+	settings.dht.enabled = true;
+	mtt::config::setValues(settings.dht);
+
+	core = mttApi::Core::create();
 
 	auto torrents = core->getTorrents();
 
