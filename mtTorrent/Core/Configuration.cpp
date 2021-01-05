@@ -60,6 +60,7 @@ namespace mtt
 		static void triggerChange(ValueType type)
 		{
 			dirty = true;
+			save();
 			AlertsManager::Get().configAlert(AlertId::ConfigChanged, type);
 
 			std::lock_guard<std::mutex> guard(cbMutex);
