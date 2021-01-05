@@ -15,14 +15,14 @@ void mtt::TrackerManager::start(AnnounceCallback callbk)
 
 	announceCallback = callbk;
 
-	for (size_t i = 0; i < 3 && i < trackers.size(); i++)
+	size_t i = 0;
+	for (auto& t : trackers)
 	{
-		auto& t = trackers[i];
+		if (!t.comm && start(&t))
+			i++;
 
-		if (!t.comm)
-		{
-			start(&t);
-		}
+		if (i > 2)
+			break;
 	}
 }
 
@@ -171,7 +171,7 @@ void mtt::TrackerManager::onTrackerFail(Tracker* t)
 	}
 }
 
-void mtt::TrackerManager::start(TrackerInfo* tracker)
+bool mtt::TrackerManager::start(TrackerInfo* tracker)
 {
 	if (tracker->uri.protocol == "udp")
 		tracker->comm = std::make_shared<UdpTrackerComm>();
@@ -182,7 +182,7 @@ void mtt::TrackerManager::start(TrackerInfo* tracker)
 		tracker->comm = std::make_shared<HttpsTrackerComm>();
 #endif
 	else
-		return;
+		return false;
 
 	tracker->comm->onFail = std::bind(&TrackerManager::onTrackerFail, this, tracker->comm.get());
 	tracker->comm->onAnnounceResult = std::bind(&TrackerManager::onAnnounce, this, std::placeholders::_1, tracker->comm.get());
@@ -192,6 +192,8 @@ void mtt::TrackerManager::start(TrackerInfo* tracker)
 	tracker->retryCount = 0;
 
 	tracker->comm->announce();
+
+	return true;
 }
 
 void mtt::TrackerManager::startNext()

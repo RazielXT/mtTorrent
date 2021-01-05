@@ -44,7 +44,7 @@ namespace mtt
 		std::vector<TrackerInfo> trackers;
 		std::mutex trackersMutex;
 
-		void start(TrackerInfo*);
+		bool start(TrackerInfo*);
 		void startNext();
 		void stopAll();
 		TrackerInfo* findTrackerInfo(Tracker*);

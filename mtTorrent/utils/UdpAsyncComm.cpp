@@ -137,6 +137,7 @@ void UdpAsyncComm::addPendingResponse(UdpRequest c, UdpResponseCallback response
 	info->anySource = anySource;
 	info->onResponse = response;
 
+	c->onResponse = std::bind(&UdpAsyncComm::onDirectUdpReceive, this, std::placeholders::_1, std::placeholders::_2);
 	c->onCloseCallback = std::bind(&UdpAsyncComm::onUdpClose, this, std::placeholders::_1);
 
 	std::lock_guard<std::mutex> guard(responsesMutex);
@@ -170,6 +171,52 @@ void UdpAsyncComm::onUdpReceiveBuffers(udp::endpoint& source, std::vector<DataBu
 
 	if (buffers.size() && onUnhandledReceive)
 		onUnhandledReceive(source, unhandled);
+}
+
+void UdpAsyncComm::onDirectUdpReceive(UdpRequest client, DataBuffer* data)
+{
+	if (!data)
+		return;
+
+	std::vector<std::shared_ptr<ResponseRetryInfo>> foundPendingResponses;
+
+	std::lock_guard<std::mutex> guard(respondingMutex);
+
+	{
+		std::lock_guard<std::mutex> guard(responsesMutex);
+
+		auto it = pendingResponses.begin();
+		while (it != pendingResponses.end())
+		{
+			if ((*it)->client == client)
+			{
+				foundPendingResponses.emplace_back(std::move(*it));
+				it = pendingResponses.erase(it);
+			}
+			else
+				++it;
+		}
+	}
+
+	bool handled = false;
+
+	for (auto r : foundPendingResponses)
+	{
+		if (!handled && r->onResponse(r->client, data))
+		{
+			UDP_LOG(r->client->getName() << " successfully handled, removing");
+
+			handled = true;
+			r->reset();
+		}
+		else
+		{
+			UDP_LOG(r->client->getName() << " unsuccessfully handled");
+
+			std::lock_guard<std::mutex> guard(responsesMutex);
+			pendingResponses.push_back(r);
+		}
+	}
 }
 
 bool UdpAsyncComm::onUdpReceive(udp::endpoint& source, DataBuffer& data)

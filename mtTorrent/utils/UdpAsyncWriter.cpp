@@ -1,7 +1,7 @@
 #include "UdpAsyncWriter.h"
 #include "Logging.h"
 
-#define UDP_LOG(x) WRITE_LOG(LogTypeUdp, x)
+#define UDP_LOG(x) WRITE_LOG(LogTypeUdp, x) //{std::stringstream ss; ss << getName() << " " << x; WriteLogImplementation(LogTypeUdp, ss);}
 
 UdpAsyncWriter::UdpAsyncWriter(asio::io_service& io) : io_service(io), socket(io)
 {
@@ -54,6 +54,7 @@ void UdpAsyncWriter::setBindPort(uint16_t port)
 
 void UdpAsyncWriter::close()
 {
+	onResponse = nullptr;
 	onCloseCallback = nullptr;
 
 	io_service.post(std::bind(&UdpAsyncWriter::do_close, shared_from_this()));
@@ -127,6 +128,10 @@ void UdpAsyncWriter::handle_connect(const std::error_code& error)
 	if (!error)
 	{
 		state = Connected;
+
+		if (onResponse)
+			socket.async_receive(asio::null_buffers(), std::bind(&UdpAsyncWriter::handle_receive, shared_from_this(), std::placeholders::_1));
+
 		send_message();
 	}
 	else
@@ -139,6 +144,7 @@ void UdpAsyncWriter::do_close()
 {
 	std::lock_guard<std::mutex> guard(stateMutex);
 
+	onResponse = nullptr;
 	onCloseCallback = nullptr;
 
 	if (state == Connected)
@@ -186,6 +192,7 @@ void UdpAsyncWriter::send_message()
 			socket.open(target_endpoint.protocol(), ec);
 			socket.set_option(asio::socket_base::reuse_address(true),ec);
 			socket.bind(udp::endpoint(target_endpoint.protocol(), bindPort), ec);
+			socket.non_blocking(true, ec);
 
 			if (ec)
 			{
@@ -265,4 +272,46 @@ std::string UdpAsyncWriter::getName()
 udp::endpoint& UdpAsyncWriter::getEndpoint()
 {
 	return target_endpoint;
+}
+
+void UdpAsyncWriter::handle_receive(const std::error_code& error)
+{
+	UDP_LOG("handle_receive status: " << error.message());
+
+	if (error || state != Connected)
+		return;
+
+	readSocket();
+	socket.async_receive(asio::null_buffers(), std::bind(&UdpAsyncWriter::handle_receive, shared_from_this(), std::placeholders::_1));
+}
+
+void UdpAsyncWriter::readSocket()
+{
+	for (size_t i = 0; i < 30; i++)
+	{
+		std::error_code ec;
+		auto av = socket.available(ec);
+		if (!av)
+			break;
+
+		receiveBuffer.resize(av);
+		size_t transferred = socket.receive_from(asio::buffer(receiveBuffer), target_endpoint, 0, ec);
+
+		if (ec)
+		{
+			if (ec == asio::error::interrupted)
+				continue;
+
+			if (ec != asio::error::would_block)
+				UDP_LOG("receive_from error: " << ec.message());
+
+			break;
+		}
+
+		if (transferred)
+		{
+			onResponse(shared_from_this(), &receiveBuffer);
+			UDP_LOG("readSocket received " << receiveBuffer.size());
+		}
+	}
 }

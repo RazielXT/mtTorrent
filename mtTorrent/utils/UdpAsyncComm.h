@@ -50,6 +50,7 @@ private:
 
 	void checkTimeout(UdpRequest, const asio::error_code& error);
 	void onUdpReceiveBuffers(udp::endpoint&, std::vector<DataBuffer*>&);
+	void onDirectUdpReceive(UdpRequest, DataBuffer*);
 	bool onUdpReceive(udp::endpoint&, DataBuffer&);
 	void onUdpClose(UdpRequest);
 	UdpPacketCallback onUnhandledReceive;

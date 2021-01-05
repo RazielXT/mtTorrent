@@ -36,6 +36,7 @@ public:
 	void write();
 	void close();
 
+	std::function<void(UdpRequest, DataBuffer*)> onResponse;
 	std::function<void(UdpRequest)> onCloseCallback;
 
 protected:
@@ -59,6 +60,10 @@ protected:
 	void send_message(const BufferView&, WriteOption opt);
 
 	void handle_write(const std::error_code& error, size_t sz, WriteOption opt);
+
+	void handle_receive(const std::error_code& error);
+	void readSocket();
+	DataBuffer receiveBuffer;
 
 	uint16_t bindPort = 0;
 
