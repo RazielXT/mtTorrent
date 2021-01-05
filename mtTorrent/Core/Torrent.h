@@ -33,7 +33,6 @@ namespace mtt
 		void stop(StopReason reason = StopReason::Manual);
 
 		void checkFiles();
-		std::shared_ptr<PiecesCheck> checkFiles(std::function<void(std::shared_ptr<PiecesCheck>)> onFinish);
 		float checkingProgress();
 
 		bool selectFiles(const std::vector<bool>&);

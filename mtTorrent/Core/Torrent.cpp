@@ -259,11 +259,6 @@ mtt::Status mtt::Torrent::start()
 	}
 #endif
 
-	if (state == ActiveState::Started)
-	{
-		return Status::Success;
-	}
-
 	if (getState() == mttApi::Torrent::State::DownloadingMetadata)
 	{
 		state = ActiveState::Started;
@@ -288,11 +283,7 @@ mtt::Status mtt::Torrent::start()
 				lastStateTime = 0;
 			}
 			else
-				checkFiles([this](std::shared_ptr<PiecesCheck> ch)
-					{
-						if (!ch->rejected)
-							start();
-					});
+				checkFiles();
 		}
 
 		files.progress.select(files.selection);
@@ -300,7 +291,7 @@ mtt::Status mtt::Torrent::start()
 
 	if (files.selection.files.empty())
 		lastError = Status::E_InvalidInput;
-	else
+	else if (!checking)
 		lastError = files.prepareSelection();
 
 	if (lastError != mtt::Status::Success)
@@ -371,19 +362,22 @@ void mtt::Torrent::stop(StopReason reason)
 	stopping = false;
 }
 
-std::shared_ptr<mtt::PiecesCheck> mtt::Torrent::checkFiles(std::function<void(std::shared_ptr<PiecesCheck>)> onFinish)
+void mtt::Torrent::checkFiles()
 {
+	if (checking)
+		return;
+
 	auto request = std::make_shared<mtt::PiecesCheck>();
 	request->piecesCount = (uint32_t)infoFile.info.pieces.size();
 
-	auto localOnFinish = [this, onFinish, request]()
+	auto localOnFinish = [this, request]()
 	{
+		checking = false;
+
 		{
 			std::lock_guard<std::mutex> guard(checkStateMutex);
 			checkState.reset();
 		}
-
-		checking = false;
 
 		if (!request->rejected)
 		{
@@ -397,8 +391,6 @@ std::shared_ptr<mtt::PiecesCheck> mtt::Torrent::checkFiles(std::function<void(st
 			else
 				stop();
 		}
-
-		onFinish(request);
 	};
 
 	checking = true;
@@ -421,14 +413,6 @@ std::shared_ptr<mtt::PiecesCheck> mtt::Torrent::checkFiles(std::function<void(st
 
 	std::lock_guard<std::mutex> guard(checkStateMutex);
 	checkState = request;
-
-	return checkState;
-}
-
-void mtt::Torrent::checkFiles()
-{
-	if(!checking)
-		checkFiles([](std::shared_ptr<PiecesCheck>) {});
 }
 
 float mtt::Torrent::checkingProgress()

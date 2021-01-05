@@ -738,15 +738,9 @@ void idealTorrentStateTest()
 	if (!torrent|| torrent->name().empty())
 		return;
 
-	bool finished = false;
-	auto onCheckFinish = [&finished](std::shared_ptr<PiecesCheck>)
-	{
-		finished = true;
-	};
+	torrent->checkFiles();
 
-	torrent->checkFiles(onCheckFinish);
-
-	WAITFOR(finished);
+	WAITFOR(!torrent->checking);
 
 	auto progress = torrent->currentProgress();
 }
@@ -758,15 +752,9 @@ void idealLocalTest()
 	if (!torrent)
 		return;
 
-	bool checked = false;
-	auto onCheckFinish = [&checked](std::shared_ptr<PiecesCheck>)
-	{
-		checked = true;
-	};
+	torrent->checkFiles();
 
-	torrent->checkFiles(onCheckFinish);
-
-	WAITFOR(checked);
+	WAITFOR(!torrent->checking);
 
 	torrent->peers->trackers.removeTrackers();
 
