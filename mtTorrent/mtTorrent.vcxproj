@@ -434,7 +434,6 @@
     <ClCompile Include="Core\Dht\Table.cpp" />
     <ClCompile Include="Core\ExtensionProtocol.cpp" />
     <ClCompile Include="Core\HttpTrackerComm.cpp" />
-    <ClCompile Include="Core\Interface.cpp" />
     <ClCompile Include="Core\Logging.cpp" />
     <ClCompile Include="Core\PeerCommunication.cpp" />
     <ClCompile Include="Core\Peers.cpp" />

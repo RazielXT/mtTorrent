@@ -277,6 +277,8 @@ mtt::Status mtt::Torrent::start()
 
 		if (filesTime != lastStateTime)
 		{
+			fileTransfer->clear();
+
 			if (filesTime == 0)
 			{
 				files.progress.removeReceived();
@@ -402,8 +404,7 @@ void mtt::Torrent::checkFiles()
 	lastError = Status::Success;
 
 	const uint32_t WorkersCount = 4;
-	if (state == ActiveState::Stopped)
-		service.start(WorkersCount);
+	service.start(WorkersCount);
 
 	auto finished = std::make_shared<uint32_t>(0);
 

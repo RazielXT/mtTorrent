@@ -17,6 +17,7 @@ namespace mtt
 
 		void start();
 		void stop();
+		void clear();
 
 		void refreshSelection();
 
@@ -85,10 +86,20 @@ namespace mtt
 		uint32_t peersEvalCounter = 0;
 
 		bool isWantedPiece(uint32_t idx) override;
+		void storePieceBlock(const PieceBlock& block) override;
 		void pieceFinished(std::shared_ptr<mtt::DownloadedPiece> piece) override;
-		std::shared_ptr<mtt::DownloadedPiece> loadUnfinishedPiece(uint32_t idx) override;
+		std::shared_ptr<mtt::DownloadedPiece> loadUnfinishedPiece(uint32_t idx, bool loadData) override;
 		bool storeUnfinishedPiece(std::shared_ptr<mtt::DownloadedPiece> piece) override;
 		LockedPeers getPeers() override;
+
+		std::mutex unsavedPieceBlocksMutex;
+		size_t unsavedPieceBlocksMaxSize = 0;
+		std::vector<std::pair<PieceBlockInfo, size_t>> unsavedPieceBlocks;
+		Status saveUnsavedPieceBlocks(const std::vector<std::pair<PieceBlockInfo, size_t>>& blocks);
+		Status saveUnsavedPieceBlocks();
+
+		std::vector<DataBuffer> dataBuffers;
+		size_t getDataBuffer();
 
 		std::vector<uint32_t> freshPieces;
 		std::vector<mtt::DownloadedPieceState> unFinishedPieces;

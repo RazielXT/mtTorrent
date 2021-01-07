@@ -1,8 +1,9 @@
 #include "Downloader.h"
 #include "Peers.h"
 #include "Torrent.h"
-#include "utils/HexEncoding.h"
 #include "Configuration.h"
+#include "utils/HexEncoding.h"
+#include "utils/SHA.h"
 #include <numeric>
 #include <random>
 
@@ -15,6 +16,7 @@ const uint32_t MaxPendingPeerRequestsToSpeedRatio = (1024*1024);
 
 mtt::Downloader::Downloader(TorrentInfo& info, DownloaderClient& c) : torrentInfo(info), client(c)
 {
+	immediateMode = info.pieceSize >= mtt::config::getInternal().minPieceSizeForImmediateStoring;
 }
 
 std::vector<mtt::DownloadedPieceState> mtt::Downloader::stop()
@@ -32,7 +34,7 @@ std::vector<mtt::DownloadedPieceState> mtt::Downloader::stop()
 	{
 		if (r.piece && r.piece->downloadedSize)
 		{
-			if (client.storeUnfinishedPiece(r.piece))
+			if (immediateMode || client.storeUnfinishedPiece(r.piece))
 				out.emplace_back(std::move(*r.piece));
 		}
 	}
@@ -106,15 +108,20 @@ void mtt::Downloader::pieceBlockReceived(PieceBlock& block, PeerCommunication* s
 				if (!r.piece)
 				{
 					r.piece = std::make_shared<DownloadedPiece>();
-					r.piece->init(r.pieceIdx, torrentInfo.getPieceSize(r.pieceIdx), r.blocksCount);
+					r.piece->init(r.pieceIdx, immediateMode ? 0 : torrentInfo.getPieceSize(r.pieceIdx), r.blocksCount);
 				}
 
 				r.piece->addBlock(block);
 
+				if (immediateMode)
+					client.storePieceBlock(block);
+
 				if (r.piece->remainingBlocks == 0)
 				{
 					finished = true;
-					valid = r.piece->isValid(torrentInfo.pieces[r.pieceIdx].hash);
+
+					if (!immediateMode)
+						valid = r.piece->isValid(torrentInfo.pieces[r.pieceIdx].hash);
 
 					if (valid)
 					{
@@ -381,7 +388,7 @@ void mtt::Downloader::sendPieceRequests(ActivePeer* p)
 				request = &requests.back();
 				request->pieceIdx = currentPiece.idx;
 				request->blocksCount = (uint16_t)torrentInfo.getPieceBlocksCount(currentPiece.idx);
-				request->piece = client.loadUnfinishedPiece(request->pieceIdx);
+				request->piece = client.loadUnfinishedPiece(request->pieceIdx, !immediateMode);
 				request->lastActivityTime = (uint32_t)time(0);
 			}
 
@@ -436,4 +443,37 @@ bool mtt::Downloader::hasWantedPieces(ActivePeer* p)
 	}
 
 	return false;
+}
+
+bool mtt::DownloadedPiece::isValid(const uint8_t* expectedHash)
+{
+	uint8_t hash[SHA_DIGEST_LENGTH];
+	_SHA1((const uint8_t*)data.data(), data.size(), hash);
+
+	return memcmp(hash, expectedHash, SHA_DIGEST_LENGTH) == 0;
+}
+
+void mtt::DownloadedPiece::init(uint32_t idx, uint32_t pieceSize, uint32_t blocksCount)
+{
+	if (pieceSize)
+		data.resize(pieceSize);
+
+	remainingBlocks = blocksCount;
+	blocksState.assign(remainingBlocks, 0);
+	index = idx;
+}
+
+void mtt::DownloadedPiece::addBlock(const mtt::PieceBlock& block)
+{
+	auto blockIdx = (block.info.begin + 1) / BlockRequestMaxSize;
+
+	if (blockIdx < blocksState.size() && blocksState[blockIdx] == 0)
+	{
+		if (!data.empty())
+			memcpy(&data[0] + block.info.begin, block.buffer.data, block.info.length);
+
+		blocksState[blockIdx] = 1;
+		remainingBlocks--;
+		downloadedSize += block.info.length;
+	}
 }

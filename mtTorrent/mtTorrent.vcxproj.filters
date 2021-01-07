@@ -118,9 +118,6 @@
     <ClCompile Include="Core\Configuration.cpp">
       <Filter>Source Files\Core\General</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Interface.cpp">
-      <Filter>Source Files\Core\General</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Logging.cpp">
       <Filter>Source Files\Core\General</Filter>
     </ClCompile>

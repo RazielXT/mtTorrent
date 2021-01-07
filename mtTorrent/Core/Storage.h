@@ -18,7 +18,15 @@ namespace mtt
 		Status setPath(std::string path, bool moveFiles = true);
 		std::string getPath();
 
-		Status storePiece(const DownloadedPiece& piece);
+		struct PieceBlockRequest
+		{
+			uint32_t index;
+			uint32_t offset;
+			const DataBuffer* data;
+		};
+		Status storePieceBlocks(std::vector<PieceBlockRequest> blocks);
+
+		Status storePieceBlock(uint32_t index, uint32_t offset, const DataBuffer& buffer);
 		Status loadPieceBlock(const PieceBlockInfo& block, DataBuffer& buffer);
 
 		Status preallocateSelection(const DownloadSelection& files);
@@ -35,15 +43,23 @@ namespace mtt
 
 		Status validatePath(const DownloadSelection& selection);
 
-		Status preallocate(const File& file);
-		Status storePiece(const File& file, const DownloadedPiece& piece);
+		Status preallocate(const File& file, uint64_t size);
+		Status storePieceBlocks(const File& file, const std::vector<PieceBlockRequest>& blocks);
 		Status loadPieceBlock(const File& file, const PieceBlockInfo& block, DataBuffer& buffer);
+
+		struct FileBlockPosition
+		{
+			uint32_t dataPos = 0;
+			uint32_t dataSize = {};
+			size_t fileDataPos = 0;
+		};
+		FileBlockPosition getFileBlockPosition(const File& file, uint32_t index, uint32_t offset, uint32_t size);
 
 		std::string path;
 
 		std::mutex storageMutex;
 
 		std::vector<File> files;
-		uint32_t pieceSize;
+		uint32_t pieceSize = 0;
 	};
 }

@@ -48,15 +48,6 @@ namespace mtt
 		uint32_t index = -1;
 	};
 
-	struct DownloadedPiece : public DownloadedPieceState
-	{
-		DataBuffer data;
-
-		void init(uint32_t idx, uint32_t pieceSize, uint32_t blocksCount);
-		void addBlock(const PieceBlock& block);
-		bool isValid(const uint8_t* expectedHash);
-	};
-
 	struct AnnounceResponse
 	{
 		uint32_t interval = 5 * 60;

@@ -22,6 +22,8 @@ mtt::FileTransfer::FileTransfer(TorrentPtr t) : downloader(t->infoFile.info, *th
 		ipToCountryLoaded = true;
 		ipToCountry.fromFile(mtt::config::getInternal().programFolderPath);
 	}
+
+	unsavedPieceBlocksMaxSize = mtt::config::getInternal().immediateStoringBufferSize / BlockRequestMaxSize;
 }
 
 void mtt::FileTransfer::start()
@@ -44,7 +46,8 @@ void mtt::FileTransfer::start()
 			updateMeasures();
 			uploader->refreshRequest();
 
-			refreshTimer->schedule(1);
+			if (refreshTimer)
+				refreshTimer->schedule(1);
 		}
 	);
 
@@ -63,10 +66,19 @@ void mtt::FileTransfer::stop()
 	}
 
 	torrent->peers->stop();
-	unFinishedPieces = downloader.stop();
+
+	auto unfinishedActive = downloader.stop();
+	unFinishedPieces.insert(unFinishedPieces.end(), unfinishedActive.begin(), unfinishedActive.end());
+
+	saveUnsavedPieceBlocks();
 
 	if (refreshTimer)
 		refreshTimer->disable();
+}
+
+void mtt::FileTransfer::clear()
+{
+	unFinishedPieces.clear();
 }
 
 void mtt::FileTransfer::addUnfinishedPieces(std::vector<mtt::DownloadedPieceState>& pieces)
@@ -293,9 +305,88 @@ bool mtt::FileTransfer::isWantedPiece(uint32_t idx)
 	return torrent->files.progress.wantedPiece(idx);
 }
 
+void mtt::FileTransfer::storePieceBlock(const PieceBlock& block)
+{
+	std::lock_guard<std::mutex> guard(unsavedPieceBlocksMutex);
+
+ 	auto bufferIdx = getDataBuffer();
+	dataBuffers[bufferIdx].assign(block.buffer.data, block.buffer.data + block.buffer.size);
+ 
+ 	unsavedPieceBlocks.push_back({ block.info, bufferIdx });
+
+	if (unsavedPieceBlocks.size() >= unsavedPieceBlocksMaxSize)
+	{
+		auto blocks = unsavedPieceBlocks;
+		unsavedPieceBlocks.clear();
+
+		torrent->service.io.post([this, blocks]()
+			{
+				auto status = saveUnsavedPieceBlocks(blocks);
+
+				if (status != Status::Success)
+				{
+					torrent->lastError = status;
+					torrent->stop(Torrent::StopReason::Internal);
+				}
+			});
+	}
+}
+
+size_t mtt::FileTransfer::getDataBuffer()
+{
+	size_t idx = 0;
+
+	for (auto& b : dataBuffers)
+	{
+		if (b.empty())
+			return idx;
+
+		idx++;
+	}
+
+	dataBuffers.push_back({});
+	return idx;
+}
+
+mtt::Status mtt::FileTransfer::saveUnsavedPieceBlocks(const std::vector<std::pair<PieceBlockInfo, size_t>>& blocks)
+{
+	std::vector<Storage::PieceBlockRequest> blockRequests;
+	blockRequests.reserve(blocks.size());
+
+	for (auto& [info, bufferIdx] : blocks)
+		blockRequests.push_back({info.index, info.begin, &dataBuffers[bufferIdx]});
+
+	Status status = torrent->files.storage.storePieceBlocks(blockRequests);
+
+	{
+		std::lock_guard<std::mutex> guard(unsavedPieceBlocksMutex);
+
+		for (const auto& [info, bufferIdx] : blocks)
+			dataBuffers[bufferIdx].clear();
+	}
+
+	return status;
+}
+
+mtt::Status mtt::FileTransfer::saveUnsavedPieceBlocks()
+{
+	std::vector<std::pair<PieceBlockInfo, size_t>> blocks;
+	{
+		std::lock_guard<std::mutex> guard(unsavedPieceBlocksMutex);
+
+		if (unsavedPieceBlocks.empty())
+			return Status::Success;
+
+		blocks = unsavedPieceBlocks;
+		unsavedPieceBlocks.clear();
+	}
+
+	return saveUnsavedPieceBlocks(blocks);
+}
+
 bool mtt::FileTransfer::storeUnfinishedPiece(std::shared_ptr<mtt::DownloadedPiece> piece)
 {
-	return torrent->files.storage.storePiece(*piece) == Status::Success;
+	return torrent->files.storage.storePieceBlock(piece->index, 0, piece->data) == Status::Success;
 }
 
 mtt::LockedPeers mtt::FileTransfer::getPeers()
@@ -303,23 +394,28 @@ mtt::LockedPeers mtt::FileTransfer::getPeers()
 	return { activePeers, peersMutex };
 }
 
-std::shared_ptr<mtt::DownloadedPiece> mtt::FileTransfer::loadUnfinishedPiece(uint32_t idx)
+std::shared_ptr<mtt::DownloadedPiece> mtt::FileTransfer::loadUnfinishedPiece(uint32_t idx, bool loadData)
 {
 	for (auto& u : unFinishedPieces)
 	{
 		if (u.index == idx && u.downloadedSize)
 		{
-			auto p = std::make_shared< mtt::DownloadedPiece>();
+			auto p = std::make_shared<mtt::DownloadedPiece>();
 			(mtt::DownloadedPieceState&)*p = std::move(u);
 			u.downloadedSize = 0;
 
-			mtt::PieceBlockInfo info;
-			info.begin = 0;
-			info.index = idx;
-			info.length = torrent->infoFile.info.getPieceSize(idx);
+			if (loadData)
+			{
+				mtt::PieceBlockInfo info;
+				info.begin = 0;
+				info.index = idx;
+				info.length = torrent->infoFile.info.getPieceSize(idx);
 
-			if (torrent->files.storage.loadPieceBlock(info, p->data) == Status::Success)
-				return p;
+				if (torrent->files.storage.loadPieceBlock(info, p->data) != Status::Success)
+					return nullptr;
+			}
+
+			return p;
 		}
 	}
 	return nullptr;
@@ -329,23 +425,29 @@ void mtt::FileTransfer::pieceFinished(std::shared_ptr<mtt::DownloadedPiece> piec
 {
 	torrent->files.progress.addPiece(piece->index);
 
-	auto torrentPtr = torrent;
-	torrent->service.io.post([torrentPtr, piece]()
-		{
-			auto status = torrentPtr->files.storage.storePiece(*piece);
-
-			if (status != Status::Success)
+	if (!piece->data.empty())
+	{
+		auto torrentPtr = torrent;
+		torrent->service.io.post([torrentPtr, piece]()
 			{
-				torrentPtr->files.progress.removePiece(piece->index);
-				torrentPtr->lastError = status;
-				torrentPtr->stop(Torrent::StopReason::Internal);
-			}
-		});
+				auto status = torrentPtr->files.storage.storePieceBlock(piece->index, 0, piece->data);
+
+				if (status != Status::Success)
+				{
+					torrentPtr->files.progress.removePiece(piece->index);
+					torrentPtr->lastError = status;
+					torrentPtr->stop(Torrent::StopReason::Internal);
+				}
+			});
+	}
 
 	{
 		std::lock_guard<std::mutex> guard(peersMutex);
 		freshPieces.push_back(piece->index);
 	}
+
+	if (torrent->selectionFinished())
+		saveUnsavedPieceBlocks();
 }
 
 void mtt::FileTransfer::evaluateCurrentPeers()

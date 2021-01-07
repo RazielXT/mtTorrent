@@ -81,6 +81,9 @@ namespace mtt
 			std::string stateFolder;
 
 			uint32_t bandwidthUpdatePeriodMs = 250;
+
+			uint32_t minPieceSizeForImmediateStoring = 1024 * 1024;
+			uint32_t immediateStoringBufferSize = 5 * 1024 * 1024;
 		};
 
 		const API_EXPORT External& getExternal();

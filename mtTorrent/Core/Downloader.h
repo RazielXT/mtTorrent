@@ -4,6 +4,15 @@
 
 namespace mtt
 {
+	struct DownloadedPiece : public DownloadedPieceState
+	{
+		DataBuffer data;
+
+		void init(uint32_t idx, uint32_t pieceSize, uint32_t blocksCount);
+		void addBlock(const PieceBlock& block);
+		bool isValid(const uint8_t* expectedHash);
+	};
+
 	struct ActivePeer
 	{
 		PeerCommunication* comm;
@@ -55,7 +64,8 @@ namespace mtt
 	{
 	public:
 		virtual bool isWantedPiece(uint32_t idx) = 0;
-		virtual std::shared_ptr<mtt::DownloadedPiece> loadUnfinishedPiece(uint32_t idx) = 0;
+		virtual void storePieceBlock(const PieceBlock& block) = 0;
+		virtual std::shared_ptr<mtt::DownloadedPiece> loadUnfinishedPiece(uint32_t idx, bool loadData) = 0;
 		virtual bool storeUnfinishedPiece(std::shared_ptr<mtt::DownloadedPiece> piece) = 0;
 		virtual void pieceFinished(std::shared_ptr<mtt::DownloadedPiece> piece) = 0;
 
@@ -114,5 +124,7 @@ namespace mtt
 
 		TorrentInfo& torrentInfo;
 		DownloaderClient& client;
+
+		bool immediateMode = false;
 	};
 }

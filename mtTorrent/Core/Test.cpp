@@ -306,7 +306,7 @@ void TorrentTest::testStorageLoad()
 			memcpy(piece.data.data() + blockInfo.begin, buffer.data(), buffer.size());
 		}
 
-		outStorage.storePiece(piece);
+		outStorage.storePieceBlock(piece.index, 0, piece.data);
 	}
 
 	mtt::PiecesCheck checkResults;
@@ -542,7 +542,7 @@ void TorrentTest::bigTestGetTorrentFileByLink()
 
 				if (pieceTodo.remainingBlocks == 0)
 				{
-					storage.storePiece(pieceTodo);
+					storage.storePieceBlock(pieceTodo.index, 0, pieceTodo.data);
 					piecesTodo.addPiece(pieceTodo.index);
 					finished = true;
 					finishedPieces++;
