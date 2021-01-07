@@ -116,7 +116,7 @@ void PiecesProgress::updateFilesProgress()
 				auto& file = info.files[i];
 				auto row = gcnew cli::array< System::String^ >(5) {
 					int(i).ToString(),
-						gcnew System::String(file.name.data),
+						gcnew System::String(file.name.data, 0, (int)file.name.length, System::Text::Encoding::UTF8),
 						"", formatBytes(file.size), int(file.size).ToString()
 				};
 

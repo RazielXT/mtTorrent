@@ -119,8 +119,8 @@ void FileSelection::fillFilesSelectionForm()
 
 	list->Sort(list->Columns[2], System::ComponentModel::ListSortDirection::Ascending);
 
-	form->Text = gcnew System::String(info.name.data);
-	form->textBoxPath->Text = gcnew System::String(info.downloadLocation.data);
+	form->Text = gcnew System::String(info.name.data, 0, (int)info.name.length, System::Text::Encoding::UTF8);
+	form->textBoxPath->Text = gcnew System::String(info.downloadLocation.data, 0, (int)info.downloadLocation.length, System::Text::Encoding::UTF8);
 
 	form->labelError->Visible = false;
 	form->checkBoxStart->Visible = state.added;
@@ -175,9 +175,15 @@ void FileSelection::onButtonClick(ButtonId id)
 			mtBI::TorrentSetPathRequest path;
 			memcpy(path.hash, state.hash, 20);
 			path.path = getUtf8String(form->textBoxPath->Text);
-			if (core.IoctlFunc(mtBI::MessageId::SetTorrentPath, &path, nullptr) != mtt::Status::Success)
+			auto status = core.IoctlFunc(mtBI::MessageId::SetTorrentPath, &path, nullptr);
+			if (status != mtt::Status::Success)
 			{
-				form->labelError->Text = "Error setting location path";
+				if (status == mtt::Status::E_InvalidPath)
+					form->labelError->Text = "Invalid path";
+				if (status == mtt::Status::E_NotEmpty)
+					form->labelError->Text = "Path not empty";
+				else
+					form->labelError->Text = "Error setting location path";
 				form->labelError->Visible = true;
 				return;
 			}
