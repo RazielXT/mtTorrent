@@ -382,7 +382,7 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 							checkState.pieces[currentPieceIdx] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
 						}
 						
-						checkState.piecesChecked = (uint32_t)++currentPieceIdx;
+						checkState.piecesChecked = std::max(checkState.piecesChecked, (uint32_t)++currentPieceIdx);
 
 						if (currentPieceIdx % workersCount == workerIdx)
 							fileIn.read((char*)readBuffer.data(), pieceSize);
@@ -439,7 +439,7 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 		if (currentFile == lastFile)
 			currentPieceIdx = currentFile->endPieceIndex + 1;
 
-		checkState.piecesChecked = (uint32_t)currentPieceIdx;
+		checkState.piecesChecked = std::max(checkState.piecesChecked, (uint32_t)currentPieceIdx);
 
 		if (checkState.rejected)
 			return;

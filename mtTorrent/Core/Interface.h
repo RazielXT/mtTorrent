@@ -20,7 +20,7 @@ namespace mtt
 	struct PiecesCheck
 	{
 		uint32_t piecesCount = 0;
-		std::atomic<uint32_t> piecesChecked = 0;
+		uint32_t piecesChecked = 0;
 		bool rejected = false;
 		std::vector<uint8_t> pieces;
 	};
