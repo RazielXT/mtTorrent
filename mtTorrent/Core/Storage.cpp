@@ -34,15 +34,26 @@ mtt::Status mtt::Storage::setPath(std::string p, bool moveFiles)
 	{
 		std::lock_guard<std::mutex> guard(storageMutex);
 
+		std::error_code ec;
+		if (!std::filesystem::exists(std::filesystem::u8path(p), ec))
+			return mtt::Status::E_InvalidPath;
+
+		if (files.size() == 1)
+		{
+			if (std::filesystem::file_size(std::filesystem::u8path(p), ec))
+				return mtt::Status::E_NotEmpty;
+		}
+		else
+		{
+			if (!std::filesystem::is_empty(std::filesystem::u8path(p), ec))
+				return mtt::Status::E_NotEmpty;
+		}
+
 		if (moveFiles && !files.empty())
 		{
 			auto originalPath = path + files.back().path.front();
-			std::error_code ec;
-			if (std::filesystem::exists(originalPath, ec))
+			if (std::filesystem::exists(std::filesystem::u8path(originalPath), ec))
 			{
-				if (!std::filesystem::exists(p, ec))
-					return mtt::Status::E_InvalidPath;
-
 				auto newPath = p + files.back().path.front();
 
 				for (auto& f : files)
@@ -54,7 +65,7 @@ mtt::Status mtt::Storage::setPath(std::string p, bool moveFiles)
 					{
 						if (i + 1 == f.path.size())
 						{
-							if (!std::filesystem::create_directories(newPathF, ec) && ec.value() != 0)
+							if (!std::filesystem::create_directories(std::filesystem::u8path(newPathF), ec) && ec.value() != 0)
 								return mtt::Status::E_AllocationProblem;
 						}
 
@@ -62,17 +73,17 @@ mtt::Status mtt::Storage::setPath(std::string p, bool moveFiles)
 						newPathF += pathSeparator + f.path[i];
 					}
 
-					if (!std::filesystem::exists(originalPathF, ec))
+					if (!std::filesystem::exists(std::filesystem::u8path(originalPathF), ec))
 						continue;
 
-					std::filesystem::rename(originalPathF, newPathF, ec);
+					std::filesystem::rename(std::filesystem::u8path(originalPathF), std::filesystem::u8path(newPathF), ec);
 
 					if (ec)
 						return mtt::Status::E_AllocationProblem;
 				}
 
 				if (files.size() > 1)
-					std::filesystem::remove(originalPath, ec);
+					std::filesystem::remove(std::filesystem::u8path(originalPath), ec);
 			}
 		}
 
