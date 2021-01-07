@@ -118,7 +118,7 @@ namespace mtt
 			}
 		}
 
-		API_EXPORT void setValues(const External::Transfer& val)
+		void setValues(const External::Transfer& val)
 		{
 			bool changed = val.maxDownloadSpeed != external.transfer.maxDownloadSpeed;
 			changed |= val.maxUploadSpeed != external.transfer.maxUploadSpeed;
@@ -128,6 +128,12 @@ namespace mtt
 				external.transfer = val;
 				triggerChange(ValueType::Transfer);
 			}
+		}
+
+		void setInternalValues(const Internal& val)
+		{
+			internal_ = val;
+			memcpy(internal_.hashId, val.hashId, 20);
 		}
 
 		int registerOnChangeCallback(ValueType v, std::function<void()> cb)

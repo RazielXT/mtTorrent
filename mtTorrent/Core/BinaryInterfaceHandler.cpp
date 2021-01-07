@@ -307,7 +307,6 @@ extern "C"
 			mtt::config::setValues(settings.connection);
 			mtt::config::setValues(settings.files);
 			mtt::config::setValues(settings.transfer);
-			mtt::config::save();
 		}
 		else if (id == mtBI::MessageId::SetTorrentFilesSelection)
 		{
