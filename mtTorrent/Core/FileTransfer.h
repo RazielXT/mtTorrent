@@ -96,7 +96,7 @@ namespace mtt
 		size_t unsavedPieceBlocksMaxSize = 0;
 		std::vector<std::pair<PieceBlockInfo, size_t>> unsavedPieceBlocks;
 		Status saveUnsavedPieceBlocks(const std::vector<std::pair<PieceBlockInfo, size_t>>& blocks);
-		Status saveUnsavedPieceBlocks();
+		Status finishUnsavedPieceBlocks();
 
 		std::vector<DataBuffer> dataBuffers;
 		size_t getDataBuffer();

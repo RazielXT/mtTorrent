@@ -70,7 +70,7 @@ void mtt::FileTransfer::stop()
 	auto unfinishedActive = downloader.stop();
 	unFinishedPieces.insert(unFinishedPieces.end(), unfinishedActive.begin(), unfinishedActive.end());
 
-	saveUnsavedPieceBlocks();
+	finishUnsavedPieceBlocks();
 
 	if (refreshTimer)
 		refreshTimer->disable();
@@ -368,7 +368,7 @@ mtt::Status mtt::FileTransfer::saveUnsavedPieceBlocks(const std::vector<std::pai
 	return status;
 }
 
-mtt::Status mtt::FileTransfer::saveUnsavedPieceBlocks()
+mtt::Status mtt::FileTransfer::finishUnsavedPieceBlocks()
 {
 	std::vector<std::pair<PieceBlockInfo, size_t>> blocks;
 	{
@@ -381,7 +381,13 @@ mtt::Status mtt::FileTransfer::saveUnsavedPieceBlocks()
 		unsavedPieceBlocks.clear();
 	}
 
-	return saveUnsavedPieceBlocks(blocks);
+	Status status = saveUnsavedPieceBlocks(blocks);
+	{
+		std::lock_guard<std::mutex> guard(unsavedPieceBlocksMutex);
+		dataBuffers.clear();
+	}
+
+	return status;
 }
 
 bool mtt::FileTransfer::storeUnfinishedPiece(std::shared_ptr<mtt::DownloadedPiece> piece)
@@ -447,7 +453,7 @@ void mtt::FileTransfer::pieceFinished(std::shared_ptr<mtt::DownloadedPiece> piec
 	}
 
 	if (torrent->selectionFinished())
-		saveUnsavedPieceBlocks();
+		finishUnsavedPieceBlocks();
 }
 
 void mtt::FileTransfer::evaluateCurrentPeers()
