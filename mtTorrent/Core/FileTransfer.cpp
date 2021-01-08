@@ -447,7 +447,12 @@ void mtt::FileTransfer::pieceFinished(std::shared_ptr<mtt::DownloadedPiece> piec
 	}
 
 	if (torrent->selectionFinished())
+	{
 		finishUnsavedPieceBlocks();
+
+		if (downloader.immediateMode)
+			torrent->checkFiles();
+	}
 }
 
 void mtt::FileTransfer::evaluateCurrentPeers()

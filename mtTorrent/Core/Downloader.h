@@ -91,6 +91,8 @@ namespace mtt
 
 		void refreshSelection(std::vector<uint32_t> selectedPieces);
 
+		bool immediateMode = false;
+
 	private:
 
 		void unchokePeer(ActivePeer*);
@@ -124,7 +126,5 @@ namespace mtt
 
 		TorrentInfo& torrentInfo;
 		DownloaderClient& client;
-
-		bool immediateMode = false;
 	};
 }
