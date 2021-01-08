@@ -103,6 +103,7 @@ void mtt::FileTransfer::refreshSelection()
 	}
 
 	downloader.refreshSelection(std::move(selected));
+	evaluateCurrentPeers();
 }
 
 void mtt::FileTransfer::handshakeFinished(PeerCommunication* p)
