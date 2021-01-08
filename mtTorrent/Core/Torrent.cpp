@@ -218,7 +218,7 @@ void mtt::Torrent::downloadMetadata()
 			saveTorrentFileFromUtm();
 
 			if (this->state == ActiveState::Started)
-				start();
+				service.io.post([this]() { start(); });
 		}
 	});
 }
