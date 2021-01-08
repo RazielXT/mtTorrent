@@ -199,7 +199,7 @@ void mtt::Torrent::downloadMetadata()
 	service.start(4);
 
 	if(!utmDl)
-		utmDl = std::make_shared<MetadataDownload>(*peers);
+		utmDl = std::make_shared<MetadataDownload>(*peers, service);
 
 	utmDl->start([this](Status s, MetadataDownloadState& state)
 	{
@@ -220,8 +220,7 @@ void mtt::Torrent::downloadMetadata()
 			if (this->state == ActiveState::Started)
 				start();
 		}
-	}
-	, service.io);
+	});
 }
 
 mttApi::Torrent::State mtt::Torrent::getState()

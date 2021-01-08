@@ -6,11 +6,11 @@
 
 #define BT_UTM_LOG(x) WRITE_LOG(LogTypeBtUtm, x)
 
-mtt::MetadataDownload::MetadataDownload(Peers& p) : peers(p)
+mtt::MetadataDownload::MetadataDownload(Peers& p, ServiceThreadpool& s) : peers(p), service(s)
 {
 }
 
-void mtt::MetadataDownload::start(std::function<void(Status, MetadataDownloadState&)> f, asio::io_service& io)
+void mtt::MetadataDownload::start(std::function<void(Status, MetadataDownloadState&)> f)
 {
 	onUpdate = f;
 	state.active = true;
@@ -30,7 +30,7 @@ void mtt::MetadataDownload::start(std::function<void(Status, MetadataDownloadSta
 	//peers.connect(Addr({ 127,0,0,1 }, 31132));
 
 	std::lock_guard<std::mutex> guard(commsMutex);
-	retryTimer = ScheduledTimer::create(io, [this]()
+	retryTimer = ScheduledTimer::create(service.io, [this]()
 		{
 			auto currentTime = (uint32_t) time(0);
 			if (state.active && !state.finished && lastActivityTime + 5 < currentTime)
@@ -172,7 +172,7 @@ void mtt::MetadataDownload::metadataPieceReceived(PeerCommunication* p, ext::UtM
 
 	if (state.finished)
 	{
-		stop();
+		service.io.post([this]() { stop(); });
 	}
 
 	onUpdate(Status::Success, state);

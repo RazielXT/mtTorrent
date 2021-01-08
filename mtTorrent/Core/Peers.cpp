@@ -581,11 +581,13 @@ void mtt::Peers::PeersListener::progressUpdated(mtt::PeerCommunication* p, uint3
 
 void mtt::Peers::PeersListener::setTarget(mtt::IPeerListener* t)
 {
+	std::lock_guard<std::mutex> guard(mtx);
 	target = t;
 }
 
 void mtt::Peers::PeersListener::setParent(Peers* p)
 {
+	std::lock_guard<std::mutex> guard(mtx);
 	peers = p;
 }
 

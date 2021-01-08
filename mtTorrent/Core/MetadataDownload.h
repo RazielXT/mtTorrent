@@ -14,9 +14,9 @@ namespace mtt
 	{
 	public:
 
-		MetadataDownload(Peers&);
+		MetadataDownload(Peers&, ServiceThreadpool& service);
 
-		void start(std::function<void(Status, MetadataDownloadState&)> onUpdate, asio::io_service& io);
+		void start(std::function<void(Status, MetadataDownloadState&)> onUpdate);
 		void stop();
 
 		MetadataDownloadState state;
@@ -61,5 +61,7 @@ namespace mtt
 
 		std::shared_ptr<ScheduledTimer> retryTimer;
 		uint32_t lastActivityTime = 0;
+
+		ServiceThreadpool& service;
 	};
 }
