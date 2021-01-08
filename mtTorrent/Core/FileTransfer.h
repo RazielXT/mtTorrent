@@ -94,12 +94,12 @@ namespace mtt
 
 		std::mutex unsavedPieceBlocksMutex;
 		size_t unsavedPieceBlocksMaxSize = 0;
-		std::vector<std::pair<PieceBlockInfo, size_t>> unsavedPieceBlocks;
-		Status saveUnsavedPieceBlocks(const std::vector<std::pair<PieceBlockInfo, size_t>>& blocks);
+		std::vector<std::pair<PieceBlockInfo, std::shared_ptr<DataBuffer>>> unsavedPieceBlocks;
+		Status saveUnsavedPieceBlocks(const std::vector<std::pair<PieceBlockInfo, std::shared_ptr<DataBuffer>>>& blocks);
 		Status finishUnsavedPieceBlocks();
 
-		std::vector<DataBuffer> dataBuffers;
-		size_t getDataBuffer();
+		std::vector<std::shared_ptr<DataBuffer>> dataBuffers;
+		std::shared_ptr<DataBuffer> getDataBuffer();
 
 		std::vector<uint32_t> freshPieces;
 		std::vector<mtt::DownloadedPieceState> unFinishedPieces;
