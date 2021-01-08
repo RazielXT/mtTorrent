@@ -38,19 +38,19 @@ mtt::Status mtt::Storage::setPath(std::string p, bool moveFiles)
 		if (!std::filesystem::exists(std::filesystem::u8path(p), ec))
 			return mtt::Status::E_InvalidPath;
 
-		if (files.size() == 1)
-		{
-			if (std::filesystem::file_size(std::filesystem::u8path(p), ec))
-				return mtt::Status::E_NotEmpty;
-		}
-		else
-		{
-			if (!std::filesystem::is_empty(std::filesystem::u8path(p), ec))
-				return mtt::Status::E_NotEmpty;
-		}
-
 		if (moveFiles && !files.empty())
 		{
+			if (files.size() == 1)
+			{
+				if (std::filesystem::file_size(std::filesystem::u8path(p), ec))
+					return mtt::Status::E_NotEmpty;
+			}
+			else
+			{
+				if (!std::filesystem::is_empty(std::filesystem::u8path(p), ec))
+					return mtt::Status::E_NotEmpty;
+			}
+
 			auto originalPath = path + files.back().path.front();
 			if (std::filesystem::exists(std::filesystem::u8path(originalPath), ec))
 			{
@@ -109,22 +109,16 @@ mtt::Status mtt::Storage::storePieceBlocks(std::vector<PieceBlockRequest> blocks
 		[](const PieceBlockRequest& l, const PieceBlockRequest& r) {return l.index < r.index || (l.index == r.index && l.offset < r.offset); });
 
 	uint32_t startIndex = blocks.front().index;
-	uint32_t endIndex = blocks.back().index;
+	uint32_t lastIndex = blocks.back().index;
 
 	auto fIt = std::lower_bound(files.begin(), files.end(), startIndex, [](const File& f, uint32_t index) { return f.endPieceIndex < index; });
-	if (fIt == files.end())
-		return Status::E_InvalidInput;
-	auto fEnd = fIt + 1;
 
-	for (; fEnd != files.end(); fEnd++)
+	Status status = Status::E_InvalidInput;
+	for (; fIt != files.end(); fIt++)
 	{
-		if (!FileContainsPiece(*fEnd, endIndex))
+		if (fIt->startPieceIndex > lastIndex)
 			break;
-	}
 
-	Status status = Status::Success;
-	for (; fIt != fEnd; fIt++)
-	{
 		status = storePieceBlocks(*fIt, blocks);
 
 		if (status != Status::Success)
@@ -354,23 +348,15 @@ mtt::Status mtt::Storage::storePieceBlocks(const File& file, const std::vector<P
 	{
 		auto& block = blocks[b.blockIdx];
 
-		if (existingSize == file.size)
+		if (existingSize == file.size || block.index == file.startPieceIndex)
 		{
 			fileOut.seekp(b.info.fileDataPos);
 			fileOut.write((const char*)block.data->data() + b.info.dataPos, b.info.dataSize);
 		}
-		else
+		else if (block.index == file.endPieceIndex)
 		{
-			if (block.index == file.startPieceIndex)
-			{
-				fileOut.seekp(0);
-				fileOut.write((const char*)block.data->data() + b.info.dataPos, b.info.dataSize);
-			}
-			else if (block.index == file.endPieceIndex)
-			{
-				fileOut.seekp(pieceSize - file.startPiecePos);
-				fileOut.write((const char*)block.data->data(), b.info.dataSize);
-			}
+			fileOut.seekp(pieceSize - file.startPiecePos + block.offset);
+			fileOut.write((const char*)block.data->data(), b.info.dataSize);
 		}
 	}
 
@@ -388,6 +374,15 @@ mtt::Status mtt::Storage::loadPieceBlock(const File& file, const PieceBlockInfo&
 
 		if (!fileOut)
 			return Status::E_FileReadError;
+
+		if (block.index == file.endPieceIndex)
+		{
+			fileOut.seekg(0, std::ios_base::end);
+			auto existingSize = fileOut.tellg();
+
+			if (existingSize < (std::streampos)file.size)
+				info.fileDataPos = pieceSize - file.startPiecePos + block.begin;
+		}
 
 		fileOut.seekg(info.fileDataPos);
 		fileOut.read((char*)buffer.data() + info.dataPos, info.dataSize);
