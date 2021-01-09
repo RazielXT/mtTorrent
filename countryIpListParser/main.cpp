@@ -1,5 +1,5 @@
 //source csv http://software77.net/geo-ip/
-//oroginal csv parse code from https://gist.github.com/Trinitok/8bc11f3e33c38a7c384f462a937b9950
+//original csv parse code from https://gist.github.com/Trinitok/8bc11f3e33c38a7c384f462a937b9950
 
 #include "..\mtTorrent\utils\FastIpToCountry.h"
 #include <vector>

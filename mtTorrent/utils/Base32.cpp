@@ -3,7 +3,7 @@
 #include <cctype>
 #include <iterator>
 
-std::string base32decode(std::string& s)
+std::string base32decode(const std::string& s)
 {
 	std::array<std::uint8_t, 8> inbuf;
 	std::array<std::uint8_t, 5> outbuf;

@@ -2,4 +2,4 @@
 
 #include <string>
 
-std::string base32decode(std::string& s);
+std::string base32decode(const std::string& s);

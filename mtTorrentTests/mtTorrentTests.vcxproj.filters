@@ -1,0 +1,417 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\mtt">
+      <UniqueIdentifier>{3fc41926-8c6c-4e19-ac98-0cb4899de37a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\mtt\utils">
+      <UniqueIdentifier>{a04a3c4e-605f-4c5c-ab07-b65e98a0e316}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\mtt\utp">
+      <UniqueIdentifier>{fc30b374-fbc8-478c-826f-17454ae0c7f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\mtt\api">
+      <UniqueIdentifier>{748ef089-d258-4e1e-b274-3b593025f725}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\mtt\dht">
+      <UniqueIdentifier>{641ea0cb-7574-4629-917a-42575427995c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\PeerCommunication.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\AlertsManager.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Configuration.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Core.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Downloader.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\ExtensionProtocol.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Files.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\FileTransfer.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\HttpsTrackerComm.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\HttpTrackerComm.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\IncomingPeersListener.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Logging.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\MetadataDownload.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\MetadataReconstruction.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\PeerMessage.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Peers.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\PiecesProgress.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\State.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Storage.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Torrent.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\TrackerManager.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\UdpTrackerComm.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Uploader.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\Bandwidth.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\Base32.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\BencodeParser.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\BencodeWriter.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\ByteSwap.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\FastIpToCountry.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\HexEncoding.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\HttpHeader.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\NetAdaptersList.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\Network.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\ScheduledTimer.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\ServiceThreadpool.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\SHA.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\SslAsyncStream.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\TcpAsyncServer.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\TcpAsyncStream.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\TorrentFileParser.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\UdpAsyncComm.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\UdpAsyncReceiver.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\UdpAsyncWriter.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\UpnpDiscovery.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\UpnpPortMapping.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\Uri.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\UrlEncoding.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\XmlParser.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Utp\UtpManager.cpp">
+      <Filter>Source Files\mtt\utp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Utp\UtpStream.cpp">
+      <Filter>Source Files\mtt\utp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Api\CoreImpl.cpp">
+      <Filter>Source Files\mtt\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Api\FileTransferImpl.cpp">
+      <Filter>Source Files\mtt\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Api\InterfaceImpl.cpp">
+      <Filter>Source Files\mtt\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Api\ListenerImpl.cpp">
+      <Filter>Source Files\mtt\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Api\MagnetDownloadImpl.cpp">
+      <Filter>Source Files\mtt\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Api\PeersImpl.cpp">
+      <Filter>Source Files\mtt\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Api\TorrentImpl.cpp">
+      <Filter>Source Files\mtt\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Dht\Communication.cpp">
+      <Filter>Source Files\mtt\dht</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Dht\Node.cpp">
+      <Filter>Source Files\mtt\dht</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Dht\Query.cpp">
+      <Filter>Source Files\mtt\dht</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Dht\Responder.cpp">
+      <Filter>Source Files\mtt\dht</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Dht\Table.cpp">
+      <Filter>Source Files\mtt\dht</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Test.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\PeerCommunication.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\AlertsManager.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\Configuration.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\Core.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\Downloader.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\ExtensionProtocol.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\Files.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\FileTransfer.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\HttpsTrackerComm.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\HttpTrackerComm.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\IncomingPeersListener.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\Interface.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\IPeerListener.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\ITracker.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\Logging.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\MetadataDownload.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\MetadataReconstruction.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\PeerMessage.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\Peers.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\PiecesProgress.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\State.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\Storage.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\Torrent.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\TrackerManager.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\UdpTrackerComm.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\Uploader.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\Bandwidth.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\Base32.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\BencodeParser.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\BencodeWriter.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\ByteSwap.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\FastIpToCountry.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\Filesystem.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\HexEncoding.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\HttpHeader.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\NetAdaptersList.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\Network.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\PacketHelper.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\ScheduledTimer.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\ServiceThreadpool.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\SHA.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\SslAsyncStream.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\TcpAsyncServer.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\TcpAsyncStream.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\TorrentFileParser.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\UdpAsyncComm.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\UdpAsyncReceiver.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\UdpAsyncWriter.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\UpnpDiscovery.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\UpnpPortMapping.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\Uri.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\UrlEncoding.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\XmlParser.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\Utp\UtpManager.h">
+      <Filter>Source Files\mtt\utp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\Utp\UtpStream.h">
+      <Filter>Source Files\mtt\utp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\Dht\Communication.h">
+      <Filter>Source Files\mtt\dht</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\Dht\DataListener.h">
+      <Filter>Source Files\mtt\dht</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\Dht\Listener.h">
+      <Filter>Source Files\mtt\dht</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\Dht\Node.h">
+      <Filter>Source Files\mtt\dht</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\Dht\Query.h">
+      <Filter>Source Files\mtt\dht</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\Dht\Responder.h">
+      <Filter>Source Files\mtt\dht</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\Dht\Table.h">
+      <Filter>Source Files\mtt\dht</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

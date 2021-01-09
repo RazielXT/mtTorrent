@@ -2,11 +2,10 @@
 #include <istream>
 #include <ostream>
 #include <string>
-#include <Test.h>
-
-#ifndef MTT_TEST_STANDALONE
 
 #ifdef _WIN32
+#include <windows.h>
+
 int __stdcall Main(HINSTANCE h, ULONG ulReason, PVOID pvReserved) {
 
 	switch (ulReason)
@@ -19,33 +18,5 @@ int __stdcall Main(HINSTANCE h, ULONG ulReason, PVOID pvReserved) {
 		break;
 	}
 	return TRUE;
-}
-#endif
-
-#else
-
-BOOL WINAPI ConsoleHandler(DWORD CEvent)
-{
-	//if(CEvent == CTRL_CLOSE_EVENT)
-	//	MessageBox(NULL, "Program being closed!", "CEvent", MB_OK);
-	
-	return TRUE;
-}
-
-int main(int argc, char* argv[])
-{
-	SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleHandler, TRUE);
-
-	try
-	{
-		TorrentTest test;
-		test.start();
-	}
-	catch (std::exception& e)
-	{
-		std::cout << "End exception: " << e.what() << "\n";
-	}
-
-	return 0;
 }
 #endif

@@ -91,9 +91,6 @@
     <ClCompile Include="Core\Dht\Query.cpp">
       <Filter>Source Files\Core\Torrent\Dht</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Test.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Core\PiecesProgress.cpp">
       <Filter>Source Files\Core\Torrent\Files</Filter>
     </ClCompile>
@@ -323,9 +320,6 @@
     </ClInclude>
     <ClInclude Include="Core\Dht\Node.h">
       <Filter>Source Files\Core\Torrent\Dht</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Test.h">
-      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="utils\UdpAsyncWriter.h">
       <Filter>Source Files\Utils</Filter>

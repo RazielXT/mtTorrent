@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{c2b5c776-4c76-4ff9-a62c-f3b033efc267}</ProjectGuid>
+    <RootNamespace>mtTorrentTests</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>NotSet</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>NotSet</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>NotSet</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>NotSet</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;ASIO_STANDALONE;_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\mtTorrent\;$(ProjectDir)\..\mtTorrent\Core;$(ProjectDir)\..\mtTorrent\asio\asio\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;ASIO_STANDALONE;_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\mtTorrent\;$(ProjectDir)\..\mtTorrent\Core;$(ProjectDir)\..\mtTorrent\asio\asio\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;ASIO_STANDALONE;_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\mtTorrent\;$(ProjectDir)\..\mtTorrent\Core;$(ProjectDir)\..\mtTorrent\asio\asio\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;ASIO_STANDALONE;_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\mtTorrent\;$(ProjectDir)\..\mtTorrent\Core;$(ProjectDir)\..\mtTorrent\asio\asio\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\mtTorrent\Core\AlertsManager.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Api\CoreImpl.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Api\FileTransferImpl.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Api\InterfaceImpl.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Api\ListenerImpl.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Api\MagnetDownloadImpl.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Api\PeersImpl.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Api\TorrentImpl.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Configuration.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Core.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Dht\Communication.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Dht\Node.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Dht\Query.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Dht\Responder.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Dht\Table.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Downloader.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\ExtensionProtocol.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Files.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\FileTransfer.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\HttpsTrackerComm.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\HttpTrackerComm.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\IncomingPeersListener.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Logging.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\MetadataDownload.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\MetadataReconstruction.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\PeerCommunication.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\PeerMessage.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Peers.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\PiecesProgress.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\State.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Storage.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Torrent.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\TrackerManager.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\UdpTrackerComm.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Uploader.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Utp\UtpManager.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Utp\UtpStream.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\Bandwidth.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\Base32.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\BencodeParser.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\BencodeWriter.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\ByteSwap.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\FastIpToCountry.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\HexEncoding.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\HttpHeader.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\NetAdaptersList.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\Network.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\ScheduledTimer.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\ServiceThreadpool.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\SHA.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\SslAsyncStream.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\TcpAsyncServer.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\TcpAsyncStream.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\TorrentFileParser.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\UdpAsyncComm.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\UdpAsyncReceiver.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\UdpAsyncWriter.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\UpnpDiscovery.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\UpnpPortMapping.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\Uri.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\UrlEncoding.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\XmlParser.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Test.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\mtTorrent\Core\AlertsManager.h" />
+    <ClInclude Include="..\mtTorrent\Core\Configuration.h" />
+    <ClInclude Include="..\mtTorrent\Core\Core.h" />
+    <ClInclude Include="..\mtTorrent\Core\Dht\Communication.h" />
+    <ClInclude Include="..\mtTorrent\Core\Dht\DataListener.h" />
+    <ClInclude Include="..\mtTorrent\Core\Dht\Listener.h" />
+    <ClInclude Include="..\mtTorrent\Core\Dht\Node.h" />
+    <ClInclude Include="..\mtTorrent\Core\Dht\Query.h" />
+    <ClInclude Include="..\mtTorrent\Core\Dht\Responder.h" />
+    <ClInclude Include="..\mtTorrent\Core\Dht\Table.h" />
+    <ClInclude Include="..\mtTorrent\Core\Downloader.h" />
+    <ClInclude Include="..\mtTorrent\Core\ExtensionProtocol.h" />
+    <ClInclude Include="..\mtTorrent\Core\Files.h" />
+    <ClInclude Include="..\mtTorrent\Core\FileTransfer.h" />
+    <ClInclude Include="..\mtTorrent\Core\HttpsTrackerComm.h" />
+    <ClInclude Include="..\mtTorrent\Core\HttpTrackerComm.h" />
+    <ClInclude Include="..\mtTorrent\Core\IncomingPeersListener.h" />
+    <ClInclude Include="..\mtTorrent\Core\Interface.h" />
+    <ClInclude Include="..\mtTorrent\Core\IPeerListener.h" />
+    <ClInclude Include="..\mtTorrent\Core\ITracker.h" />
+    <ClInclude Include="..\mtTorrent\Core\Logging.h" />
+    <ClInclude Include="..\mtTorrent\Core\MetadataDownload.h" />
+    <ClInclude Include="..\mtTorrent\Core\MetadataReconstruction.h" />
+    <ClInclude Include="..\mtTorrent\Core\PeerCommunication.h" />
+    <ClInclude Include="..\mtTorrent\Core\PeerMessage.h" />
+    <ClInclude Include="..\mtTorrent\Core\Peers.h" />
+    <ClInclude Include="..\mtTorrent\Core\PiecesProgress.h" />
+    <ClInclude Include="..\mtTorrent\Core\State.h" />
+    <ClInclude Include="..\mtTorrent\Core\Storage.h" />
+    <ClInclude Include="..\mtTorrent\Core\Torrent.h" />
+    <ClInclude Include="..\mtTorrent\Core\TrackerManager.h" />
+    <ClInclude Include="..\mtTorrent\Core\UdpTrackerComm.h" />
+    <ClInclude Include="..\mtTorrent\Core\Uploader.h" />
+    <ClInclude Include="..\mtTorrent\Core\Utp\UtpManager.h" />
+    <ClInclude Include="..\mtTorrent\Core\Utp\UtpStream.h" />
+    <ClInclude Include="..\mtTorrent\utils\Bandwidth.h" />
+    <ClInclude Include="..\mtTorrent\utils\Base32.h" />
+    <ClInclude Include="..\mtTorrent\utils\BencodeParser.h" />
+    <ClInclude Include="..\mtTorrent\utils\BencodeWriter.h" />
+    <ClInclude Include="..\mtTorrent\utils\ByteSwap.h" />
+    <ClInclude Include="..\mtTorrent\utils\FastIpToCountry.h" />
+    <ClInclude Include="..\mtTorrent\utils\Filesystem.h" />
+    <ClInclude Include="..\mtTorrent\utils\HexEncoding.h" />
+    <ClInclude Include="..\mtTorrent\utils\HttpHeader.h" />
+    <ClInclude Include="..\mtTorrent\utils\NetAdaptersList.h" />
+    <ClInclude Include="..\mtTorrent\utils\Network.h" />
+    <ClInclude Include="..\mtTorrent\utils\PacketHelper.h" />
+    <ClInclude Include="..\mtTorrent\utils\ScheduledTimer.h" />
+    <ClInclude Include="..\mtTorrent\utils\ServiceThreadpool.h" />
+    <ClInclude Include="..\mtTorrent\utils\SHA.h" />
+    <ClInclude Include="..\mtTorrent\utils\SslAsyncStream.h" />
+    <ClInclude Include="..\mtTorrent\utils\TcpAsyncServer.h" />
+    <ClInclude Include="..\mtTorrent\utils\TcpAsyncStream.h" />
+    <ClInclude Include="..\mtTorrent\utils\TorrentFileParser.h" />
+    <ClInclude Include="..\mtTorrent\utils\UdpAsyncComm.h" />
+    <ClInclude Include="..\mtTorrent\utils\UdpAsyncReceiver.h" />
+    <ClInclude Include="..\mtTorrent\utils\UdpAsyncWriter.h" />
+    <ClInclude Include="..\mtTorrent\utils\UpnpDiscovery.h" />
+    <ClInclude Include="..\mtTorrent\utils\UpnpPortMapping.h" />
+    <ClInclude Include="..\mtTorrent\utils\Uri.h" />
+    <ClInclude Include="..\mtTorrent\utils\UrlEncoding.h" />
+    <ClInclude Include="..\mtTorrent\utils\XmlParser.h" />
+    <ClInclude Include="Test.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

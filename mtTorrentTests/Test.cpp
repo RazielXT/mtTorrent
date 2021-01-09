@@ -42,11 +42,6 @@ TorrentTest::TorrentTest()
 	testInit();
 }
 
-void TorrentTest::metadataPieceReceived(PeerCommunication*, mtt::ext::UtMetadata::Message& msg)
-{
-	utmMsg = msg;
-}
-
 void TorrentTest::testAsyncDhtUdpRequest()
 {
 	ServiceThreadpool service(1);
@@ -92,10 +87,99 @@ void TorrentTest::testAsyncDhtUdpRequest()
 	WAITFOR(responded);
 }
 
-void TorrentTest::connectionClosed(PeerCommunication*, int)
+class DhtTestListener : public mtt::dht::ResultsListener
 {
-	failed = true;
-}
+public:
+
+	struct
+	{
+		uint32_t finalCount = -1;
+
+		std::mutex mutex;
+		std::vector<Addr> values;
+	}
+	result;
+
+	virtual uint32_t dhtFoundPeers(const uint8_t* hash, std::vector<Addr>& values) override
+	{
+		std::lock_guard<std::mutex> guard(result.mutex);
+
+		uint32_t count = 0;
+		for (auto& v : values)
+		{
+			bool found = false;
+
+			for (auto& old : result.values)
+			{
+				if (old == v)
+				{
+					found = true;
+					break;
+				}
+			}
+
+			if (!found)
+			{
+				result.values.push_back(v);
+				count++;
+			}
+		}
+
+		TEST_LOG("DHT received values count :" << count);
+
+		return count;
+	}
+
+	virtual void dhtFindingPeersFinished(const uint8_t* hash, uint32_t count) override
+	{
+		TEST_LOG("DHT final values count :" << count);
+
+		result.finalCount = count;
+	}
+};
+
+class TestPeerListener : public mtt::IPeerListener
+{
+public:
+
+	virtual void handshakeFinished(mtt::PeerCommunication*) override
+	{
+	}
+
+	virtual void connectionClosed(mtt::PeerCommunication*, int) override
+	{
+		closed++;
+	}
+
+	virtual void messageReceived(mtt::PeerCommunication*, mtt::PeerMessage& msg) override
+	{
+		if (onPeerMsg)
+			onPeerMsg(msg);
+	};
+
+	virtual void progressUpdated(mtt::PeerCommunication*, uint32_t) override
+	{
+	}
+
+	virtual void extHandshakeFinished(mtt::PeerCommunication*) override
+	{
+	}
+
+	virtual void metadataPieceReceived(mtt::PeerCommunication*, mtt::ext::UtMetadata::Message& msg) override
+	{
+		utmMsg = msg;
+	}
+
+	virtual void pexReceived(mtt::PeerCommunication*, mtt::ext::PeerExchange::Message&) override
+	{
+	}
+
+	uint32_t closed = 0;
+
+	mtt::ext::UtMetadata::Message utmMsg;
+
+	std::function<void(mtt::PeerMessage&)> onPeerMsg;
+};
 
 void TorrentTest::testAsyncDhtGetPeers()
 {
@@ -103,16 +187,16 @@ void TorrentTest::testAsyncDhtGetPeers()
 	mtt::dht::Communication dht;
 
 	//ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J	boku 26
-	//6QBN6XVGKV7CWOT5QXKDYWF3LIMUVK4I	owarimonogagtari batch
+	//6QBN6XVGKV7CWOT5QXKDYWF3LIMUVK4I	owarimonogatari batch
 	//56VYAWGYUTF7ETZZRB45C6FKJSKVBLRD	mushishi s2 22 rare
-	std::string targetIdBase32 = "ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J"; 
-	auto targetId = base32decode(targetIdBase32);
+	auto targetId = base32decode("ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J");
 
-	dht.findPeers((uint8_t*)targetId.data(), this);
+	DhtTestListener dhtListener;
+	dht.findPeers((uint8_t*)targetId.data(), &dhtListener);
 
-	WAITFOR(dhtResult.finalCount != -1 || !dhtResult.values.empty());
+	WAITFOR(dhtListener.result.finalCount != -1 || !dhtListener.result.values.empty());
 
-	if (dhtResult.finalCount == 0)
+	if (dhtListener.result.finalCount == 0)
 		return;
 
 	//dht.stopFindingPeers((uint8_t*)targetId.data());
@@ -122,31 +206,33 @@ void TorrentTest::testAsyncDhtGetPeers()
 	std::shared_ptr<PeerCommunication> peer;
 	uint32_t nextPeerIdx = 0;
 
+	TestPeerListener peerListener;
+
 	while (true)
 	{
-		WAITFOR(dhtResult.finalCount != -1 || nextPeerIdx < dhtResult.values.size());
+		WAITFOR(dhtListener.result.finalCount != -1 || nextPeerIdx < dhtListener.result.values.size());
 
-		if (nextPeerIdx >= dhtResult.values.size())
+		if (nextPeerIdx >= dhtListener.result.values.size())
 		{
 			TEST_LOG("NO ACTIVE PEERS, RECEIVED: " << dhtResult.finalCount);
 			return;
 		}
 
 		TEST_LOG("PEER " << nextPeerIdx);
-		peer = std::make_shared<PeerCommunication>(info, *this, service.io);
+		peerListener = {};
+		peer = std::make_shared<PeerCommunication>(info, peerListener, service.io);
 		Addr nextAddr;
 
 		{
-			std::lock_guard<std::mutex> guard(dhtResult.resultMutex);
-			nextAddr = dhtResult.values[nextPeerIdx++];
+			std::lock_guard<std::mutex> guard(dhtListener.result.mutex);
+			nextAddr = dhtListener.result.values[nextPeerIdx++];
 		}
 
-		failed = false;
 		peer->sendHandshake(nextAddr);
 
-		WAITFOR(failed || (peer->state.finishedHandshake && peer->ext.state.enabled));
+		WAITFOR(peerListener.closed || (peer->state.finishedHandshake && peer->ext.state.enabled));
 
-		if (failed || !peer->ext.utm.size)
+		if (peerListener.closed || !peer->ext.utm.size)
 			continue;
 		else
 			break;
@@ -155,19 +241,19 @@ void TorrentTest::testAsyncDhtGetPeers()
 	mtt::MetadataReconstruction metadata;
 	metadata.init(peer->ext.utm.size);
 
-	while (!metadata.finished() && !failed)
+	while (!metadata.finished() && !peerListener.closed)
 	{
 		uint32_t mdPiece = metadata.getMissingPieceIndex();
 		peer->ext.requestMetadataPiece(mdPiece);
 
-		WAITFOR(failed || !utmMsg.metadata.empty());
+		WAITFOR(peerListener.closed || !peerListener.utmMsg.metadata.empty());
 
-		if (failed || utmMsg.id != mtt::ext::UtMetadata::Data)
+		if (peerListener.closed || peerListener.utmMsg.id != mtt::ext::UtMetadata::Data)
 			return;
 
-		metadata.addPiece(utmMsg.metadata, utmMsg.piece);
+		metadata.addPiece(peerListener.utmMsg.metadata, peerListener.utmMsg.piece);
 
-		utmMsg.metadata.clear();
+		peerListener.utmMsg.metadata.clear();
 	}
 
 	if (metadata.finished())
@@ -317,6 +403,35 @@ void TorrentTest::testStorageLoad()
 	}
 }
 
+void TorrentTest::testDumpStoredPiece()
+{
+	auto torrent = parseTorrentFile("C:\\mtTorrent\\data\\state\\A1D53F1F4B76AF71F41145A193267CE89FE96275.torrent");
+	uint32_t pieceIdx = torrent.info.files[3].endPieceIndex;
+
+	mtt::Storage storage(torrent.info);
+	storage.setPath("C:\\Torrent", false);
+
+	auto blocksInfo = torrent.info.makePieceBlocksInfo(pieceIdx);
+
+	//DataBuffer mockData(20, 1);
+	//storage.storePieceBlock(pieceIdx, blocksInfo[1521].begin, mockData);
+
+	mtt::DownloadedPiece piece;
+	piece.init(pieceIdx, torrent.info.pieceSize, (uint32_t)blocksInfo.size());
+
+	DataBuffer buffer;
+	for (auto& blockInfo : blocksInfo)
+	{
+		auto status = storage.loadPieceBlock(blockInfo, buffer);
+		memcpy(piece.data->data() + blockInfo.begin, buffer.data(), buffer.size());
+
+		if (status != Status::Success)
+			std::cout << blockInfo.begin << ": Problem " << (int)status << std::endl;
+	}
+
+	std::cout << "Piece: " << (piece.isValid(torrent.info.pieces[pieceIdx].hash) ? "Valid" : "Not valid") << std::endl;
+}
+
 void TorrentTest::testPeerListen()
 {
 	auto torrent = parseTorrentFile("D:\\wifi.torrent");
@@ -344,18 +459,13 @@ void TorrentTest::testPeerListen()
 
 	WAITFOR(peerStream);
 
-	class MyListener : public BasicPeerListener
+	class MyListener : public TestPeerListener
 	{
 	public:
 
 		virtual void handshakeFinished(PeerCommunication*) override
 		{
 			success = true;
-		}
-
-		virtual void connectionClosed(PeerCommunication*, int) override
-		{
-			fail = true;
 		}
 
 		virtual void messageReceived(PeerCommunication*, PeerMessage& msg) override
@@ -387,7 +497,6 @@ void TorrentTest::testPeerListen()
 		PeerCommunication* comm;
 		TorrentFileInfo* torrent;
 		bool success = false;
-		bool fail = false;
 	}
 	listener;
 
@@ -398,13 +507,13 @@ void TorrentTest::testPeerListen()
 	comm.fromStream(peerStream, {nullptr, 0});
 	listener.comm = &comm;
 
-	WAITFOR(listener.success || listener.fail);
+	WAITFOR(listener.success || listener.closed);
 
 	if (listener.success)
 	{
 		comm.sendBitfield(progress.toBitfield());
 
-		WAITFOR(listener.fail);
+		WAITFOR(listener.closed);
 	}
 }
 
@@ -428,8 +537,9 @@ void TorrentTest::testDhtTable()
 	auto targetId = info.info.hash;
 	//dhtComm.findNode(targetId);
 
-	dhtComm.findPeers(targetId, this);
-	WAITFOR(dhtResult.finalCount != -1);
+	DhtTestListener listener;
+	dhtComm.findPeers(targetId, &listener);
+	WAITFOR(listener.result.finalCount != -1);
 
 	//dhtComm.findNode(mtt::config::internal.hashId);
 	//Sleep(25000);
@@ -478,35 +588,39 @@ void TorrentTest::bigTestGetTorrentFileByLink()
 
 	std::vector<std::shared_ptr<PeerCommunication>> peers;
 
+	TestPeerListener peerListener;
+
 	for(auto& a : addr)
 	{
-		auto peer = std::make_shared<PeerCommunication>(parsedTorrent.info, *this, service.io);
-		failed = false;
+		peerListener.closed = 0;
+
+		auto peer = std::make_shared<PeerCommunication>(parsedTorrent.info, peerListener, service.io);
 		peer->sendHandshake(a);
 
-		WAITFOR(failed || (peer->state.finishedHandshake && peer->ext.state.enabled));
+		WAITFOR(peerListener.closed || (peer->state.finishedHandshake && peer->ext.state.enabled));
 
-		if (!failed)
+		if (!peerListener.closed)
 			peers.push_back(peer);
 	}
 
-	failed = peers.empty();
+	if (peers.empty())
+		return;
 
 	mtt::MetadataReconstruction metadata;
 	metadata.init(peers.front()->ext.utm.size);
 
-	while (!metadata.finished() && !failed)
+	while (!metadata.finished() && !peerListener.closed)
 	{
 		uint32_t mdPiece = metadata.getMissingPieceIndex();
 		peers.front()->ext.requestMetadataPiece(mdPiece);
 
-		WAITFOR(failed || !utmMsg.metadata.empty())
+		WAITFOR(peerListener.closed || !peerListener.utmMsg.metadata.empty());
 
-			if (failed || utmMsg.id != mtt::ext::UtMetadata::Data)
-				return;
+		if (peerListener.closed || peerListener.utmMsg.id != mtt::ext::UtMetadata::Data)
+			return;
 
-		metadata.addPiece(utmMsg.metadata, utmMsg.piece);
-		utmMsg.metadata.clear();
+		metadata.addPiece(peerListener.utmMsg.metadata, peerListener.utmMsg.piece);
+		peerListener.utmMsg.metadata.clear();
 	}
 
 	if (metadata.finished())
@@ -530,7 +644,7 @@ void TorrentTest::bigTestGetTorrentFileByLink()
 		std::mutex pieceMtx;
 		bool finished = false;
 		uint32_t finishedPieces = 0;
-		onPeerMsg = [&](mtt::PeerMessage& msg)
+		peerListener.onPeerMsg = [&](mtt::PeerMessage& msg)
 		{
 			std::lock_guard<std::mutex> guard(pieceMtx);
 			if (msg.id == Piece)
@@ -574,29 +688,30 @@ void TorrentTest::testMetadataReceive()
 
 	ServiceThreadpool service(1);
 
-	PeerCommunication peer(torrent.info, *this, service.io);
+	TestPeerListener peerListener;
+	PeerCommunication peer(torrent.info, peerListener, service.io);
 	peer.sendHandshake(Addr({ 127,0,0,1 }, 31132));
 
-	WAITFOR(failed || (peer.state.finishedHandshake && peer.ext.state.enabled))
+	WAITFOR(peerListener.closed || (peer.state.finishedHandshake && peer.ext.state.enabled));
 
-		if (failed || !peer.ext.utm.size)
-			return;
+	if (peerListener.closed || !peer.ext.utm.size)
+		return;
 
 	mtt::MetadataReconstruction metadata;
 	metadata.init(peer.ext.utm.size);
 
-	while (!metadata.finished() && !failed)
+	while (!metadata.finished() && !peerListener.closed)
 	{
 		uint32_t mdPiece = metadata.getMissingPieceIndex();
 		peer.ext.requestMetadataPiece(mdPiece);
 
-		WAITFOR(failed || !utmMsg.metadata.empty())
+		WAITFOR(peerListener.closed || !peerListener.utmMsg.metadata.empty());
 
-			if (failed || utmMsg.id != mtt::ext::UtMetadata::Data)
-				return;
+		if (peerListener.closed || peerListener.utmMsg.id != mtt::ext::UtMetadata::Data)
+			return;
 
-		metadata.addPiece(utmMsg.metadata, utmMsg.piece);
-		utmMsg.metadata.clear();
+		metadata.addPiece(peerListener.utmMsg.metadata, peerListener.utmMsg.piece);
+		peerListener.utmMsg.metadata.clear();
 	}
 
 	if (metadata.finished())
@@ -604,43 +719,6 @@ void TorrentTest::testMetadataReceive()
 		auto info = mtt::TorrentFileParser::parseTorrentInfo(metadata.buffer.data(), metadata.buffer.size());
 		TEST_LOG(info.files[0].path[0]);
 	}
-}
-
-uint32_t TorrentTest::dhtFoundPeers(const uint8_t* hash, std::vector<Addr>& values)
-{
-	std::lock_guard<std::mutex> guard(dhtResult.resultMutex);
-
-	uint32_t count = 0;
-	for (auto& v : values)
-	{
-		bool found = false;
-
-		for (auto& old : dhtResult.values)
-		{
-			if (old == v)
-			{
-				found = true;
-				break;
-			}
-		}
-
-		if (!found)
-		{
-			dhtResult.values.push_back(v);
-			count++;
-		}
-	}
-
-	TEST_LOG("DHT received values count :" << count)
-
-		return count;
-}
-
-void TorrentTest::dhtFindingPeersFinished(const uint8_t* hash, uint32_t count)
-{
-	TEST_LOG("DHT final values count :" << count)
-
-		dhtResult.finalCount = count;
 }
 
 static TorrentPtr torrentFromFile(const char* path)
@@ -1045,10 +1123,10 @@ void testUtpLocalConnection()
 	mtt::Storage storage(torrentInfo);
 	storage.setPath("C:\\Torrent\\mtt", false);
 
-	class TestPeerListener : public BasicPeerListener
+	class MyTestPeerListener : public TestPeerListener
 	{
 	public:
-		TestPeerListener(mtt::Storage& s) : storage(s) {}
+		MyTestPeerListener(mtt::Storage& s) : storage(s) {}
 		virtual void messageReceived(PeerCommunication* p, PeerMessage& msg) override
 		{
 			if (msg.id == Piece)
@@ -1138,10 +1216,10 @@ void testUtpLocalProtocol()
 	TorrentInfo& torrentInfo = torrent.info;
 	//decodeHexa("6DEB1179339B447DC3A44A6ED9EEFE2565871116", torrentInfo.hash);
 
-	class TestPeerListener : public BasicPeerListener
+	class MyTestPeerListener : public TestPeerListener
 	{
 	public:
-		TestPeerListener(ServiceThreadpool& pool, const char* filepath, TorrentInfo& info, uint16_t port) : torrentInfo(info)
+		MyTestPeerListener(ServiceThreadpool& pool, const char* filepath, TorrentInfo& info, uint16_t port) : torrentInfo(info)
 		{
 			storage.init(torrentInfo, filepath);
 
@@ -1202,8 +1280,8 @@ void testUtpLocalProtocol()
 		std::shared_ptr<UdpAsyncReceiver> udpReceiver;
 	};
 
-	TestPeerListener uploaderListener(pool, "C:\\Torrent\\mtt", torrentInfo, 57000);
-	TestPeerListener downloaderListener(pool, "C:\\Torrent\\mtt2", torrentInfo, 56000);
+	MyTestPeerListener uploaderListener(pool, "C:\\Torrent\\mtt", torrentInfo, 57000);
+	MyTestPeerListener downloaderListener(pool, "C:\\Torrent\\mtt2", torrentInfo, 56000);
 
 	auto uploader = std::make_shared<PeerCommunication>(torrentInfo, uploaderListener, pool.io);
 	auto downloader = std::make_shared<PeerCommunication>(torrentInfo, downloaderListener, pool.io);
@@ -1240,6 +1318,6 @@ void testUtpLocalProtocol()
 
 void TorrentTest::start()
 {
-	testStorageLoad();
+	testDumpStoredPiece();
 	//testUtpLocalConnection();
 }

@@ -23,7 +23,6 @@ set (core_sources
 	PiecesProgress
 	State
 	Storage
-	Test
 	Torrent
 	TrackerManager
 	UdpTrackerComm
