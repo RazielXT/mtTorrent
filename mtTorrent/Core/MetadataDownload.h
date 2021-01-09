@@ -31,12 +31,12 @@ namespace mtt
 			std::string toString();
 		};
 
-		std::vector<EventInfo> getEvents(size_t startIndex = 0);
-		size_t getEventsCount();
+		std::vector<EventInfo> getEvents(size_t startIndex = 0) const;
+		size_t getEventsCount() const;
 
 	private:
 
-		std::mutex commsMutex;
+		mutable std::mutex commsMutex;
 		std::vector<std::shared_ptr<PeerCommunication>> activeComms;
 		void evalComms();
 		void removeBackup(PeerCommunication*);

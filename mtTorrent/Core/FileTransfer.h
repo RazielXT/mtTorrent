@@ -21,18 +21,18 @@ namespace mtt
 
 		void refreshSelection();
 
-		uint32_t getDownloadSpeed();
+		uint32_t getDownloadSpeed() const;
 		uint64_t& getUploadSum();
-		uint32_t getUploadSpeed();
+		uint32_t getUploadSpeed() const;
 
 		void addUnfinishedPieces(std::vector<mtt::DownloadedPieceState>& pieces);
 		std::vector<mtt::DownloadedPieceState> getUnfinishedPiecesState();
 
 		size_t getUnfinishedPiecesDownloadSize();
 
-		std::vector<uint32_t> getCurrentRequests();
+		std::vector<uint32_t> getCurrentRequests() const;
 
-		std::vector<ActivePeerInfo> getPeersInfo();
+		std::vector<ActivePeerInfo> getPeersInfo() const;
 
 	private:
 
@@ -69,7 +69,7 @@ namespace mtt
 		std::vector<Priority> piecesPriority;
 
 		std::vector<ActivePeer> activePeers;
-		std::mutex peersMutex;
+		mutable std::mutex peersMutex;
 
 		mtt::ActivePeer* getActivePeer(PeerCommunication* p);
 		void addPeer(PeerCommunication*);

@@ -13,24 +13,24 @@ void mttApi::Torrent::stop()
 	static_cast<mtt::Torrent*>(this)->stop();
 }
 
-mttApi::Torrent::ActiveState mttApi::Torrent::getActiveState()
+mttApi::Torrent::ActiveState mttApi::Torrent::getActiveState() const
 {
-	return static_cast<mtt::Torrent*>(this)->state;
+	return static_cast<const mtt::Torrent*>(this)->state;
 }
 
-mttApi::Torrent::State mttApi::Torrent::getState()
+mttApi::Torrent::State mttApi::Torrent::getState() const
 {
-	return static_cast<mtt::Torrent*>(this)->getState();
+	return static_cast<const mtt::Torrent*>(this)->getState();
 }
 
-mtt::Status mttApi::Torrent::getLastError()
+mtt::Status mttApi::Torrent::getLastError() const
 {
-	return static_cast<mtt::Torrent*>(this)->lastError;
+	return static_cast<const mtt::Torrent*>(this)->lastError;
 }
 
-float mttApi::Torrent::checkingProgress()
+float mttApi::Torrent::checkingProgress() const
 {
-	return static_cast<mtt::Torrent*>(this)->checkingProgress();
+	return static_cast<const mtt::Torrent*>(this)->checkingProgress();
 }
 
 void mttApi::Torrent::checkFiles()
@@ -48,14 +48,14 @@ void mttApi::Torrent::setFilesPriority(const std::vector<mtt::Priority>& p)
 	return static_cast<mtt::Torrent*>(this)->setFilesPriority(p);
 }
 
-mtt::DownloadSelection mttApi::Torrent::getFilesSelection()
+mtt::DownloadSelection mttApi::Torrent::getFilesSelection() const
 {
-	return static_cast<mtt::Torrent*>(this)->files.selection;
+	return static_cast<const mtt::Torrent*>(this)->files.selection;
 }
 
-std::string mttApi::Torrent::getLocationPath()
+std::string mttApi::Torrent::getLocationPath() const
 {
-	return static_cast<mtt::Torrent*>(this)->files.storage.getPath();
+	return static_cast<const mtt::Torrent*>(this)->files.storage.getPath();
 }
 
 mtt::Status mttApi::Torrent::setLocationPath(const std::string& path)
@@ -63,44 +63,44 @@ mtt::Status mttApi::Torrent::setLocationPath(const std::string& path)
 	return static_cast<mtt::Torrent*>(this)->setLocationPath(path);
 }
 
-const std::string& mttApi::Torrent::name()
+const std::string& mttApi::Torrent::name() const
 {
-	return static_cast<mtt::Torrent*>(this)->name();
+	return static_cast<const mtt::Torrent*>(this)->name();
 }
 
-float mttApi::Torrent::currentProgress()
+float mttApi::Torrent::currentProgress() const
 {
-	return static_cast<mtt::Torrent*>(this)->currentProgress();
+	return static_cast<const mtt::Torrent*>(this)->currentProgress();
 }
 
-float mttApi::Torrent::currentSelectionProgress()
+float mttApi::Torrent::currentSelectionProgress() const
 {
-	return static_cast<mtt::Torrent*>(this)->currentSelectionProgress();
+	return static_cast<const mtt::Torrent*>(this)->currentSelectionProgress();
 }
 
-uint64_t mttApi::Torrent::downloaded()
+uint64_t mttApi::Torrent::downloaded() const
 {
-	return static_cast<mtt::Torrent*>(this)->downloaded();
+	return static_cast<const mtt::Torrent*>(this)->downloaded();
 }
 
-uint64_t mttApi::Torrent::uploaded()
+uint64_t mttApi::Torrent::uploaded() const
 {
-	return static_cast<mtt::Torrent*>(this)->uploaded();
+	return static_cast<const mtt::Torrent*>(this)->uploaded();
 }
 
-bool mttApi::Torrent::finished()
+bool mttApi::Torrent::finished() const
 {
-	return static_cast<mtt::Torrent*>(this)->finished();
+	return static_cast<const mtt::Torrent*>(this)->finished();
 }
 
-bool mttApi::Torrent::selectionFinished()
+bool mttApi::Torrent::selectionFinished() const
 {
-	return static_cast<mtt::Torrent*>(this)->selectionFinished();
+	return static_cast<const mtt::Torrent*>(this)->selectionFinished();
 }
 
-const mtt::TorrentFileInfo& mttApi::Torrent::getFileInfo()
+const mtt::TorrentFileInfo& mttApi::Torrent::getFileInfo() const
 {
-	return static_cast<mtt::Torrent*>(this)->infoFile;
+	return static_cast<const mtt::Torrent*>(this)->infoFile;
 }
 
 std::shared_ptr<mttApi::Peers> mttApi::Torrent::getPeers()
@@ -142,10 +142,10 @@ bool mttApi::Torrent::getReceivedPieces(uint32_t* dataPieces, size_t& dataSize)
 	return true;
 }
 
-std::vector<float> mttApi::Torrent::getFilesProgress()
+std::vector<float> mttApi::Torrent::getFilesProgress() const
 {
-	auto& selection = static_cast<mtt::Torrent*>(this)->files.selection;
-	auto& progress = static_cast<mtt::Torrent*>(this)->files.progress;
+	auto& selection = static_cast<const mtt::Torrent*>(this)->files.selection;
+	auto& progress = static_cast<const mtt::Torrent*>(this)->files.progress;
 
 	if (selection.files.empty())
 		return {};
@@ -172,8 +172,8 @@ std::vector<float> mttApi::Torrent::getFilesProgress()
 	return out;
 }
 
-std::vector<uint64_t> mttApi::Torrent::getFilesAllocatedSize()
+std::vector<uint64_t> mttApi::Torrent::getFilesAllocatedSize() const
 {
-	return static_cast<mtt::Torrent*>(this)->files.storage.getAllocatedSize();
+	return static_cast<const mtt::Torrent*>(this)->files.storage.getAllocatedSize();
 }
 

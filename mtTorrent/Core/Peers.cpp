@@ -229,7 +229,7 @@ std::shared_ptr<mtt::PeerCommunication> mtt::Peers::disconnect(PeerCommunication
 	return nullptr;
 }
 
-std::vector<mtt::TrackerInfo> mtt::Peers::getSourcesInfo()
+std::vector<mtt::TrackerInfo> mtt::Peers::getSourcesInfo() const
 {
 	std::vector<mtt::TrackerInfo> out;
 	auto tr = trackers.getTrackers();
@@ -259,17 +259,17 @@ void mtt::Peers::refreshSource(const std::string& name)
 		dht.findPeers();
 }
 
-uint32_t mtt::Peers::connectedCount()
+uint32_t mtt::Peers::connectedCount() const
 {
 	return (uint32_t)activeConnections.size();
 }
 
-uint32_t mtt::Peers::receivedCount()
+uint32_t mtt::Peers::receivedCount() const
 {
 	return (uint32_t)knownPeers.size();
 }
 
-std::vector<std::shared_ptr<mtt::PeerCommunication>> mtt::Peers::getActivePeers()
+std::vector<std::shared_ptr<mtt::PeerCommunication>> mtt::Peers::getActivePeers() const
 {
 	std::vector<std::shared_ptr<mtt::PeerCommunication>> out;
 	std::lock_guard<std::mutex> guard(peersMutex);

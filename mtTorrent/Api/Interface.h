@@ -50,10 +50,10 @@ namespace mtt
 		size_t expectedBitfieldSize = 0;
 		uint64_t fullSize = 0;
 
-		API_EXPORT std::vector<PieceBlockInfo> makePieceBlocksInfo(uint32_t idx);
-		API_EXPORT PieceBlockInfo getPieceBlockInfo(uint32_t idx, uint32_t blockIdx);
-		API_EXPORT uint32_t getPieceSize(uint32_t idx);
-		API_EXPORT uint32_t getPieceBlocksCount(uint32_t idx);
+		API_EXPORT std::vector<PieceBlockInfo> makePieceBlocksInfo(uint32_t idx) const;
+		API_EXPORT PieceBlockInfo getPieceBlockInfo(uint32_t idx, uint32_t blockIdx) const;
+		API_EXPORT uint32_t getPieceSize(uint32_t idx) const;
+		API_EXPORT uint32_t getPieceBlocksCount(uint32_t idx) const;
 
 		uint32_t lastPieceIndex = 0;
 		uint32_t lastPieceSize = 0;

@@ -283,7 +283,7 @@ void UpnpPortMapping::unmapPort(const std::string& gateway, uint16_t gatewayPort
 	stream->connect(gateway, gatewayPort);
 }
 
-std::string UpnpPortMapping::getReadableInfo()
+std::string UpnpPortMapping::getReadableInfo() const
 {
 	std::string info;
 

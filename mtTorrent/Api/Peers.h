@@ -11,7 +11,7 @@ namespace mttApi
 		/*
 			Get list of trackers and their current state
 		*/
-		API_EXPORT std::vector<mtt::TrackerInfo> getSourcesInfo();
+		API_EXPORT std::vector<mtt::TrackerInfo> getSourcesInfo() const;
 		/*
 			Force announce tracker by its name
 		*/
@@ -20,8 +20,8 @@ namespace mttApi
 		/*
 			Get count of currently connected/found peers
 		*/
-		API_EXPORT uint32_t connectedCount();
-		API_EXPORT uint32_t receivedCount();
+		API_EXPORT uint32_t connectedCount() const;
+		API_EXPORT uint32_t receivedCount() const;
 
 		/*
 			Force connect to peer with specific address (ip:port)

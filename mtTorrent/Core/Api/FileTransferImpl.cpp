@@ -1,21 +1,21 @@
 #include "FileTransfer.h"
 
-uint32_t mttApi::FileTransfer::getDownloadSpeed()
+uint32_t mttApi::FileTransfer::getDownloadSpeed() const
 {
-	return static_cast<mtt::FileTransfer*>(this)->getDownloadSpeed();
+	return static_cast<const mtt::FileTransfer*>(this)->getDownloadSpeed();
 }
 
-uint32_t mttApi::FileTransfer::getUploadSpeed()
+uint32_t mttApi::FileTransfer::getUploadSpeed() const
 {
-	return static_cast<mtt::FileTransfer*>(this)->getUploadSpeed();
+	return static_cast<const mtt::FileTransfer*>(this)->getUploadSpeed();
 }
 
-std::vector<mtt::ActivePeerInfo> mttApi::FileTransfer::getPeersInfo()
+std::vector<mtt::ActivePeerInfo> mttApi::FileTransfer::getPeersInfo() const
 {
-	return static_cast<mtt::FileTransfer*>(this)->getPeersInfo();
+	return static_cast<const mtt::FileTransfer*>(this)->getPeersInfo();
 }
 
-std::vector<uint32_t> mttApi::FileTransfer::getCurrentRequests()
+std::vector<uint32_t> mttApi::FileTransfer::getCurrentRequests() const
 {
-	return static_cast<mtt::FileTransfer*>(this)->getCurrentRequests();
+	return static_cast<const mtt::FileTransfer*>(this)->getCurrentRequests();
 }

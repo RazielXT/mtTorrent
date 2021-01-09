@@ -19,9 +19,9 @@ std::shared_ptr<mttApi::Core> mttApi::Core::create()
 	return core;
 }
 
-std::vector<mttApi::TorrentPtr> mttApi::Core::getTorrents()
+std::vector<mttApi::TorrentPtr> mttApi::Core::getTorrents() const
 {
-	auto core = static_cast<mtt::Core*>(this);
+	auto core = static_cast<const mtt::Core*>(this);
 
 	std::vector<mttApi::TorrentPtr> out;
 	for (auto t = core->torrents.rbegin(); t != core->torrents.rend(); t++)
@@ -47,9 +47,9 @@ std::pair<mtt::Status, mttApi::TorrentPtr> mttApi::Core::addMagnet(const char* m
 	return static_cast<mtt::Core*>(this)->addMagnet(magnet);
 }
 
-mttApi::TorrentPtr mttApi::Core::getTorrent(const uint8_t* hash)
+mttApi::TorrentPtr mttApi::Core::getTorrent(const uint8_t* hash) const
 {
-	return static_cast<mtt::Core*>(this)->getTorrent(hash);
+	return static_cast<const mtt::Core*>(this)->getTorrent(hash);
 }
 
 std::shared_ptr<mttApi::Listener> mttApi::Core::getListener()

@@ -90,7 +90,7 @@ std::shared_ptr<mtt::Tracker> mtt::TrackerManager::getTrackerByAddr(const std::s
 	return nullptr;
 }
 
-std::vector<std::pair<std::string, std::shared_ptr<mtt::Tracker>>> mtt::TrackerManager::getTrackers()
+std::vector<std::pair<std::string, std::shared_ptr<mtt::Tracker>>> mtt::TrackerManager::getTrackers() const
 {
 	std::vector<std::pair<std::string, std::shared_ptr<mtt::Tracker>>> out;
 

@@ -360,7 +360,7 @@ void mtt::PeerCommunication::requestPieceBlock(PieceBlockInfo& pieceInfo)
 	write(mtt::bt::createBlockRequest(pieceInfo));
 }
 
-bool mtt::PeerCommunication::isEstablished()
+bool mtt::PeerCommunication::isEstablished() const
 {
 	return state.action == PeerCommunicationState::Established;
 }

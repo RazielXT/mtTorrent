@@ -19,17 +19,17 @@ namespace mtt
 		bool toBitfield(uint8_t* dataBitfield, size_t dataSize);
 		size_t getBitfieldSize();
 
-		bool empty();
-		float getPercentage();
-		float getSelectedPercentage();
+		bool empty() const;
+		float getPercentage() const;
+		float getSelectedPercentage() const;
 
 		void addPiece(uint32_t index);
-		bool hasPiece(uint32_t index);
+		bool hasPiece(uint32_t index) const;
 		void removePiece(uint32_t index);
-		bool selectedPiece(uint32_t index);
-		bool wantedPiece(uint32_t index);
-		uint32_t firstEmptyPiece();
-		size_t getReceivedPiecesCount();
+		bool selectedPiece(uint32_t index) const;
+		bool wantedPiece(uint32_t index) const;
+		uint32_t firstEmptyPiece() const;
+		size_t getReceivedPiecesCount() const;
 
 		std::vector<uint8_t> pieces;
 		size_t selectedPieces = 0;

@@ -22,14 +22,14 @@ namespace mtt
 		size_t add(std::shared_ptr<TcpAsyncStream> peer, const BufferView& data);
 		std::shared_ptr<PeerCommunication> disconnect(PeerCommunication*);
 
-		std::vector<TrackerInfo> getSourcesInfo();
+		std::vector<TrackerInfo> getSourcesInfo() const;
 		void refreshSource(const std::string& name);
 
 		TrackerManager trackers;
 
-		uint32_t connectedCount();
-		uint32_t receivedCount();
-		std::vector<std::shared_ptr<PeerCommunication>> getActivePeers();
+		uint32_t connectedCount() const;
+		uint32_t receivedCount() const;
+		std::vector<std::shared_ptr<PeerCommunication>> getActivePeers() const;
 
 		void reloadTorrentInfo();
 
@@ -79,7 +79,7 @@ namespace mtt
 
 		PeersUpdateCallback updateCallback;
 
-		enum class PeerQuality {Unknown, Closed, Offline, Connecting, Bad, Normal, Good};
+		enum class PeerQuality { Unknown, Closed, Offline, Connecting, Bad, Normal, Good };
 		struct KnownPeer
 		{
 			bool operator==(const Addr& r);
@@ -94,7 +94,7 @@ namespace mtt
 		uint32_t updateKnownPeers(const std::vector<Addr>& peers, PeerSource source);
 		uint32_t updateKnownPeers(const Addr& addr, PeerSource source);
 		std::vector<KnownPeer> knownPeers;
-		std::mutex peersMutex;
+		mutable std::mutex peersMutex;
 
 		void connect(uint32_t idx);
 		std::shared_ptr<PeerCommunication> getActivePeer(const Addr&);

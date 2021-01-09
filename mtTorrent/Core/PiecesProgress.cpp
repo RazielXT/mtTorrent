@@ -5,17 +5,17 @@ const uint8_t ReadyValue = 0;
 const uint8_t HasFlag = 1;
 const uint8_t UnselectedFlag = 8;
 
-bool mtt::PiecesProgress::empty()
+bool mtt::PiecesProgress::empty() const
 {
 	return receivedPiecesCount == 0;
 }
 
-float mtt::PiecesProgress::getPercentage()
+float mtt::PiecesProgress::getPercentage() const
 {
 	return pieces.empty() ? 0 : (receivedPiecesCount / (float)pieces.size());
 }
 
-float mtt::PiecesProgress::getSelectedPercentage()
+float mtt::PiecesProgress::getSelectedPercentage() const
 {
 	return selectedPieces == 0 ? 0 : (selectedReceivedPiecesCount / (float)selectedPieces);
 }
@@ -122,7 +122,7 @@ void mtt::PiecesProgress::addPiece(uint32_t index)
 	}
 }
 
-bool mtt::PiecesProgress::hasPiece(uint32_t index)
+bool mtt::PiecesProgress::hasPiece(uint32_t index) const
 {
 	return pieces[index] & HasFlag;
 }
@@ -139,17 +139,17 @@ void mtt::PiecesProgress::removePiece(uint32_t index)
 	}
 }
 
-bool mtt::PiecesProgress::selectedPiece(uint32_t index)
+bool mtt::PiecesProgress::selectedPiece(uint32_t index) const
 {
 	return (pieces[index] & UnselectedFlag) == 0;
 }
 
-bool mtt::PiecesProgress::wantedPiece(uint32_t index)
+bool mtt::PiecesProgress::wantedPiece(uint32_t index) const
 {
 	return pieces[index] == 0;
 }
 
-uint32_t mtt::PiecesProgress::firstEmptyPiece()
+uint32_t mtt::PiecesProgress::firstEmptyPiece() const
 {
 	for (uint32_t id = 0; id < pieces.size(); id++)
 	{
@@ -160,7 +160,7 @@ uint32_t mtt::PiecesProgress::firstEmptyPiece()
 	return -1;
 }
 
-size_t mtt::PiecesProgress::getReceivedPiecesCount()
+size_t mtt::PiecesProgress::getReceivedPiecesCount() const
 {
 	return receivedPiecesCount;
 }

@@ -55,7 +55,7 @@ void mtt::Downloader::sortPriority(const std::vector<Priority>& priority, const 
 		[&priority](uint32_t i1, uint32_t i2) { return priority[i1] > priority[i2]; });
 }
 
-std::vector<uint32_t> mtt::Downloader::getCurrentRequests()
+std::vector<uint32_t> mtt::Downloader::getCurrentRequests() const
 {
 	std::vector<uint32_t> out;
 

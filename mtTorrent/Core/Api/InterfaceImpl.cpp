@@ -33,7 +33,7 @@ static bool parseTorrentHash(std::string from, uint8_t* to)
 	return false;
 }
 
-std::vector<mtt::PieceBlockInfo> mtt::TorrentInfo::makePieceBlocksInfo(uint32_t index)
+std::vector<mtt::PieceBlockInfo> mtt::TorrentInfo::makePieceBlocksInfo(uint32_t index) const
 {
 	std::vector<PieceBlockInfo> out;
 	uint32_t size = pieceSize;
@@ -56,7 +56,7 @@ std::vector<mtt::PieceBlockInfo> mtt::TorrentInfo::makePieceBlocksInfo(uint32_t 
 	return out;
 }
 
-mtt::PieceBlockInfo mtt::TorrentInfo::getPieceBlockInfo(uint32_t idx, uint32_t blockIdx)
+mtt::PieceBlockInfo mtt::TorrentInfo::getPieceBlockInfo(uint32_t idx, uint32_t blockIdx) const
 {
 	PieceBlockInfo block;
 	block.begin = blockIdx * BlockRequestMaxSize;
@@ -69,12 +69,12 @@ mtt::PieceBlockInfo mtt::TorrentInfo::getPieceBlockInfo(uint32_t idx, uint32_t b
 	return block;
 }
 
-uint32_t mtt::TorrentInfo::getPieceSize(uint32_t idx)
+uint32_t mtt::TorrentInfo::getPieceSize(uint32_t idx) const
 {
 	return (idx == lastPieceIndex) ? lastPieceSize : pieceSize;
 }
 
-uint32_t mtt::TorrentInfo::getPieceBlocksCount(uint32_t idx)
+uint32_t mtt::TorrentInfo::getPieceBlocksCount(uint32_t idx) const
 {
 	return (idx == lastPieceIndex) ? (lastPieceLastBlockIndex + 1) : (pieceSize / BlockRequestMaxSize);
 }

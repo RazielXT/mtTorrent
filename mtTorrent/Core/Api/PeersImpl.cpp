@@ -1,8 +1,8 @@
 #include "Peers.h"
 
-std::vector<mtt::TrackerInfo> mttApi::Peers::getSourcesInfo()
+std::vector<mtt::TrackerInfo> mttApi::Peers::getSourcesInfo() const
 {
-	return static_cast<mtt::Peers*>(this)->getSourcesInfo();
+	return static_cast<const mtt::Peers*>(this)->getSourcesInfo();
 }
 
 void mttApi::Peers::refreshSource(const std::string& name)
@@ -10,14 +10,14 @@ void mttApi::Peers::refreshSource(const std::string& name)
 	return static_cast<mtt::Peers*>(this)->refreshSource(name);
 }
 
-uint32_t mttApi::Peers::connectedCount()
+uint32_t mttApi::Peers::connectedCount() const
 {
-	return static_cast<mtt::Peers*>(this)->connectedCount();
+	return static_cast<const mtt::Peers*>(this)->connectedCount();
 }
 
-uint32_t mttApi::Peers::receivedCount()
+uint32_t mttApi::Peers::receivedCount() const
 {
-	return static_cast<mtt::Peers*>(this)->receivedCount();
+	return static_cast<const mtt::Peers*>(this)->receivedCount();
 }
 
 void mttApi::Peers::connect(const char* address)

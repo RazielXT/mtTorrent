@@ -32,12 +32,12 @@ namespace mttApi
 		/*
 			Get torrent based on hash or nullptr if not found
 		*/
-		API_EXPORT TorrentPtr getTorrent(const uint8_t* hash);
+		API_EXPORT TorrentPtr getTorrent(const uint8_t* hash) const;
 
 		/*
 			Get vector of all added torrents
 		*/
-		API_EXPORT std::vector<TorrentPtr> getTorrents();
+		API_EXPORT std::vector<TorrentPtr> getTorrents() const;
 
 		/*
 			Get object of Listener, used for receiving incoming connections from other peers

@@ -16,7 +16,7 @@ namespace mtt
 
 		void stop();
 
-		std::string getUpnpReadableInfo();
+		std::string getUpnpReadableInfo() const;
 
 	protected:
 

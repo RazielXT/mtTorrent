@@ -1,13 +1,13 @@
 #include "MetadataDownload.h"
 
-mtt::MetadataDownloadState mttApi::MagnetDownload::getState()
+mtt::MetadataDownloadState mttApi::MagnetDownload::getState() const
 {
-	return static_cast<mtt::MetadataDownload*>(this)->state;
+	return static_cast<const mtt::MetadataDownload*>(this)->state;
 }
 
-size_t mttApi::MagnetDownload::getDownloadLog(std::vector<std::string>& logs, size_t logStart)
+size_t mttApi::MagnetDownload::getDownloadLog(std::vector<std::string>& logs, size_t logStart) const
 {
-	auto utm = static_cast<mtt::MetadataDownload*>(this);
+	auto utm = static_cast<const mtt::MetadataDownload*>(this);
 
 	auto events = utm->getEvents(logStart);
 	for (auto& e : events)
@@ -18,7 +18,7 @@ size_t mttApi::MagnetDownload::getDownloadLog(std::vector<std::string>& logs, si
 	return events.size();
 }
 
-size_t mttApi::MagnetDownload::getDownloadLogSize()
+size_t mttApi::MagnetDownload::getDownloadLogSize() const
 {
-	return static_cast<mtt::MetadataDownload*>(this)->getEventsCount();
+	return static_cast<const mtt::MetadataDownload*>(this)->getEventsCount();
 }

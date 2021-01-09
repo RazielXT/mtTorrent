@@ -175,7 +175,7 @@ uint64_t& mtt::FileTransfer::getUploadSum()
 	return uploader->uploaded;
 }
 
-uint32_t mtt::FileTransfer::getDownloadSpeed()
+uint32_t mtt::FileTransfer::getDownloadSpeed() const
 {
 	uint32_t sum = 0;
 
@@ -186,7 +186,7 @@ uint32_t mtt::FileTransfer::getDownloadSpeed()
 	return sum;
 }
 
-uint32_t mtt::FileTransfer::getUploadSpeed()
+uint32_t mtt::FileTransfer::getUploadSpeed() const
 {
 	uint32_t sum = 0;
 
@@ -212,7 +212,7 @@ size_t mtt::FileTransfer::getUnfinishedPiecesDownloadSize()
 	return sz;
 }
 
-std::vector<mtt::ActivePeerInfo> mtt::FileTransfer::getPeersInfo()
+std::vector<mtt::ActivePeerInfo> mtt::FileTransfer::getPeersInfo() const
 {
 	auto allPeers = torrent->peers->getActivePeers();
 
@@ -248,7 +248,7 @@ std::vector<mtt::ActivePeerInfo> mtt::FileTransfer::getPeersInfo()
 	return out;
 }
 
-std::vector<uint32_t> mtt::FileTransfer::getCurrentRequests()
+std::vector<uint32_t> mtt::FileTransfer::getCurrentRequests() const
 {
 	return downloader.getCurrentRequests();
 }

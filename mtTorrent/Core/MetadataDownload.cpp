@@ -72,7 +72,7 @@ void mtt::MetadataDownload::stop()
 	peers.stop();
 }
 
-std::vector<mtt::MetadataDownload::EventInfo> mtt::MetadataDownload::getEvents(size_t startIndex)
+std::vector<mtt::MetadataDownload::EventInfo> mtt::MetadataDownload::getEvents(size_t startIndex) const
 {
 	std::lock_guard<std::mutex> guard(commsMutex);
 
@@ -82,7 +82,7 @@ std::vector<mtt::MetadataDownload::EventInfo> mtt::MetadataDownload::getEvents(s
 	return { eventLog.begin() + startIndex, eventLog.end() };
 }
 
-size_t mtt::MetadataDownload::getEventsCount()
+size_t mtt::MetadataDownload::getEventsCount() const
 {
 	return eventLog.size();
 }

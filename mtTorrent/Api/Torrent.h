@@ -30,7 +30,7 @@ namespace mttApi
 		/*
 			Get active state, that is if torrent tries to achieve connection to other peers
 		*/
-		API_EXPORT ActiveState getActiveState();
+		API_EXPORT ActiveState getActiveState() const;
 
 		enum class State
 		{
@@ -43,16 +43,16 @@ namespace mttApi
 			Stopping,				//active and in process of stopping
 		};
 
-		API_EXPORT State getState();
+		API_EXPORT State getState() const;
 		/*
 			Get specific error which happened in caused Interrupted state
 		*/
-		API_EXPORT mtt::Status getLastError();
+		API_EXPORT mtt::Status getLastError() const;
 
 		/*
 			progress of last files checking task (0-1)
 		*/
-		API_EXPORT float checkingProgress();
+		API_EXPORT float checkingProgress() const;
 		/*
 			start check of existing files, if not already checking
 		*/
@@ -61,15 +61,15 @@ namespace mttApi
 		/*
 			get files with current selection info
 		*/
-		API_EXPORT mtt::DownloadSelection getFilesSelection();
+		API_EXPORT mtt::DownloadSelection getFilesSelection() const;
 		/*
 			get current progress of files, sorted by order in torrent file
 		*/
-		API_EXPORT std::vector<float> getFilesProgress();
+		API_EXPORT std::vector<float> getFilesProgress() const;
 		/*
 			get current allocated sizes on disk in bytes, sorted by order in torrent file
 		*/
-		API_EXPORT std::vector<uint64_t> getFilesAllocatedSize();
+		API_EXPORT std::vector<uint64_t> getFilesAllocatedSize() const;
 		/*
 			select/deselect files to download, sorted by order in torrent file
 		*/
@@ -81,7 +81,7 @@ namespace mttApi
 		/*
 			get current download location path
 		*/
-		API_EXPORT std::string getLocationPath();
+		API_EXPORT std::string getLocationPath() const;
 		/*
 			change download location path, moving existing files
 		*/
@@ -90,36 +90,36 @@ namespace mttApi
 		/*
 			get name of file from torrent file
 		*/
-		API_EXPORT const std::string& name();
+		API_EXPORT const std::string& name() const;
 		/*
 			progress of download of all torrent files
 		*/
-		API_EXPORT float currentProgress();
+		API_EXPORT float currentProgress() const;
 		/*
 			progress of download of selected torrent files
 		*/
-		API_EXPORT float currentSelectionProgress();
+		API_EXPORT float currentSelectionProgress() const;
 		/*
 			downloaded size in bytes
 		*/
-		API_EXPORT uint64_t downloaded();
+		API_EXPORT uint64_t downloaded() const;
 		/*
 			uploaded size in bytes
 		*/
-		API_EXPORT uint64_t uploaded();
+		API_EXPORT uint64_t uploaded() const;
 		/*
 			finished state of whole torrent
 		*/
-		API_EXPORT bool finished();
+		API_EXPORT bool finished() const;
 		/*
 			finished state of selected torrent files
 		*/
-		API_EXPORT bool selectionFinished();
+		API_EXPORT bool selectionFinished() const;
 
 		/*
 			get loaded torrent file
 		*/
-		API_EXPORT const mtt::TorrentFileInfo& getFileInfo();
+		API_EXPORT const mtt::TorrentFileInfo& getFileInfo() const;
 
 		/*
 			see Api\Peers.h

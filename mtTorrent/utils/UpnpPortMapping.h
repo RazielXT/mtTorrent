@@ -20,7 +20,7 @@ public:
 	void mapPort(const std::string& gateway, uint16_t gatewayPort, const std::string& client, uint16_t port, PortType type, bool enable);
 	void unmapPort(const std::string& gateway, uint16_t gatewayPort, uint16_t port, PortType type);
 
-	std::string getReadableInfo();
+	std::string getReadableInfo() const;
 
 private:
 
@@ -37,7 +37,7 @@ private:
 	struct UpnpMappingState
 	{
 		bool active = true;
-		std::mutex stateMutex;
+		mutable std::mutex stateMutex;
 
 		struct MappedPort
 		{
@@ -64,7 +64,7 @@ private:
 
 	bool discoveryStarted = false;
 	bool discoveryFinished = false;
-	std::mutex discoveryMutex;
+	mutable std::mutex discoveryMutex;
 	std::vector<std::pair<uint16_t, PortType>> activeMappingPending;
 	UpnpDiscovery discovery;
 	std::vector<UpnpDiscovery::DeviceInfo> foundDevices;

@@ -93,7 +93,7 @@ mtt::Status mtt::Storage::setPath(std::string p, bool moveFiles)
 	return mtt::Status::Success;
 }
 
-std::string mtt::Storage::getPath()
+std::string mtt::Storage::getPath() const
 {
 	return path;
 }
@@ -197,7 +197,7 @@ mtt::Status mtt::Storage::preallocateSelection(const DownloadSelection& selectio
 	return Status::Success;
 }
 
-std::vector<uint64_t> mtt::Storage::getAllocatedSize()
+std::vector<uint64_t> mtt::Storage::getAllocatedSize() const
 {
 	std::vector<uint64_t> sizes;
 	sizes.reserve(files.size());
@@ -567,7 +567,7 @@ mtt::Status mtt::Storage::preallocate(const File& file, size_t size)
 	return Status::Success;
 }
 
-std::filesystem::path mtt::Storage::getFullpath(const File& file)
+std::filesystem::path mtt::Storage::getFullpath(const File& file) const
 {
 	std::string filePath;
 

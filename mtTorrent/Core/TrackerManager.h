@@ -23,7 +23,7 @@ namespace mtt
 		void removeTrackers();
 
 		std::shared_ptr<Tracker> getTrackerByAddr(const std::string& addr);
-		std::vector<std::pair<std::string,std::shared_ptr<Tracker>>> getTrackers();
+		std::vector<std::pair<std::string,std::shared_ptr<Tracker>>> getTrackers() const;
 
 		uint32_t getTrackersCount();
 
@@ -42,7 +42,7 @@ namespace mtt
 			uint32_t retryCount = 0;
 		};
 		std::vector<TrackerInfo> trackers;
-		std::mutex trackersMutex;
+		mutable std::mutex trackersMutex;
 
 		bool start(TrackerInfo*);
 		void startNext();

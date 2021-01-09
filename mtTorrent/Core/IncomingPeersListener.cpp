@@ -74,7 +74,7 @@ void mtt::IncomingPeersListener::stop()
 	pendingPeers.clear();
 }
 
-std::string mtt::IncomingPeersListener::getUpnpReadableInfo()
+std::string mtt::IncomingPeersListener::getUpnpReadableInfo() const
 {
 	return upnp->getReadableInfo();
 }

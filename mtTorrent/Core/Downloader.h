@@ -81,7 +81,7 @@ namespace mtt
 		std::vector<mtt::DownloadedPieceState> stop();
 
 		size_t getUnfinishedPiecesDownloadSize();
-		std::vector<uint32_t> getCurrentRequests();
+		std::vector<uint32_t> getCurrentRequests() const;
 
 		void peerAdded(ActivePeer*);
 		void messageReceived(PeerCommunication*, PeerMessage&);
@@ -117,7 +117,7 @@ namespace mtt
 			DownloadedPiece piece;
 		};
 		std::vector<RequestInfo> requests;
-		std::mutex requestsMutex;
+		mutable std::mutex requestsMutex;
 
 		std::vector<uint32_t> getBestNextPieces(ActivePeer*);
 		void sendPieceRequests(ActivePeer*);

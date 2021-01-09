@@ -64,7 +64,7 @@ namespace mtt
 		void setChoke(bool enabled);
 
 		void requestPieceBlock(PieceBlockInfo& pieceInfo);
-		bool isEstablished();
+		bool isEstablished() const;
 
 		void sendKeepAlive();
 		void sendBitfield(const DataBuffer& bitfield);

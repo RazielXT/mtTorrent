@@ -227,7 +227,7 @@ void mtt::Torrent::downloadMetadata()
 	});
 }
 
-mttApi::Torrent::State mtt::Torrent::getState()
+mttApi::Torrent::State mtt::Torrent::getState() const
 {
 	if (checking)
 		return mttApi::Torrent::State::CheckingFiles;
@@ -424,7 +424,7 @@ void mtt::Torrent::checkFiles()
 	checkState = request;
 }
 
-float mtt::Torrent::checkingProgress()
+float mtt::Torrent::checkingProgress() const
 {
 	std::lock_guard<std::mutex> guard(checkStateMutex);
 
@@ -459,32 +459,32 @@ bool mtt::Torrent::selectFiles(const std::vector<bool>& s)
 	return true;
 }
 
-bool mtt::Torrent::finished()
+bool mtt::Torrent::finished() const
 {
 	return files.progress.getPercentage() == 1;
 }
 
-bool mtt::Torrent::selectionFinished()
+bool mtt::Torrent::selectionFinished() const
 {
 	return files.progress.getSelectedPercentage() == 1;
 }
 
-const uint8_t* mtt::Torrent::hash()
+const uint8_t* mtt::Torrent::hash() const
 {
 	return infoFile.info.hash;
 }
 
-std::string mtt::Torrent::hashString()
+std::string mtt::Torrent::hashString() const
 {
 	return hexToString(infoFile.info.hash, 20);
 }
 
-const std::string& mtt::Torrent::name()
+const std::string& mtt::Torrent::name() const
 {
 	return infoFile.info.name;
 }
 
-float mtt::Torrent::currentProgress()
+float mtt::Torrent::currentProgress() const
 {
 	float progress = files.progress.getPercentage();
 
@@ -497,7 +497,7 @@ float mtt::Torrent::currentProgress()
 	return progress;
 }
 
-float mtt::Torrent::currentSelectionProgress()
+float mtt::Torrent::currentSelectionProgress() const
 {
 	if (files.progress.selectedPieces == files.progress.pieces.size())
 		return currentProgress();
@@ -514,27 +514,27 @@ float mtt::Torrent::currentSelectionProgress()
 	return progress;
 }
 
-uint64_t mtt::Torrent::downloaded()
+uint64_t mtt::Torrent::downloaded() const
 {
 	return (uint64_t)(infoFile.info.fullSize * (double)files.progress.getPercentage()) + (fileTransfer ? fileTransfer->getUnfinishedPiecesDownloadSize() : 0);
 }
 
-size_t mtt::Torrent::downloadSpeed()
+size_t mtt::Torrent::downloadSpeed() const
 {
 	return fileTransfer ? fileTransfer->getDownloadSpeed() : 0;
 }
 
-uint64_t mtt::Torrent::uploaded()
+uint64_t mtt::Torrent::uploaded() const
 {
 	return fileTransfer ? fileTransfer->getUploadSum() : 0;
 }
 
-size_t mtt::Torrent::uploadSpeed()
+size_t mtt::Torrent::uploadSpeed() const
 {
 	return fileTransfer ? fileTransfer->getUploadSpeed() : 0;
 }
 
-uint64_t mtt::Torrent::dataLeft()
+uint64_t mtt::Torrent::dataLeft() const
 {
 	return infoFile.info.fullSize - downloaded();
 }

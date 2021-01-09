@@ -11,17 +11,17 @@ namespace mttApi
 		/*
 			Get bytes downloaded/uploaded last second
 		*/
-		API_EXPORT uint32_t getDownloadSpeed();
-		API_EXPORT uint32_t getUploadSpeed();
+		API_EXPORT uint32_t getDownloadSpeed() const;
+		API_EXPORT uint32_t getUploadSpeed() const;
 
 		/*
 			Get list of currently connected peers
 		*/
-		API_EXPORT std::vector<mtt::ActivePeerInfo> getPeersInfo();
+		API_EXPORT std::vector<mtt::ActivePeerInfo> getPeersInfo() const;
 
 		/*
 			Get list of currently requested pieces
 		*/
-		API_EXPORT std::vector<uint32_t> getCurrentRequests();
+		API_EXPORT std::vector<uint32_t> getCurrentRequests() const;
 	};
 }

@@ -11,7 +11,7 @@ namespace mttApi
 		/*
 			Get info about UPNP mapping, enabled by setting connection.upnpPortMapping
 		*/
-		API_EXPORT std::string getUpnpReadableInfo();
+		API_EXPORT std::string getUpnpReadableInfo() const;
 
 	};
 }

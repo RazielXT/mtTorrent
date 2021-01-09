@@ -213,7 +213,7 @@ std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addMagnet(const char* magnet)
 	return { mtt::Status::Success, torrent };
 }
 
-mtt::TorrentPtr mtt::Core::getTorrent(const uint8_t* hash)
+mtt::TorrentPtr mtt::Core::getTorrent(const uint8_t* hash) const
 {
 	for (auto t : torrents)
 	{

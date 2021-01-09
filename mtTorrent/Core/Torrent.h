@@ -27,32 +27,32 @@ namespace mtt
 		static TorrentPtr fromMagnetLink(std::string link);
 		static TorrentPtr fromSavedState(std::string name);
 		void downloadMetadata();
-		State getState();
+		State getState() const;
 
 		mtt::Status start();
 		enum class StopReason { Deinit, Manual, Internal };
 		void stop(StopReason reason = StopReason::Manual);
 
 		void checkFiles();
-		float checkingProgress();
+		float checkingProgress() const;
 
 		bool selectFiles(const std::vector<bool>&);
 		void setFilesPriority(const std::vector<mtt::Priority>&);
 		mtt::Status setLocationPath(const std::string& path);
 
-		const std::string& name();
-		float currentProgress();
-		float currentSelectionProgress();
-		uint64_t downloaded();
-		size_t downloadSpeed();
-		uint64_t uploaded();
-		size_t uploadSpeed();
-		uint64_t dataLeft();
-		bool finished();
-		bool selectionFinished();
+		const std::string& name() const;
+		float currentProgress() const;
+		float currentSelectionProgress() const;
+		uint64_t downloaded() const;
+		size_t downloadSpeed() const;
+		uint64_t uploaded() const;
+		size_t uploadSpeed() const;
+		uint64_t dataLeft() const;
+		bool finished() const;
+		bool selectionFinished() const;
 
-		const uint8_t* hash();
-		std::string hashString();
+		const uint8_t* hash() const;
+		std::string hashString() const;
 
 		Files files;
 		TorrentFileInfo infoFile;
@@ -73,7 +73,7 @@ namespace mtt
 
 		static bool loadSavedTorrentFile(const std::string& hash, DataBuffer& out);
 
-		std::mutex checkStateMutex;
+		mutable std::mutex checkStateMutex;
 		std::shared_ptr<mtt::PiecesCheck> checkState;
 		uint64_t lastStateTime = 0;
 		bool stateChanged = false;
