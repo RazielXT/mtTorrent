@@ -96,10 +96,11 @@ namespace mtt
 		size_t unsavedPieceBlocksMaxSize = 0;
 		std::vector<std::pair<PieceBlockInfo, std::shared_ptr<DataBuffer>>> unsavedPieceBlocks;
 		Status saveUnsavedPieceBlocks(const std::vector<std::pair<PieceBlockInfo, std::shared_ptr<DataBuffer>>>& blocks);
-		Status finishUnsavedPieceBlocks();
+		void finishUnsavedPieceBlocks();
 
-		std::vector<std::shared_ptr<DataBuffer>> dataBuffers;
+		std::vector<std::shared_ptr<DataBuffer>> freeDataBuffers;
 		std::shared_ptr<DataBuffer> getDataBuffer();
+		void returnDataBuffer(std::shared_ptr<DataBuffer>);
 
 		std::vector<uint32_t> freshPieces;
 		std::vector<mtt::DownloadedPieceState> unFinishedPieces;

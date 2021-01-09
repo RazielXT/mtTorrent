@@ -334,14 +334,20 @@ void mtt::FileTransfer::storePieceBlock(const PieceBlock& block)
 
 std::shared_ptr<DataBuffer> mtt::FileTransfer::getDataBuffer()
 {
-	for (auto b : dataBuffers)
+	if (freeDataBuffers.empty())
+		return std::make_shared<DataBuffer>();
+	else
 	{
-		if (b->empty())
-			return b;
+		auto buffer = freeDataBuffers.back();
+		freeDataBuffers.pop_back();
+		return buffer;
 	}
+}
 
-	dataBuffers.push_back(std::make_shared<DataBuffer>());
-	return dataBuffers.back();
+void mtt::FileTransfer::returnDataBuffer(std::shared_ptr<DataBuffer> buffer)
+{
+	buffer->clear();
+	freeDataBuffers.push_back(buffer);
 }
 
 mtt::Status mtt::FileTransfer::saveUnsavedPieceBlocks(const std::vector<std::pair<PieceBlockInfo, std::shared_ptr<DataBuffer>>>& blocks)
@@ -357,32 +363,28 @@ mtt::Status mtt::FileTransfer::saveUnsavedPieceBlocks(const std::vector<std::pai
 	{
 		std::lock_guard<std::mutex> guard(unsavedPieceBlocksMutex);
 
-		for (const auto& [info, buffer] : blocks)
-			buffer->clear();
+		for (auto& b : blocks)
+			returnDataBuffer(std::move(b.second));
 	}
 
 	return status;
 }
 
-mtt::Status mtt::FileTransfer::finishUnsavedPieceBlocks()
+void mtt::FileTransfer::finishUnsavedPieceBlocks()
 {
 	std::vector<std::pair<PieceBlockInfo, std::shared_ptr<DataBuffer>>> blocks;
 	{
 		std::lock_guard<std::mutex> guard(unsavedPieceBlocksMutex);
-
-		if (unsavedPieceBlocks.empty())
-			return Status::Success;
-
 		blocks = std::move(unsavedPieceBlocks);
 	}
 
-	Status status = saveUnsavedPieceBlocks(blocks);
+	if (!blocks.empty())
+		saveUnsavedPieceBlocks(blocks);
+
 	{
 		std::lock_guard<std::mutex> guard(unsavedPieceBlocksMutex);
-		dataBuffers.clear();
+		freeDataBuffers.clear();
 	}
-
-	return status;
 }
 
 bool mtt::FileTransfer::storeUnfinishedPiece(const mtt::DownloadedPiece& piece)
