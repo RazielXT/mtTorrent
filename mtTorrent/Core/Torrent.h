@@ -12,11 +12,12 @@ namespace mtt
 	class FileTransfer;
 	class Peers;
 
-	class Torrent : public mttApi::Torrent
+	class Torrent : public mttApi::Torrent, public std::enable_shared_from_this<Torrent>
 	{
 	public:
 
 		Torrent();
+		~Torrent();
 
 		ActiveState state = ActiveState::Stopped;
 		bool checking = false;

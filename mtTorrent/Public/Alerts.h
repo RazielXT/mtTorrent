@@ -6,7 +6,7 @@ namespace mtt
 	{
 		Torrent = 0x10000,
 		Metadata = 0x20000,
-		Config = 0x30000,
+		Config = 0x40000,
 	};
 
 	enum class AlertId
@@ -14,8 +14,7 @@ namespace mtt
 		TorrentAdded = (int)AlertCategory::Torrent,
 		TorrentFinished,
 
-		MetadataUpdated = (int)AlertCategory::Metadata,
-		MetadataFinished,
+		MetadataFinished = (int)AlertCategory::Metadata,
 
 		ConfigChanged = (int)AlertCategory::Config,
 	};

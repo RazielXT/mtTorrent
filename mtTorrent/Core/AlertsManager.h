@@ -8,8 +8,8 @@ namespace mtt
 	public:
 
 		static AlertsManager& Get();
-		void torrentAlert(AlertId id, const uint8_t* hash);
-		void metadataAlert(AlertId id, const uint8_t* hash);
+		void torrentAlert(AlertId id, Torrent* torrent);
+		void metadataAlert(AlertId id, Torrent* torrent);
 		void configAlert(AlertId id, config::ValueType type);
 
 		void registerAlerts(uint32_t alertMask);

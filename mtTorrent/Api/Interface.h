@@ -6,6 +6,13 @@
 #include <string>
 #include <vector>
 #include <cstring>
+#include <memory>
+
+namespace mttApi
+{
+	class Torrent;
+	using TorrentPtr = std::shared_ptr<Torrent>;
+}
 
 namespace mtt
 {
@@ -135,9 +142,9 @@ namespace mtt
 	{
 		AlertId id;
 
-		template <class T> T* getAs()
+		template <class T> const T* getAs() const
 		{
-			if ((int)id & (int)T::category) return static_cast<T*>(this);
+			if ((int)id & (int)T::category) return static_cast<const T*>(this);
 			return nullptr;
 		}
 	};
@@ -146,7 +153,7 @@ namespace mtt
 	{
 		static const mtt::AlertCategory category = mtt::AlertCategory::Torrent;
 
-		uint8_t hash[20];
+		mttApi::TorrentPtr torrent;
 	};
 
 	struct MetadataAlert : public TorrentAlert

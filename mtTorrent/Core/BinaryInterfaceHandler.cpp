@@ -401,9 +401,9 @@ extern "C"
 					out->alerts[i].id = alerts[i]->id;
 
 					if (auto t = alerts[i]->getAs<mtt::TorrentAlert>())
-						memcpy(out->alerts[i].hash, t->hash, 20);
+						memcpy(out->alerts[i].hash, t->torrent->getFileInfo().info.hash, 20);
 					if (auto t = alerts[i]->getAs<mtt::MetadataAlert>())
-						memcpy(out->alerts[i].hash, t->hash, 20);
+						memcpy(out->alerts[i].hash, t->torrent->getFileInfo().info.hash, 20);
 					if (auto t = alerts[i]->getAs<mtt::ConfigAlert>())
 						out->alerts[i].type = (int)t->configType;
 				}

@@ -47,7 +47,7 @@ int main()
 			if (a->id == mtt::AlertId::MetadataFinished)
 			{
 				auto mdAlert = a->getAs<mtt::MetadataAlert>();
-				printf("Name: %s, Metadata download finished\n", core->getTorrent(mdAlert->hash)->name().c_str());
+				printf("Name: %s, Metadata download finished\n", mdAlert->torrent->name().c_str());
 			}
 		}
 
@@ -224,17 +224,15 @@ void example2()
 	//...
 
 	auto alerts = core->popAlerts();
-	for (auto& alert : alerts)
+	for (const auto& alert : alerts)
 	{
 		if (alert->id == mtt::AlertId::MetadataFinished)
 		{
-			auto hash = alert->getAs<mtt::MetadataAlert>()->hash;
-			std::cout << core->getTorrent(hash)->name() << " finished" << std::endl;
+			std::cout << alert->getAs<mtt::MetadataAlert>()->torrent->name() << " finished" << std::endl;
 		}
 		else if (alert->id == mtt::AlertId::TorrentAdded)
 		{
-			auto hash = alert->getAs<mtt::TorrentAlert>()->hash;
-			std::cout << core->getTorrent(hash)->name() << " added" << std::endl;
+			std::cout << alert->getAs<mtt::TorrentAlert>()->torrent->name() << " added" << std::endl;
 		}
 	}
 }

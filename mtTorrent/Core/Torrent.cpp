@@ -14,6 +14,10 @@ mtt::Torrent::Torrent() : service(0)
 {
 }
 
+mtt::Torrent::~Torrent()
+{
+}
+
 mtt::TorrentPtr mtt::Torrent::fromFile(mtt::TorrentFileInfo fileInfo)
 {
 	mtt::TorrentPtr torrent = std::make_shared<Torrent>();
@@ -210,7 +214,7 @@ void mtt::Torrent::downloadMetadata()
 			stateChanged = true;
 			init();
 
-			AlertsManager::Get().metadataAlert(AlertId::MetadataFinished, hash());
+			AlertsManager::Get().metadataAlert(AlertId::MetadataFinished, this);
 		}
 
 		if (s == Status::Success && state.finished)
@@ -242,7 +246,7 @@ mttApi::Torrent::State mtt::Torrent::getState()
 void mtt::Torrent::init()
 {
 	files.init(infoFile.info);
-	AlertsManager::Get().torrentAlert(AlertId::TorrentAdded, hash());
+	AlertsManager::Get().torrentAlert(AlertId::TorrentAdded, this);
 }
 
 mtt::Status mtt::Torrent::start()

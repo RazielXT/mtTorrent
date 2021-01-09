@@ -4,6 +4,7 @@
 #include "PeerCommunication.h"
 #include "Peers.h"
 #include "Configuration.h"
+#include "AlertsManager.h"
 #include "utils/ScheduledTimer.h"
 #include "utils/FastIpToCountry.h"
 #include <fstream>
@@ -457,6 +458,8 @@ void mtt::FileTransfer::pieceFinished(const mtt::DownloadedPiece& piece)
 
 		if (downloader.immediateMode)
 			torrent->checkFiles();
+
+		AlertsManager::Get().metadataAlert(AlertId::TorrentFinished, torrent.get());
 	}
 }
 

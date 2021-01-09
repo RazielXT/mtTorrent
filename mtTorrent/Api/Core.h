@@ -2,12 +2,9 @@
 
 #include "Torrent.h"
 #include "Listener.h"
-#include <memory>
 
 namespace mttApi
 {
-	using TorrentPtr = std::shared_ptr<Torrent>;
-
 	class Core
 	{
 	public:
