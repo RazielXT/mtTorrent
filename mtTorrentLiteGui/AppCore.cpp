@@ -116,6 +116,16 @@ void AppCore::handleTorrentAddResponse(mtt::Status status, uint8_t* hash)
 	}
 }
 
+void AppCore::removeTorrent(uint8_t* hash, bool removeFiles)
+{
+	mtBI::RemoveTorrentRequest request;
+	request.deleteFiles = removeFiles;
+	memcpy(request.hash, hash, 20);
+
+	IoctlFunc(mtBI::MessageId::Remove, &request, nullptr);
+	forceRefresh = true;
+}
+
 void AppCore::processProgramArgument(System::String^ arg)
 {
 	if (HWND windowHandle = (HWND)GuiLite::MainForm::instance->Handle.ToInt64())

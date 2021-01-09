@@ -228,6 +228,9 @@ void FileSelection::onButtonClick(ButtonId id)
 	}
 	else if (id == ButtonId::SelectionCancel)
 	{
+		if (state.added)
+			core.removeTorrent(state.hash, false);
+
 		form->Close();
 	}
 	else if (id == ButtonId::SelectionAll)

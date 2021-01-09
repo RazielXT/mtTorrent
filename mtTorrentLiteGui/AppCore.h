@@ -31,6 +31,7 @@ public:
 	void addTorrentFromFile();
 	//communicate add result if necessary
 	void handleTorrentAddResponse(mtt::Status status, uint8_t* hash);
+	void removeTorrent(uint8_t* hash, bool removeFiles);
 
 	bool selected = false;
 	bool selectionChanged = false;
