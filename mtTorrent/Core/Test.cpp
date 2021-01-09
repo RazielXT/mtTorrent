@@ -269,11 +269,8 @@ void TorrentTest::testStorageCheck()
 	bool finished = false;
 	auto onFinish = [&](std::shared_ptr<PiecesCheck>) { finished = true; TEST_LOG("Finished"); };
 
-// 	auto checking = storage.checkStoredPiecesAsync(torrent.info.pieces, pool.io, onFinish);
-// 
-// 	WAITFOR2(finished, TEST_LOG(checking->piecesChecked << "/" << checking->piecesCount));
-// 
-// 	WAITFOR(false);
+	mtt::PiecesCheck check;
+	storage.checkStoredPieces(check, torrent.info.pieces);
 }
 
 void TorrentTest::testStorageLoad()
@@ -303,10 +300,10 @@ void TorrentTest::testStorageLoad()
 		for (auto& blockInfo : blocksInfo)
 		{		
 			storage.loadPieceBlock(blockInfo, buffer);		
-			memcpy(piece.data.data() + blockInfo.begin, buffer.data(), buffer.size());
+			memcpy(piece.data->data() + blockInfo.begin, buffer.data(), buffer.size());
 		}
 
-		outStorage.storePieceBlock(piece.index, 0, piece.data);
+		outStorage.storePieceBlock(piece.index, 0, *piece.data);
 	}
 
 	mtt::PiecesCheck checkResults;
@@ -542,7 +539,7 @@ void TorrentTest::bigTestGetTorrentFileByLink()
 
 				if (pieceTodo.remainingBlocks == 0)
 				{
-					storage.storePieceBlock(pieceTodo.index, 0, pieceTodo.data);
+					storage.storePieceBlock(pieceTodo.index, 0, *pieceTodo.data);
 					piecesTodo.addPiece(pieceTodo.index);
 					finished = true;
 					finishedPieces++;

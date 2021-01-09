@@ -87,9 +87,9 @@ namespace mtt
 
 		bool isWantedPiece(uint32_t idx) override;
 		void storePieceBlock(const PieceBlock& block) override;
-		void pieceFinished(std::shared_ptr<mtt::DownloadedPiece> piece) override;
-		std::shared_ptr<mtt::DownloadedPiece> loadUnfinishedPiece(uint32_t idx, bool loadData) override;
-		bool storeUnfinishedPiece(std::shared_ptr<mtt::DownloadedPiece> piece) override;
+		void pieceFinished(const mtt::DownloadedPiece& piece) override;
+		mtt::DownloadedPiece loadUnfinishedPiece(uint32_t idx, bool loadData) override;
+		bool storeUnfinishedPiece(const mtt::DownloadedPiece& piece) override;
 		LockedPeers getPeers() override;
 
 		std::mutex unsavedPieceBlocksMutex;

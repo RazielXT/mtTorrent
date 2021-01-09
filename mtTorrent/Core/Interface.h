@@ -45,7 +45,7 @@ namespace mtt
 		std::vector<uint8_t> blocksState;
 		uint32_t remainingBlocks = 0;
 		uint32_t downloadedSize = 0;
-		uint32_t index = -1;
+		uint32_t index = {};
 	};
 
 	struct AnnounceResponse

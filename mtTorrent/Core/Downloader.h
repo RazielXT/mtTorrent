@@ -6,7 +6,7 @@ namespace mtt
 {
 	struct DownloadedPiece : public DownloadedPieceState
 	{
-		DataBuffer data;
+		std::shared_ptr<DataBuffer> data;
 
 		void init(uint32_t idx, uint32_t pieceSize, uint32_t blocksCount);
 		void addBlock(const PieceBlock& block);
@@ -65,9 +65,9 @@ namespace mtt
 	public:
 		virtual bool isWantedPiece(uint32_t idx) = 0;
 		virtual void storePieceBlock(const PieceBlock& block) = 0;
-		virtual std::shared_ptr<mtt::DownloadedPiece> loadUnfinishedPiece(uint32_t idx, bool loadData) = 0;
-		virtual bool storeUnfinishedPiece(std::shared_ptr<mtt::DownloadedPiece> piece) = 0;
-		virtual void pieceFinished(std::shared_ptr<mtt::DownloadedPiece> piece) = 0;
+		virtual mtt::DownloadedPiece loadUnfinishedPiece(uint32_t idx, bool loadData) = 0;
+		virtual bool storeUnfinishedPiece(const mtt::DownloadedPiece& piece) = 0;
+		virtual void pieceFinished(const mtt::DownloadedPiece& piece) = 0;
 
 		virtual LockedPeers getPeers() = 0;
 	};
@@ -111,10 +111,10 @@ namespace mtt
 		struct RequestInfo
 		{
 			uint32_t pieceIdx = 0;
-			std::shared_ptr<DownloadedPiece> piece;
 			uint16_t nextBlockRequestIdx = 0;
 			uint16_t blocksCount = 0;
 			uint32_t lastActivityTime = 0;
+			DownloadedPiece piece;
 		};
 		std::vector<RequestInfo> requests;
 		std::mutex requestsMutex;

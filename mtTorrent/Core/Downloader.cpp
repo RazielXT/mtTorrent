@@ -32,10 +32,10 @@ std::vector<mtt::DownloadedPieceState> mtt::Downloader::stop()
 
 	for (auto& r : stoppedRequests)
 	{
-		if (r.piece && r.piece->downloadedSize)
+		if (r.piece.downloadedSize)
 		{
 			if (immediateMode || client.storeUnfinishedPiece(r.piece))
-				out.emplace_back(std::move(*r.piece));
+				out.emplace_back(std::move(r.piece));
 		}
 	}
 
@@ -76,8 +76,7 @@ size_t mtt::Downloader::getUnfinishedPiecesDownloadSize()
 
 	for (auto& r : requests)
 	{
-		if (r.piece)
-			s += r.piece->downloadedSize;
+		s += r.piece.downloadedSize;
 	}
 
 	return s;
@@ -105,23 +104,20 @@ void mtt::Downloader::pieceBlockReceived(PieceBlock& block, PeerCommunication* s
 			{
 				r.lastActivityTime = (uint32_t)time(0);
 
-				if (!r.piece)
-				{
-					r.piece = std::make_shared<DownloadedPiece>();
-					r.piece->init(r.pieceIdx, immediateMode ? 0 : torrentInfo.getPieceSize(r.pieceIdx), r.blocksCount);
-				}
+				if (r.piece.blocksState.empty())
+					r.piece.init(r.pieceIdx, immediateMode ? 0 : torrentInfo.getPieceSize(r.pieceIdx), r.blocksCount);
 
-				r.piece->addBlock(block);
+				r.piece.addBlock(block);
 
 				if (immediateMode)
 					client.storePieceBlock(block);
 
-				if (r.piece->remainingBlocks == 0)
+				if (r.piece.remainingBlocks == 0)
 				{
 					finished = true;
 
 					if (!immediateMode)
-						valid = r.piece->isValid(torrentInfo.pieces[r.pieceIdx].hash);
+						valid = r.piece.isValid(torrentInfo.pieces[r.pieceIdx].hash);
 
 					if (valid)
 					{
@@ -407,7 +403,7 @@ uint32_t mtt::Downloader::sendPieceRequests(ActivePeer* peer, ActivePeer::Reques
 	uint16_t nextBlock = r->nextBlockRequestIdx;
 	for (uint32_t i = 0; i < r->blocksCount; i++)
 	{
-		if (!r->piece || r->piece->blocksState[nextBlock] == 0)
+		if (r->piece.blocksState.empty() || r->piece.blocksState[nextBlock] == 0)
 		{
 			if (std::find(request->blocks.begin(), request->blocks.end(), nextBlock*BlockRequestMaxSize) == request->blocks.end())
 			{
@@ -448,7 +444,7 @@ bool mtt::Downloader::hasWantedPieces(ActivePeer* p)
 bool mtt::DownloadedPiece::isValid(const uint8_t* expectedHash)
 {
 	uint8_t hash[SHA_DIGEST_LENGTH];
-	_SHA1((const uint8_t*)data.data(), data.size(), hash);
+	_SHA1((const uint8_t*)data->data(), data->size(), hash);
 
 	return memcmp(hash, expectedHash, SHA_DIGEST_LENGTH) == 0;
 }
@@ -456,7 +452,7 @@ bool mtt::DownloadedPiece::isValid(const uint8_t* expectedHash)
 void mtt::DownloadedPiece::init(uint32_t idx, uint32_t pieceSize, uint32_t blocksCount)
 {
 	if (pieceSize)
-		data.resize(pieceSize);
+		data = std::make_shared<DataBuffer>(pieceSize);
 
 	remainingBlocks = blocksCount;
 	blocksState.assign(remainingBlocks, 0);
@@ -469,8 +465,8 @@ void mtt::DownloadedPiece::addBlock(const mtt::PieceBlock& block)
 
 	if (blockIdx < blocksState.size() && blocksState[blockIdx] == 0)
 	{
-		if (!data.empty())
-			memcpy(&data[0] + block.info.begin, block.buffer.data, block.info.length);
+		if (data)
+			memcpy(data->data() + block.info.begin, block.buffer.data, block.info.length);
 
 		blocksState[blockIdx] = 1;
 		remainingBlocks--;
