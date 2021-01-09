@@ -37,7 +37,7 @@ add_executable (mtTorrentSdkGuiExample
 	${gl3w_sources}
 )
 
-target_include_directories (mtTorrentSdkGuiExample PUBLIC imgui imgui/backends imgui/examples/libs/gl3w imgui/examples/libs/glfw/include)
+target_include_directories (mtTorrentSdkGuiExample PUBLIC ../ imgui imgui/backends)
 
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 message ("CMAKE_MODULE_PATH=${CMAKE_MODULE_PATH}")
@@ -50,6 +50,8 @@ message (STATUS "Found OpenGL ${OPENGL_FOUND} in ${OPENGL_INCLUDE_DIR}")
 target_link_libraries (mtTorrentSdkGuiExample OpenGL::GL ${CMAKE_DL_LIBS})
 
 if (GLFW_LOCAL)
+	message (STATUS "Linking GLFW3 from ImGui")
+
 	target_include_directories (mtTorrentSdkGuiExample PUBLIC imgui/examples/libs/gl3w imgui/examples/libs/glfw/include)
 	target_link_libraries (mtTorrentSdkGuiExample ${CMAKE_SOURCE_DIR}/SdkGuiExample/imgui/examples/libs/glfw/lib-vc2010-64/glfw3.lib)
 else ()
@@ -69,4 +71,3 @@ target_compile_features (mtTorrentSdkGuiExample
 
 target_link_libraries (mtTorrentSdkGuiExample mtTorrent)
 
-target_include_directories (mtTorrentSdkGuiExample PUBLIC ../)
