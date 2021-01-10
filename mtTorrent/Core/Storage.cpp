@@ -169,16 +169,39 @@ mtt::Status mtt::Storage::preallocateSelection(const DownloadSelection& selectio
 		};
 		std::vector<FileAllocations> allocations;
 
+		struct BeginEnd
+		{
+			uint32_t beginIdx;
+			uint32_t endIdx;
+		};
+		std::vector<BeginEnd> selectedIntervals;
+		for (const auto& f : selection.files)
+			if (f.selected)
+				if (!selectedIntervals.empty() && f.info.startPieceIndex == selectedIntervals.back().endIdx)
+					selectedIntervals.back().endIdx = f.info.endPieceIndex;
+				else
+					selectedIntervals.push_back({ f.info.startPieceIndex, f.info.endPieceIndex });
+
+		auto isSelected = [&selectedIntervals](const mtt::File& f)
+		{
+			for (const auto& i : selectedIntervals)
+			{
+				if (f.startPieceIndex <= i.endIdx && f.endPieceIndex >= i.beginIdx)
+					return true;
+			}
+			return false;
+		};
+
 		for (auto it = selection.files.begin(); it != selection.files.end(); it++)
 		{
 			uint64_t sz = 0;
 			if (it->selected)
 				sz = it->info.size;
-			else
+			else if (isSelected(it->info))
 			{
-				if (it != selection.files.begin() && (it - 1)->selected)
+				if (!allocations.empty() && allocations.back().file.endPieceIndex == it->info.startPieceIndex)
 					sz = pieceSize - it->info.startPiecePos;
-				if ((it + 1) != selection.files.end() && (it + 1)->selected)
+				else
 					sz += it->info.endPiecePos;
 			}
 
