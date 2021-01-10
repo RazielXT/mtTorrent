@@ -212,6 +212,16 @@ size_t mtt::FileTransfer::getUnfinishedPiecesDownloadSize()
 	return sz;
 }
 
+std::map<uint32_t, uint32_t> mtt::FileTransfer::getUnfinishedPiecesDownloadSizeMap()
+{
+	auto map = downloader.getUnfinishedPiecesDownloadSizeMap();
+
+	for (const auto& u : unFinishedPieces)
+		map[u.index] += u.downloadedSize;
+
+	return std::move(map);
+}
+
 std::vector<mtt::ActivePeerInfo> mtt::FileTransfer::getPeersInfo() const
 {
 	auto allPeers = torrent->peers->getActivePeers();
@@ -245,7 +255,7 @@ std::vector<mtt::ActivePeerInfo> mtt::FileTransfer::getPeersInfo() const
 		i++;
 	}
 
-	return out;
+	return std::move(out);
 }
 
 std::vector<uint32_t> mtt::FileTransfer::getCurrentRequests() const

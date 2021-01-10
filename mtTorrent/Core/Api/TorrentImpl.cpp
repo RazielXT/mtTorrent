@@ -43,6 +43,11 @@ bool mttApi::Torrent::selectFiles(const std::vector<bool>& s)
 	return static_cast<mtt::Torrent*>(this)->selectFiles(s);
 }
 
+bool mttApi::Torrent::selectFile(uint32_t index, bool selected)
+{
+	return static_cast<mtt::Torrent*>(this)->selectFile(index, selected);
+}
+
 void mttApi::Torrent::setFilesPriority(const std::vector<mtt::Priority>& p)
 {
 	return static_cast<mtt::Torrent*>(this)->setFilesPriority(p);
@@ -68,14 +73,14 @@ const std::string& mttApi::Torrent::name() const
 	return static_cast<const mtt::Torrent*>(this)->name();
 }
 
-float mttApi::Torrent::currentProgress() const
+float mttApi::Torrent::progress() const
 {
-	return static_cast<const mtt::Torrent*>(this)->currentProgress();
+	return static_cast<const mtt::Torrent*>(this)->progress();
 }
 
-float mttApi::Torrent::currentSelectionProgress() const
+float mttApi::Torrent::selectionProgress() const
 {
-	return static_cast<const mtt::Torrent*>(this)->currentSelectionProgress();
+	return static_cast<const mtt::Torrent*>(this)->selectionProgress();
 }
 
 uint64_t mttApi::Torrent::downloaded() const
@@ -142,34 +147,50 @@ bool mttApi::Torrent::getReceivedPieces(uint32_t* dataPieces, size_t& dataSize)
 	return true;
 }
 
-std::vector<float> mttApi::Torrent::getFilesProgress() const
+std::vector<std::pair<float, uint32_t>> mttApi::Torrent::getFilesProgress() const
 {
-	auto& selection = static_cast<const mtt::Torrent*>(this)->files.selection;
-	auto& progress = static_cast<const mtt::Torrent*>(this)->files.progress;
+	auto torrent = static_cast<const mtt::Torrent*>(this);
+	const auto& selection = torrent->files.selection;
+	const auto& progress = torrent->files.progress;
 
 	if (selection.files.empty())
 		return {};
 
-
-	std::vector<float> out;
+	std::vector<std::pair<float, uint32_t>> out;
 	out.resize(selection.files.size());
+
+	std::map<uint32_t, uint32_t> unfinished;
+	if (torrent->fileTransfer)
+		unfinished = torrent->fileTransfer->getUnfinishedPiecesDownloadSizeMap();
+
+	float pieceSize = (float)torrent->infoFile.info.pieceSize;
 
 	for (size_t i = 0; i < selection.files.size(); i++)
 	{
-		auto& file = selection.files[i].info;
-		uint32_t piecesCount = file.endPieceIndex - file.startPieceIndex + 1;
-		uint32_t receivedPieces = 0;
+		auto& file = selection.files[i];
 
-		for (uint32_t p = file.startPieceIndex; p <= file.endPieceIndex; p++)
+		uint32_t received = 0;
+		uint32_t unfinishedSize = 0;
+		for (uint32_t p = file.info.startPieceIndex; p <= file.info.endPieceIndex; p++)
 		{
 			if (progress.hasPiece(p))
-				receivedPieces++;
+				received++;
+			else if (file.selected)
+			{
+				if (auto u = unfinished.find(p); u != unfinished.end())
+					unfinishedSize += u->second;
+			}
 		}
 
-		out[i] = receivedPieces / (float)piecesCount;
+		uint32_t pieces = 1 + file.info.endPieceIndex - file.info.startPieceIndex;
+		float receivedWhole = (float)received;
+		if (unfinishedSize)
+			receivedWhole += unfinishedSize / pieceSize;
+
+		out[i] = { receivedWhole / pieces, received };
 	}
 
-	return out;
+	return std::move(out);
 }
 
 std::vector<uint64_t> mttApi::Torrent::getFilesAllocatedSize() const

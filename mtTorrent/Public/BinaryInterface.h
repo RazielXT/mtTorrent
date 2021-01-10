@@ -27,6 +27,7 @@ namespace mtBI
 		SetSettings, //SettingsInfo, null
 		RefreshSource, //SourceId, null
 		SetTorrentFilesSelection, //TorrentFilesSelectionRequest, null
+		SetTorrentFileSelection, //TorrentFileSelectionRequest, null
 		SetTorrentFilesPriority, //TorrentFilesPriorityRequest, null
 		GetTorrentFilesProgress, //hash, TorrentFilesProgress
 		SetTorrentPath, //TorrentSetPathRequest, null
@@ -104,6 +105,13 @@ namespace mtBI
 	{
 		uint8_t hash[20];
 		mtt::array<FileSelectionRequest> selection;
+	};
+
+	struct TorrentFileSelectionRequest
+	{
+		uint8_t hash[20];
+		uint32_t index;
+		bool selected;
 	};
 
 	struct TorrentFilesPriorityRequest
@@ -218,6 +226,7 @@ namespace mtBI
 	struct TorrentFileProgress
 	{
 		float progress;
+		uint32_t receivedPieces;
 		uint32_t pieceStart;
 		uint32_t pieceEnd;
 	};

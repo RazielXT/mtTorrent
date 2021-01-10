@@ -12,6 +12,7 @@ namespace mtt
 
 		void init(TorrentInfo&);
 		void select(DownloadSelection&);
+		bool select(uint32_t idx, bool selected);
 		Status prepareSelection();
 
 		PiecesProgress progress;

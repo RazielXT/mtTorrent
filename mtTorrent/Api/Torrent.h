@@ -63,9 +63,9 @@ namespace mttApi
 		*/
 		API_EXPORT mtt::DownloadSelection getFilesSelection() const;
 		/*
-			get current progress of files, sorted by order in torrent file
+			get download progress of files, sorted by order in torrent file, % (including unfinished pieces) and finished pieces
 		*/
-		API_EXPORT std::vector<float> getFilesProgress() const;
+		API_EXPORT std::vector<std::pair<float, uint32_t>> getFilesProgress() const;
 		/*
 			get current allocated sizes on disk in bytes, sorted by order in torrent file
 		*/
@@ -74,6 +74,10 @@ namespace mttApi
 			select/deselect files to download, sorted by order in torrent file
 		*/
 		API_EXPORT bool selectFiles(const std::vector<bool>&);
+		/*
+			select/deselect file to download, index sorted by order in torrent file
+		*/
+		API_EXPORT bool selectFile(uint32_t index, bool selected);
 		/*
 			set priority of files download, sorted by order in torrent file
 		*/
@@ -94,11 +98,11 @@ namespace mttApi
 		/*
 			progress of download of all torrent files
 		*/
-		API_EXPORT float currentProgress() const;
+		API_EXPORT float progress() const;
 		/*
 			progress of download of selected torrent files
 		*/
-		API_EXPORT float currentSelectionProgress() const;
+		API_EXPORT float selectionProgress() const;
 		/*
 			downloaded size in bytes
 		*/

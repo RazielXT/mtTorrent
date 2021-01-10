@@ -82,6 +82,20 @@ size_t mtt::Downloader::getUnfinishedPiecesDownloadSize()
 	return s;
 }
 
+std::map<uint32_t, uint32_t> mtt::Downloader::getUnfinishedPiecesDownloadSizeMap()
+{
+	std::map<uint32_t, uint32_t> map;
+
+	std::lock_guard<std::mutex> guard(requestsMutex);
+
+	for (auto& r : requests)
+	{
+		map[r.pieceIdx] = r.piece.downloadedSize;
+	}
+
+	return std::move(map);
+}
+
 void mtt::Downloader::peerAdded(ActivePeer* peer)
 {
 	evaluateNextRequests(peer);

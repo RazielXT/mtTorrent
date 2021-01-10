@@ -102,8 +102,8 @@ extern "C"
 			resp->uploaded = torrent->uploaded();
 			resp->downloadSpeed = torrent->getFileTransfer() ? torrent->getFileTransfer()->getDownloadSpeed() : 0;
 			resp->uploadSpeed = torrent->getFileTransfer() ? torrent->getFileTransfer()->getUploadSpeed() : 0;
-			resp->progress = torrent->currentProgress();
-			resp->selectionProgress = torrent->currentSelectionProgress();
+			resp->progress = torrent->progress();
+			resp->selectionProgress = torrent->selectionProgress();
 			resp->activeStatus = torrent->getLastError();
 			resp->started = torrent->getActiveState() == mttApi::Torrent::ActiveState::Started;
 			resp->stopping = torrent->getState() == mttApi::Torrent::State::Stopping;
@@ -167,16 +167,17 @@ extern "C"
 				return mtt::Status::E_InvalidInput;
 			auto resp = (mtBI::TorrentFilesProgress*) output;
 
-			auto selection = torrent->getFilesSelection();
+			const auto& files = torrent->getFileInfo().info.files;
 			auto progress = torrent->getFilesProgress();
 
-			resp->files.resize(selection.files.size());
+			resp->files.resize(files.size());
 
-			for (size_t i = 0; i < selection.files.size(); i++)
+			for (size_t i = 0; i < resp->files.size(); i++)
 			{
-				resp->files[i].pieceStart = selection.files[i].info.startPieceIndex;
-				resp->files[i].pieceEnd = selection.files[i].info.endPieceIndex;
-				resp->files[i].progress = progress[i];
+				resp->files[i].progress = progress[i].first;
+				resp->files[i].receivedPieces = progress[i].second;
+				resp->files[i].pieceStart = files[i].startPieceIndex;
+				resp->files[i].pieceEnd = files[i].endPieceIndex;
 			}
 		}
 		else if (id == mtBI::MessageId::GetSourcesInfo)
@@ -322,6 +323,16 @@ extern "C"
 			}
 
 			if (!torrent->selectFiles(dlSelect))
+				return mtt::Status::E_InvalidInput;
+		}
+		else if (id == mtBI::MessageId::SetTorrentFileSelection)
+		{
+			auto selection = (mtBI::TorrentFileSelectionRequest*)request;
+			auto torrent = core->getTorrent(selection->hash);
+			if (!torrent)
+				return mtt::Status::E_InvalidInput;
+
+			if (!torrent->selectFile(selection->index, selection->selected))
 				return mtt::Status::E_InvalidInput;
 		}
 		else if (id == mtBI::MessageId::SetTorrentFilesPriority)

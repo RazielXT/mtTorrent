@@ -152,7 +152,7 @@ void TorrentInstance::drawInfoWindow()
 		break;
 	}
 	case mttApi::Torrent::State::Downloading:
-		ImGui::Text("Downloading, Progress %f%%, Speed: %s, Connected peers: %u, Found peers: %u\n", torrentPtr->currentProgress() * 100, formatBytesSpeed(torrentPtr->getFileTransfer()->getDownloadSpeed()).data(), torrentPtr->getPeers()->connectedCount(), torrentPtr->getPeers()->receivedCount());
+		ImGui::Text("Downloading, Progress %f%%, Speed: %s, Connected peers: %u, Found peers: %u\n", torrentPtr->progress() * 100, formatBytesSpeed(torrentPtr->getFileTransfer()->getDownloadSpeed()).data(), torrentPtr->getPeers()->connectedCount(), torrentPtr->getPeers()->receivedCount());
 		break;
 	case mttApi::Torrent::State::Seeding:
 		ImGui::Text("Finished, upload speed: %s\n", formatBytesSpeed(torrentPtr->getFileTransfer()->getUploadSpeed()).data());

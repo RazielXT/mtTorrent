@@ -746,7 +746,7 @@ void idealGeneralTest()
 
 	while (!torrent->finished())
 	{
-		TEST_LOG(torrent->currentProgress() << "%\n");
+		TEST_LOG(torrent->progress() << "%\n");
 		TEST_LOG("Connected: " << torrent->peers->connectedCount() << ", all: " << torrent->peers->receivedCount() << "\n");
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	}
@@ -772,11 +772,7 @@ void TorrentTest::idealMagnetLinkTest()
 		auto newAlerts = alerts.popAlerts();
 		for (auto& a : newAlerts)
 		{
-			if (a->id == AlertId::MetadataUpdated)
-			{
-				TEST_LOG("Metadata updated\n");
-			}
-			else if (a->id == AlertId::MetadataFinished)
+			if (a->id == AlertId::MetadataFinished)
 			{
 				TEST_LOG("Metadata finished\n");
 				break;
@@ -817,7 +813,7 @@ void idealTorrentStateTest()
 
 	WAITFOR(!torrent->checking);
 
-	auto progress = torrent->currentProgress();
+	auto progress = torrent->progress();
 }
 
 void idealLocalTest()
@@ -840,7 +836,7 @@ void idealLocalTest()
 
 	while (!torrent->finished())
 	{
-		TEST_LOG("Progress: " << torrent->currentProgress() << "(" << torrent->downloaded()/(1024.f*1024) << "MB) (" << torrent->downloadSpeed()/(1024.f * 1024) << " MBps)");
+		TEST_LOG("Progress: " << torrent->progress() << "(" << torrent->downloaded()/(1024.f*1024) << "MB) (" << torrent->downloadSpeed()/(1024.f * 1024) << " MBps)");
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	}
 

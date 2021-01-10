@@ -81,6 +81,7 @@ namespace mtt
 		std::vector<mtt::DownloadedPieceState> stop();
 
 		size_t getUnfinishedPiecesDownloadSize();
+		std::map<uint32_t, uint32_t> getUnfinishedPiecesDownloadSizeMap();
 		std::vector<uint32_t> getCurrentRequests() const;
 
 		void peerAdded(ActivePeer*);

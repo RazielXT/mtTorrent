@@ -37,12 +37,13 @@ namespace mtt
 		float checkingProgress() const;
 
 		bool selectFiles(const std::vector<bool>&);
+		bool selectFile(uint32_t index, bool selected);
 		void setFilesPriority(const std::vector<mtt::Priority>&);
 		mtt::Status setLocationPath(const std::string& path);
 
 		const std::string& name() const;
-		float currentProgress() const;
-		float currentSelectionProgress() const;
+		float progress() const;
+		float selectionProgress() const;
 		uint64_t downloaded() const;
 		size_t downloadSpeed() const;
 		uint64_t uploaded() const;

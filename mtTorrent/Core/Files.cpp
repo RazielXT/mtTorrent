@@ -19,6 +19,17 @@ void mtt::Files::select(DownloadSelection& s)
 	progress.select(selection);
 }
 
+bool mtt::Files::select(uint32_t idx, bool selected)
+{
+	if (selection.files.size() <= idx)
+		return false;
+
+	selection.files[idx].selected = selected;
+	progress.select(selection);
+
+	return true;
+}
+
 mtt::Status mtt::Files::prepareSelection()
 {
 	return storage.preallocateSelection(selection);

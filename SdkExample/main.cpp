@@ -85,7 +85,7 @@ int main()
 				break;
 			}
 			case mttApi::Torrent::State::Downloading:
-				printf("Name: %s, Progress: %f%%, Speed: %u bps, Connected peers: %u, Found peers: %u\n", t->name().c_str(), t->currentProgress()*100, t->getFileTransfer()->getDownloadSpeed(), t->getPeers()->connectedCount(), t->getPeers()->receivedCount());
+				printf("Name: %s, Progress: %f%%, Speed: %u bps, Connected peers: %u, Found peers: %u\n", t->name().c_str(), t->progress()*100, t->getFileTransfer()->getDownloadSpeed(), t->getPeers()->connectedCount(), t->getPeers()->receivedCount());
 				break;
 			case mttApi::Torrent::State::Seeding:
 				printf("Name: %s finished, upload speed: %u\n", t->name().c_str(), t->getFileTransfer()->getUploadSpeed());
@@ -121,7 +121,7 @@ void example2()
 
 		while (!torrent->finished())
 		{
-			std::cout << torrent->name() << " progress: " << torrent->currentProgress() * 100 << "%%\n";
+			std::cout << torrent->name() << " progress: " << torrent->progress() * 100 << "%%\n";
 			std::this_thread::sleep_for(std::chrono::seconds(1));
 		}
 	}
@@ -170,7 +170,7 @@ void example2()
 	torrent->setLocationPath("path\\to\\new\\download\\path");
 
 	if (!torrent->selectionFinished())
-		std::cout << "Selection progress: " << torrent->currentSelectionProgress() * 100 << "%%\n";
+		std::cout << "Selection progress: " << torrent->selectionProgress() * 100 << "%%\n";
 
 	auto transfer = torrent->getFileTransfer();
 

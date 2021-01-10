@@ -459,6 +459,24 @@ bool mtt::Torrent::selectFiles(const std::vector<bool>& s)
 	return true;
 }
 
+bool mtt::Torrent::selectFile(uint32_t index, bool selected)
+{
+	if (files.select(index, selected))
+		return false;
+
+	if (state == ActiveState::Started)
+	{
+		lastError = files.prepareSelection();
+
+		if (fileTransfer)
+			fileTransfer->refreshSelection();
+
+		return lastError == Status::Success;
+	}
+
+	return true;
+}
+
 bool mtt::Torrent::finished() const
 {
 	return files.progress.getPercentage() == 1;
@@ -484,7 +502,7 @@ const std::string& mtt::Torrent::name() const
 	return infoFile.info.name;
 }
 
-float mtt::Torrent::currentProgress() const
+float mtt::Torrent::progress() const
 {
 	float progress = files.progress.getPercentage();
 
@@ -497,18 +515,26 @@ float mtt::Torrent::currentProgress() const
 	return progress;
 }
 
-float mtt::Torrent::currentSelectionProgress() const
+float mtt::Torrent::selectionProgress() const
 {
 	if (files.progress.selectedPieces == files.progress.pieces.size())
-		return currentProgress();
+		return progress();
 
 	float progress = files.progress.getSelectedPercentage();
 
 	if (fileTransfer)
 	{
-		float unfinishedPieces = fileTransfer->getUnfinishedPiecesDownloadSize() / (float)infoFile.info.pieceSize;
-		if(files.progress.selectedPieces)
-			progress += unfinishedPieces / files.progress.selectedPieces;
+		auto unfinishedPieces = fileTransfer->getUnfinishedPiecesDownloadSizeMap();
+
+		uint32_t unfinishedSize = 0;
+		for (auto& p : unfinishedPieces)
+		{
+			if (files.progress.selectedPiece(p.first))
+				unfinishedSize += p.second;
+		}
+
+		if (files.progress.selectedPieces)
+			progress += unfinishedSize / files.progress.selectedPieces;
 	}
 
 	return progress;
