@@ -105,7 +105,6 @@ namespace mtt
 		void refreshPeerBlockRequests(std::vector<ActivePeer>& peers, PieceBlock& block, PieceStatus status, PeerCommunication* source);
 
 		std::vector<uint32_t> selectedPieces;
-		std::vector<uint32_t> sortedPieces;
 
 		std::mutex priorityMutex;
 

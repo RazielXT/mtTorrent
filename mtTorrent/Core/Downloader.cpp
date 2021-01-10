@@ -46,13 +46,8 @@ void mtt::Downloader::sortPriority(const std::vector<Priority>& priority, const 
 {
 	std::lock_guard<std::mutex> guard(priorityMutex);
 
-	sortedPieces = selectedPieces;
-
-	std::sort(sortedPieces.begin(), sortedPieces.end(),
-		[&availability](uint32_t i1, uint32_t i2) {return availability[i1] < availability[i2]; });
-
-	std::sort(sortedPieces.begin(), sortedPieces.end(),
-		[&priority](uint32_t i1, uint32_t i2) { return priority[i1] > priority[i2]; });
+	std::sort(selectedPieces.begin(), selectedPieces.end(),
+		[&availability, &priority](uint32_t i1, uint32_t i2) { return priority[i1] > priority[i2] || (priority[i1] == priority[i2] && availability[i1] < availability[i2]); });
 }
 
 std::vector<uint32_t> mtt::Downloader::getCurrentRequests() const
@@ -240,8 +235,6 @@ void mtt::Downloader::refreshSelection(std::vector<uint32_t> selected)
 
 		auto rng = std::minstd_rand{ (uint32_t)time(0) };
 		std::shuffle(selectedPieces.begin(), selectedPieces.end(), rng);
-
-		sortedPieces = selectedPieces;
 	}
 
 	{
@@ -306,7 +299,7 @@ std::vector<uint32_t> mtt::Downloader::getBestNextPieces(ActivePeer* p)
 
 	std::lock_guard<std::mutex> guard(priorityMutex);
 
-	for (auto idx : sortedPieces)
+	for (auto idx : selectedPieces)
 	{
 		if (client.isWantedPiece(idx) && p->comm->info.pieces.hasPiece(idx))
 		{
@@ -404,7 +397,7 @@ void mtt::Downloader::sendPieceRequests(ActivePeer* p)
 
 			count += sendPieceRequests(p, &currentPiece, request, maxRequests - count);
 
-			if(count >= maxRequests)
+			if (count >= maxRequests)
 				break;
 		}
 	}
@@ -431,7 +424,7 @@ uint32_t mtt::Downloader::sendPieceRequests(ActivePeer* peer, ActivePeer::Reques
 
 		nextBlock = (nextBlock + 1) % r->blocksCount;
 
-		if(count == max)
+		if (count == max)
 			break;
 	}
 	r->nextBlockRequestIdx = nextBlock;
@@ -446,7 +439,7 @@ bool mtt::Downloader::hasWantedPieces(ActivePeer* p)
 	if (p->comm->info.pieces.pieces.size() != torrentInfo.pieces.size())
 		return false;
 
-	for (auto i : sortedPieces)
+	for (auto i : selectedPieces)
 	{
 		if (p->comm->info.pieces.hasPiece(i) && client.isWantedPiece(i))
 			return true;
