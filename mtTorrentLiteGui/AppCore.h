@@ -35,6 +35,8 @@ public:
 
 	bool selected = false;
 	bool selectionChanged = false;
+	bool forceRefresh = true;
+
 	//hash of first selected torrent
 	uint8_t firstSelectedHash[20];
 
@@ -61,5 +63,4 @@ private:
 	void checkAlerts();
 
 	int RefreshTimeCounter = 10;
-	bool forceRefresh = true;
 };

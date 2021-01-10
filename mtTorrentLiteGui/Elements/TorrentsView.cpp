@@ -20,13 +20,13 @@ void TorrentsView::update()
 
 	auto activeTab = GuiLite::MainForm::instance->getActiveTab();
 
-	if (core.selectionChanged || activeTab == GuiLite::MainForm::TabType::Peers)
+	if (activeTab == GuiLite::MainForm::TabType::Peers)
 		refreshPeers();
 
-	if (core.selectionChanged || activeTab == GuiLite::MainForm::TabType::Sources)
+	if (activeTab == GuiLite::MainForm::TabType::Sources)
 		refreshSources();
 
-	if (core.selectionChanged || activeTab == GuiLite::MainForm::TabType::Progress)
+	if (activeTab == GuiLite::MainForm::TabType::Progress)
 		piecesProgress.update();
 }
 

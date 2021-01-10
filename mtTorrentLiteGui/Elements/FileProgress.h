@@ -1,17 +1,20 @@
 #pragma once
 #include "../../mtTorrent/Public/BinaryInterface.h"
+#include <vector>
 
 class AppCore;
 
 /*
 Pieces chart + files progress grid
 */
-class PiecesProgress
+class FileProgress
 {
 public:
-	PiecesProgress(AppCore& core);
+	FileProgress(AppCore& core);
 
 	void update();
+
+	void fileSelectionChanged(int row);
 
 private:
 
@@ -29,15 +32,10 @@ private:
 
 	uint32_t getProgressChartIndex(uint32_t pieceIdx);
 
-	struct
-	{
-		uint32_t from = -1;
-		uint32_t to;
-	}
-	piecesHighlight;
-
-	//temporarily change progress highlighting to highlight chart interval (specific file) 
-	void highlightChartPieces(uint32_t from, uint32_t to);
+	bool refreshing = false;
+	bool selectionChanged = false;
+	std::vector<size_t> activePieces;
+	std::vector<size_t> fileFinishedPieces;
 
 	AppCore& core;
 };

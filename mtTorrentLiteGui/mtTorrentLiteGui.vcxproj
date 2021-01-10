@@ -160,7 +160,7 @@
     <ClCompile Include="AppCoreCallbacks.cpp" />
     <ClCompile Include="Elements\FileSelection.cpp" />
     <ClCompile Include="Elements\MagnetProgress.cpp" />
-    <ClCompile Include="Elements\PiecesProgress.cpp" />
+    <ClCompile Include="Elements\FileProgress.cpp" />
     <ClCompile Include="Elements\Scheduler.cpp" />
     <ClCompile Include="Elements\Settings.cpp" />
     <ClCompile Include="Elements\SpeedChart.cpp" />
@@ -179,7 +179,7 @@
     <ClInclude Include="CrossProcessComm.h" />
     <ClInclude Include="Elements\FileSelection.h" />
     <ClInclude Include="Elements\MagnetProgress.h" />
-    <ClInclude Include="Elements\PiecesProgress.h" />
+    <ClInclude Include="Elements\FileProgress.h" />
     <ClInclude Include="Elements\Scheduler.h" />
     <ClInclude Include="Elements\Settings.h" />
     <ClInclude Include="Elements\SpeedChart.h" />

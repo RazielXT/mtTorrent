@@ -53,9 +53,6 @@
     <ClCompile Include="Elements\SpeedChart.cpp">
       <Filter>Source Files\Elements</Filter>
     </ClCompile>
-    <ClCompile Include="Elements\PiecesProgress.cpp">
-      <Filter>Source Files\Elements</Filter>
-    </ClCompile>
     <ClCompile Include="Elements\TorrentsView.cpp">
       <Filter>Source Files\Elements</Filter>
     </ClCompile>
@@ -76,6 +73,9 @@
     </ClCompile>
     <ClCompile Include="AppCoreCallbacks.cpp">
       <Filter>Source Files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Elements\FileProgress.cpp">
+      <Filter>Source Files\Elements</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -115,9 +115,6 @@
     <ClInclude Include="Elements\TorrentsView.h">
       <Filter>Source Files\Elements</Filter>
     </ClInclude>
-    <ClInclude Include="Elements\PiecesProgress.h">
-      <Filter>Source Files\Elements</Filter>
-    </ClInclude>
     <ClInclude Include="Elements\Scheduler.h">
       <Filter>Source Files\Elements</Filter>
     </ClInclude>
@@ -132,6 +129,9 @@
     </ClInclude>
     <ClInclude Include="MttLibrary.h">
       <Filter>Source Files\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Elements\FileProgress.h">
+      <Filter>Source Files\Elements</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

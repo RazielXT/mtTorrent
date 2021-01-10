@@ -1,5 +1,5 @@
 #pragma once
-#include "PiecesProgress.h"
+#include "FileProgress.h"
 #include "SpeedChart.h"
 #include <vector>
 
@@ -21,9 +21,10 @@ public:
 	};
 	std::vector<SelectedTorrent> getAllSelectedTorrents();
 
+	FileProgress piecesProgress;
+
 private:
 
-	PiecesProgress piecesProgress;
 	SpeedChart speedChart;
 
 	AppCore& core;
