@@ -186,7 +186,7 @@ void FileProgress::updateFilesProgress()
 				auto chart = GuiLite::MainForm::instance->pieceChart;
 				chart->Series["Request"]->Points->Clear();
 
-				for (uint32_t i = progressInfo.files[idx].pieceStart; i < progressInfo.files[idx].pieceEnd; i++)
+				for (uint32_t i = progressInfo.files[idx].pieceStart; i <= progressInfo.files[idx].pieceEnd; i++)
 				{
 					chart->Series["Request"]->Points->AddXY(getProgressChartIndex(i), 0);
 				}

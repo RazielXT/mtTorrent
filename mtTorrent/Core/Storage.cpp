@@ -416,7 +416,6 @@ mtt::Status mtt::Storage::loadPieceBlock(const File& file, const PieceBlockInfo&
 
 void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<PieceInfo>& piecesInfo, uint32_t workersCount, uint32_t workerIdx)
 {
-	checkState.pieces.resize(piecesInfo.size());
 	size_t currentPieceIdx = 0;
 
 	if (files.empty())

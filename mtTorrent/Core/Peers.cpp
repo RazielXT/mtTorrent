@@ -445,7 +445,8 @@ void mtt::Peers::DhtSource::start()
 		else
 			nextUpdate = info.nextAnnounce - currentTime;
 
-		dhtRefreshTimer->schedule(nextUpdate);
+		if (dhtRefreshTimer)
+			dhtRefreshTimer->schedule(nextUpdate);
 	};
 
 	info.state = TrackerState::Connected;

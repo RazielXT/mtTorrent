@@ -379,6 +379,7 @@ void mtt::Torrent::checkFiles()
 
 	auto request = std::make_shared<mtt::PiecesCheck>();
 	request->piecesCount = (uint32_t)infoFile.info.pieces.size();
+	request->pieces.resize(request->piecesCount);
 
 	auto localOnFinish = [this, request]()
 	{
@@ -534,7 +535,7 @@ float mtt::Torrent::selectionProgress() const
 		}
 
 		if (files.progress.selectedPieces)
-			progress += unfinishedSize / files.progress.selectedPieces;
+			progress += unfinishedSize / (float)infoFile.info.pieceSize;
 	}
 
 	return progress;
