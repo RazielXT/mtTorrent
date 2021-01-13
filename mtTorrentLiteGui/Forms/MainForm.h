@@ -1454,7 +1454,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->TorrentProgress->FillWeight = 15;
 			this->TorrentProgress->HeaderText = L"Progress";
 			this->TorrentProgress->MinimumWidth = 100;
-			this->TorrentProgress->Name = L"TorrentProgress";
+			this->TorrentProgress->Name = L"Progress";
 			this->TorrentProgress->ReadOnly = true;
 			this->TorrentProgress->Width = 125;
 			// 
@@ -1709,6 +1709,25 @@ private: System::Void  torrentGridView_SortCompare(System::Object^ sender, DataG
 		auto v1 = Int32::Parse(torrentsGrid->Rows[e->RowIndex1]->Cells[bytesID]->Value->ToString());
 		auto v2 = Int32::Parse(torrentsGrid->Rows[e->RowIndex2]->Cells[bytesID]->Value->ToString());
 		e->SortResult = v1 > v2 ? 1 : -1;
+	}
+	else if (e->Column->Name == "Progress")
+	{
+		auto s1 = torrentsGrid->Rows[e->RowIndex1]->Cells[e->Column->Index]->Value->ToString();
+		float v1 = 0;
+		int i = s1->IndexOf('%');
+		if (i != -1)
+			v1 = float::Parse(s1->Substring(0, i));
+
+		auto s2 = torrentsGrid->Rows[e->RowIndex2]->Cells[e->Column->Index]->Value->ToString();
+		float v2 = 0;
+		i = s2->IndexOf('%');
+		if (i != -1)
+			v2 = float::Parse(s2->Substring(0, i));
+
+		if (v1 == v2 && e->CellValue1->ToString() != e->CellValue2->ToString())
+			e->SortResult = System::String::Compare(e->CellValue1->ToString(), e->CellValue2->ToString());
+		else
+			e->SortResult = v1 > v2 ? 1 : -1;
 	}
 	else
 		e->SortResult = System::String::Compare(e->CellValue1->ToString(), e->CellValue2->ToString());
