@@ -61,7 +61,7 @@ SavedWindowState getSavedWindowState()
 {
 	SavedWindowState state = {};
 
-	std::ifstream file("./window", std::ios_base::binary);
+	std::ifstream file("./data/window", std::ios_base::binary);
 	if (file)
 		file.read((char*)&state, sizeof(state));
 
@@ -73,7 +73,7 @@ void saveWindowState(const SavedWindowState& state)
 	if (!state.height)
 		return;
 
-	std::ofstream file("./window", std::ios_base::binary);
+	std::ofstream file("./data/window", std::ios_base::binary);
 	file.write((const char*)&state, sizeof(state));
 }
 
