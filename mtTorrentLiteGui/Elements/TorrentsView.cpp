@@ -3,6 +3,7 @@
 #include "../AppCore.h"
 #include "../Utils/Utils.h"
 #include "../../mtTorrent/utils/HexEncoding.h"
+#include <map>
 
 TorrentsView::TorrentsView(AppCore& c) : core(c), piecesProgress(c)
 {
@@ -54,6 +55,11 @@ void TorrentsView::refreshSelection()
 			core.selectionChanged = true;
 		}
 	}
+}
+
+void TorrentsView::updateList()
+{
+	listChanged = true;
 }
 
 std::vector<TorrentsView::SelectedTorrent> TorrentsView::getAllSelectedTorrents()
@@ -150,7 +156,52 @@ void TorrentsView::refreshTorrentsGrid()
 	bool selectionStopped = false;
 
 	auto torrentGrid = GuiLite::MainForm::instance->getGrid();
-	adjustGridRowsCount(torrentGrid, (int)torrents.list.size());
+
+	auto hashToInt = [](const std::string& hash)
+	{
+		int i = 1;
+		for (int j = 0; j < 20; j++)
+			i += ((uint8_t)hash[j]) * i;
+		return i;
+	};
+
+	auto hashToInt2 = []( System::String^ hash)
+	{
+		int i = 1;
+		for (int j = 0; j < 20; j++)
+			i += ((uint8_t)hash[j]) * i;
+		return i;
+	};
+
+	if (listChanged || torrentRows.size() != torrentGrid->Rows->Count)
+	{
+		torrentRows.clear();
+
+		for (int i = 0; i < torrentGrid->Rows->Count;)
+		{
+			bool found = true;
+			auto rowHashId = hashToInt2(torrentGrid->Rows[i]->Cells[0]->Value->ToString());
+
+			for (auto& t : torrents.list)
+			{
+				auto hashId = hashToInt(hexToString(t.hash, 20));
+
+				if (hashId == rowHashId)
+				{
+					torrentRows[hashId] = i;
+					found = true;
+					break;
+				}
+			}
+			
+			if (found)
+				i++;
+			else
+				torrentGrid->Rows->RemoveAt(i);
+		}
+
+		listChanged = false;
+	}
 
 	for (size_t i = 0; i < torrents.list.size(); i++)
 	{
@@ -235,9 +286,11 @@ void TorrentsView::refreshTorrentsGrid()
 					progress += " (" + float(info.progress).ToString("P") + ")";
 			}
 
+			auto hashStr = hexToString(t.hash, 20);
+
 			//torrent row - visual/logic data columns
 			auto row = gcnew cli::array< System::String^  >(12) {
-				gcnew System::String(hexToString(t.hash, 20).data()),
+				gcnew System::String(hashStr.data()),
 					name, progress, activeStatus,
 					speedInfo, int(info.downloadSpeed).ToString(),
 					info.uploadSpeed ? formatBytesSpeed(info.uploadSpeed) : "", int(info.uploadSpeed).ToString(),
@@ -246,7 +299,14 @@ void TorrentsView::refreshTorrentsGrid()
 					formatBytes(info.downloaded), formatBytes(info.uploaded)
 			};
 
-			torrentGrid->Rows[i]->SetValues(row);
+			int rowId = 0;
+			auto existingRowId = torrentRows.find(hashToInt(hashStr));
+			if (existingRowId != torrentRows.end())
+				rowId = existingRowId->second;
+			else
+				rowId = torrentGrid->Rows->Add();
+
+			torrentGrid->Rows[rowId]->SetValues(row);
 
 			if (isSelected)
 			{
@@ -256,7 +316,7 @@ void TorrentsView::refreshTorrentsGrid()
 				lastInfoIncomplete = info.utmActive;
 			}
 
-			if (torrentGrid->Rows[i]->Selected)
+			if (torrentGrid->Rows[rowId]->Selected)
 			{
 				if (t.active || info.checking)
 					selectionActive = true;
@@ -264,10 +324,6 @@ void TorrentsView::refreshTorrentsGrid()
 				if (!t.active)
 					selectionStopped = true;
 			}
-
-			//resort new grid
-			if (torrentGrid->SortedColumn)
-				torrentGrid->Sort(torrentGrid->SortedColumn, torrentGrid->SortOrder == System::Windows::Forms::SortOrder::Ascending ? System::ComponentModel::ListSortDirection::Ascending : System::ComponentModel::ListSortDirection::Descending);
 		}
 	}
 

@@ -124,6 +124,7 @@ void AppCore::removeTorrent(uint8_t* hash, bool removeFiles)
 
 	IoctlFunc(mtBI::MessageId::Remove, &request, nullptr);
 	forceRefresh = true;
+	torrentsView.updateList();
 }
 
 void AppCore::processProgramArgument(System::String^ arg)
@@ -174,6 +175,7 @@ void AppCore::checkAlerts()
 		{
 			if (alert.id == mtt::AlertId::TorrentAdded)
 			{
+				torrentsView.updateList();
 				fileSelection.showFilesSelectionForm(alert.hash, true);
 			}
 			else if (alert.id == mtt::AlertId::MetadataFinished)
@@ -299,6 +301,7 @@ void AppCore::onButtonClick(ButtonId id, System::String^ param)
 		}
 
 		forceRefresh = true;
+		torrentsView.updateList();
 	}
 	else if (id == ButtonId::AddTorrentFile)
 	{

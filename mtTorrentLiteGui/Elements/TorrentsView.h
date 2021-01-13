@@ -2,6 +2,7 @@
 #include "FileProgress.h"
 #include "SpeedChart.h"
 #include <vector>
+#include <map>
 
 class AppCore;
 
@@ -14,6 +15,8 @@ public:
 
 	//update selection info based on torrents grid state
 	void refreshSelection();
+
+	void updateList();
 
 	struct SelectedTorrent
 	{
@@ -36,4 +39,7 @@ private:
 	void refreshTorrentsGrid();
 	void refreshPeers();
 	void refreshSources();
+
+	std::map<int, int> torrentRows;
+	bool listChanged = true;
 };

@@ -135,6 +135,27 @@ namespace GuiLite {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ Index;
+private: System::Windows::Forms::DataGridViewCheckBoxColumn^ Selected;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn5;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ Progress;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ Size;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ SizeBytes;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ PiecesCount;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ PiecesRemaining;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ PiecesActive;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ torrentId;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentName;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentProgress;
@@ -147,15 +168,126 @@ private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentConnected;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentFoundPeers;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentDownloaded;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column3;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ Index;
-private: System::Windows::Forms::DataGridViewCheckBoxColumn^ Selected;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn5;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ Progress;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ Size;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ SizeBytes;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ PiecesCount;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ PiecesRemaining;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ PiecesActive;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -371,14 +503,6 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle1 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle10 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle11 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle2 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle3 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle4 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle5 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle6 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle7 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle8 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle9 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle12 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle16 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle17 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
@@ -399,6 +523,11 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle25 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle31 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle32 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle26 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle27 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle28 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle29 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle30 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataVisualization::Charting::ChartArea^ chartArea2 = (gcnew System::Windows::Forms::DataVisualization::Charting::ChartArea());
 			System::Windows::Forms::DataVisualization::Charting::Series^ series3 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
 			System::Windows::Forms::DataVisualization::Charting::DataPoint^ dataPoint1 = (gcnew System::Windows::Forms::DataVisualization::Charting::DataPoint(2,
@@ -407,11 +536,14 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 				1));
 			System::Windows::Forms::DataVisualization::Charting::Series^ series4 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
 			System::Windows::Forms::DataVisualization::Charting::Title^ title1 = (gcnew System::Windows::Forms::DataVisualization::Charting::Title());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle26 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle27 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle28 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle29 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle30 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle2 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle3 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle4 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle5 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle6 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle7 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle8 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle9 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			this->splitContainer1 = (gcnew System::Windows::Forms::SplitContainer());
 			this->splitContainer2 = (gcnew System::Windows::Forms::SplitContainer());
 			this->buttonRemove = (gcnew System::Windows::Forms::Button());
@@ -421,18 +553,6 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->buttonStart = (gcnew System::Windows::Forms::Button());
 			this->buttonAddTorrent = (gcnew System::Windows::Forms::Button());
 			this->torrentsGrid = (gcnew System::Windows::Forms::DataGridView());
-			this->torrentId = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->TorrentName = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->TorrentProgress = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->Column4 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->DL = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->DlBytes = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->UP = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->UpBytes = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->TorrentConnected = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->TorrentFoundPeers = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->TorrentDownloaded = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->Column3 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->TorrentTabs = (gcnew System::Windows::Forms::TabControl());
 			this->tabPage1 = (gcnew System::Windows::Forms::TabPage());
 			this->torrentInfoLabel = (gcnew System::Windows::Forms::TextBox());
@@ -462,8 +582,6 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->dlSpeedChart = (gcnew System::Windows::Forms::DataVisualization::Charting::Chart());
 			this->progressTabPage = (gcnew System::Windows::Forms::TabPage());
 			this->filesProgressGridView = (gcnew System::Windows::Forms::DataGridView());
-			this->pieceChart = (gcnew System::Windows::Forms::DataVisualization::Charting::Chart());
-			this->trayIcon = (gcnew System::Windows::Forms::NotifyIcon(this->components));
 			this->Index = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->Selected = (gcnew System::Windows::Forms::DataGridViewCheckBoxColumn());
 			this->dataGridViewTextBoxColumn5 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
@@ -473,6 +591,20 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->PiecesCount = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->PiecesRemaining = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->PiecesActive = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->pieceChart = (gcnew System::Windows::Forms::DataVisualization::Charting::Chart());
+			this->trayIcon = (gcnew System::Windows::Forms::NotifyIcon(this->components));
+			this->torrentId = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->TorrentName = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->TorrentProgress = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->Column4 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->DL = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->DlBytes = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->UP = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->UpBytes = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->TorrentConnected = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->TorrentFoundPeers = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->TorrentDownloaded = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->Column3 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->splitContainer1))->BeginInit();
 			this->splitContainer1->Panel1->SuspendLayout();
 			this->splitContainer1->Panel2->SuspendLayout();
@@ -512,7 +644,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			// splitContainer1.Panel2
 			// 
 			this->splitContainer1->Panel2->Controls->Add(this->TorrentTabs);
-			this->splitContainer1->Size = System::Drawing::Size(1344, 525);
+			this->splitContainer1->Size = System::Drawing::Size(1377, 525);
 			this->splitContainer1->SplitterDistance = 277;
 			this->splitContainer1->TabIndex = 3;
 			// 
@@ -537,7 +669,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			// splitContainer2.Panel2
 			// 
 			this->splitContainer2->Panel2->Controls->Add(this->torrentsGrid);
-			this->splitContainer2->Size = System::Drawing::Size(1344, 277);
+			this->splitContainer2->Size = System::Drawing::Size(1377, 277);
 			this->splitContainer2->SplitterDistance = 43;
 			this->splitContainer2->TabIndex = 2;
 			// 
@@ -564,7 +696,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->buttonSettings->FlatStyle = System::Windows::Forms::FlatStyle::Popup;
 			this->buttonSettings->Font = (gcnew System::Drawing::Font(L"Segoe UI Symbol", 7.8F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->buttonSettings->Location = System::Drawing::Point(1227, 0);
+			this->buttonSettings->Location = System::Drawing::Point(1260, 0);
 			this->buttonSettings->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
 			this->buttonSettings->Name = L"buttonSettings";
 			this->buttonSettings->Size = System::Drawing::Size(117, 43);
@@ -687,134 +819,12 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->torrentsGrid->RowHeadersWidth = 51;
 			this->torrentsGrid->RowTemplate->Height = 24;
 			this->torrentsGrid->SelectionMode = System::Windows::Forms::DataGridViewSelectionMode::FullRowSelect;
-			this->torrentsGrid->Size = System::Drawing::Size(1344, 230);
+			this->torrentsGrid->Size = System::Drawing::Size(1377, 230);
 			this->torrentsGrid->TabIndex = 1;
 			this->torrentsGrid->CellClick += gcnew System::Windows::Forms::DataGridViewCellEventHandler(this, &MainForm::torrentsGrid_CellContentClick);
 			this->torrentsGrid->CellMouseDoubleClick += gcnew System::Windows::Forms::DataGridViewCellMouseEventHandler(this, &MainForm::TorrentsGrid_CellContentClick_1);
 			this->torrentsGrid->MouseClick += gcnew System::Windows::Forms::MouseEventHandler(this, &MainForm::torrentsGrid_MouseClick);
-			// 
-			// torrentId
-			// 
-			this->torrentId->HeaderText = L"Id";
-			this->torrentId->MinimumWidth = 6;
-			this->torrentId->Name = L"torrentId";
-			this->torrentId->ReadOnly = true;
-			this->torrentId->Visible = false;
-			this->torrentId->Width = 125;
-			// 
-			// TorrentName
-			// 
-			this->TorrentName->AutoSizeMode = System::Windows::Forms::DataGridViewAutoSizeColumnMode::Fill;
-			this->TorrentName->HeaderText = L"Name";
-			this->TorrentName->MinimumWidth = 220;
-			this->TorrentName->Name = L"TorrentName";
-			this->TorrentName->ReadOnly = true;
-			// 
-			// TorrentProgress
-			// 
-			dataGridViewCellStyle2->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->TorrentProgress->DefaultCellStyle = dataGridViewCellStyle2;
-			this->TorrentProgress->FillWeight = 15;
-			this->TorrentProgress->HeaderText = L"Progress";
-			this->TorrentProgress->MinimumWidth = 100;
-			this->TorrentProgress->Name = L"TorrentProgress";
-			this->TorrentProgress->ReadOnly = true;
-			this->TorrentProgress->Width = 125;
-			// 
-			// Column4
-			// 
-			dataGridViewCellStyle3->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->Column4->DefaultCellStyle = dataGridViewCellStyle3;
-			this->Column4->FillWeight = 15;
-			this->Column4->HeaderText = L"State";
-			this->Column4->MinimumWidth = 50;
-			this->Column4->Name = L"Column4";
-			this->Column4->ReadOnly = true;
-			this->Column4->Width = 70;
-			// 
-			// DL
-			// 
-			dataGridViewCellStyle4->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->DL->DefaultCellStyle = dataGridViewCellStyle4;
-			this->DL->FillWeight = 30;
-			this->DL->HeaderText = L"Download";
-			this->DL->MinimumWidth = 80;
-			this->DL->Name = L"DL";
-			this->DL->ReadOnly = true;
-			this->DL->Width = 125;
-			// 
-			// DlBytes
-			// 
-			this->DlBytes->HeaderText = L"DlBytes";
-			this->DlBytes->MinimumWidth = 6;
-			this->DlBytes->Name = L"DlBytes";
-			this->DlBytes->ReadOnly = true;
-			this->DlBytes->Visible = false;
-			this->DlBytes->Width = 125;
-			// 
-			// UP
-			// 
-			dataGridViewCellStyle5->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->UP->DefaultCellStyle = dataGridViewCellStyle5;
-			this->UP->FillWeight = 15;
-			this->UP->HeaderText = L"Upload";
-			this->UP->MinimumWidth = 50;
-			this->UP->Name = L"UP";
-			this->UP->ReadOnly = true;
-			this->UP->Width = 90;
-			// 
-			// UpBytes
-			// 
-			this->UpBytes->HeaderText = L"UpBytes";
-			this->UpBytes->MinimumWidth = 6;
-			this->UpBytes->Name = L"UpBytes";
-			this->UpBytes->ReadOnly = true;
-			this->UpBytes->Visible = false;
-			this->UpBytes->Width = 125;
-			// 
-			// TorrentConnected
-			// 
-			dataGridViewCellStyle6->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->TorrentConnected->DefaultCellStyle = dataGridViewCellStyle6;
-			this->TorrentConnected->FillWeight = 10;
-			this->TorrentConnected->HeaderText = L"Connections";
-			this->TorrentConnected->MinimumWidth = 60;
-			this->TorrentConnected->Name = L"TorrentConnected";
-			this->TorrentConnected->ReadOnly = true;
-			this->TorrentConnected->Width = 70;
-			// 
-			// TorrentFoundPeers
-			// 
-			dataGridViewCellStyle7->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->TorrentFoundPeers->DefaultCellStyle = dataGridViewCellStyle7;
-			this->TorrentFoundPeers->FillWeight = 10;
-			this->TorrentFoundPeers->HeaderText = L"Peers";
-			this->TorrentFoundPeers->MinimumWidth = 60;
-			this->TorrentFoundPeers->Name = L"TorrentFoundPeers";
-			this->TorrentFoundPeers->ReadOnly = true;
-			this->TorrentFoundPeers->Width = 70;
-			// 
-			// TorrentDownloaded
-			// 
-			dataGridViewCellStyle8->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->TorrentDownloaded->DefaultCellStyle = dataGridViewCellStyle8;
-			this->TorrentDownloaded->FillWeight = 10;
-			this->TorrentDownloaded->HeaderText = L"Downloaded";
-			this->TorrentDownloaded->MinimumWidth = 70;
-			this->TorrentDownloaded->Name = L"TorrentDownloaded";
-			this->TorrentDownloaded->ReadOnly = true;
-			this->TorrentDownloaded->Width = 90;
-			// 
-			// Column3
-			// 
-			dataGridViewCellStyle9->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->Column3->DefaultCellStyle = dataGridViewCellStyle9;
-			this->Column3->FillWeight = 10;
-			this->Column3->HeaderText = L"Uploaded";
-			this->Column3->MinimumWidth = 70;
-			this->Column3->Name = L"Column3";
-			this->Column3->ReadOnly = true;
-			this->Column3->Width = 90;
+			this->torrentsGrid->Sorted += gcnew System::EventHandler(this, &MainForm::torrentsGridView_Sorted);
 			// 
 			// TorrentTabs
 			// 
@@ -828,7 +838,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->TorrentTabs->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
 			this->TorrentTabs->Name = L"TorrentTabs";
 			this->TorrentTabs->SelectedIndex = 0;
-			this->TorrentTabs->Size = System::Drawing::Size(1344, 244);
+			this->TorrentTabs->Size = System::Drawing::Size(1377, 244);
 			this->TorrentTabs->TabIndex = 0;
 			this->TorrentTabs->Selecting += gcnew System::Windows::Forms::TabControlCancelEventHandler(this, &MainForm::filesProgressGridView_TabClick);
 			// 
@@ -839,7 +849,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->tabPage1->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
 			this->tabPage1->Name = L"tabPage1";
 			this->tabPage1->Padding = System::Windows::Forms::Padding(3, 2, 3, 2);
-			this->tabPage1->Size = System::Drawing::Size(1336, 215);
+			this->tabPage1->Size = System::Drawing::Size(1369, 215);
 			this->tabPage1->TabIndex = 0;
 			this->tabPage1->Text = L"General";
 			this->tabPage1->UseVisualStyleBackColor = true;
@@ -854,7 +864,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->torrentInfoLabel->Name = L"torrentInfoLabel";
 			this->torrentInfoLabel->ReadOnly = true;
 			this->torrentInfoLabel->ScrollBars = System::Windows::Forms::ScrollBars::Both;
-			this->torrentInfoLabel->Size = System::Drawing::Size(1330, 211);
+			this->torrentInfoLabel->Size = System::Drawing::Size(1363, 211);
 			this->torrentInfoLabel->TabIndex = 0;
 			// 
 			// tabPage2
@@ -1269,74 +1279,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->filesProgressGridView->CellMouseUp += gcnew System::Windows::Forms::DataGridViewCellMouseEventHandler(this, &MainForm::filesProgressGridView_CellMouseUp);
 			this->filesProgressGridView->CellValueChanged += gcnew System::Windows::Forms::DataGridViewCellEventHandler(this, &MainForm::filesProgressGridView_CellValueChanged);
 			this->filesProgressGridView->SelectionChanged += gcnew System::EventHandler(this, &MainForm::FilesProgressSelection);
-			// 
-			// pieceChart
-			// 
-			this->pieceChart->BorderlineWidth = 0;
-			chartArea2->AxisX->Crossing = 1.7976931348623157E+308;
-			chartArea2->AxisX->Enabled = System::Windows::Forms::DataVisualization::Charting::AxisEnabled::True;
-			chartArea2->AxisX->InterlacedColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(255)),
-				static_cast<System::Int32>(static_cast<System::Byte>(192)), static_cast<System::Int32>(static_cast<System::Byte>(255)));
-			chartArea2->AxisX->Interval = 10;
-			chartArea2->AxisX->IntervalAutoMode = System::Windows::Forms::DataVisualization::Charting::IntervalAutoMode::VariableCount;
-			chartArea2->AxisX->IntervalOffsetType = System::Windows::Forms::DataVisualization::Charting::DateTimeIntervalType::Number;
-			chartArea2->AxisX->IsMarginVisible = false;
-			chartArea2->AxisX->LabelStyle->Enabled = false;
-			chartArea2->AxisX->Minimum = 0;
-			chartArea2->AxisY->Crossing = 1.7976931348623157E+308;
-			chartArea2->AxisY->Enabled = System::Windows::Forms::DataVisualization::Charting::AxisEnabled::False;
-			chartArea2->AxisY->Interval = 1;
-			chartArea2->AxisY->IsMarginVisible = false;
-			chartArea2->AxisY->Maximum = 1;
-			chartArea2->AxisY->MaximumAutoSize = 1;
-			chartArea2->AxisY->Minimum = 0;
-			chartArea2->AxisY->TitleAlignment = System::Drawing::StringAlignment::Far;
-			chartArea2->BackColor = System::Drawing::Color::Silver;
-			chartArea2->BorderWidth = 0;
-			chartArea2->IsSameFontSizeForAllAxes = true;
-			chartArea2->Name = L"ChartArea1";
-			chartArea2->Position->Auto = false;
-			chartArea2->Position->Height = 94;
-			chartArea2->Position->Width = 90;
-			chartArea2->Position->X = 1;
-			chartArea2->Position->Y = 1;
-			this->pieceChart->ChartAreas->Add(chartArea2);
-			this->pieceChart->Dock = System::Windows::Forms::DockStyle::Top;
-			this->pieceChart->Location = System::Drawing::Point(3, 2);
-			this->pieceChart->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
-			this->pieceChart->Name = L"pieceChart";
-			this->pieceChart->Palette = System::Windows::Forms::DataVisualization::Charting::ChartColorPalette::Fire;
-			series3->ChartArea = L"ChartArea1";
-			series3->Color = System::Drawing::Color::RoyalBlue;
-			series3->CustomProperties = L"PointWidth=2";
-			series3->Name = L"HasSeries";
-			series3->Points->Add(dataPoint1);
-			series3->Points->Add(dataPoint2);
-			series4->ChartArea = L"ChartArea1";
-			series4->Color = System::Drawing::Color::DarkOrange;
-			series4->CustomProperties = L"EmptyPointValue=Zero, PointWidth=2";
-			series4->Name = L"Request";
-			this->pieceChart->Series->Add(series3);
-			this->pieceChart->Series->Add(series4);
-			this->pieceChart->Size = System::Drawing::Size(1330, 40);
-			this->pieceChart->TabIndex = 0;
-			this->pieceChart->Text = L"pieceChart";
-			title1->Alignment = System::Drawing::ContentAlignment::MiddleRight;
-			title1->Docking = System::Windows::Forms::DataVisualization::Charting::Docking::Right;
-			title1->Name = L"Title";
-			title1->Position->Auto = false;
-			title1->Position->Height = 100;
-			title1->Position->X = 99;
-			title1->Text = L"10000/10000";
-			title1->TextOrientation = System::Windows::Forms::DataVisualization::Charting::TextOrientation::Horizontal;
-			this->pieceChart->Titles->Add(title1);
-			this->pieceChart->Visible = false;
-			// 
-			// trayIcon
-			// 
-			this->trayIcon->Text = L"mtTorrent";
-			this->trayIcon->Visible = true;
-			this->trayIcon->MouseDoubleClick += gcnew System::Windows::Forms::MouseEventHandler(this, &MainForm::trayIcon_MouseDoubleClick);
+			this->filesProgressGridView->Sorted += gcnew System::EventHandler(this, &MainForm::filesProgressGridView_Sorted);
 			// 
 			// Index
 			// 
@@ -1419,11 +1362,202 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->PiecesActive->Name = L"PiecesActive";
 			this->PiecesActive->ReadOnly = true;
 			// 
+			// pieceChart
+			// 
+			this->pieceChart->BorderlineWidth = 0;
+			chartArea2->AxisX->Crossing = 1.7976931348623157E+308;
+			chartArea2->AxisX->Enabled = System::Windows::Forms::DataVisualization::Charting::AxisEnabled::True;
+			chartArea2->AxisX->InterlacedColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(255)),
+				static_cast<System::Int32>(static_cast<System::Byte>(192)), static_cast<System::Int32>(static_cast<System::Byte>(255)));
+			chartArea2->AxisX->Interval = 10;
+			chartArea2->AxisX->IntervalAutoMode = System::Windows::Forms::DataVisualization::Charting::IntervalAutoMode::VariableCount;
+			chartArea2->AxisX->IntervalOffsetType = System::Windows::Forms::DataVisualization::Charting::DateTimeIntervalType::Number;
+			chartArea2->AxisX->IsMarginVisible = false;
+			chartArea2->AxisX->LabelStyle->Enabled = false;
+			chartArea2->AxisX->Minimum = 0;
+			chartArea2->AxisY->Crossing = 1.7976931348623157E+308;
+			chartArea2->AxisY->Enabled = System::Windows::Forms::DataVisualization::Charting::AxisEnabled::False;
+			chartArea2->AxisY->Interval = 1;
+			chartArea2->AxisY->IsMarginVisible = false;
+			chartArea2->AxisY->Maximum = 1;
+			chartArea2->AxisY->MaximumAutoSize = 1;
+			chartArea2->AxisY->Minimum = 0;
+			chartArea2->AxisY->TitleAlignment = System::Drawing::StringAlignment::Far;
+			chartArea2->BackColor = System::Drawing::Color::Silver;
+			chartArea2->BorderWidth = 0;
+			chartArea2->IsSameFontSizeForAllAxes = true;
+			chartArea2->Name = L"ChartArea1";
+			chartArea2->Position->Auto = false;
+			chartArea2->Position->Height = 94;
+			chartArea2->Position->Width = 90;
+			chartArea2->Position->X = 1;
+			chartArea2->Position->Y = 1;
+			this->pieceChart->ChartAreas->Add(chartArea2);
+			this->pieceChart->Dock = System::Windows::Forms::DockStyle::Top;
+			this->pieceChart->Location = System::Drawing::Point(3, 2);
+			this->pieceChart->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
+			this->pieceChart->Name = L"pieceChart";
+			this->pieceChart->Palette = System::Windows::Forms::DataVisualization::Charting::ChartColorPalette::Fire;
+			series3->ChartArea = L"ChartArea1";
+			series3->Color = System::Drawing::Color::RoyalBlue;
+			series3->CustomProperties = L"PointWidth=2";
+			series3->Name = L"HasSeries";
+			series3->Points->Add(dataPoint1);
+			series3->Points->Add(dataPoint2);
+			series4->ChartArea = L"ChartArea1";
+			series4->Color = System::Drawing::Color::DarkOrange;
+			series4->CustomProperties = L"EmptyPointValue=Zero, PointWidth=2";
+			series4->Name = L"Request";
+			this->pieceChart->Series->Add(series3);
+			this->pieceChart->Series->Add(series4);
+			this->pieceChart->Size = System::Drawing::Size(1330, 40);
+			this->pieceChart->TabIndex = 0;
+			this->pieceChart->Text = L"pieceChart";
+			title1->Alignment = System::Drawing::ContentAlignment::MiddleRight;
+			title1->Docking = System::Windows::Forms::DataVisualization::Charting::Docking::Right;
+			title1->Name = L"Title";
+			title1->Position->Auto = false;
+			title1->Position->Height = 100;
+			title1->Position->X = 99;
+			title1->Text = L"10000/10000";
+			title1->TextOrientation = System::Windows::Forms::DataVisualization::Charting::TextOrientation::Horizontal;
+			this->pieceChart->Titles->Add(title1);
+			// 
+			// trayIcon
+			// 
+			this->trayIcon->Text = L"mtTorrent";
+			this->trayIcon->Visible = true;
+			this->trayIcon->MouseDoubleClick += gcnew System::Windows::Forms::MouseEventHandler(this, &MainForm::trayIcon_MouseDoubleClick);
+			// 
+			// torrentId
+			// 
+			this->torrentId->HeaderText = L"Id";
+			this->torrentId->MinimumWidth = 6;
+			this->torrentId->Name = L"torrentId";
+			this->torrentId->ReadOnly = true;
+			this->torrentId->Visible = false;
+			this->torrentId->Width = 125;
+			// 
+			// TorrentName
+			// 
+			this->TorrentName->AutoSizeMode = System::Windows::Forms::DataGridViewAutoSizeColumnMode::Fill;
+			this->TorrentName->FillWeight = 110;
+			this->TorrentName->HeaderText = L"Name";
+			this->TorrentName->MinimumWidth = 350;
+			this->TorrentName->Name = L"TorrentName";
+			this->TorrentName->ReadOnly = true;
+			// 
+			// TorrentProgress
+			// 
+			dataGridViewCellStyle2->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->TorrentProgress->DefaultCellStyle = dataGridViewCellStyle2;
+			this->TorrentProgress->FillWeight = 15;
+			this->TorrentProgress->HeaderText = L"Progress";
+			this->TorrentProgress->MinimumWidth = 100;
+			this->TorrentProgress->Name = L"TorrentProgress";
+			this->TorrentProgress->ReadOnly = true;
+			this->TorrentProgress->Width = 125;
+			// 
+			// Column4
+			// 
+			dataGridViewCellStyle3->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->Column4->DefaultCellStyle = dataGridViewCellStyle3;
+			this->Column4->FillWeight = 15;
+			this->Column4->HeaderText = L"State";
+			this->Column4->MinimumWidth = 50;
+			this->Column4->Name = L"Column4";
+			this->Column4->ReadOnly = true;
+			this->Column4->Width = 70;
+			// 
+			// DL
+			// 
+			dataGridViewCellStyle4->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->DL->DefaultCellStyle = dataGridViewCellStyle4;
+			this->DL->FillWeight = 30;
+			this->DL->HeaderText = L"Download";
+			this->DL->MinimumWidth = 80;
+			this->DL->Name = L"DL";
+			this->DL->ReadOnly = true;
+			this->DL->Width = 125;
+			// 
+			// DlBytes
+			// 
+			this->DlBytes->HeaderText = L"DlBytes";
+			this->DlBytes->MinimumWidth = 6;
+			this->DlBytes->Name = L"DlBytes";
+			this->DlBytes->ReadOnly = true;
+			this->DlBytes->Visible = false;
+			this->DlBytes->Width = 125;
+			// 
+			// UP
+			// 
+			dataGridViewCellStyle5->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->UP->DefaultCellStyle = dataGridViewCellStyle5;
+			this->UP->FillWeight = 15;
+			this->UP->HeaderText = L"Upload";
+			this->UP->MinimumWidth = 50;
+			this->UP->Name = L"UP";
+			this->UP->ReadOnly = true;
+			this->UP->Width = 90;
+			// 
+			// UpBytes
+			// 
+			this->UpBytes->HeaderText = L"UpBytes";
+			this->UpBytes->MinimumWidth = 6;
+			this->UpBytes->Name = L"UpBytes";
+			this->UpBytes->ReadOnly = true;
+			this->UpBytes->Visible = false;
+			this->UpBytes->Width = 125;
+			// 
+			// TorrentConnected
+			// 
+			dataGridViewCellStyle6->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->TorrentConnected->DefaultCellStyle = dataGridViewCellStyle6;
+			this->TorrentConnected->FillWeight = 10;
+			this->TorrentConnected->HeaderText = L"Connections";
+			this->TorrentConnected->MinimumWidth = 40;
+			this->TorrentConnected->Name = L"TorrentConnected";
+			this->TorrentConnected->ReadOnly = true;
+			this->TorrentConnected->Width = 65;
+			// 
+			// TorrentFoundPeers
+			// 
+			dataGridViewCellStyle7->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->TorrentFoundPeers->DefaultCellStyle = dataGridViewCellStyle7;
+			this->TorrentFoundPeers->FillWeight = 5;
+			this->TorrentFoundPeers->HeaderText = L"Peers";
+			this->TorrentFoundPeers->MinimumWidth = 40;
+			this->TorrentFoundPeers->Name = L"TorrentFoundPeers";
+			this->TorrentFoundPeers->ReadOnly = true;
+			this->TorrentFoundPeers->Width = 55;
+			// 
+			// TorrentDownloaded
+			// 
+			dataGridViewCellStyle8->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->TorrentDownloaded->DefaultCellStyle = dataGridViewCellStyle8;
+			this->TorrentDownloaded->FillWeight = 8;
+			this->TorrentDownloaded->HeaderText = L"Downloaded";
+			this->TorrentDownloaded->MinimumWidth = 30;
+			this->TorrentDownloaded->Name = L"TorrentDownloaded";
+			this->TorrentDownloaded->ReadOnly = true;
+			this->TorrentDownloaded->Width = 65;
+			// 
+			// Column3
+			// 
+			dataGridViewCellStyle9->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->Column3->DefaultCellStyle = dataGridViewCellStyle9;
+			this->Column3->FillWeight = 8;
+			this->Column3->HeaderText = L"Uploaded";
+			this->Column3->MinimumWidth = 30;
+			this->Column3->Name = L"Column3";
+			this->Column3->ReadOnly = true;
+			this->Column3->Width = 60;
+			// 
 			// MainForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(8, 16);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(1344, 525);
+			this->ClientSize = System::Drawing::Size(1377, 525);
 			this->Controls->Add(this->splitContainer1);
 			this->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
 			this->Name = L"MainForm";
@@ -1650,6 +1784,14 @@ private: System::Void filesProgressGridView_CellClick(System::Object^ sender, Sy
 }
 private: System::Void filesProgressGridView_TabClick(System::Object^ sender, System::Windows::Forms::TabControlCancelEventArgs^ e) {
 	forceGuiRefresh();
+}
+private: System::Void  filesProgressGridView_Sorted(System::Object^ sender, System::EventArgs^ e)
+{
+	filesProgressGridView->ClearSelection();
+}
+private: System::Void  torrentsGridView_Sorted(System::Object^ sender, System::EventArgs^ e)
+{
+	torrentsGridSorted();
 }
 };
 }

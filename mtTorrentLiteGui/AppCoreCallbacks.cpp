@@ -51,3 +51,7 @@ System::String^ fileSelectionValidatePath(System::String^ path)
 {
 	return core.fileSelection.validatePath(path);
 }
+extern void torrentsGridSorted()
+{
+	core.torrentsView.updateList();
+}
