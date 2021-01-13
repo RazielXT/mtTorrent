@@ -381,7 +381,7 @@ extern "C"
 			if (!torrent)
 				return mtt::Status::E_InvalidInput;
 
-			return torrent->setLocationPath(info->path.data);
+			return torrent->setLocationPath(info->path.data, info->moveFiles);
 		}
 		else if (id == mtBI::MessageId::GetFilesAllocation)
 		{

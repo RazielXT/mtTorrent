@@ -204,6 +204,7 @@ namespace mtBI
 	{
 		uint8_t hash[20];
 		mtt::string path;
+		bool moveFiles;
 	};
 
 	struct RegisterAlertsRequest

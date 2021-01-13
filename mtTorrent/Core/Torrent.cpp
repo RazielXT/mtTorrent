@@ -582,9 +582,14 @@ void mtt::Torrent::setFilesPriority(const std::vector<mtt::Priority>& priority)
 	stateChanged = true;
 }
 
-mtt::Status mtt::Torrent::setLocationPath(const std::string& path)
+mtt::Status mtt::Torrent::setLocationPath(const std::string& path, bool moveFiles)
 {
 	stateChanged = true;
 
-	return files.storage.setPath(path, lastStateTime != 0);
+	auto status = files.storage.setPath(path, moveFiles);
+
+	if (!moveFiles)
+		checkFiles();
+
+	return status;
 }

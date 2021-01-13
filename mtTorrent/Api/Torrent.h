@@ -87,9 +87,9 @@ namespace mttApi
 		*/
 		API_EXPORT std::string getLocationPath() const;
 		/*
-			change download location path, moving existing files
+			change download location path, moving existing files if wanted
 		*/
-		API_EXPORT mtt::Status setLocationPath(const std::string& path);
+		API_EXPORT mtt::Status setLocationPath(const std::string& path, bool moveFiles);
 
 		/*
 			get name of file from torrent file

@@ -174,8 +174,21 @@ void FileSelection::onButtonClick(ButtonId id)
 			//set torrent files location, moving files if path changed
 			mtBI::TorrentSetPathRequest path;
 			memcpy(path.hash, state.hash, 20);
+			path.moveFiles = true;
 			path.path = getUtf8String(form->textBoxPath->Text);
 			auto status = core.IoctlFunc(mtBI::MessageId::SetTorrentPath, &path, nullptr);
+
+			if (status == mtt::Status::E_NotEmpty)
+			{
+				auto result = ::MessageBox(NULL, L"Folder not empty, inherit containing files?", L"Torrent folder", MB_YESNO);
+
+				if (result == IDYES)
+				{
+					path.moveFiles = false;
+					status = core.IoctlFunc(mtBI::MessageId::SetTorrentPath, &path, nullptr);
+				}
+			}
+
 			if (status != mtt::Status::Success)
 			{
 				if (status == mtt::Status::E_InvalidPath)

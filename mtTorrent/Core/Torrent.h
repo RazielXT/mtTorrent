@@ -39,7 +39,7 @@ namespace mtt
 		bool selectFiles(const std::vector<bool>&);
 		bool selectFile(uint32_t index, bool selected);
 		void setFilesPriority(const std::vector<mtt::Priority>&);
-		mtt::Status setLocationPath(const std::string& path);
+		mtt::Status setLocationPath(const std::string& path, bool moveFiles);
 
 		const std::string& name() const;
 		float progress() const;
