@@ -22,6 +22,12 @@ namespace GuiLite {
 		{
 			InitializeComponent();
 
+			auto lastState = getSavedWindowState();
+			if (lastState.height)
+			{
+				this->ClientSize = System::Drawing::Size(lastState.width, lastState.height);
+			}
+
 			trayIcon->Icon = Icon->ExtractAssociatedIcon(Assembly::GetExecutingAssembly()->Location);
 
 			torrentsGrid->SortCompare += gcnew DataGridViewSortCompareEventHandler(this, &MainForm::torrentGridView_SortCompare);
@@ -66,17 +72,6 @@ namespace GuiLite {
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column1;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn4;
 
-
-
-
-
-
-
-
-
-
-
-
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ gridPeerAddress;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ DL2;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ DlBytes2;
@@ -87,65 +82,6 @@ namespace GuiLite {
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ peerCountry;
 	private: System::Windows::Forms::NotifyIcon^ trayIcon;
 	public: System::Windows::Forms::DataGridView^ filesProgressGridView;
-
-	public:
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ Index;
 private: System::Windows::Forms::DataGridViewCheckBoxColumn^ Selected;
@@ -168,273 +104,6 @@ private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentConnected;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentFoundPeers;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentDownloaded;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column3;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	private:
-
-
-
-
-
 	public:
 
 		static MainForm^ instance;
@@ -474,6 +143,12 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 		/// </summary>
 		~MainForm()
 		{
+			SavedWindowState state;
+			state.height = ClientSize.Height;
+			state.width = ClientSize.Width;
+
+			saveWindowState(state);
+
 			if (components)
 			{
 				delete components;

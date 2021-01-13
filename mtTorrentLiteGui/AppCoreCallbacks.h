@@ -49,3 +49,11 @@ extern void fileProgressSelectionChanged(int row);
 extern void forceGuiRefresh();
 extern System::String^ fileSelectionValidatePath(System::String^ path);
 extern void torrentsGridSorted();
+
+struct SavedWindowState
+{
+	int height;
+	int width;
+};
+extern SavedWindowState getSavedWindowState();
+extern void saveWindowState(const SavedWindowState&);

@@ -1,5 +1,6 @@
 #include "AppCoreCallbacks.h"
 #include "AppCore.h"
+#include <fstream>
 
 extern AppCore core;
 
@@ -43,7 +44,7 @@ void fileProgressSelectionChanged(int row)
 {
 	core.torrentsView.piecesProgress.fileSelectionChanged(row);
 }
-extern void forceGuiRefresh()
+void forceGuiRefresh()
 {
 	core.forceRefresh = true;
 }
@@ -51,7 +52,27 @@ System::String^ fileSelectionValidatePath(System::String^ path)
 {
 	return core.fileSelection.validatePath(path);
 }
-extern void torrentsGridSorted()
+void torrentsGridSorted()
 {
 	core.torrentsView.updateList();
+}
+
+SavedWindowState getSavedWindowState()
+{
+	SavedWindowState state = {};
+
+	std::ifstream file("./window", std::ios_base::binary);
+	if (file)
+		file.read((char*)&state, sizeof(state));
+
+	return state;
+}
+
+void saveWindowState(const SavedWindowState& state)
+{
+	if (!state.height)
+		return;
+
+	std::ofstream file("./window", std::ios_base::binary);
+	file.write((const char*)&state, sizeof(state));
 }
