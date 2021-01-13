@@ -57,3 +57,5 @@ struct SavedWindowState
 };
 extern SavedWindowState getSavedWindowState();
 extern void saveWindowState(const SavedWindowState&);
+
+extern float bytesToNumber(System::String^);

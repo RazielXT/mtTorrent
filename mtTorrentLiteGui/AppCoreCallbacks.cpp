@@ -76,3 +76,20 @@ void saveWindowState(const SavedWindowState& state)
 	std::ofstream file("./window", std::ios_base::binary);
 	file.write((const char*)&state, sizeof(state));
 }
+
+float bytesToNumber(System::String^ str)
+{
+	float value = 0;
+	int i = str->IndexOf(' ');
+	if (i != -1)
+		float::TryParse(str->Substring(0, i), value);
+
+	if (str->Contains("GB"))
+		value *= 1024 * 1024 * 1024;
+	else if (str->Contains("MB"))
+		value *= 1024 * 1024;
+	else if (str->Contains("KB"))
+		value *= 1024;
+
+	return value;
+}

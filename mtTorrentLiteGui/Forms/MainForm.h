@@ -1213,7 +1213,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->TorrentDownloaded->FillWeight = 8;
 			this->TorrentDownloaded->HeaderText = L"Downloaded";
 			this->TorrentDownloaded->MinimumWidth = 30;
-			this->TorrentDownloaded->Name = L"TorrentDownloaded";
+			this->TorrentDownloaded->Name = L"Downloaded";
 			this->TorrentDownloaded->ReadOnly = true;
 			this->TorrentDownloaded->Width = 65;
 			// 
@@ -1224,7 +1224,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->Column3->FillWeight = 8;
 			this->Column3->HeaderText = L"Uploaded";
 			this->Column3->MinimumWidth = 30;
-			this->Column3->Name = L"Column3";
+			this->Column3->Name = L"Uploaded";
 			this->Column3->ReadOnly = true;
 			this->Column3->Width = 60;
 			// 
@@ -1387,17 +1387,30 @@ private: System::Void  torrentGridView_SortCompare(System::Object^ sender, DataG
 	}
 	else if (e->Column->Name == "Progress")
 	{
-		auto s1 = torrentsGrid->Rows[e->RowIndex1]->Cells[e->Column->Index]->Value->ToString();
+		auto s1 = e->CellValue1->ToString();
 		float v1 = 0;
 		int i = s1->IndexOf('%');
 		if (i != -1)
 			v1 = float::Parse(s1->Substring(0, i));
 
-		auto s2 = torrentsGrid->Rows[e->RowIndex2]->Cells[e->Column->Index]->Value->ToString();
+		auto s2 = e->CellValue2->ToString();
 		float v2 = 0;
 		i = s2->IndexOf('%');
 		if (i != -1)
 			v2 = float::Parse(s2->Substring(0, i));
+
+		if (v1 == v2 && e->CellValue1->ToString() != e->CellValue2->ToString())
+			e->SortResult = System::String::Compare(e->CellValue1->ToString(), e->CellValue2->ToString());
+		else
+			e->SortResult = v1 > v2 ? 1 : -1;
+	}
+	else if (e->Column->Name == "Downloaded" || e->Column->Name == "Uploaded")
+	{
+		auto s1 = e->CellValue1->ToString();
+		auto v1 = bytesToNumber(s1);
+
+		auto s2 = e->CellValue2->ToString();
+		auto v2 = bytesToNumber(s2);
 
 		if (v1 == v2 && e->CellValue1->ToString() != e->CellValue2->ToString())
 			e->SortResult = System::String::Compare(e->CellValue1->ToString(), e->CellValue2->ToString());
