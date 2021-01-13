@@ -248,9 +248,9 @@ void AppCore::onButtonClick(ButtonId id, System::String^ param)
 		mtBI::TorrentInfo info;
 		if (IoctlFunc(mtBI::MessageId::GetTorrentInfo, firstSelectedHash, &info) == mtt::Status::Success && info.downloadLocation.length > 0)
 		{
-			auto path = gcnew System::String(info.downloadLocation.data);
+			auto path = gcnew System::String(info.downloadLocation.data, 0, (int)info.downloadLocation.length, System::Text::Encoding::UTF8);
 			if (info.files.size() > 1)
-				path += gcnew System::String(info.name.data);
+				path += gcnew System::String(info.name.data, 0, (int)info.name.length, System::Text::Encoding::UTF8);
 			try
 			{
 				System::Diagnostics::Process::Start(path);
