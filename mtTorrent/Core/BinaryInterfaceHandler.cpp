@@ -84,7 +84,8 @@ extern "C"
 			{
 				auto t = torrents[i];
 				memcpy(resp->list[i].hash, t->getFileInfo().info.hash, 20);
-				resp->list[i].active = (t->getState() != mttApi::Torrent::State::Inactive);
+				auto state = t->getState();
+				resp->list[i].active = (state != mttApi::Torrent::State::Inactive && state != mttApi::Torrent::State::Interrupted);
 			}
 		}
 		else if (id == mtBI::MessageId::GetTorrentStateInfo)
