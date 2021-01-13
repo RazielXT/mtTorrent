@@ -250,6 +250,9 @@
     <ClCompile Include="utils\NetAdaptersList.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Interface.cpp">
+      <Filter>Source Files\Core\General</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Storage.h">

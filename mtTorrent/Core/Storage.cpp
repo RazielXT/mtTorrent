@@ -40,50 +40,27 @@ mtt::Status mtt::Storage::setPath(std::string p, bool moveFiles)
 
 		if (moveFiles && !files.empty())
 		{
+			auto newPath = std::filesystem::u8path(p + files.back().path.front());
+
 			if (files.size() == 1)
 			{
-				if (std::filesystem::file_size(std::filesystem::u8path(p), ec))
+				if (std::filesystem::file_size(newPath, ec))
 					return mtt::Status::E_NotEmpty;
 			}
 			else
 			{
-				if (!std::filesystem::is_empty(std::filesystem::u8path(p), ec))
+				if (std::filesystem::exists(newPath, ec) && !std::filesystem::is_empty(newPath, ec))
 					return mtt::Status::E_NotEmpty;
 			}
 
-			auto originalPath = path + files.back().path.front();
-			if (std::filesystem::exists(std::filesystem::u8path(originalPath), ec))
+			auto originalPath = std::filesystem::u8path(path + files.back().path.front());
+
+			if (std::filesystem::exists(originalPath, ec))
 			{
-				auto newPath = p + files.back().path.front();
+				std::filesystem::rename(originalPath, newPath, ec);
 
-				for (auto& f : files)
-				{
-					auto originalPathF = originalPath;
-					auto newPathF = newPath;
-
-					for (size_t i = 1; i < f.path.size(); i++)
-					{
-						if (i + 1 == f.path.size())
-						{
-							if (!std::filesystem::create_directories(std::filesystem::u8path(newPathF), ec) && ec.value() != 0)
-								return mtt::Status::E_AllocationProblem;
-						}
-
-						originalPathF += pathSeparator + f.path[i];
-						newPathF += pathSeparator + f.path[i];
-					}
-
-					if (!std::filesystem::exists(std::filesystem::u8path(originalPathF), ec))
-						continue;
-
-					std::filesystem::rename(std::filesystem::u8path(originalPathF), std::filesystem::u8path(newPathF), ec);
-
-					if (ec)
-						return mtt::Status::E_AllocationProblem;
-				}
-
-				if (files.size() > 1)
-					std::filesystem::remove(std::filesystem::u8path(originalPath), ec);
+				if (ec)
+					return mtt::Status::E_AllocationProblem;
 			}
 		}
 
@@ -155,66 +132,48 @@ mtt::Status mtt::Storage::loadPieceBlock(const PieceBlockInfo& block, DataBuffer
 
 mtt::Status mtt::Storage::preallocateSelection(const DownloadSelection& selection)
 {
-	{
-		std::lock_guard<std::mutex> guard(storageMutex);
+	std::lock_guard<std::mutex> guard(storageMutex);
 
-		auto s = validatePath(selection);
+	auto s = validatePath(selection);
+	if (s != Status::Success)
+		return s;
+
+	struct FileAllocations
+	{
+		const mtt::File& file;
+		uint64_t size;
+	};
+	std::vector<FileAllocations> allocations;
+
+	mtt::SelectedIntervals selected(selection);
+
+	if (selected.selectedIntervals.empty())
+		return Status::Success;
+
+	for (auto it = selection.files.begin(); it != selection.files.end(); it++)
+	{
+		uint64_t sz = 0;
+		if (it->selected)
+			sz = it->info.size;
+		else if (selected.isSelected(it->info))
+		{
+			if (!allocations.empty() && allocations.back().file.endPieceIndex == it->info.startPieceIndex)
+				sz = pieceSize - it->info.startPiecePos;
+			else
+				sz += it->info.endPiecePos;
+		}
+
+		if (sz)
+			allocations.push_back({ it->info, sz });
+		else if (selected.selectedIntervals.back().endIdx < it->info.startPieceIndex)
+			break;
+	}
+
+	for (auto a : allocations)
+	{
+		auto s = preallocate(a.file, a.size);
 		if (s != Status::Success)
 			return s;
-
-		struct FileAllocations
-		{
-			const mtt::File& file;
-			uint64_t size;
-		};
-		std::vector<FileAllocations> allocations;
-
-		struct BeginEnd
-		{
-			uint32_t beginIdx;
-			uint32_t endIdx;
-		};
-		std::vector<BeginEnd> selectedIntervals;
-		for (const auto& f : selection.files)
-			if (f.selected)
-				if (!selectedIntervals.empty() && f.info.startPieceIndex == selectedIntervals.back().endIdx)
-					selectedIntervals.back().endIdx = f.info.endPieceIndex;
-				else
-					selectedIntervals.push_back({ f.info.startPieceIndex, f.info.endPieceIndex });
-
-		auto isSelected = [&selectedIntervals](const mtt::File& f)
-		{
-			for (const auto& i : selectedIntervals)
-			{
-				if (f.startPieceIndex <= i.endIdx && f.endPieceIndex >= i.beginIdx)
-					return true;
-			}
-			return false;
-		};
-
-		for (auto it = selection.files.begin(); it != selection.files.end(); it++)
-		{
-			uint64_t sz = 0;
-			if (it->selected)
-				sz = it->info.size;
-			else if (isSelected(it->info))
-			{
-				if (!allocations.empty() && allocations.back().file.endPieceIndex == it->info.startPieceIndex)
-					sz = pieceSize - it->info.startPiecePos;
-				else
-					sz += it->info.endPiecePos;
-			}
-
-			if (sz)
-				allocations.push_back({ it->info, sz });
-		}
-
-		for (auto a : allocations)
-		{
-			auto s = preallocate(a.file, a.size);
-			if (s != Status::Success)
-				return s;
-		}
 	}
 
 	return Status::Success;

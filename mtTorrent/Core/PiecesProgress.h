@@ -11,9 +11,9 @@ namespace mtt
 		void resize(size_t size);
 		void removeReceived();
 
-		void select(DownloadSelection& selection);
-		void fromBitfield(DataBuffer& bitfield);
-		void fromList(std::vector<uint8_t>& pieces);
+		void select(const DownloadSelection& selection);
+		void fromBitfield(const DataBuffer& bitfield);
+		void fromList(const std::vector<uint8_t>& pieces);
 		DataBuffer toBitfield();
 		void toBitfield(DataBuffer&);
 		bool toBitfield(uint8_t* dataBitfield, size_t dataSize);

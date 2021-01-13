@@ -222,6 +222,9 @@
     <ClCompile Include="..\mtTorrent\Core\Dht\Table.cpp">
       <Filter>Source Files\mtt\dht</Filter>
     </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Interface.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Test.h">

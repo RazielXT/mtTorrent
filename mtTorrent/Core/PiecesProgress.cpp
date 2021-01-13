@@ -79,15 +79,16 @@ void mtt::PiecesProgress::removeReceived()
 	}
 }
 
-void mtt::PiecesProgress::select(DownloadSelection& selection)
+void mtt::PiecesProgress::select(const DownloadSelection& selection)
 {
 	init(selection.files.back().info.endPieceIndex + 1);
 	selectedPieces = 0;
 
+	mtt::SelectedIntervals selectionInterval(selection);
+
 	for (size_t i = 0; i < pieces.size(); i++)
 	{
-		bool selected = std::find_if(selection.files.begin(), selection.files.end(), [i](const FileSelectionInfo& f) 
-			{ return f.selected && f.info.startPieceIndex <= i && f.info.endPieceIndex >= i; }) != selection.files.end();
+		bool selected = selectionInterval.isSelected((uint32_t)i);
 
 		if (pieces[i] & HasFlag)
 		{
@@ -165,7 +166,7 @@ size_t mtt::PiecesProgress::getReceivedPiecesCount() const
 	return receivedPiecesCount;
 }
 
-void mtt::PiecesProgress::fromBitfield(DataBuffer& bitfield)
+void mtt::PiecesProgress::fromBitfield(const DataBuffer& bitfield)
 {
 	size_t maxPiecesCount = pieces.empty() ? bitfield.size() * 8 : pieces.size();
 
@@ -183,7 +184,7 @@ void mtt::PiecesProgress::fromBitfield(DataBuffer& bitfield)
 	}
 }
 
-void mtt::PiecesProgress::fromList(std::vector<uint8_t>& piecesList)
+void mtt::PiecesProgress::fromList(const std::vector<uint8_t>& piecesList)
 {
 	init(piecesList.size());
 

@@ -169,6 +169,7 @@
     <ClCompile Include="..\mtTorrent\Core\HttpsTrackerComm.cpp" />
     <ClCompile Include="..\mtTorrent\Core\HttpTrackerComm.cpp" />
     <ClCompile Include="..\mtTorrent\Core\IncomingPeersListener.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Interface.cpp" />
     <ClCompile Include="..\mtTorrent\Core\Logging.cpp" />
     <ClCompile Include="..\mtTorrent\Core\MetadataDownload.cpp" />
     <ClCompile Include="..\mtTorrent\Core\MetadataReconstruction.cpp" />

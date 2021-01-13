@@ -305,6 +305,7 @@
     <ClCompile Include="Core\FileTransfer.cpp" />
     <ClCompile Include="Core\HttpsTrackerComm.cpp" />
     <ClCompile Include="Core\IncomingPeersListener.cpp" />
+    <ClCompile Include="Core\Interface.cpp" />
     <ClCompile Include="Core\Torrent.cpp" />
     <ClCompile Include="Core\MetadataDownload.cpp" />
     <ClCompile Include="Core\Configuration.cpp" />

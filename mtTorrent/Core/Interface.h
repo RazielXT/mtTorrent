@@ -48,6 +48,20 @@ namespace mtt
 		uint32_t index = {};
 	};
 
+	struct SelectedIntervals
+	{
+		SelectedIntervals(const mtt::DownloadSelection& selection);
+		bool isSelected(const mtt::File& f);
+		bool isSelected(uint32_t idx);
+
+		struct Interval
+		{
+			uint32_t beginIdx;
+			uint32_t endIdx;
+		};
+		std::vector<Interval> selectedIntervals;
+	};
+
 	struct AnnounceResponse
 	{
 		uint32_t interval = 5 * 60;
