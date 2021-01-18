@@ -10,11 +10,11 @@ namespace mtt
 	{
 	public:
 
-		Storage() {};
-		Storage(TorrentInfo& info);
+		Storage(const TorrentInfo& info);
 		~Storage();
 
-		void init(TorrentInfo& info, const std::string& locationPath);
+		void init(const std::string& locationPath);
+
 		Status setPath(std::string path, bool moveFiles = true);
 		std::string getPath() const;
 
@@ -59,7 +59,6 @@ namespace mtt
 
 		std::mutex storageMutex;
 
-		std::vector<File> files;
-		uint32_t pieceSize = 0;
+		const TorrentInfo& info;
 	};
 }

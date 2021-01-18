@@ -65,8 +65,8 @@ namespace mtt
 
 		void save();
 		void saveTorrentFile(const char* data, size_t size);
-		void saveTorrentFileFromUtm();
 		void removeMetaFiles();
+		bool loadFileInfo();
 
 		bool importTrackers(const mtt::TorrentFileInfo& fileInfo);
 
@@ -76,11 +76,16 @@ namespace mtt
 
 		mutable std::mutex checkStateMutex;
 		std::shared_ptr<mtt::PiecesCheck> checkState;
+
+		void refreshLastState();
 		uint64_t lastStateTime = 0;
+
 		bool stateChanged = false;
-		void init();
+		void initialize();
 
 		std::mutex stateMutex;
 		bool stopping = false;
+
+		enum class LoadedState { Minimal, Full } loadedState = LoadedState::Minimal;
 	};
 }

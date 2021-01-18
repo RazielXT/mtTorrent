@@ -1,14 +1,14 @@
 #include "Interface.h"
 
-mtt::SelectedIntervals::SelectedIntervals(const mtt::DownloadSelection& selection)
+mtt::SelectedIntervals::SelectedIntervals(const mtt::TorrentInfo info, const mtt::DownloadSelection& selection)
 {
-	for (const auto& f : selection.files)
-		if (f.selected)
+	for (size_t i = 0; i < info.files.size(); i++)
+		if (selection[i].selected)
 		{
-			if (!selectedIntervals.empty() && f.info.startPieceIndex == selectedIntervals.back().endIdx)
-				selectedIntervals.back().endIdx = f.info.endPieceIndex;
+			if (!selectedIntervals.empty() && info.files[i].startPieceIndex == selectedIntervals.back().endIdx)
+				selectedIntervals.back().endIdx = info.files[i].endPieceIndex;
 			else
-				selectedIntervals.push_back({ f.info.startPieceIndex, f.info.endPieceIndex });
+				selectedIntervals.push_back({ info.files[i].startPieceIndex, info.files[i].endPieceIndex });
 		}
 }
 

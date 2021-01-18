@@ -88,16 +88,10 @@ namespace mtt
 		High = 90
 	};
 
-	struct FileSelectionInfo
+	struct FileSelection
 	{
 		bool selected;
 		Priority priority;
-		File info;
-	};
-
-	struct DownloadSelection
-	{
-		std::vector<FileSelectionInfo> files;
 	};
 
 	enum class TrackerState { Clear, Initialized, Offline, Alive, Connecting, Connected, Announcing, Announced, Reannouncing };

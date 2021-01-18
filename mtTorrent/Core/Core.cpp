@@ -183,9 +183,8 @@ std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addFile(const uint8_t* data, 
 	if (!torrent)
 		return { mtt::Status::E_InvalidInput, nullptr };
 
-	torrents.push_back(torrent);
 	torrent->saveTorrentFile((const char*)data, size);
-	torrent->checkFiles();
+	torrents.push_back(torrent);
 	saveTorrentList(torrents);
 
 	return { mtt::Status::Success, torrent };

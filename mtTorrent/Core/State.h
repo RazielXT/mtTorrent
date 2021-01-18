@@ -10,14 +10,16 @@ namespace mtt
 	{
 		TorrentState(std::vector<uint8_t>&);
 
+		struct 
+		{
+			std::string name;
+			uint32_t pieceSize = 0;
+		}
+		info;
+
 		std::string downloadPath;
 
-		struct File
-		{
-			bool selected;
-			Priority priority = Priority::Normal;
-		};
-		std::vector<File> files;
+		DownloadSelection selection;
 
 		std::vector<uint8_t>& pieces;
 		int64_t lastStateTime = 0;

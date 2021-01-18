@@ -77,14 +77,14 @@ void mtt::FileTransfer::stop()
 		refreshTimer->disable();
 }
 
-void mtt::FileTransfer::clear()
-{
-	unFinishedPieces.clear();
-}
-
 void mtt::FileTransfer::addUnfinishedPieces(std::vector<mtt::DownloadedPieceState>& pieces)
 {
 	unFinishedPieces = std::move(pieces);
+}
+
+void mtt::FileTransfer::clearUnfinishedPieces()
+{
+	unFinishedPieces.clear();
 }
 
 void mtt::FileTransfer::refreshSelection()
@@ -92,13 +92,16 @@ void mtt::FileTransfer::refreshSelection()
 	piecesPriority.resize(torrent->infoFile.info.pieces.size(), Priority(0));
 	std::vector<uint32_t> selected;
 
-	for (auto& f : torrent->files.selection.files)
+	for (size_t i = 0; i < torrent->infoFile.info.files.size(); i++)
 	{
-		for (size_t i = f.info.startPieceIndex; i <= f.info.endPieceIndex; i++)
-		{
-			piecesPriority[i] = std::max(piecesPriority[i], f.priority);
+		const auto& file = torrent->infoFile.info.files[i];
+		const auto& selection = torrent->files.selection[i];
 
-			if (f.selected && (selected.empty() || i != selected.back()))
+		for (size_t i = file.startPieceIndex; i <= file.endPieceIndex; i++)
+		{
+			piecesPriority[i] = std::max(piecesPriority[i], selection.priority);
+
+			if (selection.selected && (selected.empty() || i != selected.back()))
 				selected.push_back((uint32_t)i);
 		}
 	}

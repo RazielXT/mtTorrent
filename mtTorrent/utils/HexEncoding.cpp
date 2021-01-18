@@ -14,7 +14,7 @@ static uint8_t fromHexa(char h)
 	return h;
 }
 
-bool decodeHexa(const std::string& from, uint8_t* to)
+bool decodeHexa(const std::string& from, uint8_t* to, size_t size)
 {
 	for (auto c : from)
 	{
@@ -24,7 +24,7 @@ bool decodeHexa(const std::string& from, uint8_t* to)
 			return false;
 	}
 
-	for (size_t i = 0; i < 20; i++)
+	for (size_t i = 0; i < size; i++)
 	{
 		uint8_t f = fromHexa(from[i * 2]);
 		uint8_t s = fromHexa(from[i * 2 + 1]);

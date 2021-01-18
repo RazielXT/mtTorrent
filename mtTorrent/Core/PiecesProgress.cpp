@@ -20,7 +20,7 @@ float mtt::PiecesProgress::getSelectedPercentage() const
 	return selectedPieces == 0 ? 0 : (selectedReceivedPiecesCount / (float)selectedPieces);
 }
 
-void mtt::PiecesProgress::recheckPieces()
+void mtt::PiecesProgress::calculatePieces()
 {
 	receivedPiecesCount = 0;
 	selectedReceivedPiecesCount = 0;
@@ -64,7 +64,7 @@ void mtt::PiecesProgress::resize(size_t size)
 		if(!previous.empty())
 			memcpy(pieces.data(), previous.data(), std::min(size, previous.size()));
 
-		recheckPieces();
+		calculatePieces();
 	}
 }
 
@@ -79,21 +79,44 @@ void mtt::PiecesProgress::removeReceived()
 	}
 }
 
-void mtt::PiecesProgress::select(const DownloadSelection& selection)
+void mtt::PiecesProgress::select(const TorrentInfo& info, const DownloadSelection& selection)
 {
-	init(selection.files.back().info.endPieceIndex + 1);
+	init(info.pieces.size());
 	selectedPieces = 0;
 
-	mtt::SelectedIntervals selectionInterval(selection);
+	mtt::SelectedIntervals selectionIntervals(info, selection);
 
 	for (size_t i = 0; i < pieces.size(); i++)
 	{
-		bool selected = selectionInterval.isSelected((uint32_t)i);
+		bool selected = selectionIntervals.isSelected((uint32_t)i);
 
 		if (pieces[i] & HasFlag)
 		{
 			receivedPiecesCount++;
 
+			if (selected)
+				selectedReceivedPiecesCount++;
+		}
+
+		if (selected)
+		{
+			selectedPieces++;
+			pieces[i] &= ~UnselectedFlag;
+		}
+		else
+			pieces[i] |= UnselectedFlag;
+	}
+}
+
+void mtt::PiecesProgress::select(const File& info, bool selected)
+{
+	for (uint32_t i = info.startPieceIndex; i != info.endPieceIndex; i++)
+	{
+		if ((pieces[i] & UnselectedFlag) && !selected)
+			continue;
+
+		if (pieces[i] & HasFlag)
+		{
 			if (selected)
 				selectedReceivedPiecesCount++;
 		}
@@ -201,7 +224,7 @@ void mtt::PiecesProgress::fromList(const std::vector<uint8_t>& piecesList)
 			pieces[i] &= ~HasFlag;
 }
 
-DataBuffer mtt::PiecesProgress::toBitfield()
+DataBuffer mtt::PiecesProgress::toBitfield() const
 {
 	DataBuffer buffer;
 
@@ -210,7 +233,7 @@ DataBuffer mtt::PiecesProgress::toBitfield()
 	return buffer;
 }
 
-bool mtt::PiecesProgress::toBitfield(uint8_t* dataBitfield, size_t dataSize)
+bool mtt::PiecesProgress::toBitfield(uint8_t* dataBitfield, size_t dataSize) const
 {
 	if (dataSize < getBitfieldSize())
 		return false;
@@ -228,14 +251,14 @@ bool mtt::PiecesProgress::toBitfield(uint8_t* dataBitfield, size_t dataSize)
 	return true;
 }
 
-void mtt::PiecesProgress::toBitfield(DataBuffer& buffer)
+void mtt::PiecesProgress::toBitfield(DataBuffer& buffer) const
 {
 	buffer.resize(getBitfieldSize());
 
 	toBitfield(buffer.data(), buffer.size());
 }
 
-size_t mtt::PiecesProgress::getBitfieldSize()
+size_t mtt::PiecesProgress::getBitfieldSize() const
 {
 	return (size_t)ceil(pieces.size() / 8.0f);
 }

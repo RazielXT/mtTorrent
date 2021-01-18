@@ -76,7 +76,7 @@ namespace mtt
 	{
 	public:
 
-		Downloader(TorrentInfo& torrentInfo, DownloaderClient& client);
+		Downloader(const TorrentInfo& torrentInfo, DownloaderClient& client);
 
 		std::vector<mtt::DownloadedPieceState> stop();
 
@@ -124,7 +124,7 @@ namespace mtt
 		uint32_t sendPieceRequests(ActivePeer*,ActivePeer::RequestedPiece*, RequestInfo*, uint32_t max);
 		bool hasWantedPieces(ActivePeer*);
 
-		TorrentInfo& torrentInfo;
+		const TorrentInfo& torrentInfo;
 		DownloaderClient& client;
 	};
 }

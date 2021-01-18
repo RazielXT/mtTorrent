@@ -6,18 +6,19 @@ namespace mtt
 {
 	struct PiecesProgress
 	{
-		void recheckPieces();
+		void calculatePieces();
 		void init(size_t size);
 		void resize(size_t size);
 		void removeReceived();
 
-		void select(const DownloadSelection& selection);
+		void select(const File& info, bool selected);
+		void select(const TorrentInfo& info, const DownloadSelection& selection);
 		void fromBitfield(const DataBuffer& bitfield);
 		void fromList(const std::vector<uint8_t>& pieces);
-		DataBuffer toBitfield();
-		void toBitfield(DataBuffer&);
-		bool toBitfield(uint8_t* dataBitfield, size_t dataSize);
-		size_t getBitfieldSize();
+		DataBuffer toBitfield() const;
+		void toBitfield(DataBuffer&) const;
+		bool toBitfield(uint8_t* dataBitfield, size_t dataSize) const;
+		size_t getBitfieldSize() const;
 
 		bool empty() const;
 		float getPercentage() const;

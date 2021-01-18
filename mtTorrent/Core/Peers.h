@@ -22,10 +22,11 @@ namespace mtt
 		size_t add(std::shared_ptr<TcpAsyncStream> peer, const BufferView& data);
 		std::shared_ptr<PeerCommunication> disconnect(PeerCommunication*);
 
-		std::vector<TrackerInfo> getSourcesInfo() const;
+		std::vector<TrackerInfo> getSourcesInfo();
 		void refreshSource(const std::string& name);
 
 		TrackerManager trackers;
+		TorrentPtr torrent;
 
 		uint32_t connectedCount() const;
 		uint32_t receivedCount() const;
@@ -53,8 +54,6 @@ namespace mtt
 		void addLogEvent(LogEvent, Addr&, char) {}
 		void saveLogEvents() {}
 #endif
-
-		TorrentPtr torrent;
 
 		class PeersListener : public mtt::IPeerListener, public std::enable_shared_from_this<PeersListener>
 		{

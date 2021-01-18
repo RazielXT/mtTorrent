@@ -17,7 +17,6 @@ namespace mtt
 
 		void start();
 		void stop();
-		void clear();
 
 		void refreshSelection();
 
@@ -26,6 +25,7 @@ namespace mtt
 		uint32_t getUploadSpeed() const;
 
 		void addUnfinishedPieces(std::vector<mtt::DownloadedPieceState>& pieces);
+		void clearUnfinishedPieces();
 		std::vector<mtt::DownloadedPieceState> getUnfinishedPiecesState();
 
 		size_t getUnfinishedPiecesDownloadSize();

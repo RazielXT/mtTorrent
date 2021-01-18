@@ -14,7 +14,7 @@ const uint32_t MinPendingPeerRequestsBeforeNext = 5;
 const uint32_t MaxPendingPeerRequests = 10;
 const uint32_t MaxPendingPeerRequestsToSpeedRatio = (1024*1024);
 
-mtt::Downloader::Downloader(TorrentInfo& info, DownloaderClient& c) : torrentInfo(info), client(c)
+mtt::Downloader::Downloader(const TorrentInfo& info, DownloaderClient& c) : torrentInfo(info), client(c)
 {
 	immediateMode = info.pieceSize >= mtt::config::getInternal().minPieceSizeForImmediateStoring;
 }

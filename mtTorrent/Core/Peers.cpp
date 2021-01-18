@@ -229,8 +229,10 @@ std::shared_ptr<mtt::PeerCommunication> mtt::Peers::disconnect(PeerCommunication
 	return nullptr;
 }
 
-std::vector<mtt::TrackerInfo> mtt::Peers::getSourcesInfo() const
+std::vector<mtt::TrackerInfo> mtt::Peers::getSourcesInfo()
 {
+	torrent->loadFileInfo();
+
 	std::vector<mtt::TrackerInfo> out;
 	auto tr = trackers.getTrackers();
 	out.reserve(tr.size() + 2);
@@ -284,6 +286,9 @@ std::vector<std::shared_ptr<mtt::PeerCommunication>> mtt::Peers::getActivePeers(
 
 void mtt::Peers::reloadTorrentInfo()
 {
+	if (trackers.getTrackersCount() == 0)
+		trackers.addTrackers(torrent->infoFile.announceList);
+
 	std::lock_guard<std::mutex> guard(peersMutex);
 
 	for (auto& peer : activeConnections)

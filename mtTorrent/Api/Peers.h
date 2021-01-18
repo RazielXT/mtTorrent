@@ -11,7 +11,7 @@ namespace mttApi
 		/*
 			Get list of trackers and their current state
 		*/
-		API_EXPORT std::vector<mtt::TrackerInfo> getSourcesInfo() const;
+		API_EXPORT std::vector<mtt::TrackerInfo> getSourcesInfo();
 		/*
 			Force announce tracker by its name
 		*/

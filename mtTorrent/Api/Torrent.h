@@ -61,15 +61,15 @@ namespace mttApi
 		/*
 			get files with current selection info
 		*/
-		API_EXPORT mtt::DownloadSelection getFilesSelection() const;
+		API_EXPORT std::vector<mtt::FileSelection> getFilesSelection() const;
 		/*
 			get download progress of files, sorted by order in torrent file, % (including unfinished pieces) and finished pieces
 		*/
-		API_EXPORT std::vector<std::pair<float, uint32_t>> getFilesProgress() const;
+		API_EXPORT std::vector<std::pair<float, uint32_t>> getFilesProgress();
 		/*
 			get current allocated sizes on disk in bytes, sorted by order in torrent file
 		*/
-		API_EXPORT std::vector<uint64_t> getFilesAllocatedSize() const;
+		API_EXPORT std::vector<uint64_t> getFilesAllocatedSize();
 		/*
 			select/deselect files to download, sorted by order in torrent file
 		*/
@@ -95,6 +95,10 @@ namespace mttApi
 			get name of file from torrent file
 		*/
 		API_EXPORT const std::string& name() const;
+		/*
+			get 20 byte torrent hash id
+		*/
+		API_EXPORT const uint8_t* hash() const;
 		/*
 			progress of download of all torrent files
 		*/
@@ -123,7 +127,7 @@ namespace mttApi
 		/*
 			get loaded torrent file
 		*/
-		API_EXPORT const mtt::TorrentFileInfo& getFileInfo() const;
+		API_EXPORT const mtt::TorrentFileInfo& getFileInfo();
 
 		/*
 			see Api\Peers.h
@@ -139,14 +143,18 @@ namespace mttApi
 		API_EXPORT std::shared_ptr<mttApi::MagnetDownload> getMagnetDownload();
 
 		/*
-			get pieces progress as bitfield
-			see torrent file info.expectedBitfieldSize
+			get count of all pieces
 		*/
-		API_EXPORT bool getPiecesBitfield(uint8_t* dataBitfield, size_t dataSize);
+		API_EXPORT size_t getPiecesCount() const;
+		/*
+			get pieces progress as bitfield
+			in/out dataSize is returned as current bitfield size
+		*/
+		API_EXPORT bool getPiecesBitfield(uint8_t* dataBitfield, size_t& dataSize) const;
 		/*
 			get indices of all received pieces
-			dataSize is returned as count of received pieces
+			in/out dataSize is returned as count of received pieces
 		*/
-		API_EXPORT bool getReceivedPieces(uint32_t* dataPieces, size_t& dataSize);
+		API_EXPORT bool getReceivedPieces(uint32_t* dataPieces, size_t& dataSize) const;
 	};
 }

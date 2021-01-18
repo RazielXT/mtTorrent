@@ -23,6 +23,11 @@ void mtt::TorrentState::save(const std::string& name)
 
 	writer.startMap();
 
+	writer.startMap("info");
+	writer.addRawItem("4:name", info.name);
+	writer.addRawItem("9:pieceSize", info.pieceSize);
+	writer.endMap();
+
 	writer.addRawItem("12:downloadPath", downloadPath);
 	writer.addRawItemFromBuffer("6:pieces", (const char*)pieces.data(), pieces.size());
 	writer.addRawItem("13:lastStateTime", lastStateTime);
@@ -42,11 +47,11 @@ void mtt::TorrentState::save(const std::string& name)
 	writer.endArray();
 
 	writer.startRawArrayItem("9:selection");
-	for (auto& f : files)
+	for (auto& s : selection)
 	{
 		writer.startArray();
-		writer.addNumber(f.selected);
-		writer.addNumber((size_t)f.priority);
+		writer.addNumber(s.selected);
+		writer.addNumber((size_t)s.priority);
 		writer.endArray();
 	}
 	writer.endArray();
@@ -73,6 +78,12 @@ bool mtt::TorrentState::load(const std::string& name)
 
 	if (auto root = parser.getRoot())
 	{
+		if (auto pInfo = root->getDictItem("info"))
+		{
+			info.name = pInfo->getTxt("name");
+			info.pieceSize = (uint32_t)pInfo->getInt("pieceSize");
+		}
+
 		downloadPath = root->getTxt("downloadPath");
 		lastStateTime = (int64_t)root->getBigInt("lastStateTime");
 		started = root->getInt("started");
@@ -80,8 +91,7 @@ bool mtt::TorrentState::load(const std::string& name)
 
 		if (auto pItem = root->getTxtItem("pieces"))
 		{
-			if(pieces.size() == pItem->size)
-				pieces.assign(pItem->data, pItem->data + pItem->size);
+			pieces.assign(pItem->data, pItem->data + pItem->size);
 		}
 		if (auto uList = root->getListItem("unfinished"))
 		{
@@ -105,18 +115,18 @@ bool mtt::TorrentState::load(const std::string& name)
 				}
 			}
 		}
-		if (auto fList = root->getListItem("selection"))
+		if (auto sList = root->getListItem("selection"))
 		{
-			files.clear();
-			for (auto& f : *fList)
+			selection.clear();
+			for (const auto& s : *sList)
 			{
-				if (f.isList())
+				if (s.isList())
 				{
-					auto params = f.getFirstItem();
-					files.push_back({ params->getInt() != 0, (Priority)params->getNextSibling()->getInt() });
+					auto params = s.getFirstItem();
+					selection.push_back({ params->getInt() != 0, (Priority)params->getNextSibling()->getInt() });
 				}
 				else
-					files.push_back({ false, Priority::Normal });
+					selection.push_back({ false, Priority::Normal });
 			}
 		}
 	}

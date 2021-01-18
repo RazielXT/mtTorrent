@@ -83,7 +83,7 @@ extern "C"
 			for (size_t i = 0; i < torrents.size(); i++)
 			{
 				auto t = torrents[i];
-				memcpy(resp->list[i].hash, t->getFileInfo().info.hash, 20);
+				memcpy(resp->list[i].hash, t->hash(), 20);
 				auto state = t->getState();
 				resp->list[i].active = (state != mttApi::Torrent::State::Inactive && state != mttApi::Torrent::State::Interrupted);
 			}
@@ -143,20 +143,23 @@ extern "C"
 			if (!torrent)
 				return mtt::Status::E_InvalidInput;
 			auto resp = (mtBI::TorrentInfo*) output;
-			resp->name = torrent->getFileInfo().info.name;
-			resp->fullsize = torrent->getFileInfo().info.fullSize;
-			resp->createdBy = torrent->getFileInfo().about.createdBy;
-			resp->creationDate = torrent->getFileInfo().about.creationDate;
+
+			const auto& fileInfo = torrent->getFileInfo();
+
+			resp->name = fileInfo.info.name;
+			resp->fullsize = fileInfo.info.fullSize;
+			resp->createdBy = fileInfo.about.createdBy;
+			resp->creationDate = fileInfo.about.creationDate;
 
 			auto selection = torrent->getFilesSelection();
-			resp->files.resize(selection.files.size());
+			resp->files.resize(selection.size());
 
-			for (size_t i = 0; i < selection.files.size(); i++)
+			for (size_t i = 0; i < selection.size(); i++)
 			{
-				resp->files[i].name = selection.files[i].info.path.back();
-				resp->files[i].size = selection.files[i].info.size;
-				resp->files[i].selected = selection.files[i].selected;
-				resp->files[i].priority = (uint8_t)selection.files[i].priority;
+				resp->files[i].name = fileInfo.info.files[i].path.back();
+				resp->files[i].size = fileInfo.info.files[i].size;
+				resp->files[i].selected = selection[i].selected;
+				resp->files[i].priority = (uint8_t)selection[i].priority;
 			}
 
 			resp->downloadLocation = torrent->getLocationPath();
@@ -224,13 +227,17 @@ extern "C"
 				return mtt::Status::E_InvalidInput;	
 
 			auto resp = (mtBI::PiecesInfo*) output;
-			resp->piecesCount = (uint32_t)torrent->getFileInfo().info.pieces.size();
+			resp->piecesCount = (uint32_t)torrent->getPiecesCount();
 			size_t receivedCount = 0;
 			torrent->getReceivedPieces(nullptr, receivedCount);
 			resp->receivedCount = (uint32_t)receivedCount;
 
-			resp->bitfield.resize(torrent->getFileInfo().info.expectedBitfieldSize);
-			torrent->getPiecesBitfield(resp->bitfield.data(), resp->bitfield.size());
+			size_t sz = 0;
+			if (!torrent->getPiecesBitfield(resp->bitfield.data(), sz) && sz)
+			{
+				resp->bitfield.resize(sz);
+				torrent->getPiecesBitfield(resp->bitfield.data(), sz);
+			}
 
 			if (torrent->getFileTransfer())
 			{
@@ -318,6 +325,8 @@ extern "C"
 				return mtt::Status::E_InvalidInput;
 
 			std::vector<bool> dlSelect;
+			dlSelect.reserve(selection->selection.size());
+
 			for (auto& f : selection->selection)
 			{
 				dlSelect.push_back(f.selected);

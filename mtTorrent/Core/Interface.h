@@ -48,9 +48,11 @@ namespace mtt
 		uint32_t index = {};
 	};
 
+	using DownloadSelection = std::vector<FileSelection>;
+
 	struct SelectedIntervals
 	{
-		SelectedIntervals(const mtt::DownloadSelection& selection);
+		SelectedIntervals(const mtt::TorrentInfo info, const mtt::DownloadSelection& selection);
 		bool isSelected(const mtt::File& f);
 		bool isSelected(uint32_t idx);
 
