@@ -5,7 +5,6 @@
 
 FileProgress::FileProgress(AppCore& c) : core(c)
 {
-
 }
 
 void FileProgress::update()
@@ -75,6 +74,10 @@ void FileProgress::updatePiecesChart()
 
 	if (core.IoctlFunc(mtBI::MessageId::GetPiecesInfo, &core.firstSelectedHash, &progress) == mtt::Status::Success && !progress.bitfield.empty())
 	{
+		static uint32_t lastReceivedCount = progress.receivedCount;
+		if (progress.receivedCount < lastReceivedCount)
+			lastBitfield.clear(0);
+
 		initPiecesChart();
 
 		chart->Titles[0]->Text = int(progress.receivedCount).ToString() + "/" + int(progress.piecesCount).ToString();
@@ -102,6 +105,7 @@ void FileProgress::updatePiecesChart()
 		activePieces.assign(progress.requests.data(), progress.requests.data() + progress.requests.size());
 
 		std::swap(progress.bitfield, lastBitfield);
+		lastReceivedCount = progress.receivedCount;
 	}
 	else
 		chart->Visible = false;
