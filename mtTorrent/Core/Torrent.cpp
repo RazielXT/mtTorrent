@@ -382,9 +382,11 @@ void mtt::Torrent::checkFiles()
 	if (checking)
 		return;
 
-	auto request = std::make_shared<mtt::PiecesCheck>();
-	request->piecesCount = (uint32_t)infoFile.info.pieces.size();
-	request->pieces.resize(request->piecesCount);
+	files.progress.removeReceived();
+	lastStateTime = 0;
+
+	auto request = std::make_shared<mtt::PiecesCheck>(files.progress);
+	request->piecesCount = (uint32_t)files.progress.pieces.size();
 
 	auto localOnFinish = [this, request]()
 	{
@@ -397,8 +399,7 @@ void mtt::Torrent::checkFiles()
 
 		if (!request->rejected)
 		{
-			files.progress.fromList(request->pieces);
-			files.progress.select(files.selection);
+			files.progress.select(infoFile.info, files.selection);
 			lastStateTime = files.storage.getLastModifiedTime();
 			stateChanged = true;
 

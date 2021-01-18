@@ -416,8 +416,10 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 					{
 						if (currentPieceIdx % workersCount == workerIdx)
 						{
-							_SHA1(readBuffer.data(), pieceSize, shaBuffer);
-							checkState.pieces[currentPieceIdx] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
+							_SHA1(readBuffer.data(), info.pieceSize, shaBuffer);
+
+							if (memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0)
+								checkState.progress.addPiece(currentPieceIdx);
 						}
 						
 						checkState.piecesChecked = std::max(checkState.piecesChecked, ++currentPieceIdx);
@@ -434,7 +436,9 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 						if (currentPieceIdx % workersCount == workerIdx)
 						{
 							_SHA1(readBuffer.data(), currentFile->endPiecePos, shaBuffer);
-							checkState.pieces[currentPieceIdx] = memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0;
+
+							if (memcmp(shaBuffer, piecesInfo[currentPieceIdx].hash, 20) == 0)
+								checkState.progress.addPiece(currentPieceIdx);
 						}
 
 						currentPieceIdx++;
@@ -454,8 +458,9 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 						{
 							fileIn.read((char*)readBuffer.data() + currentFile->startPiecePos, startPieceSize);
 
-							_SHA1(readBuffer.data(), pieceSize, shaBuffer);
-							checkState.pieces[currentFile->startPieceIndex] = memcmp(shaBuffer, piecesInfo[currentFile->startPieceIndex].hash, 20) == 0;
+							_SHA1(readBuffer.data(), info.pieceSize, shaBuffer);
+							if (memcmp(shaBuffer, piecesInfo[currentFile->startPieceIndex].hash, 20) == 0)
+								checkState.progress.addPiece(currentFile->startPieceIndex);
 						}
 						else
 							fileIn.seekg(startPieceSize, std::ios_base::cur);

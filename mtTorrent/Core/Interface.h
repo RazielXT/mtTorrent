@@ -17,12 +17,16 @@ namespace mtt
 	class Torrent;
 	using TorrentPtr = std::shared_ptr<Torrent>;
 
+	struct PiecesProgress;
+
 	struct PiecesCheck
 	{
+		PiecesCheck(PiecesProgress& p) : progress(p) {}
+
+		PiecesProgress& progress;
 		uint32_t piecesCount = 0;
 		uint32_t piecesChecked = 0;
 		bool rejected = false;
-		std::vector<uint8_t> pieces;
 	};
 
 	enum class PeerSource
