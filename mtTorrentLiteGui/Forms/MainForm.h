@@ -1094,7 +1094,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			title1->Position->Auto = false;
 			title1->Position->Height = 100;
 			title1->Position->X = 99;
-			title1->Text = L"10000/10000";
+			title1->Text = L"";
 			title1->TextOrientation = System::Windows::Forms::DataVisualization::Charting::TextOrientation::Horizontal;
 			this->pieceChart->Titles->Add(title1);
 			// 

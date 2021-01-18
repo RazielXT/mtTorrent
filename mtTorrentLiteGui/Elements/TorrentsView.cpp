@@ -179,7 +179,7 @@ void TorrentsView::refreshTorrentsGrid()
 
 		for (int i = 0; i < torrentGrid->Rows->Count;)
 		{
-			bool found = true;
+			bool found = false;
 			auto rowHashId = hashToInt2(torrentGrid->Rows[i]->Cells[0]->Value->ToString());
 
 			for (auto& t : torrents.list)
@@ -300,13 +300,23 @@ void TorrentsView::refreshTorrentsGrid()
 			};
 
 			int rowId = 0;
-			auto existingRowId = torrentRows.find(hashToInt(hashStr));
+			int hashId = hashToInt(hashStr);
+			auto existingRowId = torrentRows.find(hashId);
 			if (existingRowId != torrentRows.end())
+			{
 				rowId = existingRowId->second;
+				torrentGrid->Rows[rowId]->SetValues(row);
+			}
 			else
-				rowId = torrentGrid->Rows->Add();
+			{
+				torrentGrid->Rows->Insert((int)i, row);
 
-			torrentGrid->Rows[rowId]->SetValues(row);
+				for (auto& t : torrentRows)
+					if (t.second >= i)
+						torrentRows[t.first] = t.second + 1;
+
+				torrentRows[hashId] = (int)i;
+			}
 
 			if (isSelected)
 			{
