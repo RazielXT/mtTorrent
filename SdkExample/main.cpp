@@ -159,7 +159,7 @@ void example2()
 	std::vector<bool> newSelection;
 	std::vector<mtt::Priority> newPriority;
 
-	for (auto s : selection.files)
+	for (auto s : selection)
 	{
 		newSelection.push_back(!s.selected);
 		newPriority.push_back(mtt::Priority::High);
@@ -167,7 +167,7 @@ void example2()
 
 	torrent->selectFiles(newSelection);
 	torrent->setFilesPriority(newPriority);
-	torrent->setLocationPath("path\\to\\new\\download\\path");
+	torrent->setLocationPath("path\\to\\new\\download\\path", false);
 
 	if (!torrent->selectionFinished())
 		std::cout << "Selection progress: " << torrent->selectionProgress() * 100 << "%%\n";

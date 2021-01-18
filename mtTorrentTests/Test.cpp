@@ -355,7 +355,10 @@ void TorrentTest::testStorageCheck()
 	bool finished = false;
 	auto onFinish = [&](std::shared_ptr<PiecesCheck>) { finished = true; TEST_LOG("Finished"); };
 
-	mtt::PiecesCheck check;
+	PiecesProgress progress;
+	progress.init(torrent.info.pieces.size());
+
+	mtt::PiecesCheck check(progress);
 	storage.checkStoredPieces(check, torrent.info.pieces);
 }
 
@@ -363,9 +366,7 @@ void TorrentTest::testStorageLoad()
 {
 	auto torrent = parseTorrentFile("C:\\test\\wifi.torrent");
 
-	DownloadSelection selection;
-	for (auto&f : torrent.info.files)
-		selection.files.push_back({ true, Priority::Normal, f });
+	DownloadSelection selection(torrent.info.files.size(), { false, Priority::Normal });
 
 	mtt::Storage storage(torrent.info);
 	storage.setPath("C:\\test");
@@ -392,9 +393,12 @@ void TorrentTest::testStorageLoad()
 		outStorage.storePieceBlock(piece.index, 0, *piece.data);
 	}
 
-	mtt::PiecesCheck checkResults;
+	PiecesProgress progress;
+	progress.init(torrent.info.pieces.size());
+
+	mtt::PiecesCheck checkResults(progress);
 	outStorage.checkStoredPieces(checkResults, torrent.info.pieces);
-	for (auto r : checkResults.pieces)
+	for (auto r : progress.pieces)
 	{
 		if (r != 1)
 		{
@@ -436,19 +440,17 @@ void TorrentTest::testPeerListen()
 {
 	auto torrent = parseTorrentFile("D:\\wifi.torrent");
 
-	DownloadSelection selection;
-	for (auto&f : torrent.info.files)
-		selection.files.push_back({ true, Priority::Normal, f });
+	DownloadSelection selection(torrent.info.files.size(), { false, Priority::Normal });
 
 	mtt::Storage storage(torrent.info);
 	storage.setPath("D:\\test");
 	storage.preallocateSelection(selection);
 
-	mtt::PiecesCheck check;
-	storage.checkStoredPieces(check, torrent.info.pieces);
-
 	mtt::PiecesProgress progress;
-	progress.fromList(check.pieces);
+	progress.init(torrent.info.pieces.size());
+
+	mtt::PiecesCheck check(progress);
+	storage.checkStoredPieces(check, torrent.info.pieces);
 
 	ServiceThreadpool service(2);
 
@@ -631,12 +633,10 @@ void TorrentTest::bigTestGetTorrentFileByLink()
 		mtt::Storage storage(info);
 		storage.setPath("E:\\Torrent");
 
-		DownloadSelection selection;
-		for (auto&f : info.files)
-			selection.files.push_back({ false, Priority::Normal, f });
+		DownloadSelection selection(info.files.size(), { false, Priority::Normal });
 
 		PiecesProgress piecesTodo;
-		piecesTodo.select(selection);
+		piecesTodo.select(info, selection);
 
 		peers.front()->setInterested(true);
 
@@ -1215,9 +1215,9 @@ void testUtpLocalProtocol()
 	class MyTestPeerListener : public TestPeerListener
 	{
 	public:
-		MyTestPeerListener(ServiceThreadpool& pool, const char* filepath, TorrentInfo& info, uint16_t port) : torrentInfo(info)
+		MyTestPeerListener(ServiceThreadpool& pool, const char* filepath, TorrentInfo& info, uint16_t port) : torrentInfo(info), storage(info)
 		{
-			storage.init(torrentInfo, filepath);
+			storage.init(filepath);
 
 			utpMgr.start(port);
 			udpReceiver = std::make_shared<UdpAsyncReceiver>(pool.io, port, false);

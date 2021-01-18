@@ -94,7 +94,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>mtTorrent.lib;opengl32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>imgui\examples\libs\glfw\lib-vc2010-32</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\$(Platform)\$(Configuration)\;imgui\examples\libs\glfw\lib-vc2010-32</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -113,7 +113,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>mtTorrent.lib;opengl32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>imgui\examples\libs\glfw\lib-vc2010-32</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\$(Platform)\$(Configuration)\;imgui\examples\libs\glfw\lib-vc2010-32</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -147,7 +147,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>mtTorrent.lib;opengl32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>imgui\examples\libs\glfw\lib-vc2010-64</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\$(Platform)\$(Configuration)\;imgui\examples\libs\glfw\lib-vc2010-64</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
