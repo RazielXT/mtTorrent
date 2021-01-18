@@ -54,6 +54,7 @@ struct SavedWindowState
 {
 	int height;
 	int width;
+	int splitterDistance;
 };
 extern SavedWindowState getSavedWindowState();
 extern void saveWindowState(const SavedWindowState&);

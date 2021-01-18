@@ -27,6 +27,10 @@ namespace GuiLite {
 			{
 				this->ClientSize = System::Drawing::Size(lastState.width, lastState.height);
 			}
+			if (lastState.splitterDistance)
+			{
+				splitContainer1->SplitterDistance = lastState.splitterDistance;
+			}
 
 			trayIcon->Icon = Icon->ExtractAssociatedIcon(Assembly::GetExecutingAssembly()->Location);
 
@@ -146,6 +150,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			SavedWindowState state;
 			state.height = ClientSize.Height;
 			state.width = ClientSize.Width;
+			state.splitterDistance = splitContainer1->SplitterDistance;
 
 			saveWindowState(state);
 
@@ -1378,6 +1383,12 @@ private: System::Void ButtonRemove_Click(System::Object^ sender, System::EventAr
 
 private: System::Void  torrentGridView_SortCompare(System::Object^ sender, DataGridViewSortCompareEventArgs^ e)
 {
+	e->SortResult = System::String::Compare(e->CellValue1->ToString(), e->CellValue2->ToString());
+	e->Handled = true;
+
+	if (e->SortResult == 0)
+		return;
+
 	if(e->Column->Name == "UP" || e->Column->Name == "DL")
 	{
 		auto bytesID = gcnew String(e->Column->Name == "DL" ? "DlBytes" : "UpBytes");
@@ -1417,10 +1428,6 @@ private: System::Void  torrentGridView_SortCompare(System::Object^ sender, DataG
 		else
 			e->SortResult = v1 > v2 ? 1 : -1;
 	}
-	else
-		e->SortResult = System::String::Compare(e->CellValue1->ToString(), e->CellValue2->ToString());
-
-	e->Handled = true;
 }
 
 private: System::Void  peersView_SortCompare(System::Object^ sender, DataGridViewSortCompareEventArgs^ e)
