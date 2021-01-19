@@ -1196,7 +1196,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->TorrentConnected->FillWeight = 10;
 			this->TorrentConnected->HeaderText = L"Connections";
 			this->TorrentConnected->MinimumWidth = 40;
-			this->TorrentConnected->Name = L"TorrentConnected";
+			this->TorrentConnected->Name = L"Connections";
 			this->TorrentConnected->ReadOnly = true;
 			this->TorrentConnected->Width = 65;
 			// 
@@ -1207,7 +1207,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->TorrentFoundPeers->FillWeight = 5;
 			this->TorrentFoundPeers->HeaderText = L"Peers";
 			this->TorrentFoundPeers->MinimumWidth = 40;
-			this->TorrentFoundPeers->Name = L"TorrentFoundPeers";
+			this->TorrentFoundPeers->Name = L"Peers";
 			this->TorrentFoundPeers->ReadOnly = true;
 			this->TorrentFoundPeers->Width = 55;
 			// 
@@ -1402,15 +1402,15 @@ private: System::Void  torrentGridView_SortCompare(System::Object^ sender, DataG
 		float v1 = 0;
 		int i = s1->IndexOf('%');
 		if (i != -1)
-			v1 = float::Parse(s1->Substring(0, i));
+			float::TryParse(s1->Substring(0, i), v1);
 
 		auto s2 = e->CellValue2->ToString();
 		float v2 = 0;
 		i = s2->IndexOf('%');
 		if (i != -1)
-			v2 = float::Parse(s2->Substring(0, i));
+			float::TryParse(s2->Substring(0, i), v2);
 
-		if (v1 == v2 && e->CellValue1->ToString() != e->CellValue2->ToString())
+		if (v1 == v2)
 			e->SortResult = System::String::Compare(e->CellValue1->ToString(), e->CellValue2->ToString());
 		else
 			e->SortResult = v1 > v2 ? 1 : -1;
@@ -1423,10 +1423,15 @@ private: System::Void  torrentGridView_SortCompare(System::Object^ sender, DataG
 		auto s2 = e->CellValue2->ToString();
 		auto v2 = bytesToNumber(s2);
 
-		if (v1 == v2 && e->CellValue1->ToString() != e->CellValue2->ToString())
-			e->SortResult = System::String::Compare(e->CellValue1->ToString(), e->CellValue2->ToString());
-		else
-			e->SortResult = v1 > v2 ? 1 : -1;
+		e->SortResult = v1 > v2 ? 1 : -1;
+	}
+	else if(e->Column->Name == "Connections" || e->Column->Name == "Peers")
+	{
+		int v1 = 0;
+		Int32::TryParse(e->CellValue1->ToString(), v1);
+		int v2 = 0;
+		Int32::TryParse(e->CellValue2->ToString(), v2);
+		e->SortResult = v1 > v2 ? 1 : -1;
 	}
 }
 
@@ -1456,6 +1461,16 @@ private: System::Void  filesProgressGridView_SortCompare(System::Object^ sender,
 	}
 	else
 		e->SortResult = System::String::Compare(e->CellValue1->ToString(), e->CellValue2->ToString());
+
+	if (e->SortResult != 0)
+	{
+		if (e->Column->Name == "PiecesCount" || e->Column->Name == "PiecesRemaining" || e->Column->Name == "PiecesActive")
+		{
+			auto v1 = Int32::Parse(e->CellValue1->ToString());
+			auto v2 = Int32::Parse(e->CellValue2->ToString());
+			e->SortResult = v1 > v2 ? 1 : -1;
+		}
+	}
 
 	e->Handled = true;
 }
