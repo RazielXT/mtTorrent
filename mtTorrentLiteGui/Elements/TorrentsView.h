@@ -41,5 +41,11 @@ private:
 	void refreshSources();
 
 	std::map<int, int> torrentRows;
+	struct TorrentState
+	{
+		bool active = true;
+	};
+	std::map<int, TorrentState> torrentState;
+
 	bool listChanged = true;
 };

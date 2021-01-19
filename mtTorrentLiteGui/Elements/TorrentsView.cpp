@@ -207,6 +207,45 @@ void TorrentsView::refreshTorrentsGrid()
 	{
 		auto& t = torrents.list[i];
 
+		int rowId = 0;
+		auto hashStr = hexToString(t.hash, 20);
+		{
+			auto hashStr = hexToString(t.hash, 20);
+			int hashId = hashToInt(hashStr);
+
+			auto existingRowId = torrentRows.find(hashId);
+			if (existingRowId != torrentRows.end())
+			{
+				rowId = existingRowId->second;
+			}
+			else
+			{
+				rowId = (int)i;
+				torrentGrid->Rows->Insert(rowId);
+
+				for (auto& t : torrentRows)
+					if (t.second >= rowId)
+						torrentRows[t.first] = t.second + 1;
+
+				torrentRows[hashId] = rowId;
+			}
+
+			if (torrentGrid->Rows[rowId]->Selected)
+			{
+				if (t.active)
+					selectionActive = true;
+
+				if (!t.active)
+					selectionStopped = true;
+			}
+
+			//no need to update stopped info state
+			if (!t.active && !torrentState[hashId].active)
+				continue;
+
+			torrentState[hashId] = { t.active };
+		}
+
 		if (core.IoctlFunc(mtBI::MessageId::GetTorrentStateInfo, t.hash, &info) == mtt::Status::Success)
 		{
 			bool isSelected = (memcmp(t.hash, core.firstSelectedHash, 20) == 0);
@@ -286,8 +325,6 @@ void TorrentsView::refreshTorrentsGrid()
 					progress += " (" + float(info.progress).ToString("P") + ")";
 			}
 
-			auto hashStr = hexToString(t.hash, 20);
-
 			//torrent row - visual/logic data columns
 			auto row = gcnew cli::array< System::String^  >(12) {
 				gcnew System::String(hashStr.data()),
@@ -299,24 +336,7 @@ void TorrentsView::refreshTorrentsGrid()
 					formatBytes(info.downloaded), formatBytes(info.uploaded)
 			};
 
-			int rowId = 0;
-			int hashId = hashToInt(hashStr);
-			auto existingRowId = torrentRows.find(hashId);
-			if (existingRowId != torrentRows.end())
-			{
-				rowId = existingRowId->second;
-				torrentGrid->Rows[rowId]->SetValues(row);
-			}
-			else
-			{
-				torrentGrid->Rows->Insert((int)i, row);
-
-				for (auto& t : torrentRows)
-					if (t.second >= i)
-						torrentRows[t.first] = t.second + 1;
-
-				torrentRows[hashId] = (int)i;
-			}
+			torrentGrid->Rows[rowId]->SetValues(row);
 
 			if (isSelected)
 			{
@@ -324,15 +344,6 @@ void TorrentsView::refreshTorrentsGrid()
 					core.selectionChanged = true;
 
 				lastInfoIncomplete = info.utmActive;
-			}
-
-			if (torrentGrid->Rows[rowId]->Selected)
-			{
-				if (t.active || info.checking)
-					selectionActive = true;
-
-				if (!t.active)
-					selectionStopped = true;
 			}
 		}
 	}
