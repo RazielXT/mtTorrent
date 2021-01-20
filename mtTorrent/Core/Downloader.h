@@ -63,6 +63,7 @@ namespace mtt
 	class DownloaderClient
 	{
 	public:
+		virtual bool isFinished() = 0;
 		virtual bool isWantedPiece(uint32_t idx) = 0;
 		virtual void storePieceBlock(const PieceBlock& block) = 0;
 		virtual mtt::DownloadedPiece loadUnfinishedPiece(uint32_t idx, bool loadData) = 0;

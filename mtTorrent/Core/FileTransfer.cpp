@@ -315,6 +315,11 @@ void mtt::FileTransfer::disconnectPeers(const std::vector<uint32_t>& positions)
 	}
 }
 
+bool mtt::FileTransfer::isFinished()
+{
+	return torrent->checking || torrent->selectionFinished();
+}
+
 bool mtt::FileTransfer::isWantedPiece(uint32_t idx)
 {
 	return torrent->files.progress.wantedPiece(idx);
@@ -521,7 +526,7 @@ void mtt::FileTransfer::evalCurrentPeers()
 		}
 #endif
 
-		if ((uint32_t)activePeers.size() < mtt::config::getExternal().connection.maxTorrentConnections)
+		if ((uint32_t)activePeers.size() < mtt::config::getExternal().connection.maxTorrentConnections && !torrent->selectionFinished())
 		{
 			return;
 		}

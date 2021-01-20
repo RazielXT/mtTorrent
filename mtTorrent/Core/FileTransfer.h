@@ -84,6 +84,7 @@ namespace mtt
 		void disconnectPeers(const std::vector<uint32_t>& positions);
 		uint32_t peersEvalCounter = 0;
 
+		bool isFinished() override;
 		bool isWantedPiece(uint32_t idx) override;
 		void storePieceBlock(const PieceBlock& block) override;
 		void pieceFinished(const mtt::DownloadedPiece& piece) override;

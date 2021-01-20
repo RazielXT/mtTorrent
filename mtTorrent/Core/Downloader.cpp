@@ -266,6 +266,9 @@ void mtt::Downloader::refreshSelection(std::vector<uint32_t> selected)
 
 void mtt::Downloader::evaluateNextRequests(ActivePeer* peer)
 {
+	if (client.isFinished())
+		return;
+
 	if (peer->comm->state.peerChoking)
 	{
 		if (!peer->comm->info.pieces.empty() && !peer->comm->state.amInterested && hasWantedPieces(peer))
