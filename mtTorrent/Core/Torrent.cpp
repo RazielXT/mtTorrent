@@ -561,7 +561,7 @@ float mtt::Torrent::selectionProgress() const
 		}
 
 		if (files.progress.selectedPieces)
-			progress += unfinishedSize / (float)infoFile.info.pieceSize;
+			progress += unfinishedSize / (float)(infoFile.info.pieceSize * files.progress.selectedPieces);
 	}
 
 	return progress;
