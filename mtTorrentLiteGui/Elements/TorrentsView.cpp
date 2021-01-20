@@ -199,8 +199,6 @@ void TorrentsView::refreshTorrentsGrid()
 			else
 				torrentGrid->Rows->RemoveAt(i);
 		}
-
-		listChanged = false;
 	}
 
 	for (size_t i = 0; i < torrents.list.size(); i++)
@@ -240,11 +238,13 @@ void TorrentsView::refreshTorrentsGrid()
 			}
 
 			//no need to update stopped info state
-			if (!t.active && !torrentState[hashId].active)
+			if (!t.active && !torrentState[hashId].active && !listChanged)
 				continue;
 
 			torrentState[hashId] = { t.active };
 		}
+
+		listChanged = false;
 
 		if (core.IoctlFunc(mtBI::MessageId::GetTorrentStateInfo, t.hash, &info) == mtt::Status::Success)
 		{
