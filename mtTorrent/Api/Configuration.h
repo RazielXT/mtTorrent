@@ -84,6 +84,8 @@ namespace mtt
 
 			uint32_t minPieceSizeForImmediateStoring = 1024 * 1024;
 			uint32_t immediateStoringBufferSize = 5 * 1024 * 1024;
+
+			bool enablePeerDiagnostics = false;
 		};
 
 		const API_EXPORT External& getExternal();

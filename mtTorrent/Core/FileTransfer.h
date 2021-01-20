@@ -37,9 +37,7 @@ namespace mtt
 
 	private:
 
-#ifdef MTT_DIAGNOSTICS
 		Diagnostics::Storage diagnostics;
-#endif // MTT_DIAGNOSTICS
 
 #ifdef PEER_DIAGNOSTICS
 		struct LogEval

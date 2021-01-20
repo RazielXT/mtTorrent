@@ -82,9 +82,7 @@ namespace mtt
 
 		uint64_t getReceivedDataCount();
 
-#ifdef MTT_DIAGNOSTICS
 		Diagnostics::Peer diagnostics;
-#endif
 
 	protected:
 
@@ -107,6 +105,8 @@ namespace mtt
 		void resetState();
 
 		void initializeTcpStream();
+
+		bool enableDiagnostics = false;
 	};
 
 }

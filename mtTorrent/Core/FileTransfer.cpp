@@ -610,6 +610,7 @@ void mtt::FileTransfer::evalCurrentPeers()
 void mtt::FileTransfer::updateMeasures()
 {
 	std::vector<std::pair<PeerCommunication*, std::pair<uint64_t, uint64_t>>> currentMeasure;
+	bool enablePeerDiagnostics = mtt::config::getInternal().enablePeerDiagnostics;
 
 	{
 		std::lock_guard<std::mutex> guard(peersMutex);
@@ -645,15 +646,12 @@ void mtt::FileTransfer::updateMeasures()
 				for (auto& piece : freshPieces)
 					peer.comm->sendHave(piece);
 
-#ifdef MTT_DIAGNOSTICS
-			diagnostics.addPeer(peer.comm->diagnostics);
-#endif // MTT_DIAGNOSTICS
-
+			if (enablePeerDiagnostics)
+				diagnostics.addPeer(peer.comm->diagnostics);
 		}
 
-#ifdef MTT_DIAGNOSTICS
-		diagnostics.flush();
-#endif // MTT_DIAGNOSTICS
+		if (enablePeerDiagnostics)
+			diagnostics.flush();
 
 		freshPieces.clear();
 	}

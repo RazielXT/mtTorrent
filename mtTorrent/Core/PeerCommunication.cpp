@@ -7,15 +7,9 @@
 #define BT_LOG(x) WRITE_LOG(LogTypeBt, "(" << getAddressName() << ") " << x)
 #define LOG_MGS(x) BT_LOG(x)//{std::stringstream ss; ss << x; LogMsg(ss);}
 
-#ifdef MTT_DIAGNOSTICS
-#define DIAGNOSTICS(type, a) { diagnostics.addSnapshotEvent({Diagnostics::PeerEventType::##type, (uint32_t)a}); }
-#define DIAGNOSTICS_3(type, a, b) { diagnostics.addSnapshotEvent({Diagnostics::PeerEventType::##type, (uint32_t)a, (uint32_t)b}); }
-#define DIAGNOSTICS_4(type, a, b, c) { diagnostics.addSnapshotEvent({Diagnostics::PeerEventType::##type, (uint32_t)a, (uint32_t)b, (uint32_t)c}); }
-#else
-#define DIAGNOSTICS(x, a) {}
-#define DIAGNOSTICS_3(type, a, b) {}
-#define DIAGNOSTICS_4(type, a, b, c) {}
-#endif // MTT_DIAGNOSTICS
+#define DIAGNOSTICS(type, a) { if (enableDiagnostics) diagnostics.addSnapshotEvent({Diagnostics::PeerEventType::##type, (uint32_t)a}); }
+#define DIAGNOSTICS_3(type, a, b) { if (enableDiagnostics) diagnostics.addSnapshotEvent({Diagnostics::PeerEventType::##type, (uint32_t)a, (uint32_t)b}); }
+#define DIAGNOSTICS_4(type, a, b, c) { if (enableDiagnostics) diagnostics.addSnapshotEvent({Diagnostics::PeerEventType::##type, (uint32_t)a, (uint32_t)b, (uint32_t)c}); }
 
 using namespace mtt;
 
@@ -142,10 +136,9 @@ size_t mtt::PeerCommunication::fromStream(std::shared_ptr<TcpAsyncStream> s, con
 	initializeTcpStream();
 	initializeCallbacks();
 
-#ifdef MTT_DIAGNOSTICS
+	enableDiagnostics = mtt::config::getInternal().enablePeerDiagnostics;
 	diagnostics.snapshot.name = getAddressName();
 	DIAGNOSTICS(RemoteConnected, state.action);
-#endif
 
 	return dataReceived(streamData);
 }
@@ -194,10 +187,9 @@ void mtt::PeerCommunication::initializeTcpStream()
 
 void PeerCommunication::sendHandshake(const Addr& address)
 {
-#ifdef MTT_DIAGNOSTICS
+	enableDiagnostics = mtt::config::getInternal().enablePeerDiagnostics;
 	diagnostics.snapshot.name = address.toString();
 	DIAGNOSTICS(Connect, state.action);
-#endif
 
 	if (state.action != PeerCommunicationState::Disconnected)
 		resetState();
