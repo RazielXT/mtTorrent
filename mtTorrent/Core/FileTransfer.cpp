@@ -79,7 +79,13 @@ void mtt::FileTransfer::stop()
 
 void mtt::FileTransfer::addUnfinishedPieces(std::vector<mtt::DownloadedPieceState>& pieces)
 {
-	unFinishedPieces = std::move(pieces);
+	unFinishedPieces.reserve(pieces.size());
+
+	for (auto& p : pieces)
+	{
+		if (!torrent->files.progress.hasPiece(p.index))
+			unFinishedPieces.emplace_back(std::move(p));
+	}
 }
 
 void mtt::FileTransfer::clearUnfinishedPieces()
@@ -375,7 +381,7 @@ mtt::Status mtt::FileTransfer::saveUnsavedPieceBlocks(const std::vector<std::pai
 	blockRequests.reserve(blocks.size());
 
 	for (auto& [info, buffer] : blocks)
-		blockRequests.push_back({info.index, info.begin, buffer.get()});
+		blockRequests.push_back({ info.index, info.begin, buffer.get() });
 
 	Status status = torrent->files.storage.storePieceBlocks(std::move(blockRequests));
 
