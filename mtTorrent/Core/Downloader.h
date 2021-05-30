@@ -9,7 +9,7 @@ namespace mtt
 		std::shared_ptr<DataBuffer> data;
 
 		void init(uint32_t idx, uint32_t pieceSize, uint32_t blocksCount);
-		void addBlock(const PieceBlock& block);
+		bool addBlock(const PieceBlock& block);
 		bool isValid(const uint8_t* expectedHash);
 	};
 
@@ -124,6 +124,8 @@ namespace mtt
 		void sendPieceRequests(ActivePeer*);
 		uint32_t sendPieceRequests(ActivePeer*,ActivePeer::RequestedPiece*, RequestInfo*, uint32_t max);
 		bool hasWantedPieces(ActivePeer*);
+
+		uint64_t duplicatedDataSum = 0;
 
 		const TorrentInfo& torrentInfo;
 		DownloaderClient& client;

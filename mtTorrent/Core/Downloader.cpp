@@ -116,7 +116,11 @@ void mtt::Downloader::pieceBlockReceived(PieceBlock& block, PeerCommunication* s
 				if (r.piece.blocksState.empty())
 					r.piece.init(r.pieceIdx, immediateMode ? 0 : torrentInfo.getPieceSize(r.pieceIdx), r.blocksCount);
 
-				r.piece.addBlock(block);
+				if (!r.piece.addBlock(block))
+				{
+					duplicatedDataSum += block.info.length;
+					break;
+				}
 
 				if (immediateMode)
 					client.storePieceBlock(block);
@@ -128,11 +132,16 @@ void mtt::Downloader::pieceBlockReceived(PieceBlock& block, PeerCommunication* s
 					if (!immediateMode)
 						valid = r.piece.isValid(torrentInfo.pieces[r.pieceIdx].hash);
 
+					if (!client.isWantedPiece(r.pieceIdx))
+						duplicatedDataSum += r.piece.downloadedSize;
+
 					if (valid)
 					{
 						DL_LOG("Request finished, piece " << block.info.index);
 						client.pieceFinished(std::move(r.piece));
 					}
+					else
+						duplicatedDataSum += r.piece.downloadedSize;
 
 					requests.erase(it);
 				}
@@ -469,7 +478,7 @@ void mtt::DownloadedPiece::init(uint32_t idx, uint32_t pieceSize, uint32_t block
 	index = idx;
 }
 
-void mtt::DownloadedPiece::addBlock(const mtt::PieceBlock& block)
+bool mtt::DownloadedPiece::addBlock(const mtt::PieceBlock& block)
 {
 	auto blockIdx = (block.info.begin + 1) / BlockRequestMaxSize;
 
@@ -481,5 +490,9 @@ void mtt::DownloadedPiece::addBlock(const mtt::PieceBlock& block)
 		blocksState[blockIdx] = 1;
 		remainingBlocks--;
 		downloadedSize += block.info.length;
+
+		return true;
 	}
+
+	return false;
 }
