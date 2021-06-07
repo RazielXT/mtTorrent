@@ -9,6 +9,9 @@ AppCore core;
 [STAThread]
 void FormsMain(cli::array<System::String ^>^ args)
 {
+	if (Environment::OSVersion->Version->Major >= 6)
+		SetProcessDPIAware();
+
 	Application::EnableVisualStyles();
 	Application::SetCompatibleTextRenderingDefault(false);
 

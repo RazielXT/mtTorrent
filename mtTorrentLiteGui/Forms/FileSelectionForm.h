@@ -27,8 +27,14 @@ namespace GuiLite {
 			fillFilesSelectionForm();
 			initialized = true;
 		}
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Id;
+	public:
+	private: System::Windows::Forms::DataGridViewCheckBoxColumn^ Selected;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ NameColumn;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Size;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Priority;
 
-		bool initialized = false;
+	public:	bool initialized = false;
 
 		void validate()
 		{
@@ -56,11 +62,11 @@ namespace GuiLite {
 	public: System::Windows::Forms::CheckBox^ checkBoxStart;
 	private: System::Windows::Forms::TextBox^ searchTextBox;
 	private: System::Windows::Forms::Label^ label2;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Id;
-	private: System::Windows::Forms::DataGridViewCheckBoxColumn^ Selected;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ NameColumn;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Size;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Priority;
+
+
+
+
+
 	private: System::Windows::Forms::Panel^ panel2;
 
 	public:  static FileSelectionForm^ instance;
@@ -122,9 +128,10 @@ namespace GuiLite {
 			// cancelButton
 			// 
 			this->cancelButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-			this->cancelButton->Location = System::Drawing::Point(801, 134);
+			this->cancelButton->Location = System::Drawing::Point(901, 168);
+			this->cancelButton->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->cancelButton->Name = L"cancelButton";
-			this->cancelButton->Size = System::Drawing::Size(103, 30);
+			this->cancelButton->Size = System::Drawing::Size(116, 38);
 			this->cancelButton->TabIndex = 1;
 			this->cancelButton->Text = L"Cancel";
 			this->cancelButton->UseVisualStyleBackColor = true;
@@ -133,9 +140,10 @@ namespace GuiLite {
 			// okButton
 			// 
 			this->okButton->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-			this->okButton->Location = System::Drawing::Point(692, 134);
+			this->okButton->Location = System::Drawing::Point(778, 168);
+			this->okButton->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->okButton->Name = L"okButton";
-			this->okButton->Size = System::Drawing::Size(103, 30);
+			this->okButton->Size = System::Drawing::Size(116, 38);
 			this->okButton->TabIndex = 2;
 			this->okButton->Text = L"OK";
 			this->okButton->UseVisualStyleBackColor = true;
@@ -149,9 +157,10 @@ namespace GuiLite {
 			this->panel1->AutoScroll = true;
 			this->panel1->AutoSize = true;
 			this->panel1->Controls->Add(this->filesGridView);
-			this->panel1->Location = System::Drawing::Point(9, 13);
+			this->panel1->Location = System::Drawing::Point(10, 16);
+			this->panel1->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->panel1->Name = L"panel1";
-			this->panel1->Size = System::Drawing::Size(907, 434);
+			this->panel1->Size = System::Drawing::Size(1020, 542);
 			this->panel1->TabIndex = 3;
 			// 
 			// filesGridView
@@ -166,12 +175,13 @@ namespace GuiLite {
 			});
 			this->filesGridView->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->filesGridView->Location = System::Drawing::Point(0, 0);
+			this->filesGridView->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->filesGridView->Name = L"filesGridView";
 			this->filesGridView->RowHeadersVisible = false;
 			this->filesGridView->RowHeadersWidth = 51;
-			this->filesGridView->RowTemplate->Height = 24;
+			this->filesGridView->RowTemplate->Height = 30;
 			this->filesGridView->SelectionMode = System::Windows::Forms::DataGridViewSelectionMode::FullRowSelect;
-			this->filesGridView->Size = System::Drawing::Size(907, 434);
+			this->filesGridView->Size = System::Drawing::Size(1020, 542);
 			this->filesGridView->TabIndex = 0;
 			this->filesGridView->CellContentClick += gcnew System::Windows::Forms::DataGridViewCellEventHandler(this, &FileSelectionForm::FilesGridView_CellContentClick);
 			this->filesGridView->CellContentDoubleClick += gcnew System::Windows::Forms::DataGridViewCellEventHandler(this, &FileSelectionForm::FilesGridView_CellContentClick);
@@ -189,7 +199,7 @@ namespace GuiLite {
 			// Selected
 			// 
 			this->Selected->HeaderText = L"";
-			this->Selected->MinimumWidth = 6;
+			this->Selected->MinimumWidth = 50;
 			this->Selected->Name = L"Selected";
 			this->Selected->SortMode = System::Windows::Forms::DataGridViewColumnSortMode::Automatic;
 			this->Selected->Width = 50;
@@ -223,16 +233,17 @@ namespace GuiLite {
 			// infoLabel
 			// 
 			this->infoLabel->AutoSize = true;
-			this->infoLabel->Location = System::Drawing::Point(19, 45);
+			this->infoLabel->Location = System::Drawing::Point(21, 56);
 			this->infoLabel->Name = L"infoLabel";
-			this->infoLabel->Size = System::Drawing::Size(0, 17);
+			this->infoLabel->Size = System::Drawing::Size(0, 20);
 			this->infoLabel->TabIndex = 4;
 			// 
 			// selectAllButton
 			// 
-			this->selectAllButton->Location = System::Drawing::Point(11, 10);
+			this->selectAllButton->Location = System::Drawing::Point(12, 12);
+			this->selectAllButton->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->selectAllButton->Name = L"selectAllButton";
-			this->selectAllButton->Size = System::Drawing::Size(103, 25);
+			this->selectAllButton->Size = System::Drawing::Size(116, 31);
 			this->selectAllButton->TabIndex = 6;
 			this->selectAllButton->Text = L"Select All";
 			this->selectAllButton->UseVisualStyleBackColor = true;
@@ -240,9 +251,10 @@ namespace GuiLite {
 			// 
 			// deselectAllButton
 			// 
-			this->deselectAllButton->Location = System::Drawing::Point(120, 10);
+			this->deselectAllButton->Location = System::Drawing::Point(135, 12);
+			this->deselectAllButton->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->deselectAllButton->Name = L"deselectAllButton";
-			this->deselectAllButton->Size = System::Drawing::Size(103, 25);
+			this->deselectAllButton->Size = System::Drawing::Size(116, 31);
 			this->deselectAllButton->TabIndex = 5;
 			this->deselectAllButton->Text = L"Deselect All";
 			this->deselectAllButton->UseVisualStyleBackColor = true;
@@ -253,17 +265,18 @@ namespace GuiLite {
 			this->label1->AutoSize = true;
 			this->label1->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(134)));
-			this->label1->Location = System::Drawing::Point(19, 79);
+			this->label1->Location = System::Drawing::Point(21, 99);
 			this->label1->Name = L"label1";
-			this->label1->Size = System::Drawing::Size(75, 17);
+			this->label1->Size = System::Drawing::Size(83, 20);
 			this->label1->TabIndex = 7;
 			this->label1->Text = L"Location:";
 			// 
 			// buttonBrowse
 			// 
-			this->buttonBrowse->Location = System::Drawing::Point(11, 99);
+			this->buttonBrowse->Location = System::Drawing::Point(12, 124);
+			this->buttonBrowse->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->buttonBrowse->Name = L"buttonBrowse";
-			this->buttonBrowse->Size = System::Drawing::Size(81, 30);
+			this->buttonBrowse->Size = System::Drawing::Size(91, 38);
 			this->buttonBrowse->TabIndex = 9;
 			this->buttonBrowse->Text = L"Browse..";
 			this->buttonBrowse->UseVisualStyleBackColor = true;
@@ -273,18 +286,19 @@ namespace GuiLite {
 			// 
 			this->labelError->AutoSize = true;
 			this->labelError->ForeColor = System::Drawing::Color::Red;
-			this->labelError->Location = System::Drawing::Point(100, 79);
+			this->labelError->Location = System::Drawing::Point(112, 99);
 			this->labelError->Name = L"labelError";
-			this->labelError->Size = System::Drawing::Size(39, 17);
+			this->labelError->Size = System::Drawing::Size(42, 20);
 			this->labelError->TabIndex = 10;
 			this->labelError->Text = L"error";
 			// 
 			// textBoxPath
 			// 
-			this->textBoxPath->Location = System::Drawing::Point(98, 100);
+			this->textBoxPath->Location = System::Drawing::Point(110, 125);
+			this->textBoxPath->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->textBoxPath->Name = L"textBoxPath";
 			this->textBoxPath->ReadOnly = true;
-			this->textBoxPath->Size = System::Drawing::Size(739, 22);
+			this->textBoxPath->Size = System::Drawing::Size(831, 26);
 			this->textBoxPath->TabIndex = 11;
 			this->textBoxPath->Text = L"path";
 			// 
@@ -293,9 +307,10 @@ namespace GuiLite {
 			this->checkBoxStart->AutoSize = true;
 			this->checkBoxStart->Checked = true;
 			this->checkBoxStart->CheckState = System::Windows::Forms::CheckState::Checked;
-			this->checkBoxStart->Location = System::Drawing::Point(13, 140);
+			this->checkBoxStart->Location = System::Drawing::Point(15, 175);
+			this->checkBoxStart->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->checkBoxStart->Name = L"checkBoxStart";
-			this->checkBoxStart->Size = System::Drawing::Size(60, 21);
+			this->checkBoxStart->Size = System::Drawing::Size(70, 24);
 			this->checkBoxStart->TabIndex = 12;
 			this->checkBoxStart->Text = L"Start";
 			this->checkBoxStart->UseVisualStyleBackColor = true;
@@ -303,9 +318,10 @@ namespace GuiLite {
 			// searchTextBox
 			// 
 			this->searchTextBox->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
-			this->searchTextBox->Location = System::Drawing::Point(742, 11);
+			this->searchTextBox->Location = System::Drawing::Point(835, 14);
+			this->searchTextBox->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->searchTextBox->Name = L"searchTextBox";
-			this->searchTextBox->Size = System::Drawing::Size(162, 22);
+			this->searchTextBox->Size = System::Drawing::Size(182, 26);
 			this->searchTextBox->TabIndex = 13;
 			this->searchTextBox->TextChanged += gcnew System::EventHandler(this, &FileSelectionForm::searchTextBox_TextChanged);
 			// 
@@ -313,9 +329,9 @@ namespace GuiLite {
 			// 
 			this->label2->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Right));
 			this->label2->AutoSize = true;
-			this->label2->Location = System::Drawing::Point(687, 14);
+			this->label2->Location = System::Drawing::Point(773, 18);
 			this->label2->Name = L"label2";
-			this->label2->Size = System::Drawing::Size(53, 17);
+			this->label2->Size = System::Drawing::Size(60, 20);
 			this->label2->TabIndex = 14;
 			this->label2->Text = L"Search";
 			// 
@@ -335,18 +351,20 @@ namespace GuiLite {
 			this->panel2->Controls->Add(this->buttonBrowse);
 			this->panel2->Controls->Add(this->selectAllButton);
 			this->panel2->Controls->Add(this->label1);
-			this->panel2->Location = System::Drawing::Point(9, 453);
+			this->panel2->Location = System::Drawing::Point(10, 566);
+			this->panel2->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->panel2->Name = L"panel2";
-			this->panel2->Size = System::Drawing::Size(907, 169);
+			this->panel2->Size = System::Drawing::Size(1020, 211);
 			this->panel2->TabIndex = 15;
 			// 
 			// FileSelectionForm
 			// 
-			this->AutoScaleDimensions = System::Drawing::SizeF(8, 16);
+			this->AutoScaleDimensions = System::Drawing::SizeF(9, 20);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(924, 624);
+			this->ClientSize = System::Drawing::Size(1040, 780);
 			this->Controls->Add(this->panel2);
 			this->Controls->Add(this->panel1);
+			this->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->MinimizeBox = false;
 			this->Name = L"FileSelectionForm";
 			this->ShowIcon = false;
