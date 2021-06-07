@@ -7,6 +7,10 @@
 #include <fstream>
 #include <iostream>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif // _WIN32
+
 mtt::Storage::Storage(const TorrentInfo& i) : info(i)
 {
 	init(std::string(".") + pathSeparator);
@@ -322,7 +326,14 @@ mtt::Status mtt::Storage::storePieceBlocks(const File& file, const std::vector<P
 	std::ofstream fileOut(path, std::ios_base::binary | std::ios_base::in);
 
 	if (!fileOut)
+	{
+#ifdef _WIN32
+		if (GetLastError() == ERROR_SHARING_VIOLATION)
+			return Status::E_FileLockedError;
+#endif // _WIN32
+
 		return Status::E_FileWriteError;
+	}
 
 	fileOut.seekp(0, std::ios_base::end);
 	auto existingSize = fileOut.tellp();

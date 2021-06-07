@@ -22,6 +22,7 @@ namespace mtt
 		E_NoData,
 		E_FileReadError,
 		E_FileWriteError,
+		E_FileLockedError,
 		E_NotEmpty,
 
 		E_NetworkError = 2000,

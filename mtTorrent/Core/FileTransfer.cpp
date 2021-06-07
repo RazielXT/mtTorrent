@@ -347,7 +347,13 @@ void mtt::FileTransfer::storePieceBlock(const PieceBlock& block)
 
 		torrent->service.io.post([this, blocks]()
 			{
-				auto status = saveUnsavedPieceBlocks(blocks);
+				mtt::Status status;
+				int retry = 0;
+				while ((status = saveUnsavedPieceBlocks(blocks)) == mtt::Status::E_FileLockedError && retry < 5)
+				{
+					std::this_thread::sleep_for(retry == 0 ? std::chrono::milliseconds(100) : std::chrono::seconds(1));
+					retry++;
+				}
 
 				if (status != Status::Success)
 				{
