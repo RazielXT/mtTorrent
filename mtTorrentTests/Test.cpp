@@ -376,21 +376,18 @@ void TorrentTest::testStorageLoad()
 	outStorage.setPath("C:\\test\\out");
 	outStorage.preallocateSelection(selection);
 
-	mtt::DownloadedPiece piece;
 	DataBuffer buffer;
 
 	for (uint32_t i = 0; i < torrent.info.pieces.size(); i++)
 	{
 		auto blocksInfo = torrent.info.makePieceBlocksInfo(i);
-		piece.init(i, torrent.info.pieceSize, (uint32_t)blocksInfo.size());
 
 		for (auto& blockInfo : blocksInfo)
 		{		
-			storage.loadPieceBlock(blockInfo, buffer);		
-			memcpy(piece.data->data() + blockInfo.begin, buffer.data(), buffer.size());
+			storage.loadPieceBlock(blockInfo, buffer);
 		}
 
-		outStorage.storePieceBlock(piece.index, 0, *piece.data);
+		outStorage.storePieceBlocks({{ i, 0, &buffer }});
 	}
 
 	PiecesProgress progress;
@@ -420,20 +417,20 @@ void TorrentTest::testDumpStoredPiece()
 	//DataBuffer mockData(20, 1);
 	//storage.storePieceBlock(pieceIdx, blocksInfo[1521].begin, mockData);
 
-	mtt::DownloadedPiece piece;
-	piece.init(pieceIdx, torrent.info.pieceSize, (uint32_t)blocksInfo.size());
+	DataBuffer pieceData;
+	pieceData.resize(torrent.info.pieceSize);
 
 	DataBuffer buffer;
 	for (auto& blockInfo : blocksInfo)
 	{
 		auto status = storage.loadPieceBlock(blockInfo, buffer);
-		memcpy(piece.data->data() + blockInfo.begin, buffer.data(), buffer.size());
+		memcpy(pieceData.data() + blockInfo.begin, buffer.data(), buffer.size());
 
 		if (status != Status::Success)
 			std::cout << blockInfo.begin << ": Problem " << (int)status << std::endl;
 	}
 
-	std::cout << "Piece: " << (piece.isValid(torrent.info.pieces[pieceIdx].hash) ? "Valid" : "Not valid") << std::endl;
+	std::cout << "Piece: " << (mtt::DownloadedPiece::isValid(pieceData, torrent.info.pieces[pieceIdx].hash) ? "Valid" : "Not valid") << std::endl;
 }
 
 void TorrentTest::testPeerListen()
@@ -641,6 +638,7 @@ void TorrentTest::bigTestGetTorrentFileByLink()
 		peers.front()->setInterested(true);
 
 		DownloadedPiece pieceTodo;
+		DataBuffer blockBuffer;
 		std::mutex pieceMtx;
 		bool finished = false;
 		uint32_t finishedPieces = 0;
@@ -649,11 +647,12 @@ void TorrentTest::bigTestGetTorrentFileByLink()
 			std::lock_guard<std::mutex> guard(pieceMtx);
 			if (msg.id == Piece)
 			{
+				blockBuffer.assign(msg.piece.buffer.data, msg.piece.buffer.data + msg.piece.buffer.size);
+				storage.storePieceBlocks({ { msg.piece.info.index, msg.piece.info.begin, &blockBuffer } });
 				pieceTodo.addBlock(msg.piece);
 
 				if (pieceTodo.remainingBlocks == 0)
 				{
-					storage.storePieceBlock(pieceTodo.index, 0, *pieceTodo.data);
 					piecesTodo.addPiece(pieceTodo.index);
 					finished = true;
 					finishedPieces++;
@@ -669,7 +668,7 @@ void TorrentTest::bigTestGetTorrentFileByLink()
 			TEST_LOG("Requesting idx " << p);
 
 			finished = false;
-			pieceTodo.init(p, info.getPieceSize(p), info.getPieceBlocksCount(p));
+			pieceTodo.init(p, info.getPieceBlocksCount(p));
 
 			for (auto& b : blocks)
 			{
@@ -1035,7 +1034,7 @@ void testSerializedCommunication(TorrentInfo& torrentInfo)
 		else if (!msg.messageSize)
 			bufferPos = receiveBuffer.size();
 
-		return std::move(msg);
+		return msg;
 	};
 
 	auto message = readNextMessage();
@@ -1056,8 +1055,7 @@ void testSerializedCommunication(TorrentInfo& torrentInfo)
 			auto idx = message.piece.info.index;
 			if (pieces.find(idx) == pieces.end())
 			{
-				uint32_t blocksCount = torrentInfo.getPieceBlocksCount(idx);
-				pieces[idx].init(idx, torrentInfo.getPieceSize(idx), blocksCount);
+				pieces[idx].init(idx, torrentInfo.getPieceBlocksCount(idx););
 			}
 
 			auto pieceIt = pieces.find(idx);
