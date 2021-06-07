@@ -33,7 +33,7 @@ namespace mtt
 		enum class StopReason { Deinit, Manual, Internal };
 		void stop(StopReason reason = StopReason::Manual);
 
-		void checkFiles();
+		void checkFiles(bool all = false);
 		float checkingProgress() const;
 
 		bool selectFiles(const std::vector<bool>&);
@@ -78,7 +78,7 @@ namespace mtt
 		std::shared_ptr<mtt::PiecesCheck> checkState;
 
 		void refreshLastState();
-		uint64_t lastStateTime = 0;
+		int64_t lastStateTime = 0;
 
 		bool stateChanged = false;
 		void initialize();

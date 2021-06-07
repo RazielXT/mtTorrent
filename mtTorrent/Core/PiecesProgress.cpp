@@ -68,14 +68,16 @@ void mtt::PiecesProgress::resize(size_t size)
 	}
 }
 
-void mtt::PiecesProgress::removeReceived()
+void mtt::PiecesProgress::removeReceived(const std::vector<bool>& where)
 {
-	receivedPiecesCount = 0;
-	selectedReceivedPiecesCount = 0;
-
-	for (auto& p : pieces)
+	for (size_t i = 0; i < pieces.size(); i++)
 	{
-		p &= ~HasFlag;
+		if (where[i] && pieces[i] & HasFlag)
+		{
+			receivedPiecesCount--;
+			selectedReceivedPiecesCount--;
+			pieces[i] &= ~HasFlag;
+		}
 	}
 }
 

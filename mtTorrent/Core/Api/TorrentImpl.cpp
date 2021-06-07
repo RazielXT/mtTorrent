@@ -35,7 +35,7 @@ float mttApi::Torrent::checkingProgress() const
 
 void mttApi::Torrent::checkFiles()
 {
-	static_cast<mtt::Torrent*>(this)->checkFiles();
+	static_cast<mtt::Torrent*>(this)->checkFiles(true);
 }
 
 bool mttApi::Torrent::selectFiles(const std::vector<bool>& s)

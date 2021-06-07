@@ -26,15 +26,15 @@ namespace mtt
 		};
 		Status storePieceBlocks(std::vector<PieceBlockRequest> blocks);
 
-		Status storePieceBlock(uint32_t index, uint32_t offset, const DataBuffer& buffer);
 		Status loadPieceBlock(const PieceBlockInfo& block, DataBuffer& buffer);
 
 		Status preallocateSelection(const DownloadSelection& files);
 		std::vector<uint64_t> getAllocatedSize() const;
-		void checkStoredPieces(PiecesCheck& checkState, const std::vector<PieceInfo>& piecesInfo, uint32_t workersCount = 1, uint32_t workerIdx = 0);
+		void checkStoredPieces(PiecesCheck& checkState, const std::vector<PieceInfo>& piecesInfo, uint32_t workersCount, uint32_t workerIdx, const std::vector<bool>& wantedChecks);
 
 		Status deleteAll();
 		int64_t getLastModifiedTime();
+		int64_t getLastModifiedTime(size_t fileIdx);
 
 	private:
 

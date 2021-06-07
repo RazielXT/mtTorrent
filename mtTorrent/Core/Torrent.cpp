@@ -205,17 +205,30 @@ void mtt::Torrent::refreshLastState()
 {
 	if (!checking)
 	{
-		auto filesTime = files.storage.getLastModifiedTime();
+		bool needRecheck = false;
+		int64_t filesTime = 0;
 
-		if (filesTime != lastStateTime)
+		const auto& tfiles = infoFile.info.files;
+		for (size_t i = 0; i < tfiles.size(); i++)
+		{
+			auto fileTime = files.storage.getLastModifiedTime(i);
+
+			if (filesTime < fileTime)
+				filesTime = fileTime;
+
+			bool checkFile = !lastStateTime;
+			if (!fileTime && files.progress.hasPiece(tfiles[i].startPieceIndex))
+				needRecheck = true;
+		}
+
+		if (filesTime != lastStateTime || needRecheck)
 		{
 			fileTransfer->clearUnfinishedPieces();
-			files.progress.removeReceived();
 
 			if (filesTime == 0)
 				lastStateTime = 0;
-			else
-				checkFiles();
+
+			checkFiles();
 		}
 	}
 }
@@ -316,7 +329,7 @@ mtt::Status mtt::Torrent::start()
 		return lastError;
 	}
 
-	service.start(4);
+	service.start(5);
 
 	state = ActiveState::Started;
 	stateChanged = true;
@@ -377,16 +390,40 @@ void mtt::Torrent::stop(StopReason reason)
 	stopping = false;
 }
 
-void mtt::Torrent::checkFiles()
+void mtt::Torrent::checkFiles(bool all)
 {
 	if (checking)
 		return;
 
-	files.progress.removeReceived();
-	lastStateTime = 0;
+	if (all)
+	{
+		lastStateTime = 0;
+	}
 
 	auto request = std::make_shared<mtt::PiecesCheck>(files.progress);
 	request->piecesCount = (uint32_t)files.progress.pieces.size();
+
+	std::vector<bool> wantedChecks(infoFile.info.pieces.size());
+	const auto& tfiles = infoFile.info.files;
+	for (size_t i = 0; i < tfiles.size(); i++)
+	{
+		bool checkFile = !lastStateTime;
+		if (!checkFile)
+		{
+			auto fileTime = files.storage.getLastModifiedTime(i);
+
+			if (lastStateTime < fileTime || (!fileTime && files.progress.selectedPiece(tfiles[i].startPieceIndex)))
+				checkFile = true;
+		}
+
+		if (checkFile)
+		{
+			for (uint32_t p = tfiles[i].startPieceIndex; p <= tfiles[i].endPieceIndex; p++)
+				wantedChecks[p] = true;
+		}
+	}
+
+	files.progress.removeReceived(wantedChecks);
 
 	auto localOnFinish = [this, request]()
 	{
@@ -421,9 +458,9 @@ void mtt::Torrent::checkFiles()
 	auto finished = std::make_shared<uint32_t>(0);
 
 	for (uint32_t i = 0; i < WorkersCount; i++)
-		service.io.post([WorkersCount, i, finished, localOnFinish, request, this]()
+		service.io.post([WorkersCount, i, finished, localOnFinish, request, wantedChecks, this]()
 			{
-				files.storage.checkStoredPieces(*request.get(), infoFile.info.pieces, WorkersCount, i);
+				files.storage.checkStoredPieces(*request.get(), infoFile.info.pieces, WorkersCount, i, wantedChecks);
 
 				if (++(*finished) == WorkersCount)
 					localOnFinish();
@@ -539,6 +576,9 @@ float mtt::Torrent::progress() const
 		progress += unfinishedPieces / files.progress.pieces.size();
 	}
 
+	if (progress > 1.0f)
+		progress = 1.0f;
+
 	return progress;
 }
 
@@ -549,7 +589,7 @@ float mtt::Torrent::selectionProgress() const
 
 	float progress = files.progress.getSelectedPercentage();
 
-	if (fileTransfer)
+	if (fileTransfer && infoFile.info.pieceSize)
 	{
 		auto unfinishedPieces = fileTransfer->getUnfinishedPiecesDownloadSizeMap();
 
@@ -563,6 +603,9 @@ float mtt::Torrent::selectionProgress() const
 		if (files.progress.selectedPieces)
 			progress += unfinishedSize / (float)(infoFile.info.pieceSize * files.progress.selectedPieces);
 	}
+
+	if (progress > 1.0f)
+		progress = 1.0f;
 
 	return progress;
 }
@@ -599,7 +642,7 @@ mtt::Status mtt::Torrent::setLocationPath(const std::string& path, bool moveFile
 	auto status = files.storage.setPath(path, moveFiles);
 
 	if (!moveFiles)
-		checkFiles();
+		checkFiles(true);
 
 	return status;
 }

@@ -9,7 +9,7 @@ namespace mtt
 		void calculatePieces();
 		void init(size_t size);
 		void resize(size_t size);
-		void removeReceived();
+		void removeReceived(const std::vector<bool>&);
 
 		void select(const File& info, bool selected);
 		void select(const TorrentInfo& info, const DownloadSelection& selection);

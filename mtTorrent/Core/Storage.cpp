@@ -108,14 +108,6 @@ mtt::Status mtt::Storage::storePieceBlocks(std::vector<PieceBlockRequest> blocks
 	return status;
 }
 
-mtt::Status mtt::Storage::storePieceBlock(uint32_t index, uint32_t offset, const DataBuffer& buffer)
-{
-	std::vector<PieceBlockRequest> blockVec;
-	blockVec.push_back({ index, offset, &buffer });
-
-	return storePieceBlocks(std::move(blockVec));
-}
-
 mtt::Status mtt::Storage::loadPieceBlock(const PieceBlockInfo& block, DataBuffer& buffer)
 {
 	Status status = Status::Success;
@@ -200,7 +192,7 @@ std::vector<uint64_t> mtt::Storage::getAllocatedSize() const
 			sizes.push_back(0);
 	}
 
-	return std::move(sizes);
+	return sizes;
 }
 
 mtt::Status mtt::Storage::deleteAll()
@@ -252,6 +244,12 @@ int64_t mtt::Storage::getLastModifiedTime()
 	return time;
 }
 
+int64_t mtt::Storage::getLastModifiedTime(size_t fileIdx)
+{
+	auto path = getFullpath(info.files[fileIdx]);
+	return getWriteTime(path);
+}
+
 mtt::Storage::FileBlockPosition mtt::Storage::getFileBlockPosition(const File& file, uint32_t index, uint32_t offset, uint32_t size)
 {
 	FileBlockPosition blockInfo;
@@ -274,7 +272,8 @@ mtt::Storage::FileBlockPosition mtt::Storage::getFileBlockPosition(const File& f
 	}
 	else
 	{
-		blockInfo.fileDataPos = info.pieceSize - file.startPiecePos + offset;
+		auto or = info.pieceSize - file.startPiecePos + offset;
+		blockInfo.fileDataPos = or;
 
 		if (index > file.startPieceIndex + 1)
 			blockInfo.fileDataPos += (index - file.startPieceIndex - 1) * (size_t)info.pieceSize;
@@ -385,7 +384,7 @@ mtt::Status mtt::Storage::loadPieceBlock(const File& file, const PieceBlockInfo&
 	return Status::Success;
 }
 
-void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<PieceInfo>& piecesInfo, uint32_t workersCount, uint32_t workerIdx)
+void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<PieceInfo>& piecesInfo, uint32_t workersCount, uint32_t workerIdx, const std::vector<bool>& wantedChecks)
 {
 	uint32_t currentPieceIdx = 0;
 
@@ -402,9 +401,8 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 	while (currentPieceIdx < piecesInfo.size())
 	{
 		auto fullpath = getFullpath(*currentFile);
-
 		std::error_code ec;
-		if (std::filesystem::exists(fullpath, ec))
+		if ((wantedChecks[currentFile->startPieceIndex] || wantedChecks[currentFile->endPieceIndex]) && std::filesystem::exists(fullpath, ec))
 		{
 			fileIn.open(fullpath, std::ios_base::binary);
 
@@ -417,7 +415,7 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 					auto readSize = info.pieceSize - currentFile->startPiecePos;
 					auto readBufferPos = currentFile->startPiecePos;
 
-					if (currentPieceIdx % workersCount == workerIdx)
+					if (currentPieceIdx % workersCount == workerIdx && wantedChecks[currentPieceIdx])
 						fileIn.read((char*)readBuffer.data() + readBufferPos, readSize);
 					else
 						fileIn.seekg(readSize, std::ios_base::beg);
@@ -425,7 +423,7 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 					//all pieces in files with correct size
 					while (fileIn && (uint64_t)fileIn.tellg() <= currentFile->size && !checkState.rejected && currentPieceIdx <= currentFile->endPieceIndex)
 					{
-						if (currentPieceIdx % workersCount == workerIdx)
+						if (currentPieceIdx % workersCount == workerIdx && wantedChecks[currentPieceIdx])
 						{
 							_SHA1(readBuffer.data(), info.pieceSize, shaBuffer);
 
@@ -435,7 +433,7 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 						
 						checkState.piecesChecked = std::max(checkState.piecesChecked, ++currentPieceIdx);
 
-						if (currentPieceIdx % workersCount == workerIdx)
+						if (currentPieceIdx % workersCount == workerIdx && wantedChecks[currentPieceIdx])
 							fileIn.read((char*)readBuffer.data(), info.pieceSize);
 						else
 							fileIn.seekg(info.pieceSize, std::ios_base::cur);
@@ -444,7 +442,7 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 					//end of last file
 					if (currentPieceIdx == currentFile->endPieceIndex && currentFile == lastFile)
 					{
-						if (currentPieceIdx % workersCount == workerIdx)
+						if (currentPieceIdx % workersCount == workerIdx && wantedChecks[currentPieceIdx])
 						{
 							_SHA1(readBuffer.data(), currentFile->endPiecePos, shaBuffer);
 
@@ -465,7 +463,7 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 					if (existingSize >= startPieceSize && existingSize <= tempFileSize)
 					{
 						//start piece ending
-						if (currentFile->startPieceIndex % workersCount == workerIdx)
+						if (currentFile->startPieceIndex % workersCount == workerIdx && wantedChecks[currentFile->startPieceIndex])
 						{
 							fileIn.read((char*)readBuffer.data() + currentFile->startPiecePos, startPieceSize);
 
@@ -478,7 +476,7 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 
 						//end piece starting
 						if(existingSize == tempFileSize)
-							if (currentFile->endPieceIndex % workersCount == workerIdx)
+							if (currentFile->endPieceIndex % workersCount == workerIdx && wantedChecks[currentFile->endPieceIndex])
 								fileIn.read((char*)readBuffer.data(), endPieceSize);
 					}
 				}
@@ -500,6 +498,8 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 
 		if(++currentFile > lastFile)
 			break;
+
+		currentPieceIdx = currentFile->startPieceIndex;
 	}
 }
 
