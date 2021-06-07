@@ -129,6 +129,7 @@ extern "C"
 					out.addr = peer.address;
 					out.connected = peer.connected;
 					out.choking = peer.choking;
+					out.requesting = peer.requesting;
 					out.progress = peer.percentage;
 					out.dlSpeed = peer.downloadSpeed;
 					out.upSpeed = peer.uploadSpeed;

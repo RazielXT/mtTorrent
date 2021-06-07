@@ -129,6 +129,7 @@ namespace mtt
 		float percentage = 0;
 		bool connected = false;
 		bool choking = false;
+		bool requesting = false;
 		std::string country;
 	};
 

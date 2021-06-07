@@ -257,6 +257,7 @@ std::vector<mtt::ActivePeerInfo> mtt::FileTransfer::getPeersInfo() const
 			{
 				out[i].downloadSpeed = active.downloadSpeed;
 				out[i].uploadSpeed = active.uploadSpeed;
+				out[i].requesting = !active.requestedPieces.empty();
 				break;
 			}
 		}

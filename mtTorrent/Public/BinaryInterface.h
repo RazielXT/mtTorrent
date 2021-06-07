@@ -172,6 +172,7 @@ namespace mtBI
 		float progress;
 		bool connected;
 		bool choking;
+		bool requesting;
 		uint32_t dlSpeed;
 		uint32_t upSpeed;
 		mtt::string addr;
