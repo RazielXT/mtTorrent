@@ -22,23 +22,21 @@ namespace GuiLite {
 		{
 			InitializeComponent();
 
-			auto lastState = getSavedWindowState();
-			if (lastState.height)
-			{
-				this->ClientSize = System::Drawing::Size(lastState.width, lastState.height);
-			}
-			if (lastState.splitterDistance)
-			{
-				splitContainer1->SplitterDistance = lastState.splitterDistance;
-			}
-
-			trayIcon->Icon = Icon->ExtractAssociatedIcon(Assembly::GetExecutingAssembly()->Location);
-
 			torrentsGrid->SortCompare += gcnew DataGridViewSortCompareEventHandler(this, &MainForm::torrentGridView_SortCompare);
 			peersGridView->SortCompare += gcnew DataGridViewSortCompareEventHandler(this, &MainForm::peersView_SortCompare);
 			filesProgressGridView->SortCompare += gcnew DataGridViewSortCompareEventHandler(this, &MainForm::filesProgressGridView_SortCompare);
 
 			instance = this;
+
+			getWindowState();
+			if (windowState->height)
+			{
+				this->ClientSize = System::Drawing::Size(windowState->width, windowState->height);
+			}
+			if (windowState->splitterDistance)
+			{
+				splitContainer1->SplitterDistance = windowState->splitterDistance;
+			}
 
 			try
 			{
@@ -49,6 +47,7 @@ namespace GuiLite {
 			}
 		}
 
+	public: UserWindowState^ windowState;
 		static System::Windows::Forms::Timer^ schedulerTimer;
 		static System::Windows::Forms::Timer^ updateTimer;
 

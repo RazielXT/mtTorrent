@@ -50,13 +50,17 @@ extern void forceGuiRefresh();
 extern System::String^ fileSelectionValidatePath(System::String^ path);
 extern void torrentsGridSorted();
 
-struct SavedWindowState
+public ref class UserWindowState
 {
+public:
+
 	int height;
 	int width;
 	int splitterDistance;
+
+	System::String^ addPeer;
 };
-extern SavedWindowState getSavedWindowState();
-extern void saveWindowState(const SavedWindowState&);
+extern UserWindowState^ getWindowState();
+extern void saveWindowState();
 
 extern float bytesToNumber(System::String^);

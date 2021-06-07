@@ -1,6 +1,7 @@
 #include "AppCoreCallbacks.h"
 #include "AppCore.h"
 #include <fstream>
+#include "MainForm.h"
 
 extern AppCore core;
 
@@ -57,24 +58,94 @@ void torrentsGridSorted()
 	core.torrentsView.updateList();
 }
 
-SavedWindowState getSavedWindowState()
-{
-	SavedWindowState state = {};
+using namespace System::Xml;
 
-	std::ifstream file("./data/window", std::ios_base::binary);
-	if (file)
-		file.read((char*)&state, sizeof(state));
+UserWindowState^ getWindowState()
+{
+	UserWindowState^ state = GuiLite::MainForm::instance->windowState;
+
+	if (!state)
+	{
+		state = gcnew UserWindowState();
+		System::Xml::XmlDocument^ doc = gcnew System::Xml::XmlDocument;
+
+		if (System::IO::File::Exists("./data/window.xml"))
+		{
+			try
+			{
+				doc->Load("./data/window.xml");
+
+				if (auto user = doc->GetElementsByTagName("window"))
+				{
+					for each(XmlNode^ e in user[0]->ChildNodes)
+					{
+						if (e->Name == "height")
+							System::Int32::TryParse(e->InnerText, state->height);
+						else if (e->Name == "width")
+							System::Int32::TryParse(e->InnerText, state->width);
+						else if (e->Name == "splitterDistance")
+							System::Int32::TryParse(e->InnerText, state->splitterDistance);
+						else if (e->Name == "addPeer")
+							state->addPeer = e->InnerText;
+					}
+				}
+			}
+			catch (System::Exception^ ex)
+			{
+				::MessageBoxA(NULL, getUtf8String(ex->Message).data(), "Window state load failure", MB_OK);
+			}
+		}
+
+		GuiLite::MainForm::instance->windowState = state;
+	}
 
 	return state;
 }
 
-void saveWindowState(const SavedWindowState& state)
+void saveWindowState()
 {
-	if (!state.height)
-		return;
+	UserWindowState^ state = GuiLite::MainForm::instance->windowState;
 
-	std::ofstream file("./data/window", std::ios_base::binary);
-	file.write((const char*)&state, sizeof(state));
+	if (state)
+	{
+		XmlDocument^ doc = gcnew XmlDocument();
+
+		XmlElement^ root = doc->CreateElement("window");
+		doc->AppendChild(root);
+
+		XmlElement^ e;
+
+		if (state->addPeer)
+		{
+			e = doc->CreateElement("addPeer");
+			e->InnerText = state->addPeer;
+			root->AppendChild(e);
+		}
+
+		{
+			e = doc->CreateElement("height");
+			e->InnerText = state->height.ToString();
+			root->AppendChild(e);
+
+			e = doc->CreateElement("width");
+			e->InnerText = state->width.ToString();
+			root->AppendChild(e);
+
+			e = doc->CreateElement("splitterDistance");
+			e->InnerText = state->splitterDistance.ToString();
+			root->AppendChild(e);
+		}
+
+		try
+		{
+			doc->Save("./data/window.xml");
+		}
+		catch (System::Exception^ ex)
+		{
+			::MessageBoxA(NULL, getUtf8String(ex->Message).data(), "Window state save failure", MB_OK);
+		}
+
+	}
 }
 
 float bytesToNumber(System::String^ str)

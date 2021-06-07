@@ -23,6 +23,9 @@ namespace GuiLite {
 			//
 			//TODO: Add the constructor code here
 			//
+
+			if (auto val = getWindowState()->addPeer)
+				textBox1->Text = val;
 		}
 
 	protected:
@@ -105,6 +108,8 @@ namespace GuiLite {
 		}
 #pragma endregion
 	private: System::Void AddPeerButton_Click(System::Object^ sender, System::EventArgs^ e) {
+
+		getWindowState()->addPeer = textBox1->Text;
 		onButtonClick(ButtonId::AddPeer, textBox1->Text);
 		Close();
 	}
