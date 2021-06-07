@@ -24,16 +24,14 @@ TorrentFileInfo TorrentFileParser::parse(const uint8_t* data, size_t length, Par
 	return out;
 }
 
-static uint32_t getPieceIndex(uint64_t pos, uint64_t pieceSize)
+static uint32_t getPieceIndex(uint64_t pos, uint64_t pieceSize, bool end)
 {
-	uint32_t p = 0;
+	auto idx = (uint32_t) (pos / (uint64_t) pieceSize);
 
-	while (pieceSize + p*pieceSize < pos)
-	{
-		p++;
-	}
+	if (end && (pos % (uint64_t)pieceSize) == 0)
+		idx--;
 
-	return p;
+	return idx;
 }
 
 void loadTorrentFileInfo(BencodeParser& parser, TorrentFileInfo& fileInfo)
@@ -211,10 +209,10 @@ mtt::TorrentInfo parseTorrentInfo(const BencodeParser::Object* infoDictionary)
 			}
 
 			uint64_t size = file->getBigInt("length");
-			auto startId = getPieceIndex(sizeSum, info.pieceSize);
+			auto startId = getPieceIndex(sizeSum, info.pieceSize, false);
 			auto startPos = sizeSum % info.pieceSize;
 			sizeSum += size;
-			auto endId = getPieceIndex(sizeSum, info.pieceSize);
+			auto endId = getPieceIndex(sizeSum, info.pieceSize, true);
 			auto endPos = sizeSum % info.pieceSize;
 
 			info.files.push_back({ path,  size, startId, (uint32_t)startPos, endId, (uint32_t)endPos });
