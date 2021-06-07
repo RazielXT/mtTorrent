@@ -24,7 +24,7 @@ mtt::FileTransfer::FileTransfer(TorrentPtr t) : downloader(t->infoFile.info, *th
 		ipToCountry.fromFile(mtt::config::getInternal().programFolderPath);
 	}
 
-	unsavedPieceBlocksMaxSize = mtt::config::getInternal().immediateStoringBufferSize / BlockRequestMaxSize;
+	unsavedPieceBlocksMaxSize = mtt::config::getInternal().fileStoringBufferSize / BlockRequestMaxSize;
 }
 
 void mtt::FileTransfer::start()
@@ -77,7 +77,7 @@ void mtt::FileTransfer::stop()
 		refreshTimer->disable();
 }
 
-void mtt::FileTransfer::addUnfinishedPieces(std::vector<mtt::DownloadedPieceState>& pieces)
+void mtt::FileTransfer::addUnfinishedPieces(std::vector<mtt::DownloadedPiece>& pieces)
 {
 	unFinishedPieces.reserve(pieces.size());
 
@@ -206,7 +206,7 @@ uint32_t mtt::FileTransfer::getUploadSpeed() const
 	return sum;
 }
 
-std::vector<mtt::DownloadedPieceState> mtt::FileTransfer::getUnfinishedPiecesState()
+std::vector<mtt::DownloadedPiece> mtt::FileTransfer::getUnfinishedPiecesState()
 {
 	return unFinishedPieces;
 }
@@ -228,7 +228,7 @@ std::map<uint32_t, uint32_t> mtt::FileTransfer::getUnfinishedPiecesDownloadSizeM
 	for (const auto& u : unFinishedPieces)
 		map[u.index] += u.downloadedSize;
 
-	return std::move(map);
+	return map;
 }
 
 std::vector<mtt::ActivePeerInfo> mtt::FileTransfer::getPeersInfo() const
@@ -265,7 +265,7 @@ std::vector<mtt::ActivePeerInfo> mtt::FileTransfer::getPeersInfo() const
 		i++;
 	}
 
-	return std::move(out);
+	return out;
 }
 
 std::vector<uint32_t> mtt::FileTransfer::getCurrentRequests() const
@@ -329,7 +329,7 @@ bool mtt::FileTransfer::isFinished()
 
 bool mtt::FileTransfer::isWantedPiece(uint32_t idx)
 {
-	return torrent->files.progress.wantedPiece(idx);
+	return !torrent->checking && torrent->files.progress.wantedPiece(idx);
 }
 
 void mtt::FileTransfer::storePieceBlock(const PieceBlock& block)
@@ -390,7 +390,7 @@ mtt::Status mtt::FileTransfer::saveUnsavedPieceBlocks(const std::vector<std::pai
 		std::lock_guard<std::mutex> guard(unsavedPieceBlocksMutex);
 
 		for (auto& b : blocks)
-			returnDataBuffer(std::move(b.second));
+			returnDataBuffer(b.second);
 	}
 
 	return status;
@@ -413,40 +413,22 @@ void mtt::FileTransfer::finishUnsavedPieceBlocks()
 	}
 }
 
-bool mtt::FileTransfer::storeUnfinishedPiece(const mtt::DownloadedPiece& piece)
-{
-	return torrent->files.storage.storePieceBlock(piece.index, 0, *piece.data) == Status::Success;
-}
-
 mtt::LockedPeers mtt::FileTransfer::getPeers()
 {
 	return { activePeers, peersMutex };
 }
 
-mtt::DownloadedPiece mtt::FileTransfer::loadUnfinishedPiece(uint32_t idx, bool loadData)
+mtt::DownloadedPiece mtt::FileTransfer::loadUnfinishedPiece(uint32_t idx)
 {
 	for (auto& u : unFinishedPieces)
 	{
 		if (u.index == idx && u.downloadedSize)
 		{
 			mtt::DownloadedPiece piece;
-			(mtt::DownloadedPieceState&)piece = std::move(u);
+			(mtt::DownloadedPiece&)piece = std::move(u);
 			u.downloadedSize = 0;
 
-			if (loadData)
-			{
-				mtt::PieceBlockInfo info;
-				info.begin = 0;
-				info.index = idx;
-				info.length = torrent->infoFile.info.getPieceSize(idx);
-
-				piece.data = std::make_shared<DataBuffer>();
-
-				if (torrent->files.storage.loadPieceBlock(info, *piece.data) != Status::Success)
-					return {};
-			}
-
-			return std::move(piece);
+			return piece;
 		}
 	}
 	return {};
@@ -455,22 +437,6 @@ mtt::DownloadedPiece mtt::FileTransfer::loadUnfinishedPiece(uint32_t idx, bool l
 void mtt::FileTransfer::pieceFinished(const mtt::DownloadedPiece& piece)
 {
 	torrent->files.progress.addPiece(piece.index);
-
-	if (piece.data)
-	{
-		auto torrentPtr = torrent;
-		torrent->service.io.post([torrentPtr, piece]()
-			{
-				auto status = torrentPtr->files.storage.storePieceBlock(piece.index, 0, *piece.data);
-
-				if (status != Status::Success)
-				{
-					torrentPtr->files.progress.removePiece(piece.index);
-					torrentPtr->lastError = status;
-					torrentPtr->stop(Torrent::StopReason::Internal);
-				}
-			});
-	}
 
 	{
 		std::lock_guard<std::mutex> guard(peersMutex);
@@ -481,8 +447,7 @@ void mtt::FileTransfer::pieceFinished(const mtt::DownloadedPiece& piece)
 	{
 		finishUnsavedPieceBlocks();
 
-		if (downloader.immediateMode)
-			torrent->checkFiles();
+		torrent->checkFiles();
 
 		AlertsManager::Get().metadataAlert(AlertId::TorrentFinished, torrent.get());
 	}

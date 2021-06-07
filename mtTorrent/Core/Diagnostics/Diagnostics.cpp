@@ -205,5 +205,5 @@ std::vector<mtt::Diagnostics::PeerSnapshot> mtt::Diagnostics::Storage::loadPeers
 		peers.insert(peers.begin() + i, p.second);
 	}
 
-	return std::move(peers);
+	return peers;
 }

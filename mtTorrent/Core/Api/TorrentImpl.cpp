@@ -215,7 +215,7 @@ std::vector<std::pair<float, uint32_t>> mttApi::Torrent::getFilesProgress()
 		out[i] = { receivedWhole / pieces, received };
 	}
 
-	return std::move(out);
+	return out;
 }
 
 std::vector<uint64_t> mttApi::Torrent::getFilesAllocatedSize()

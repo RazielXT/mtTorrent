@@ -44,12 +44,17 @@ namespace mtt
 		BufferView buffer;
 	};
 
-	struct DownloadedPieceState
+	struct DownloadedPiece
 	{
 		std::vector<uint8_t> blocksState;
 		uint32_t remainingBlocks = 0;
 		uint32_t downloadedSize = 0;
 		uint32_t index = {};
+
+		void init(uint32_t idx, uint32_t blocksCount);
+		bool addBlock(const PieceBlock& block);
+
+		static bool isValid(const DataBuffer& data, const uint8_t* expectedHash);
 	};
 
 	using DownloadSelection = std::vector<FileSelection>;

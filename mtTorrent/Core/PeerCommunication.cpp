@@ -236,7 +236,7 @@ size_t PeerCommunication::dataReceived(const BufferView& buffer)
 		else if (!msg.messageSize)
 			consumedSize = buffer.size;
 
-		return std::move(msg);
+		return msg;
 	};
 
 	auto message = readNextMessage();

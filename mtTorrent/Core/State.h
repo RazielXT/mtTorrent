@@ -25,7 +25,7 @@ namespace mtt
 		int64_t lastStateTime = 0;
 		bool started = false;
 
-		std::vector<DownloadedPieceState> unfinishedPieces;
+		std::vector<DownloadedPiece> unfinishedPieces;
 
 		uint64_t uploaded = 0;
 

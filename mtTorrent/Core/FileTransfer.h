@@ -24,9 +24,9 @@ namespace mtt
 		uint64_t& getUploadSum();
 		uint32_t getUploadSpeed() const;
 
-		void addUnfinishedPieces(std::vector<mtt::DownloadedPieceState>& pieces);
+		void addUnfinishedPieces(std::vector<mtt::DownloadedPiece>& pieces);
 		void clearUnfinishedPieces();
-		std::vector<mtt::DownloadedPieceState> getUnfinishedPiecesState();
+		std::vector<mtt::DownloadedPiece> getUnfinishedPiecesState();
 
 		size_t getUnfinishedPiecesDownloadSize();
 		std::map<uint32_t, uint32_t> getUnfinishedPiecesDownloadSizeMap();
@@ -88,8 +88,7 @@ namespace mtt
 		bool isWantedPiece(uint32_t idx) override;
 		void storePieceBlock(const PieceBlock& block) override;
 		void pieceFinished(const mtt::DownloadedPiece& piece) override;
-		mtt::DownloadedPiece loadUnfinishedPiece(uint32_t idx, bool loadData) override;
-		bool storeUnfinishedPiece(const mtt::DownloadedPiece& piece) override;
+		mtt::DownloadedPiece loadUnfinishedPiece(uint32_t idx) override;
 		LockedPeers getPeers() override;
 
 		std::mutex unsavedPieceBlocksMutex;
@@ -103,7 +102,7 @@ namespace mtt
 		void returnDataBuffer(std::shared_ptr<DataBuffer>);
 
 		std::vector<uint32_t> freshPieces;
-		std::vector<mtt::DownloadedPieceState> unFinishedPieces;
+		std::vector<mtt::DownloadedPiece> unFinishedPieces;
 
 		Downloader downloader;
 		std::shared_ptr<Uploader> uploader;

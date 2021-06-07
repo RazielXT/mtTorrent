@@ -1,4 +1,5 @@
 #include "Interface.h"
+#include "utils/SHA.h"
 
 mtt::SelectedIntervals::SelectedIntervals(const mtt::TorrentInfo info, const mtt::DownloadSelection& selection)
 {
@@ -30,4 +31,35 @@ bool mtt::SelectedIntervals::isSelected(uint32_t idx)
 			return true;
 	}
 	return false;
+}
+
+void mtt::DownloadedPiece::init(uint32_t idx, uint32_t blocksCount)
+{
+	remainingBlocks = blocksCount;
+	blocksState.assign(remainingBlocks, 0);
+	index = idx;
+}
+
+bool mtt::DownloadedPiece::addBlock(const mtt::PieceBlock & block)
+{
+	auto blockIdx = (block.info.begin + 1) / BlockRequestMaxSize;
+
+	if (blockIdx < blocksState.size() && blocksState[blockIdx] == 0)
+	{
+		blocksState[blockIdx] = 1;
+		remainingBlocks--;
+		downloadedSize += block.info.length;
+
+		return true;
+	}
+
+	return false;
+}
+
+bool mtt::DownloadedPiece::isValid(const DataBuffer& data, const uint8_t* expectedHash)
+{
+	uint8_t hash[SHA_DIGEST_LENGTH];
+	_SHA1((const uint8_t*)data.data(), data.size(), hash);
+
+	return memcmp(hash, expectedHash, SHA_DIGEST_LENGTH) == 0;
 }

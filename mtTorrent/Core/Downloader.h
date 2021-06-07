@@ -4,15 +4,6 @@
 
 namespace mtt
 {
-	struct DownloadedPiece : public DownloadedPieceState
-	{
-		std::shared_ptr<DataBuffer> data;
-
-		void init(uint32_t idx, uint32_t pieceSize, uint32_t blocksCount);
-		bool addBlock(const PieceBlock& block);
-		bool isValid(const uint8_t* expectedHash);
-	};
-
 	struct ActivePeer
 	{
 		PeerCommunication* comm;
@@ -66,8 +57,7 @@ namespace mtt
 		virtual bool isFinished() = 0;
 		virtual bool isWantedPiece(uint32_t idx) = 0;
 		virtual void storePieceBlock(const PieceBlock& block) = 0;
-		virtual mtt::DownloadedPiece loadUnfinishedPiece(uint32_t idx, bool loadData) = 0;
-		virtual bool storeUnfinishedPiece(const mtt::DownloadedPiece& piece) = 0;
+		virtual mtt::DownloadedPiece loadUnfinishedPiece(uint32_t idx) = 0;
 		virtual void pieceFinished(const mtt::DownloadedPiece& piece) = 0;
 
 		virtual LockedPeers getPeers() = 0;
@@ -79,7 +69,7 @@ namespace mtt
 
 		Downloader(const TorrentInfo& torrentInfo, DownloaderClient& client);
 
-		std::vector<mtt::DownloadedPieceState> stop();
+		std::vector<mtt::DownloadedPiece> stop();
 
 		size_t getUnfinishedPiecesDownloadSize();
 		std::map<uint32_t, uint32_t> getUnfinishedPiecesDownloadSizeMap();
@@ -92,8 +82,6 @@ namespace mtt
 		void sortPriority(const std::vector<Priority>& priority, const std::vector<uint32_t>& availability);
 
 		void refreshSelection(std::vector<uint32_t> selectedPieces);
-
-		bool immediateMode = false;
 
 	private:
 
