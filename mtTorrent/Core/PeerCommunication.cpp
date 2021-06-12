@@ -119,45 +119,38 @@ bool mtt::PeerInfo::supportsDht()
 	return (protocol[7] & 0x80) != 0;
 }
 
-PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l) : torrent(t), listener(l)
-{
-}
-
 PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, asio::io_service& io_service) : torrent(t), listener(l)
 {
-	stream = std::make_shared<TcpAsyncStream>(io_service);
+	stream = std::make_shared<PeerStream>(io_service);
 }
 
 size_t mtt::PeerCommunication::fromStream(std::shared_ptr<TcpAsyncStream> s, const BufferView& streamData)
 {
-	stream = s;
+	initializeStream();
+	stream->fromStream(s);
 
-	state.action = PeerCommunicationState::Connected;
-	initializeTcpStream();
-	initializeCallbacks();
-
-	enableDiagnostics = mtt::config::getInternal().enablePeerDiagnostics;
-	diagnostics.snapshot.name = getAddressName();
 	DIAGNOSTICS(RemoteConnected, state.action);
 
 	return dataReceived(streamData);
 }
 
-size_t mtt::PeerCommunication::fromStream(utp::StreamPtr stream, const BufferView& streamData)
+size_t mtt::PeerCommunication::fromStream(utp::StreamPtr s, const BufferView& streamData)
 {
-	utpStream = stream;
+	initializeStream();
+	stream->fromStream(s);
 
-	state.action = PeerCommunicationState::Connected;
-	initializeCallbacks();
-	ext.utpStream = utpStream;
-	utpStream->onCloseCallback = [this](int code) {connectionClosed(code); };
-	utpStream->onReceiveCallback = std::bind(&PeerCommunication::dataReceived, shared_from_this(), std::placeholders::_1);
+	DIAGNOSTICS(RemoteConnected, state.action);
 
 	return dataReceived(streamData);
 }
 
-void mtt::PeerCommunication::initializeCallbacks()
+void mtt::PeerCommunication::initializeStream()
 {
+	ext.write = [this](const DataBuffer& data)
+	{
+		stream->write(data);
+	};
+
 	ext.pex.onPexMessage = [this](mtt::ext::PeerExchange::Message& msg)
 	{
 		listener.pexReceived(this, msg);
@@ -166,23 +159,10 @@ void mtt::PeerCommunication::initializeCallbacks()
 	{
 		listener.metadataPieceReceived(this, msg);
 	};
-}
 
-void mtt::PeerCommunication::initializeTcpStream()
-{
-	{
-		//std::lock_guard<std::mutex> guard(stream->callbackMutex);
-		stream->onConnectCallback = std::bind(&PeerCommunication::connectionOpened, shared_from_this());
-		stream->onCloseCallback = [this](int code) {connectionClosed(code); };
-		stream->onReceiveCallback = std::bind(&PeerCommunication::dataReceived, shared_from_this(), std::placeholders::_1);
-	}
-
-	ext.stream = stream;
-
-	BandwidthChannel* channels[2];
-	channels[0] = BandwidthManager::Get().GetChannel("");
-	channels[1] = BandwidthManager::Get().GetChannel(hexToString(torrent.hash, 20));
-	stream->setBandwidthChannels(channels, 2);
+	stream->onOpenCallback = std::bind(&PeerCommunication::connectionOpened, shared_from_this());
+	stream->onCloseCallback = [this](int code) { connectionClosed(code); };
+	stream->onReceiveCallback = [this](const BufferView& buffer) { return dataReceived(buffer); };
 }
 
 void PeerCommunication::sendHandshake(const Addr& address)
@@ -196,21 +176,8 @@ void PeerCommunication::sendHandshake(const Addr& address)
 
 	state.action = PeerCommunicationState::Connecting;
 
-// 	utpStream = utp::Manager::get().createStream(address.toUdpEndpoint(), [this, address](bool success)
-// 		{
-// 			if (success)
-// 			{
-// 				ext.utpStream = utpStream;
-// 				utpStream->onCloseCallback = [this](int code) {connectionClosed(code); };
-// 				utpStream->onReceiveCallback = std::bind(&PeerCommunication::dataReceived, shared_from_this(), std::placeholders::_1);
-// 				connectionOpened();
-// 			}
-// 			else
-// 			{
-				initializeTcpStream();
-				stream->connect(address.addrBytes, address.port, address.ipv6);
-// 			}
-// 		});
+	initializeStream();
+	stream->open(address);
 }
 
 void mtt::PeerCommunication::sendHandshake()
@@ -219,7 +186,7 @@ void mtt::PeerCommunication::sendHandshake()
 	{
 		LOG_MGS("Handshake");
 		state.action = PeerCommunicationState::Handshake;
-		write(mtt::bt::createHandshake(torrent.hash, mtt::config::getInternal().hashId));
+		stream->write(mtt::bt::createHandshake(torrent.hash, mtt::config::getInternal().hashId));
 	}
 }
 
@@ -253,12 +220,10 @@ size_t PeerCommunication::dataReceived(const BufferView& buffer)
 
 void PeerCommunication::connectionOpened()
 {
-	if (!ext.utpStream)
-		utpStream = nullptr;
-
-	initializeCallbacks();
 	state.action = PeerCommunicationState::Connected;
 
+	enableDiagnostics = mtt::config::getInternal().enablePeerDiagnostics;
+	diagnostics.snapshot.name = stream->getAddressName();
 	DIAGNOSTICS(Connected, state.action);
 
 	sendHandshake();
@@ -269,31 +234,13 @@ void mtt::PeerCommunication::close()
 	if (state.action != PeerCommunicationState::Disconnected)
 	{
 		state.action = PeerCommunicationState::Disconnected;
-		stream->close(false);
+		stream->close();
 	}
 }
 
-const Addr& mtt::PeerCommunication::getAddress()
+const std::shared_ptr<mtt::PeerStream> PeerCommunication::getStream() const
 {
-	return stream->getAddress();
-}
-
-std::string mtt::PeerCommunication::getAddressName()
-{
-	return stream->getHostname();
-}
-
-uint64_t mtt::PeerCommunication::getReceivedDataCount()
-{
-	return stream->getReceivedDataCount();
-}
-
-void mtt::PeerCommunication::write(const DataBuffer& data)
-{
-	if (utpStream)
-		utpStream->write(data);
-	else if (stream)
-		stream->write(data);
+	return stream;
 }
 
 void mtt::PeerCommunication::connectionClosed(int code)
@@ -309,7 +256,6 @@ void mtt::PeerCommunication::connectionClosed(int code)
 
 mtt::PeerCommunication::~PeerCommunication()
 {
-	//stream->close();
 }
 
 void mtt::PeerCommunication::setInterested(bool enabled)
@@ -324,7 +270,7 @@ void mtt::PeerCommunication::setInterested(bool enabled)
 	DIAGNOSTICS(Interested, enabled);
 
 	state.amInterested = enabled;
-	write(mtt::bt::createStateMessage(enabled ? Interested : NotInterested));
+	stream->write(mtt::bt::createStateMessage(enabled ? Interested : NotInterested));
 }
 
 void mtt::PeerCommunication::setChoke(bool enabled)
@@ -338,7 +284,7 @@ void mtt::PeerCommunication::setChoke(bool enabled)
 	DIAGNOSTICS(Choke, enabled);
 	LOG_MGS("Choke " << enabled);
 	state.amChoking = enabled;
-	write(mtt::bt::createStateMessage(enabled ? Choke : Unchoke));
+	stream->write(mtt::bt::createStateMessage(enabled ? Choke : Unchoke));
 }
 
 void mtt::PeerCommunication::requestPieceBlock(PieceBlockInfo& pieceInfo)
@@ -349,7 +295,7 @@ void mtt::PeerCommunication::requestPieceBlock(PieceBlockInfo& pieceInfo)
 	DIAGNOSTICS_4(RequestPiece, pieceInfo.index, pieceInfo.begin, pieceInfo.length);
 
 	LOG_MGS("Request " << pieceInfo.index);
-	write(mtt::bt::createBlockRequest(pieceInfo));
+	stream->write(mtt::bt::createBlockRequest(pieceInfo));
 }
 
 bool mtt::PeerCommunication::isEstablished() const
@@ -363,7 +309,7 @@ void mtt::PeerCommunication::sendKeepAlive()
 		return;
 
 	LOG_MGS("KeepAlive");
-	write(DataBuffer(4, 0));
+	stream->write(DataBuffer(4, 0));
 }
 
 void mtt::PeerCommunication::sendHave(uint32_t pieceIdx)
@@ -372,7 +318,7 @@ void mtt::PeerCommunication::sendHave(uint32_t pieceIdx)
 		return;
 
 	LOG_MGS("Have " << pieceIdx);
-	write(mtt::bt::createHave(pieceIdx));
+	stream->write(mtt::bt::createHave(pieceIdx));
 }
 
 void mtt::PeerCommunication::sendPieceBlock(const PieceBlock& block)
@@ -381,7 +327,7 @@ void mtt::PeerCommunication::sendPieceBlock(const PieceBlock& block)
 		return;
 
 	LOG_MGS("Piece " << block.info.index);
-	write(mtt::bt::createPiece(block));
+	stream->write(mtt::bt::createPiece(block));
 }
 
 void mtt::PeerCommunication::sendBitfield(const DataBuffer& bitfield)
@@ -390,7 +336,7 @@ void mtt::PeerCommunication::sendBitfield(const DataBuffer& bitfield)
 		return;
 
 	LOG_MGS("Bitfield");
-	write(mtt::bt::createBitfield(bitfield));
+	stream->write(mtt::bt::createBitfield(bitfield));
 }
 
 void mtt::PeerCommunication::resetState()
@@ -405,7 +351,7 @@ void mtt::PeerCommunication::sendPort(uint16_t port)
 		return;
 
 	LOG_MGS("Port " << port);
-	write(mtt::bt::createPort(port));
+	stream->write(mtt::bt::createPort(port));
 }
 
 void mtt::PeerCommunication::handleMessage(PeerMessage& message)
@@ -466,7 +412,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 			if (!state.finishedHandshake)
 			{
 				if(state.action == PeerCommunicationState::Connected)
-					write(mtt::bt::createHandshake(torrent.hash, mtt::config::getInternal().hashId));
+					stream->write(mtt::bt::createHandshake(torrent.hash, mtt::config::getInternal().hashId));
 
 				state.action = PeerCommunicationState::Established;
 				state.finishedHandshake = true;

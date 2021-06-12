@@ -66,17 +66,17 @@ void TcpAsyncStream::write(const DataBuffer& data)
 	io_service.post(std::bind(&TcpAsyncStream::do_write, shared_from_this(), data));
 }
 
-std::string& TcpAsyncStream::getHostname()
+const std::string& TcpAsyncStream::getHostname() const
 {
 	return info.host;
 }
 
-Addr& TcpAsyncStream::getAddress()
+const Addr& TcpAsyncStream::getAddress() const
 {
 	return info.address;
 }
 
-uint64_t TcpAsyncStream::getReceivedDataCount()
+uint64_t TcpAsyncStream::getReceivedDataCount() const
 {
 	return readBuffer.receivedCounter;
 }

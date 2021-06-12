@@ -33,10 +33,10 @@ public:
 	std::function<size_t(const BufferView&)> onReceiveCallback;
 	std::function<void(int)> onCloseCallback;
 
-	std::string& getHostname();
-	Addr& getAddress();
+	const std::string& getHostname() const;
+	const Addr& getAddress() const;
 
-	uint64_t getReceivedDataCount();
+	uint64_t getReceivedDataCount() const;
 
 	void setBandwidthChannels(BandwidthChannel**, uint32_t count);
 	void setBandwidthPriority(int priority);

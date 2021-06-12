@@ -253,6 +253,9 @@
     <ClCompile Include="Core\Interface.cpp">
       <Filter>Source Files\Core\General</Filter>
     </ClCompile>
+    <ClCompile Include="Core\PeerStream.cpp">
+      <Filter>Source Files\Core\Torrent\Peer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Storage.h">
@@ -476,6 +479,9 @@
     </ClInclude>
     <ClInclude Include="Core\Diagnostics\Diagnostics.h">
       <Filter>Source Files\Core\Diagnostics</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\PeerStream.h">
+      <Filter>Source Files\Core\Torrent\Peer</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,11 +1,10 @@
 #pragma once
 
-#include "utils/TcpAsyncStream.h"
 #include "PeerMessage.h"
 #include "ExtensionProtocol.h"
 #include "IPeerListener.h"
 #include "PiecesProgress.h"
-#include "Utp/UtpManager.h"
+#include "PeerStream.h"
 #include "Diagnostics/Diagnostics.h"
 
 namespace mtt
@@ -48,7 +47,6 @@ namespace mtt
 	public:
 
 		PeerCommunication(TorrentInfo& torrent, IPeerListener& listener, asio::io_service& io_service);
-		PeerCommunication(TorrentInfo& torrent, IPeerListener& listener);
 		~PeerCommunication();
 
 		size_t fromStream(std::shared_ptr<TcpAsyncStream> stream, const BufferView& streamData);
@@ -77,23 +75,17 @@ namespace mtt
 
 		ext::ExtensionProtocol ext;
 
-		const Addr& getAddress();
-		std::string getAddressName();
-
-		uint64_t getReceivedDataCount();
+		const std::shared_ptr<PeerStream> getStream() const;
 
 		Diagnostics::Peer diagnostics;
 
 	protected:
 
-		void write(const DataBuffer&);
-
 		IPeerListener& listener;
 
 		TorrentInfo& torrent;
 
-		std::shared_ptr<TcpAsyncStream> stream;
-		utp::StreamPtr utpStream;
+		std::shared_ptr<PeerStream> stream;
 
 		void handleMessage(PeerMessage& msg);
 
@@ -101,10 +93,8 @@ namespace mtt
 		size_t dataReceived(const BufferView& buffer);
 		void connectionClosed(int);
 
-		void initializeCallbacks();
+		void initializeStream();
 		void resetState();
-
-		void initializeTcpStream();
 
 		bool enableDiagnostics = false;
 	};

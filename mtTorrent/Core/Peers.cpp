@@ -180,7 +180,7 @@ size_t mtt::Peers::add(std::shared_ptr<TcpAsyncStream> stream, const BufferView&
 		return 0;
 
 	ActivePeer peer;
-	peer.comm = std::make_shared<PeerCommunication>(torrent->infoFile.info, *peersListener);
+	peer.comm = std::make_shared<PeerCommunication>(torrent->infoFile.info, *peersListener, torrent->service.io);
 
 	{
 		std::lock_guard<std::mutex> guard(peersMutex);
@@ -541,7 +541,7 @@ void mtt::Peers::PeersListener::messageReceived(mtt::PeerCommunication* p, mtt::
 	{
 		if (mtt::config::getExternal().dht.enabled)
 		{
-			Addr addr = p->getAddress();
+			Addr addr = p->getStream()->getAddress();
 			addr.port = m.port;
 			dht::Communication::get().pingNode(addr);
 		}

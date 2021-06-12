@@ -243,7 +243,7 @@ std::vector<mtt::ActivePeerInfo> mtt::FileTransfer::getPeersInfo() const
 	uint32_t i = 0;
 	for (auto& comm : allPeers)
 	{
-		auto& addr = comm->getAddress();
+		auto& addr = comm->getStream()->getAddress();
 		out[i].address = addr.toString();
 		out[i].country = addr.ipv6 ? "" : ipToCountry.GetCountry(swap32(*reinterpret_cast<const uint32_t*>(addr.addrBytes)));
 		out[i].percentage = comm->info.pieces.getPercentage();
@@ -607,7 +607,7 @@ void mtt::FileTransfer::updateMeasures()
 
 		for (auto& peer : activePeers)
 		{
-			peer.downloaded = peer.comm->getReceivedDataCount();
+			peer.downloaded = peer.comm->getStream()->getReceivedDataCount();
 			currentMeasure.push_back({ peer.comm, {peer.downloaded, peer.uploaded} });
 			peer.downloadSpeed = 0;
 			peer.uploadSpeed = 0;

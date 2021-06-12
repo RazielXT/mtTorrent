@@ -225,14 +225,6 @@ void mtt::ext::ExtensionProtocol::sendHandshake()
 	state.sentHandshake = true;
 }
 
-void mtt::ext::ExtensionProtocol::write(const DataBuffer& data)
-{
-	if (utpStream)
-		utpStream->write(data);
-	else if (stream)
-		stream->write(data);
-}
-
 bool mtt::ext::ExtensionProtocol::requestMetadataPiece(uint32_t index)
 {
 	if (!state.enabled || utm.size == 0)
