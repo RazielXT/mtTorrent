@@ -445,6 +445,8 @@ void mtt::Torrent::checkFiles(bool all)
 			else
 				stop();
 		}
+		else
+			lastStateTime = 0;
 	};
 
 	checking = true;
