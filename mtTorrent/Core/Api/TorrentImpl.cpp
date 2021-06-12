@@ -108,6 +108,11 @@ bool mttApi::Torrent::selectionFinished() const
 	return static_cast<const mtt::Torrent*>(this)->selectionFinished();
 }
 
+int64_t mttApi::Torrent::getTimeAdded() const
+{
+	return static_cast<const mtt::Torrent*>(this)->getTimeAdded();
+}
+
 const mtt::TorrentFileInfo& mttApi::Torrent::getFileInfo()
 {
 	auto torrent = static_cast<mtt::Torrent*>(this);

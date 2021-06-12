@@ -123,6 +123,10 @@ namespace mttApi
 			finished state of selected torrent files
 		*/
 		API_EXPORT bool selectionFinished() const;
+		/*
+			get unit timestamp of date when torrent was added
+		*/
+		API_EXPORT int64_t getTimeAdded() const;
 
 		/*
 			get loaded torrent file

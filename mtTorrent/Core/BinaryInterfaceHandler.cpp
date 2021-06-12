@@ -95,6 +95,7 @@ extern "C"
 				return mtt::Status::E_InvalidInput;
 			auto resp = (mtBI::TorrentStateInfo*) output;
 			resp->name = torrent->name();
+			resp->timeAdded = torrent->getTimeAdded();
 			resp->connectedPeers = torrent->getPeers()->connectedCount();
 			resp->checkingProgress = torrent->checkingProgress();
 			resp->checking = resp->checkingProgress < 1;

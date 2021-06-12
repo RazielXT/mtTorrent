@@ -151,6 +151,7 @@ namespace mtBI
 	struct TorrentStateInfo
 	{
 		mtt::string name;
+		uint64_t timeAdded;
 		float progress;
 		float selectionProgress;
 		uint64_t downloaded;

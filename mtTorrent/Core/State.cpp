@@ -31,6 +31,7 @@ void mtt::TorrentState::save(const std::string& name)
 	writer.addRawItem("12:downloadPath", downloadPath);
 	writer.addRawItemFromBuffer("6:pieces", (const char*)pieces.data(), pieces.size());
 	writer.addRawItem("13:lastStateTime", lastStateTime);
+	writer.addRawItem("9:addedTime", addedTime);
 	writer.addRawItem("7:started", started);
 	writer.addRawItem("8:uploaded", uploaded);
 
@@ -86,6 +87,7 @@ bool mtt::TorrentState::load(const std::string& name)
 
 		downloadPath = root->getTxt("downloadPath");
 		lastStateTime = (int64_t)root->getBigInt("lastStateTime");
+		addedTime = (int64_t)root->getBigInt("addedTime");
 		started = root->getInt("started");
 		uploaded = root->getBigInt("uploaded");
 

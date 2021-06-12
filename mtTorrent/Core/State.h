@@ -23,6 +23,7 @@ namespace mtt
 
 		std::vector<uint8_t>& pieces;
 		int64_t lastStateTime = 0;
+		int64_t addedTime = 0;
 		bool started = false;
 
 		std::vector<DownloadedPiece> unfinishedPieces;

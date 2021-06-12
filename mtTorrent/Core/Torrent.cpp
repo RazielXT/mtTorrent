@@ -31,6 +31,7 @@ mtt::TorrentPtr mtt::Torrent::fromFile(mtt::TorrentFileInfo fileInfo)
 
 	torrent->peers = std::make_shared<Peers>(torrent);
 	torrent->fileTransfer = std::make_shared<FileTransfer>(torrent);
+	torrent->addedTime = (int64_t)time(0);
 
 	return torrent;
 }
@@ -44,6 +45,7 @@ mtt::TorrentPtr mtt::Torrent::fromMagnetLink(std::string link)
 
 	torrent->peers = std::make_shared<Peers>(torrent);
 	torrent->fileTransfer = std::make_shared<FileTransfer>(torrent);
+	torrent->addedTime = (int64_t)time(0);
 
 	return torrent;
 }
@@ -70,6 +72,10 @@ mtt::TorrentPtr mtt::Torrent::fromSavedState(std::string name)
 
 	torrent->files.initialize(state.selection, state.downloadPath);
 	torrent->lastStateTime = state.lastStateTime;
+	torrent->addedTime = state.addedTime;
+
+	if (torrent->addedTime == 0)
+		torrent->addedTime = (int64_t)time(0);
 
 	torrent->peers = std::make_shared<Peers>(torrent);
 	torrent->fileTransfer = std::make_shared<FileTransfer>(torrent);
@@ -118,6 +124,7 @@ void mtt::Torrent::save()
 	saveState.info.pieceSize = infoFile.info.pieceSize;
 	saveState.downloadPath = files.storage.getPath();
 	saveState.lastStateTime = lastStateTime = files.storage.getLastModifiedTime();
+	saveState.addedTime = addedTime;
 	saveState.started = state == ActiveState::Started;
 	saveState.uploaded = fileTransfer->getUploadSum();
 
@@ -551,6 +558,11 @@ bool mtt::Torrent::finished() const
 bool mtt::Torrent::selectionFinished() const
 {
 	return files.progress.getSelectedPercentage() == 1;
+}
+
+int64_t mtt::Torrent::getTimeAdded() const
+{
+	return addedTime;
 }
 
 const uint8_t* mtt::Torrent::hash() const

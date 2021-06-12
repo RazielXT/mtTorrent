@@ -54,6 +54,7 @@ namespace mtt
 
 		const uint8_t* hash() const;
 		std::string hashString() const;
+		int64_t getTimeAdded() const;
 
 		Files files;
 		TorrentFileInfo infoFile;
@@ -79,6 +80,7 @@ namespace mtt
 
 		void refreshLastState();
 		int64_t lastStateTime = 0;
+		int64_t addedTime = 0;
 
 		bool stateChanged = false;
 		void initialize();
