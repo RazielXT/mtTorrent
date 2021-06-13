@@ -28,6 +28,9 @@
     <Filter Include="Source Files\mtt\dht">
       <UniqueIdentifier>{641ea0cb-7574-4629-917a-42575427995c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\mtt\diag">
+      <UniqueIdentifier>{72d57272-d988-4eb1-b960-49e99f361937}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -225,6 +228,12 @@
     <ClCompile Include="..\mtTorrent\Core\Interface.cpp">
       <Filter>Source Files\mtt</Filter>
     </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\PeerStream.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Diagnostics\Diagnostics.cpp">
+      <Filter>Source Files\mtt\diag</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Test.h">
@@ -415,6 +424,12 @@
     </ClInclude>
     <ClInclude Include="..\mtTorrent\Core\Dht\Table.h">
       <Filter>Source Files\mtt\dht</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\PeerStream.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\Diagnostics\Diagnostics.h">
+      <Filter>Source Files\mtt\diag</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

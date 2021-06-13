@@ -166,6 +166,7 @@
     <ClCompile Include="..\mtTorrent\Core\Dht\Query.cpp" />
     <ClCompile Include="..\mtTorrent\Core\Dht\Responder.cpp" />
     <ClCompile Include="..\mtTorrent\Core\Dht\Table.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Diagnostics\Diagnostics.cpp" />
     <ClCompile Include="..\mtTorrent\Core\Downloader.cpp" />
     <ClCompile Include="..\mtTorrent\Core\ExtensionProtocol.cpp" />
     <ClCompile Include="..\mtTorrent\Core\Files.cpp" />
@@ -180,6 +181,7 @@
     <ClCompile Include="..\mtTorrent\Core\PeerCommunication.cpp" />
     <ClCompile Include="..\mtTorrent\Core\PeerMessage.cpp" />
     <ClCompile Include="..\mtTorrent\Core\Peers.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\PeerStream.cpp" />
     <ClCompile Include="..\mtTorrent\Core\PiecesProgress.cpp" />
     <ClCompile Include="..\mtTorrent\Core\State.cpp" />
     <ClCompile Include="..\mtTorrent\Core\Storage.cpp" />
@@ -228,6 +230,7 @@
     <ClInclude Include="..\mtTorrent\Core\Dht\Query.h" />
     <ClInclude Include="..\mtTorrent\Core\Dht\Responder.h" />
     <ClInclude Include="..\mtTorrent\Core\Dht\Table.h" />
+    <ClInclude Include="..\mtTorrent\Core\Diagnostics\Diagnostics.h" />
     <ClInclude Include="..\mtTorrent\Core\Downloader.h" />
     <ClInclude Include="..\mtTorrent\Core\ExtensionProtocol.h" />
     <ClInclude Include="..\mtTorrent\Core\Files.h" />
@@ -244,6 +247,7 @@
     <ClInclude Include="..\mtTorrent\Core\PeerCommunication.h" />
     <ClInclude Include="..\mtTorrent\Core\PeerMessage.h" />
     <ClInclude Include="..\mtTorrent\Core\Peers.h" />
+    <ClInclude Include="..\mtTorrent\Core\PeerStream.h" />
     <ClInclude Include="..\mtTorrent\Core\PiecesProgress.h" />
     <ClInclude Include="..\mtTorrent\Core\State.h" />
     <ClInclude Include="..\mtTorrent\Core\Storage.h" />
