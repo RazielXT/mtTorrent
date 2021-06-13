@@ -114,8 +114,6 @@ void mtt::Peers::connectNext(uint32_t count)
 		if (p.lastQuality == PeerQuality::Unknown)
 		{
 			connect((uint32_t)i);
-			p.lastConnectionTime = currentTime;
-			p.connectionAttempts++;
 			count--;
 		}
 		else if(p.lastQuality < PeerQuality::Connecting)
@@ -374,6 +372,9 @@ void mtt::Peers::connect(uint32_t idx)
 	if (knownPeer.lastQuality == PeerQuality::Unknown)
 		knownPeer.lastQuality = PeerQuality::Connecting;
 
+	knownPeer.lastConnectionTime = (uint32_t)::time(0);;
+	knownPeer.connectionAttempts++;
+
 	PEERS_LOG("connect " << knownPeer.address.toString());
 
 	ActivePeer peer;
@@ -489,7 +490,7 @@ void mtt::Peers::DhtSource::findPeers()
 	}
 }
 
-uint32_t mtt::Peers::DhtSource::dhtFoundPeers(const uint8_t* hash, std::vector<Addr>& values)
+uint32_t mtt::Peers::DhtSource::dhtFoundPeers(const uint8_t* hash, const std::vector<Addr>& values)
 {
 	info.peers += peers.updateKnownPeers(values, PeerSource::Dht);
 	return info.peers;

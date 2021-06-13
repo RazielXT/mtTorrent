@@ -141,6 +141,8 @@ void mtt::utp::Stream::write(const DataBuffer& data)
 
 bool mtt::utp::Stream::readUdpPacket(const MessageHeader& header, const BufferView& data)
 {
+	receiving.bytesSize += data.size;
+
 	switch (header.getType())
 	{
 	case MessageType::ST_STATE:
@@ -234,9 +236,25 @@ uint16_t mtt::utp::Stream::getId()
 	return state.id_recv;
 }
 
-const udp::endpoint& mtt::utp::Stream::getEndpoint()
+const udp::endpoint& mtt::utp::Stream::getEndpoint() const
 {
 	return writer->getEndpoint();
+}
+
+std::string mtt::utp::Stream::getHostname() const
+{
+	return writer->getName();
+}
+
+Addr mtt::utp::Stream::getAddress() const
+{
+	const auto& e = getEndpoint();
+	return Addr(e.address(), e.port());
+}
+
+uint64_t mtt::utp::Stream::getReceivedDataCount() const
+{
+	return receiving.bytesSize;
 }
 
 void mtt::utp::Stream::close()

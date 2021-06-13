@@ -688,7 +688,7 @@ void mtt::dht::Query::PingNodes::sendRequest(const NodeInfo& node, bool unknown)
 	requests.push_back(req);
 }
 
-void mtt::dht::Query::AnnouncePeer(const uint8_t* infohash, std::string& token, udp::endpoint& target, DataListener* dhtListener)
+void mtt::dht::Query::AnnouncePeer(const uint8_t* infohash, const std::string& token, const udp::endpoint& target, DataListener* dhtListener)
 {
 	DHT_LOG("AnnouncePeer infohash " << hexToString(infohash, 20) << " to " << target.address().to_string());
 

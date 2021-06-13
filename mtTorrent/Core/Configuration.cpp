@@ -122,6 +122,7 @@ namespace mtt
 		{
 			bool changed = val.maxDownloadSpeed != external.transfer.maxDownloadSpeed;
 			changed |= val.maxUploadSpeed != external.transfer.maxUploadSpeed;
+			changed |= val.utp.enabled != external.transfer.utp.enabled;
 
 			if (changed)
 			{
@@ -234,6 +235,8 @@ namespace mtt
 							external.transfer.maxDownloadSpeed = (uint32_t)i->getBigInt();
 						if (auto i = tSettings->getIntItem("maxUploadSpeed"))
 							external.transfer.maxUploadSpeed = (uint32_t)i->getBigInt();
+						if (auto i = tSettings->getIntItem("utpEnable"))
+							external.transfer.utp.enabled = (bool)i->getInt();
 					}
 					if (auto fSettings = externalSettings->getDictItem("files"))
 					{
@@ -282,6 +285,7 @@ namespace mtt
 					writer.startMap("transfer");
 					writer.addItem("maxDownloadSpeed", external.transfer.maxDownloadSpeed);
 					writer.addItem("maxUploadSpeed", external.transfer.maxUploadSpeed);
+					writer.addItem("utpEnable", (int)external.transfer.utp.enabled);
 					writer.endMap();
 
 					writer.startMap("files");

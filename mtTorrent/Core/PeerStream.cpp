@@ -1,4 +1,5 @@
 #include "PeerStream.h"
+#include "Api/Configuration.h"
 
 mtt::PeerStream::PeerStream(asio::io_service& io) : io_service(io)
 {
@@ -21,27 +22,17 @@ void mtt::PeerStream::fromStream(std::shared_ptr<TcpAsyncStream> stream)
 void mtt::PeerStream::fromStream(utp::StreamPtr stream)
 {
 	utpStream = stream;
+	initializeUtpStream();
 
 	onOpenCallback();
 }
 
 void mtt::PeerStream::open(const Addr& address)
 {
-	// 	utpStream = utp::Manager::get().createStream(address.toUdpEndpoint(), [this, address](bool success)
-	// 		{
-	// 			if (success)
-	// 			{
-	// 				ext.utpStream = utpStream;
-	// 				utpStream->onCloseCallback = [this](int code) {connectionClosed(code); };
-	// 				utpStream->onReceiveCallback = std::bind(&PeerCommunication::dataReceived, shared_from_this(), std::placeholders::_1);
-	// 				connectionOpened();
-	// 			}
-	// 			else
-	// 			{
-					initializeTcpStream();
-					tcpStream->connect(address.addrBytes, address.port, address.ipv6);
-	// 			}
-	// 		});
+	if (mtt::config::getExternal().transfer.utp.enabled)
+		openUtpStream(address);
+	else
+		openTcpStream(address);
 }
 
 void mtt::PeerStream::write(const DataBuffer& data)
@@ -58,19 +49,34 @@ void mtt::PeerStream::close()
 		tcpStream->close(false);
 }
 
-const Addr& mtt::PeerStream::getAddress() const
+Addr mtt::PeerStream::getAddress() const
 {
-	return tcpStream->getAddress();
+	if (tcpStream)
+		return tcpStream->getAddress();
+	if (utpStream)
+		return utpStream->getAddress();
+
+	return Addr::Empty();
 }
 
-const std::string& mtt::PeerStream::getAddressName() const
+std::string mtt::PeerStream::getAddressName() const
 {
-	return tcpStream->getHostname();
+	if (tcpStream)
+		return tcpStream->getHostname();
+	if (utpStream)
+		return utpStream->getHostname();
+
+	return {};
 }
 
 uint64_t mtt::PeerStream::getReceivedDataCount() const
 {
-	return tcpStream->getReceivedDataCount();
+	if (tcpStream)
+		return tcpStream->getReceivedDataCount();
+	if (utpStream)
+		return utpStream->getReceivedDataCount();
+
+	return 0;
 }
 
 void mtt::PeerStream::setMinBandwidthRequest(uint32_t size)
@@ -81,23 +87,51 @@ void mtt::PeerStream::setMinBandwidthRequest(uint32_t size)
 
 void mtt::PeerStream::initializeTcpStream()
 {
-	if (!tcpStream)
-	{
-		tcpStream = std::make_shared<TcpAsyncStream>(io_service);
+	tcpStream = std::make_shared<TcpAsyncStream>(io_service);
 
-		tcpStream->onConnectCallback = std::bind(&PeerStream::connectionOpened, shared_from_this(), Type::Tcp);
-		tcpStream->onCloseCallback = [this](int code) { connectionClosed(Type::Tcp, code); };
-		tcpStream->onReceiveCallback = [this](const BufferView& buffer) { return dataReceived(Type::Tcp, buffer); };
+	tcpStream->onConnectCallback = std::bind(&PeerStream::connectionOpened, shared_from_this(), Type::Tcp);
+	tcpStream->onCloseCallback = [this](int code) { connectionClosed(Type::Tcp, code); };
+	tcpStream->onReceiveCallback = [this](const BufferView& buffer) { return dataReceived(Type::Tcp, buffer); };
 
-		BandwidthChannel* channels[2];
-		channels[0] = BandwidthManager::Get().GetChannel("");
-		channels[1] = nullptr;//BandwidthManager::Get().GetChannel(hexToString(torrent.hash, 20));
-		tcpStream->setBandwidthChannels(channels, 2);
-	}
+	BandwidthChannel* channels[2];
+	channels[0] = BandwidthManager::Get().GetChannel("");
+	channels[1] = nullptr;//BandwidthManager::Get().GetChannel(hexToString(torrent.hash, 20));
+	tcpStream->setBandwidthChannels(channels, 2);
 }
 
-void mtt::PeerStream::connectionOpened(Type)
+void mtt::PeerStream::openTcpStream(const Addr& address)
 {
+	initializeTcpStream();
+	tcpStream->connect(address.addrBytes, address.port, address.ipv6);
+}
+
+void mtt::PeerStream::initializeUtpStream()
+{
+	utpStream->onCloseCallback = std::bind(&PeerStream::connectionClosed, shared_from_this(), Type::Utp, std::placeholders::_1);
+	utpStream->onReceiveCallback = [this](const BufferView& buffer) { return dataReceived(Type::Utp, buffer); };
+}
+
+void mtt::PeerStream::openUtpStream(const Addr& address)
+{
+	utpStream = utp::Manager::get().createStream(address.toUdpEndpoint(), [this, address](bool success)
+		{
+			if (success)
+			{
+				initializeUtpStream();
+				connectionOpened(Type::Utp);
+			}
+			else
+			{
+				openTcpStream(address);
+			}
+		});
+}
+
+void mtt::PeerStream::connectionOpened(Type t)
+{
+	if (t != Type::Utp)
+		utpStream = nullptr;
+
 	return onOpenCallback();
 }
 

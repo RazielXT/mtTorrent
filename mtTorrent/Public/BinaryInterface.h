@@ -56,6 +56,7 @@ namespace mtBI
 		bool upnpEnabled;
 		uint32_t maxDownloadSpeed;
 		uint32_t maxUploadSpeed;
+		bool utpEnabled;
 	};
 
 	struct PiecesInfo

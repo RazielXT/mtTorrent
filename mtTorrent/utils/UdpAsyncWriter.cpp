@@ -282,12 +282,12 @@ void UdpAsyncWriter::send_message(const BufferView& buffer)
 		postFail("Write", ec);
 }
 
-std::string UdpAsyncWriter::getName()
+std::string UdpAsyncWriter::getName() const
 {
 	return target_endpoint.address().to_string() + ":" + std::to_string(target_endpoint.port());
 }
 
-udp::endpoint& UdpAsyncWriter::getEndpoint()
+const udp::endpoint& UdpAsyncWriter::getEndpoint() const
 {
 	return target_endpoint;
 }

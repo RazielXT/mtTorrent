@@ -23,8 +23,8 @@ namespace mtt
 		void write(const DataBuffer&);
 		void close();
 
-		const Addr& getAddress() const;
-		const std::string& getAddressName() const;
+		Addr getAddress() const;
+		std::string getAddressName() const;
 
 		uint64_t getReceivedDataCount() const;
 
@@ -35,9 +35,12 @@ namespace mtt
 		asio::io_service& io_service;
 
 		std::shared_ptr<TcpAsyncStream> tcpStream;
-		utp::StreamPtr utpStream;
-
 		void initializeTcpStream();
+		void openTcpStream(const Addr& address);
+
+		utp::StreamPtr utpStream;
+		void initializeUtpStream();
+		void openUtpStream(const Addr& address);
 
 		enum class Type
 		{

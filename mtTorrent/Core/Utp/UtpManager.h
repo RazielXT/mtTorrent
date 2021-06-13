@@ -25,13 +25,13 @@ namespace mtt
 			void start(uint16_t port);
 			void stop();
 
-			StreamPtr createStream(udp::endpoint& e, /*asio::io_service& io_service,*/ std::function<void(bool)> onResult);
-
-			bool onUdpPacket(udp::endpoint&, std::vector<DataBuffer*>&);
+			StreamPtr createStream(const udp::endpoint& e, std::function<void(bool)> onResult);
 
 			StreamPtr getStream() { return streams.begin()->second; }
 
 			std::function<void(StreamPtr)> onConnection;
+
+			bool onUdpPacket(udp::endpoint&, std::vector<DataBuffer*>&);
 
 		private:
 

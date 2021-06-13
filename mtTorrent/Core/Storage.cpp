@@ -272,8 +272,7 @@ mtt::Storage::FileBlockPosition mtt::Storage::getFileBlockPosition(const File& f
 	}
 	else
 	{
-		auto or = info.pieceSize - file.startPiecePos + offset;
-		blockInfo.fileDataPos = or;
+		blockInfo.fileDataPos = info.pieceSize - file.startPiecePos + offset;
 
 		if (index > file.startPieceIndex + 1)
 			blockInfo.fileDataPos += (index - file.startPieceIndex - 1) * (size_t)info.pieceSize;

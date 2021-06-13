@@ -45,6 +45,12 @@ namespace mtt
 			{
 				uint32_t maxDownloadSpeed = 0;
 				uint32_t maxUploadSpeed = 0;
+
+				struct 
+				{
+					bool enabled = false;
+				}
+				utp;
 			}
 			transfer;
 

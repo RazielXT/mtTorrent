@@ -21,17 +21,22 @@ mtt::utp::Manager& mtt::utp::Manager::get()
 
 void mtt::utp::Manager::start(uint16_t port)
 {
-	active = true;
-	service.start(4);
-
 	currentUdpPort = port;
-	timeoutTimer = ScheduledTimer::create(service.io, [this]()
-		{
-			refresh();
-			timeoutTimer->schedule(std::chrono::milliseconds(500));
-		});
 
-	timeoutTimer->schedule(std::chrono::milliseconds(500));
+	if (!active)
+	{
+		active = true;
+		service.start(4);
+
+		timeoutTimer = ScheduledTimer::create(service.io, [this]()
+			{
+				refresh();
+				timeoutTimer->schedule(std::chrono::milliseconds(500));
+			});
+
+		timeoutTimer->schedule(std::chrono::milliseconds(500));
+	}
+
 }
 
 void mtt::utp::Manager::stop()
@@ -46,7 +51,7 @@ void mtt::utp::Manager::stop()
 	service.stop();
 }
 
-mtt::utp::StreamPtr mtt::utp::Manager::createStream(udp::endpoint& e,/* asio::io_service& io_service, */std::function<void(bool)> onResult)
+mtt::utp::StreamPtr mtt::utp::Manager::createStream(const udp::endpoint& e, std::function<void(bool)> onResult)
 {
 	std::lock_guard<std::mutex> guard(streamsMutex);
 

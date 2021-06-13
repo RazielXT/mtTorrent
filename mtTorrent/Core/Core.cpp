@@ -103,6 +103,21 @@ void mtt::Core::init()
 			else
 				dht->stop();
 		});
+
+	if (mtt::config::getExternal().transfer.utp.enabled)
+		utp.start(mtt::config::getExternal().connection.udpPort);
+
+	config::registerOnChangeCallback(config::ValueType::Transfer, [this]()
+		{
+			if (mtt::config::getExternal().transfer.utp.enabled)
+				utp.start(mtt::config::getExternal().connection.udpPort);
+		});
+
+	UdpAsyncComm::Get()->listen([this](udp::endpoint& e, std::vector<DataBuffer*>& b)
+		{
+			utp.onUdpPacket(e, b);
+			dht->onUdpPacket(e, b);
+		});
 }
 
 static void saveTorrentList(const std::vector<mtt::TorrentPtr>& torrents)

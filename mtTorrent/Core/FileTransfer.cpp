@@ -309,7 +309,10 @@ void mtt::FileTransfer::removePeer(PeerCommunication* p)
 		}
 	}
 
-	evaluateCurrentPeers();
+	torrent->service.io.post([this]()
+		{
+			evaluateCurrentPeers();
+		});
 }
 
 void mtt::FileTransfer::disconnectPeers(const std::vector<uint32_t>& positions)

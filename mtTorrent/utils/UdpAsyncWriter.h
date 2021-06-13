@@ -27,8 +27,8 @@ public:
 	void setAddress(const std::string& hostname, const std::string& port, bool ipv6);
 	void setBindPort(uint16_t port);
 
-	std::string getName();
-	udp::endpoint& getEndpoint();
+	std::string getName() const;
+	const udp::endpoint& getEndpoint() const;
 
 	enum class WriteOption { None, DontFragment };
 	void write(const BufferView& data, WriteOption opt = WriteOption::None );

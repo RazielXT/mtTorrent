@@ -45,6 +45,13 @@ Addr::Addr(const char* str)
 	set(a, (uint16_t)strtoul(str + portStart + 1, 0, 10));
 }
 
+static Addr emptyAddr;
+
+const Addr& Addr::Empty()
+{
+	return emptyAddr;
+}
+
 void Addr::set(const uint8_t* ip, uint16_t p, bool isIpv6)
 {
 	memcpy(addrBytes, ip, isIpv6 ? 16 : 4);

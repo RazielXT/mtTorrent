@@ -39,7 +39,11 @@ namespace mtt
 			bool refresh(TimePoint now);
 
 			uint16_t getId();
-			const udp::endpoint& getEndpoint();
+			const udp::endpoint& getEndpoint() const;
+
+			std::string getHostname() const;
+			Addr getAddress() const;
+			uint64_t getReceivedDataCount() const;
 
 		private:
 
@@ -158,6 +162,8 @@ namespace mtt
 					bool appended = false;
 				}
 				state;
+
+				uint64_t bytesSize = 0;
 			}
 			receiving;
 

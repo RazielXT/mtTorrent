@@ -11,7 +11,6 @@ mtt::dht::Communication* comm;
 mtt::dht::Communication::Communication() : responder(*this)
 {
 	udp = UdpAsyncComm::Get();
-	udp->listen(std::bind(&Communication::onUnknownUdpPacket, this, std::placeholders::_1, std::placeholders::_2));
 	comm = this;
 	
 	responder.table = table = std::make_shared<Table>();
@@ -137,7 +136,7 @@ void mtt::dht::Communication::pingNode(const Addr& addr)
 	q->start(addr, table, this);
 }
 
-uint32_t mtt::dht::Communication::onFoundPeers(const uint8_t* hash, std::vector<Addr>& values)
+uint32_t mtt::dht::Communication::onFoundPeers(const uint8_t* hash, const std::vector<Addr>& values)
 {
 	std::lock_guard<std::mutex> guard(peersQueriesMutex);
 
@@ -247,12 +246,12 @@ void mtt::dht::Communication::load()
 	}
 }
 
-void mtt::dht::Communication::announceTokenReceived(const uint8_t* hash, std::string& token, udp::endpoint& source)
+void mtt::dht::Communication::announceTokenReceived(const uint8_t* hash, const std::string& token, const udp::endpoint& source)
 {
 	Query::AnnouncePeer(hash, token, source, this);
 }
 
-bool mtt::dht::Communication::onUnknownUdpPacket(udp::endpoint& e, std::vector<DataBuffer*>& data)
+bool mtt::dht::Communication::onUdpPacket(udp::endpoint& e, std::vector<DataBuffer*>& data)
 {
 	for (auto d : data)
 	{

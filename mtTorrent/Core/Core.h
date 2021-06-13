@@ -3,6 +3,7 @@
 #include "Torrent.h"
 #include "Api/Core.h"
 #include "utils/ScheduledTimer.h"
+#include "Utp/UtpManager.h"
 
 class TcpAsyncServer;
 class ServiceThreadpool;
@@ -47,5 +48,6 @@ namespace mtt
 		Status removeTorrent(const char* hash, bool deleteFiles);
 
 		std::unique_ptr<GlobalBandwidth> bandwidth;
+		utp::Manager utp;
 	};
 }

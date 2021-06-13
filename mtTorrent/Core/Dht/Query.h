@@ -146,7 +146,7 @@ namespace mtt
 				PingMessage parseResponse(DataBuffer& message);
 			};
 
-			void AnnouncePeer(const uint8_t* infohash, std::string& token, udp::endpoint& target, DataListener* dhtListener);
+			void AnnouncePeer(const uint8_t* infohash, const std::string& token, const udp::endpoint& target, DataListener* dhtListener);
 		}
 	}
 }
