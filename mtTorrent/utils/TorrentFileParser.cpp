@@ -212,7 +212,7 @@ mtt::TorrentInfo parseTorrentInfo(const BencodeParser::Object* infoDictionary)
 			auto startId = getPieceIndex(sizeSum, info.pieceSize, false);
 			auto startPos = sizeSum % info.pieceSize;
 			sizeSum += size;
-			auto endId = getPieceIndex(sizeSum, info.pieceSize, true);
+			auto endId = size ? getPieceIndex(sizeSum, info.pieceSize, true) : startId;
 			auto endPos = sizeSum % info.pieceSize;
 
 			info.files.push_back({ path,  size, startId, (uint32_t)startPos, endId, (uint32_t)endPos });

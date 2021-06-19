@@ -160,7 +160,7 @@ mtt::Status mtt::Storage::preallocateSelection(const DownloadSelection& selectio
 				sz += file.endPiecePos;
 		}
 
-		if (sz)
+		if (sz || selection[i].selected)
 			allocations.push_back({ file, sz });
 		else if (selected.selectedIntervals.back().endIdx < file.startPieceIndex)
 			break;
