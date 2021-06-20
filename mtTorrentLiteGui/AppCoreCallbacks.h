@@ -54,9 +54,13 @@ public ref class UserWindowState
 {
 public:
 
+	bool maximized;
 	int height;
 	int width;
 	int splitterDistance;
+
+	System::String^ torrentSortColumn;
+	bool torrentSortColumnDesc;
 
 	System::String^ addPeer;
 };

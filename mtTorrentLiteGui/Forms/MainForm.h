@@ -29,13 +29,23 @@ namespace GuiLite {
 			instance = this;
 
 			getWindowState();
+			if (windowState->maximized)
+			{
+				this->WindowState = FormWindowState::Maximized;
+			}
 			if (windowState->height)
 			{
 				this->ClientSize = System::Drawing::Size(windowState->width, windowState->height);
 			}
+
 			if (windowState->splitterDistance)
 			{
 				splitContainer1->SplitterDistance = windowState->splitterDistance;
+			}
+			if (windowState->torrentSortColumn)
+			{
+				auto c = torrentsGrid->Columns[windowState->torrentSortColumn];
+				torrentsGrid->Sort(c, windowState->torrentSortColumnDesc ? System::ComponentModel::ListSortDirection::Descending : System::ComponentModel::ListSortDirection::Ascending);
 			}
 
 			try
@@ -90,7 +100,7 @@ private: System::Windows::Forms::DataGridViewTextBoxColumn^ Index;
 private: System::Windows::Forms::DataGridViewCheckBoxColumn^ Selected;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn5;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ Progress;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ Size;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ TSize;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ SizeBytes;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ PiecesCount;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ PiecesRemaining;
@@ -250,17 +260,33 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 		/// </summary>
 		~MainForm()
 		{
-			windowState->height = ClientSize.Height;
-			windowState->width = ClientSize.Width;
-			windowState->splitterDistance = splitContainer1->SplitterDistance;
+			if (!saved)
+			{
+				windowState->maximized = (WindowState == FormWindowState::Maximized);
+				windowState->height = ClientSize.Height;
+				windowState->width = ClientSize.Width;
 
-			saveWindowState();
+				windowState->splitterDistance = splitContainer1->SplitterDistance;
+
+				if (torrentsGrid->SortedColumn)
+					windowState->torrentSortColumn = torrentsGrid->SortedColumn->Name;
+				else
+					windowState->torrentSortColumn = nullptr;
+
+				windowState->torrentSortColumnDesc = torrentsGrid->SortOrder == System::Windows::Forms::SortOrder::Descending;
+
+				saveWindowState();
+
+				saved = true;
+			}
 
 			if (components)
 			{
 				delete components;
 			}
 		}
+
+		bool saved = false;
 	private: System::Windows::Forms::SplitContainer^  splitContainer1;
 	private: System::Windows::Forms::TabControl^  TorrentTabs;
 
@@ -380,7 +406,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->Selected = (gcnew System::Windows::Forms::DataGridViewCheckBoxColumn());
 			this->dataGridViewTextBoxColumn5 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->FProgress = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->Size = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->TSize = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->SizeBytes = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->PiecesCount = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->PiecesRemaining = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
@@ -1148,7 +1174,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->filesProgressGridView->ColumnHeadersHeightSizeMode = System::Windows::Forms::DataGridViewColumnHeadersHeightSizeMode::AutoSize;
 			this->filesProgressGridView->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(9) {
 				this->Index,
-					this->Selected, this->dataGridViewTextBoxColumn5, this->FProgress, this->Size, this->SizeBytes, this->PiecesCount, this->PiecesRemaining,
+					this->Selected, this->dataGridViewTextBoxColumn5, this->FProgress, this->TSize, this->SizeBytes, this->PiecesCount, this->PiecesRemaining,
 					this->PiecesActive
 			});
 			dataGridViewCellStyle31->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleLeft;
@@ -1224,12 +1250,12 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			// Size
 			// 
 			dataGridViewCellStyle27->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->Size->DefaultCellStyle = dataGridViewCellStyle27;
-			this->Size->FillWeight = 20;
-			this->Size->HeaderText = L"Size";
-			this->Size->MinimumWidth = 80;
-			this->Size->Name = L"Size";
-			this->Size->ReadOnly = true;
+			this->TSize->DefaultCellStyle = dataGridViewCellStyle27;
+			this->TSize->FillWeight = 20;
+			this->TSize->HeaderText = L"Size";
+			this->TSize->MinimumWidth = 80;
+			this->TSize->Name = L"Size";
+			this->TSize->ReadOnly = true;
 			// 
 			// SizeBytes
 			// 

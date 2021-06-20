@@ -79,7 +79,9 @@ UserWindowState^ getWindowState()
 				{
 					for each(XmlNode^ e in user[0]->ChildNodes)
 					{
-						if (e->Name == "height")
+						if (e->Name == "maximized")
+							System::Boolean::TryParse(e->InnerText, state->maximized);
+						else if (e->Name == "height")
 							System::Int32::TryParse(e->InnerText, state->height);
 						else if (e->Name == "width")
 							System::Int32::TryParse(e->InnerText, state->width);
@@ -87,6 +89,16 @@ UserWindowState^ getWindowState()
 							System::Int32::TryParse(e->InnerText, state->splitterDistance);
 						else if (e->Name == "addPeer")
 							state->addPeer = e->InnerText;
+						else if (e->Name == "torrentsGrid")
+						{
+							for each (XmlNode^ el in e->ChildNodes)
+							{
+								if (el->Name == "sortColumn")
+									state->torrentSortColumn = el->InnerText;
+								else if (el->Name == "sortDesc")
+									System::Boolean::TryParse(el->InnerText, state->torrentSortColumnDesc);
+							}
+						}
 					}
 				}
 			}
@@ -123,6 +135,10 @@ void saveWindowState()
 		}
 
 		{
+			e = doc->CreateElement("maximized");
+			e->InnerText = state->maximized.ToString();
+			root->AppendChild(e);
+
 			e = doc->CreateElement("height");
 			e->InnerText = state->height.ToString();
 			root->AppendChild(e);
@@ -134,6 +150,21 @@ void saveWindowState()
 			e = doc->CreateElement("splitterDistance");
 			e->InnerText = state->splitterDistance.ToString();
 			root->AppendChild(e);
+
+			XmlElement^ torrents = doc->CreateElement("torrentsGrid");
+
+			if (state->torrentSortColumn)
+			{
+				e = doc->CreateElement("sortColumn");
+				e->InnerText = state->torrentSortColumn;
+				torrents->AppendChild(e);
+
+				e = doc->CreateElement("sortDesc");
+				e->InnerText = state->torrentSortColumnDesc.ToString();
+				torrents->AppendChild(e);
+			}
+
+			root->AppendChild(torrents);
 		}
 
 		try
