@@ -514,7 +514,7 @@ mtt::Status mtt::Storage::preallocate(const File& file, size_t size)
 	if (ec)
 		return Status::E_InvalidPath;
 
-	if (existingSize != size)
+	if (!exists || existingSize != size)
 	{
 		if (existingSize > size)
 		{
@@ -551,7 +551,7 @@ mtt::Status mtt::Storage::preallocate(const File& file, size_t size)
 			fileOut.seekp(file.size - 1);
 			fileOut.write(buffer.data(), buffer.size());
 		}
-		else
+		else if (size)
 		{
 			fileOut.seekp(size - 1);
 			fileOut.put(0);

@@ -224,7 +224,7 @@ void mtt::Torrent::refreshLastState()
 				filesTime = fileTime;
 
 			bool checkFile = !lastStateTime;
-			if (!fileTime && files.progress.hasPiece(tfiles[i].startPieceIndex))
+			if (!fileTime && files.progress.hasPiece(tfiles[i].startPieceIndex) && tfiles[i].size != 0)
 				needRecheck = true;
 		}
 
