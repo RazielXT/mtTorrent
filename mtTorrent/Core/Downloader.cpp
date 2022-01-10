@@ -6,15 +6,16 @@
 #include <numeric>
 #include <random>
 
-#define DL_LOG(x) WRITE_LOG(LogTypeDownload, x)
+#define DL_LOG(x) WRITE_LOG(x)
 
 const size_t MaxPreparedPieces = 10;
-const uint32_t MinPendingPeerRequestsBeforeNext = 5;
-const uint32_t MaxPendingPeerRequests = 10;
-const uint32_t MaxPendingPeerRequestsToSpeedRatio = (1024*1024);
+const uint32_t MinPendingPeerRequests = 5;
+const uint32_t MaxPendingPeerRequests = 40;
+const float DlSpeedPerMoreRequest = 40*1024.f;
 
 mtt::Downloader::Downloader(const TorrentInfo& info, DownloaderClient& c) : torrentInfo(info), client(c)
 {
+	CREATE_NAMED_LOG(Downloader, info.name);
 }
 
 std::vector<mtt::DownloadedPiece> mtt::Downloader::stop()
@@ -205,11 +206,11 @@ void mtt::Downloader::unchokePeer(ActivePeer* peer)
 
 void mtt::Downloader::messageReceived(PeerCommunication* comm, PeerMessage& msg)
 {
-	if (msg.id == Piece)
+	if (msg.id == PeerMessage::Piece)
 	{
 		pieceBlockReceived(msg.piece, comm);
 	}
-	else if (msg.id == Unchoke)
+	else if (msg.id == PeerMessage::Unchoke)
 	{
 		auto peers = client.getPeers();
 
@@ -367,14 +368,19 @@ void mtt::Downloader::sendPieceRequests(ActivePeer* p)
 		count += (uint32_t)piece.blocks.size();
 	}
 
-	if (count < MinPendingPeerRequestsBeforeNext)
-	{
-		auto maxRequests = MaxPendingPeerRequests;
-		if (p->receivedBlocks > 30)
-		{
-			maxRequests = MaxPendingPeerRequests * std::max(1U, p->downloadSpeed / MaxPendingPeerRequestsToSpeedRatio);
-		}
+	DL_LOG("Current requests" << count << "pieces count" << p->requestedPieces.size());
 
+	static auto maxRequests = MinPendingPeerRequests;
+	if (p->receivedBlocks > 30)
+	{
+		if (maxRequests < (uint32_t)(p->downloadSpeed / DlSpeedPerMoreRequest))
+			maxRequests = std::min(MaxPendingPeerRequests, maxRequests + 1);
+		else
+			maxRequests = std::max(MinPendingPeerRequests, maxRequests - 1);
+	}
+
+	if (count < maxRequests)
+	{
 		std::lock_guard<std::mutex> guard(requestsMutex);
 
 		for (auto& currentPiece : p->requestedPieces)
@@ -391,7 +397,7 @@ void mtt::Downloader::sendPieceRequests(ActivePeer* p)
 
 			if (!request)
 			{
-				DL_LOG("Request add " << currentPiece.idx);
+				DL_LOG("Request add idx" << currentPiece.idx);
 				requests.push_back(RequestInfo());
 				request = &requests.back();
 				request->pieceIdx = currentPiece.idx;
@@ -401,10 +407,11 @@ void mtt::Downloader::sendPieceRequests(ActivePeer* p)
 			}
 
 			count += sendPieceRequests(p, &currentPiece, request, maxRequests - count);
-
 			if (count >= maxRequests)
 				break;
 		}
+
+		DL_LOG("New requests" << count << "maxRequests" << maxRequests << "receivedBlocks" << p->receivedBlocks << "dl" << p->downloadSpeed);
 	}
 }
 
@@ -420,7 +427,7 @@ uint32_t mtt::Downloader::sendPieceRequests(ActivePeer* peer, ActivePeer::Reques
 			if (std::find(request->blocks.begin(), request->blocks.end(), nextBlock*BlockRequestMaxSize) == request->blocks.end())
 			{
 				auto info = torrentInfo.getPieceBlockInfo(request->idx, nextBlock);
-				DL_LOG("Send block request " << info.index << "-" << info.begin);
+				DL_LOG("Send block request " << info.index << info.begin);
 				request->blocks.push_back(info.begin);
 				peer->comm->requestPieceBlock(info);
 				count++;

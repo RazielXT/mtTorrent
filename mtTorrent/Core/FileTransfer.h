@@ -37,32 +37,7 @@ namespace mtt
 
 	private:
 
-		Diagnostics::Storage diagnostics;
-
-#ifdef PEER_DIAGNOSTICS
-		struct LogEval
-		{
-			long time;
-			uint32_t count;
-		};
-		std::vector<LogEval> logEvals;
-
-		struct LogEvalPeer
-		{
-			uint32_t dl = 0;
-			uint32_t up = 0;
-			uint32_t activityTime = 0;
-			Addr addr;
-			enum Action : uint8_t { Keep, TooSoon, NotResponding, TooSlow, Upload } action = Keep;
-			char info = 0;
-		};
-		std::vector<LogEvalPeer> logEvalPeers;
-
-		std::mutex logmtx;
-		void saveLogEvents();
-#else
-		void saveLogEvents() {}
-#endif
+		FileLog log;
 
 		std::vector<uint32_t> piecesAvailability;
 		std::vector<Priority> piecesPriority;
@@ -73,12 +48,13 @@ namespace mtt
 		mtt::ActivePeer* getActivePeer(PeerCommunication* p);
 		void addPeer(PeerCommunication*);
 		void removePeer(PeerCommunication*);
-		void evaluateCurrentPeers();
+		void evaluateMorePeers();
 
 		std::shared_ptr<ScheduledTimer> refreshTimer;
 
 		void updateMeasures();
 		std::vector<std::pair<PeerCommunication*, std::pair<uint64_t, uint64_t>>> lastSpeedMeasure;
+		uint32_t updateMeasuresCounter = 0;
 
 		void evalCurrentPeers();
 		void disconnectPeers(const std::vector<uint32_t>& positions);

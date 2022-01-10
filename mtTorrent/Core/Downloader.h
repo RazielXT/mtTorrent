@@ -117,5 +117,7 @@ namespace mtt
 
 		const TorrentInfo& torrentInfo;
 		DownloaderClient& client;
+
+		FileLog log;
 	};
 }
