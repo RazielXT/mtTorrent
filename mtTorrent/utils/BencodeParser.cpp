@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cstring>
 
-#define PARSER_LOG(x) WRITE_LOG(LogTypeBencodeParser, x)
+#define PARSER_LOG(x) WRITE_GLOBAL_LOG(BencodeParser, x)
 
 template <>
 std::string mtt::BencodeParser::Object::getValueOr(const char* name, std::string def) const
@@ -166,7 +166,7 @@ mtt::BencodeParser::Object* mtt::BencodeParser::parseString(const char** body)
 	obj.info.data = *body;
 	(*body) += obj.info.size;
 
-	PARSER_LOG("String " << std::string(obj.info.data, obj.info.size));
+	PARSER_LOG("String " << std::string(obj.info.data));
 
 	objects.push_back(obj);
 	return &objects.back();

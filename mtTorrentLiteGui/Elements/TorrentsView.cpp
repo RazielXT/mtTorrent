@@ -348,6 +348,9 @@ void TorrentsView::refreshTorrentsGrid()
 		}
 	}
 
+	if (torrentGrid->SortedColumn)
+		torrentGrid->Sort(torrentGrid->SortedColumn, torrentGrid->SortOrder == System::Windows::Forms::SortOrder::Ascending ? System::ComponentModel::ListSortDirection::Ascending : System::ComponentModel::ListSortDirection::Descending);
+
 	GuiLite::MainForm::instance->buttonStart->Enabled = selectionStopped;
 	GuiLite::MainForm::instance->buttonStop->Enabled = selectionActive;
 	GuiLite::MainForm::instance->buttonRemove->Enabled = core.selected;

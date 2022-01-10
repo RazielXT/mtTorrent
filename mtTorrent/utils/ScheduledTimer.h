@@ -15,7 +15,6 @@ struct ScheduledTimer : public std::enable_shared_from_this<ScheduledTimer>
 	void schedule(std::chrono::milliseconds time);
 
 	void disable();
-	uint32_t getSecondsTillNextUpdate();
 
 private:
 

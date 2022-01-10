@@ -2,8 +2,6 @@
 #include "SHA.h"
 #include <iostream>
 
-#define TPARSER_LOG(x) WRITE_LOG(LogTypeFileParser, x)
-
 using namespace mtt;
 
 bool generateInfoHash(BencodeParser& parsed, TorrentFileInfo&, TorrentFileParser::ParsedInfo*);

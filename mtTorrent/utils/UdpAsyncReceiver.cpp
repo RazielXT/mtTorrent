@@ -1,7 +1,7 @@
 #include "UdpAsyncReceiver.h"
 #include "Logging.h"
 
-#define UDP_LOG(x) WRITE_LOG(LogTypeUdpListener, x)
+#define UDP_LOG(x) WRITE_GLOBAL_LOG(UdpListener, x)
 
 UdpAsyncReceiver::UdpAsyncReceiver(asio::io_service& io_service, uint16_t port, bool ipv6) : socket_(io_service)
 {

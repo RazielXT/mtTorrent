@@ -308,7 +308,6 @@
     <ClCompile Include="Core\Api\TorrentImpl.cpp" />
     <ClCompile Include="Core\BinaryInterfaceHandler.cpp" />
     <ClCompile Include="Core\Core.cpp" />
-    <ClCompile Include="Core\Diagnostics\Diagnostics.cpp" />
     <ClCompile Include="Core\Files.cpp" />
     <ClCompile Include="Core\FileTransfer.cpp" />
     <ClCompile Include="Core\HttpsTrackerComm.cpp" />
@@ -378,7 +377,6 @@
     <ClInclude Include="Core\AlertsManager.h" />
     <ClInclude Include="Core\Core.h" />
     <ClInclude Include="Core\Dht\Listener.h" />
-    <ClInclude Include="Core\Diagnostics\Diagnostics.h" />
     <ClInclude Include="Core\Files.h" />
     <ClInclude Include="Core\FileTransfer.h" />
     <ClInclude Include="Core\HttpsTrackerComm.h" />

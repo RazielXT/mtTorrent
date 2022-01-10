@@ -8,9 +8,30 @@ mtt::Uploader::Uploader(TorrentPtr t)
 	torrent = t;
 }
 
+void mtt::Uploader::stop()
+{
+	std::lock_guard<std::mutex> guard(requestsMutex);
+	pendingRequests.clear();
+	requestingBytes = false;
+	availableBytes = 0;
+}
+
 void mtt::Uploader::isInterested(PeerCommunication* p)
 {
 	p->setChoke(false);
+}
+
+void mtt::Uploader::cancelRequests(PeerCommunication* p)
+{
+	std::lock_guard<std::mutex> guard(requestsMutex);
+
+	for (auto it = pendingRequests.begin(); it != pendingRequests.end();)
+	{
+		if (it->peer == p)
+			it = pendingRequests.erase(it);
+		else
+			it++;
+	}
 }
 
 void mtt::Uploader::pieceRequest(PeerCommunication* p, const PieceBlockInfo& info)
@@ -18,7 +39,7 @@ void mtt::Uploader::pieceRequest(PeerCommunication* p, const PieceBlockInfo& inf
 	std::lock_guard<std::mutex> guard(requestsMutex);
 	
 	requestBytes(info.length);
-	pendingRequests.push_back({ p->shared_from_this(), info });
+	pendingRequests.push_back({ p, info });
 
 	if (!requestingBytes)
 		torrent->service.io.post([this]() { sendRequests(); });
@@ -79,7 +100,7 @@ void mtt::Uploader::sendRequests()
 				uploaded += r.block.length;
 				availableBytes -= r.block.length;
 
-				handledRequests[r.peer.get()] += r.block.length;
+				handledRequests[r.peer] += r.block.length;
 			}
 			else
 			{
@@ -117,4 +138,9 @@ std::map<mtt::PeerCommunication*, uint32_t> mtt::Uploader::popHandledRequests()
 	std::lock_guard<std::mutex> guard(requestsMutex);
 
 	return std::move(handledRequests);
+}
+
+std::string mtt::Uploader::name()
+{
+	return torrent->name() + "_upload";
 }

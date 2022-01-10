@@ -17,6 +17,8 @@ public:
 	virtual void assignBandwidth(int amount) = 0;
 
 	virtual bool isActive() = 0;
+
+	virtual std::string name() = 0;
 };
 
 struct BandwidthChannel
@@ -27,12 +29,8 @@ struct BandwidthChannel
 
 	// 0 means infinite
 	void setLimit(int limit);
-	int getLimit() const
-	{
-		return limit;
-	}
+	int getLimit() const;
 
-	int getQuotaLeft() const;
 	void updateQuota(int dtMilliseconds);
 
 	// this is used when connections disconnect with
@@ -47,13 +45,7 @@ struct BandwidthChannel
 	// should especially help in situations where a single peer
 	// has a capacity under the rate limit, but would otherwise be
 	// held back by the latency of getting bandwidth from the limiter
-	bool needQueueing(int amount)
-	{
-		if (limit == 0) return false;
-		if (quotaLeft - amount < limit) return true;
-		quotaLeft -= amount;
-		return false;
-	}
+	bool needQueueing(int amount);
 
 	// used as temporary storage while distributing
 	// bandwidth
@@ -91,7 +83,7 @@ struct BandwidthRequest
 
 	// loops over the bandwidth channels and assigns bandwidth
 	// from the most limiting one
-	int assign_bandwidth();
+	int assignBandwidth();
 
 	static constexpr int MaxBandwidthChannels = 2;
 	BandwidthChannel* channel[MaxBandwidthChannels];
@@ -106,9 +98,6 @@ struct BandwidthManager
 	BandwidthChannel* GetChannel(const std::string& name);
 
 	void close();
-
-	uint32_t queueSize() const;
-	std::int64_t getQueuedBytes() const;
 
 	// returns the number of bytes to assign to the peer, or 0
 	// if the peer's 'assign_bandwidth' callback will be called later

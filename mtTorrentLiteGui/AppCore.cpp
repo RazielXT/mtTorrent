@@ -264,6 +264,7 @@ void AppCore::onButtonClick(ButtonId id, System::String^ param)
 	else if (id == ButtonId::CheckFiles)
 	{
 		IoctlFunc(mtBI::MessageId::CheckFiles, &firstSelectedHash, nullptr);
+		torrentsView.updateList();
 	}
 	else if (id == ButtonId::Schedule)
 	{

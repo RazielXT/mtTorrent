@@ -1,19 +1,21 @@
 #include "UdpAsyncWriter.h"
-#include "Logging.h"
 
-#define UDP_LOG(x) WRITE_LOG(LogTypeUdp, x) //{std::stringstream ss; ss << getName() << " " << x; WriteLogImplementation(LogTypeUdp, ss);}
+#define UDP_LOG(x) WRITE_LOG(x)
 
 UdpAsyncWriter::UdpAsyncWriter(asio::io_service& io) : io_service(io), socket(io)
 {
+	CREATE_LOG(UdpWriter);
 }
 
 UdpAsyncWriter::~UdpAsyncWriter()
 {
+	NAME_LOG(getName());
 }
 
 void UdpAsyncWriter::setAddress(const Addr& addr)
 {
 	target_endpoint = addr.toUdpEndpoint();
+	hostname = target_endpoint.address().to_string();
 
 	state = Initialized;
 }
@@ -21,6 +23,7 @@ void UdpAsyncWriter::setAddress(const Addr& addr)
 void UdpAsyncWriter::setAddress(const udp::endpoint& addr)
 {
 	target_endpoint = addr;
+	hostname = target_endpoint.address().to_string();
 
 	state = Initialized;
 }
@@ -68,12 +71,8 @@ void UdpAsyncWriter::write()
 	io_service.post(std::bind(&UdpAsyncWriter::do_rewrite, shared_from_this()));
 }
 
-extern void recordUtpPacket(const BufferView& data);
-
 void UdpAsyncWriter::write(const BufferView& data, WriteOption option)
 {
-	//recordUtpPacket(data);
-
 	//std::lock_guard<std::mutex> guard(stateMutex);
 
 	if (state == Connected)
@@ -209,6 +208,9 @@ void UdpAsyncWriter::send_message()
 
 			socket.open(target_endpoint.protocol(), ec);
 			socket.set_option(asio::socket_base::reuse_address(true),ec);
+			socket.set_option(asio::socket_base::receive_buffer_size(4000000), ec);
+			//socket.set_option(asio::socket_base::send_buffer_size(1000000), ec);
+
 			socket.bind(udp::endpoint(target_endpoint.protocol(), bindPort), ec);
 			socket.non_blocking(true, ec);
 
@@ -278,13 +280,15 @@ void UdpAsyncWriter::send_message(const BufferView& buffer)
 	std::error_code ec;
 	socket.send_to(asio::buffer(buffer.data, buffer.size), target_endpoint, {}, ec);
 
+	UDP_LOG("writing finished");
+
 	if (ec)
 		postFail("Write", ec);
 }
 
 std::string UdpAsyncWriter::getName() const
 {
-	return target_endpoint.address().to_string() + ":" + std::to_string(target_endpoint.port());
+	return hostname;
 }
 
 const udp::endpoint& UdpAsyncWriter::getEndpoint() const

@@ -8,7 +8,7 @@
 
 #ifdef MTT_WITH_SSL
 
-#define HTTP_TRACKER_LOG(x) WRITE_LOG(LogTypeHttpTracker, x)
+#define HTTP_TRACKER_LOG(x) WRITE_GLOBAL_LOG(HttpTracker, x)
 
 using namespace mtt;
 

@@ -3,7 +3,7 @@
 #include "PeerMessage.h"
 #include "Configuration.h"
 
-#define BT_EXT_LOG(x) WRITE_LOG(LogTypeBtExt, x)
+#define BT_EXT_LOG(x) WRITE_GLOBAL_LOG(ExtensionProtocol, x)
 
 using namespace mtt;
 using namespace mtt::ext;
@@ -80,7 +80,7 @@ DataBuffer mtt::ext::UtMetadata::createMetadataRequest(uint32_t index)
 {
 	PacketBuilder packet(32);
 	packet.add32(0);
-	packet.add(mtt::Extended);
+	packet.add(mtt::PeerMessage::Extended);
 	packet.add(UtMetadataEx);
 	packet.add("d8:msg_typei0e5:piecei", 22);
 	auto idxStr = std::to_string(index);
@@ -159,7 +159,7 @@ DataBuffer ExtensionProtocol::createExtendedHandshakeMessage(bool enablePex, uin
 {
 	PacketBuilder extDict(100);
 	extDict.add32(0);
-	extDict.add(mtt::Extended);
+	extDict.add(mtt::PeerMessage::Extended);
 	extDict.add(HandshakeEx);
 
 	extDict.add('d');

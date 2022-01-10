@@ -59,6 +59,10 @@ namespace GuiLite {
 
 	public: System::Windows::Forms::NumericUpDown^ numericDlSpeed;
 	private: System::Windows::Forms::Button^ buttonMagnet;
+	public: System::Windows::Forms::CheckBox^ utpCheckBox;
+	private:
+
+	private:
 	public:
 
 	public:
@@ -112,132 +116,217 @@ namespace GuiLite {
 			this->numericUpSpeed = (gcnew System::Windows::Forms::NumericUpDown());
 			this->numericDlSpeed = (gcnew System::Windows::Forms::NumericUpDown());
 			this->buttonMagnet = (gcnew System::Windows::Forms::Button());
+			this->utpCheckBox = (gcnew System::Windows::Forms::CheckBox());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->tcpPortNumeric))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->udpPortNumeric))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->maxConnectionsNumeric))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->numericUpSpeed))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->numericDlSpeed))->BeginInit();
 			this->SuspendLayout();
+			// 
+			// checkBoxDht
+			// 
 			this->checkBoxDht->AutoSize = true;
-			this->checkBoxDht->Location = System::Drawing::Point(58, 276);
+			this->checkBoxDht->Location = System::Drawing::Point(65, 345);
+			this->checkBoxDht->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->checkBoxDht->Name = L"checkBoxDht";
-			this->checkBoxDht->Size = System::Drawing::Size(59, 21);
+			this->checkBoxDht->Size = System::Drawing::Size(68, 24);
 			this->checkBoxDht->TabIndex = 0;
 			this->checkBoxDht->Text = L"DHT";
 			this->checkBoxDht->UseVisualStyleBackColor = true;
-			this->tcpPortNumeric->Location = System::Drawing::Point(228, 85);
+			// 
+			// tcpPortNumeric
+			// 
+			this->tcpPortNumeric->Location = System::Drawing::Point(256, 106);
+			this->tcpPortNumeric->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->tcpPortNumeric->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) { 65535, 0, 0, 0 });
 			this->tcpPortNumeric->Minimum = System::Decimal(gcnew cli::array< System::Int32 >(4) { 1, 0, 0, 0 });
 			this->tcpPortNumeric->Name = L"tcpPortNumeric";
-			this->tcpPortNumeric->Size = System::Drawing::Size(120, 22);
+			this->tcpPortNumeric->Size = System::Drawing::Size(135, 26);
 			this->tcpPortNumeric->TabIndex = 1;
 			this->tcpPortNumeric->Value = System::Decimal(gcnew cli::array< System::Int32 >(4) { 1, 0, 0, 0 });
-			this->udpPortNumeric->Location = System::Drawing::Point(228, 113);
+			// 
+			// udpPortNumeric
+			// 
+			this->udpPortNumeric->Location = System::Drawing::Point(256, 141);
+			this->udpPortNumeric->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->udpPortNumeric->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) { 65535, 0, 0, 0 });
 			this->udpPortNumeric->Minimum = System::Decimal(gcnew cli::array< System::Int32 >(4) { 1, 0, 0, 0 });
 			this->udpPortNumeric->Name = L"udpPortNumeric";
-			this->udpPortNumeric->Size = System::Drawing::Size(120, 22);
+			this->udpPortNumeric->Size = System::Drawing::Size(135, 26);
 			this->udpPortNumeric->TabIndex = 2;
 			this->udpPortNumeric->Value = System::Decimal(gcnew cli::array< System::Int32 >(4) { 1, 0, 0, 0 });
-			this->maxConnectionsNumeric->Location = System::Drawing::Point(228, 141);
+			// 
+			// maxConnectionsNumeric
+			// 
+			this->maxConnectionsNumeric->Location = System::Drawing::Point(256, 176);
+			this->maxConnectionsNumeric->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->maxConnectionsNumeric->Name = L"maxConnectionsNumeric";
-			this->maxConnectionsNumeric->Size = System::Drawing::Size(120, 22);
+			this->maxConnectionsNumeric->Size = System::Drawing::Size(135, 26);
 			this->maxConnectionsNumeric->TabIndex = 3;
-			this->directoryTextBox->Location = System::Drawing::Point(59, 47);
+			// 
+			// directoryTextBox
+			// 
+			this->directoryTextBox->Location = System::Drawing::Point(66, 59);
+			this->directoryTextBox->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->directoryTextBox->Name = L"directoryTextBox";
-			this->directoryTextBox->Size = System::Drawing::Size(291, 22);
+			this->directoryTextBox->Size = System::Drawing::Size(327, 26);
 			this->directoryTextBox->TabIndex = 4;
+			// 
+			// label1
+			// 
 			this->label1->AutoSize = true;
-			this->label1->Location = System::Drawing::Point(56, 85);
+			this->label1->Location = System::Drawing::Point(63, 106);
 			this->label1->Name = L"label1";
-			this->label1->Size = System::Drawing::Size(101, 17);
+			this->label1->Size = System::Drawing::Size(112, 20);
 			this->label1->TabIndex = 5;
 			this->label1->Text = L"TCP listen port";
+			// 
+			// label2
+			// 
 			this->label2->AutoSize = true;
-			this->label2->Location = System::Drawing::Point(56, 113);
+			this->label2->Location = System::Drawing::Point(63, 141);
 			this->label2->Name = L"label2";
-			this->label2->Size = System::Drawing::Size(103, 17);
+			this->label2->Size = System::Drawing::Size(116, 20);
 			this->label2->TabIndex = 6;
 			this->label2->Text = L"UDP listen port";
+			// 
+			// label3
+			// 
 			this->label3->AutoSize = true;
-			this->label3->Location = System::Drawing::Point(56, 143);
+			this->label3->Location = System::Drawing::Point(63, 179);
 			this->label3->Name = L"label3";
-			this->label3->Size = System::Drawing::Size(113, 17);
+			this->label3->Size = System::Drawing::Size(128, 20);
 			this->label3->TabIndex = 7;
 			this->label3->Text = L"Max connections";
+			// 
+			// label4
+			// 
 			this->label4->AutoSize = true;
-			this->label4->Location = System::Drawing::Point(56, 24);
+			this->label4->Location = System::Drawing::Point(63, 30);
 			this->label4->Name = L"label4";
-			this->label4->Size = System::Drawing::Size(112, 17);
+			this->label4->Size = System::Drawing::Size(125, 20);
 			this->label4->TabIndex = 8;
 			this->label4->Text = L"Default directory";
-			this->buttonOk->Location = System::Drawing::Point(119, 349);
+			// 
+			// buttonOk
+			// 
+			this->buttonOk->Location = System::Drawing::Point(133, 478);
+			this->buttonOk->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->buttonOk->Name = L"buttonOk";
-			this->buttonOk->Size = System::Drawing::Size(81, 27);
+			this->buttonOk->Size = System::Drawing::Size(91, 34);
 			this->buttonOk->TabIndex = 9;
 			this->buttonOk->Text = L"OK";
 			this->buttonOk->UseVisualStyleBackColor = true;
 			this->buttonOk->Click += gcnew System::EventHandler(this, &SettingsForm::buttonOk_Click);
-			this->buttonCancel->Location = System::Drawing::Point(206, 349);
+			// 
+			// buttonCancel
+			// 
+			this->buttonCancel->Location = System::Drawing::Point(231, 478);
+			this->buttonCancel->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->buttonCancel->Name = L"buttonCancel";
-			this->buttonCancel->Size = System::Drawing::Size(84, 27);
+			this->buttonCancel->Size = System::Drawing::Size(94, 34);
 			this->buttonCancel->TabIndex = 10;
 			this->buttonCancel->Text = L"Cancel";
 			this->buttonCancel->UseVisualStyleBackColor = true;
 			this->buttonCancel->Click += gcnew System::EventHandler(this, &SettingsForm::buttonCancel_Click);
+			// 
+			// upnpMapCheckBox
+			// 
 			this->upnpMapCheckBox->AutoSize = true;
-			this->upnpMapCheckBox->Location = System::Drawing::Point(58, 249);
+			this->upnpMapCheckBox->Location = System::Drawing::Point(65, 311);
+			this->upnpMapCheckBox->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->upnpMapCheckBox->Name = L"upnpMapCheckBox";
-			this->upnpMapCheckBox->Size = System::Drawing::Size(151, 21);
+			this->upnpMapCheckBox->Size = System::Drawing::Size(171, 24);
 			this->upnpMapCheckBox->TabIndex = 11;
 			this->upnpMapCheckBox->Text = L"Upnp port mapping";
 			this->upnpMapCheckBox->UseVisualStyleBackColor = true;
 			this->upnpMapCheckBox->CheckedChanged += gcnew System::EventHandler(this, &SettingsForm::upnpMapCheckBox_CheckedChanged);
+			// 
+			// upnpToolTip
+			// 
 			this->upnpToolTip->AutomaticDelay = 100;
 			this->upnpToolTip->AutoPopDelay = 10000;
 			this->upnpToolTip->InitialDelay = 100;
 			this->upnpToolTip->ReshowDelay = 20;
 			this->upnpToolTip->ShowAlways = true;
 			this->upnpToolTip->Popup += gcnew System::Windows::Forms::PopupEventHandler(this, &SettingsForm::UpnpToolTip_Popup);
-			this->dirButton->Location = System::Drawing::Point(273, 19);
+			// 
+			// dirButton
+			// 
+			this->dirButton->Location = System::Drawing::Point(307, 24);
+			this->dirButton->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->dirButton->Name = L"dirButton";
-			this->dirButton->Size = System::Drawing::Size(77, 27);
+			this->dirButton->Size = System::Drawing::Size(87, 34);
 			this->dirButton->TabIndex = 12;
 			this->dirButton->Text = L"Browse";
 			this->dirButton->UseVisualStyleBackColor = true;
 			this->dirButton->Click += gcnew System::EventHandler(this, &SettingsForm::dirButton_Click);
+			// 
+			// label5
+			// 
 			this->label5->AutoSize = true;
-			this->label5->Location = System::Drawing::Point(56, 205);
+			this->label5->Location = System::Drawing::Point(63, 256);
 			this->label5->Name = L"label5";
-			this->label5->Size = System::Drawing::Size(113, 17);
+			this->label5->Size = System::Drawing::Size(127, 20);
 			this->label5->TabIndex = 16;
 			this->label5->Text = L"Max upload KB/s";
+			// 
+			// label6
+			// 
 			this->label6->AutoSize = true;
-			this->label6->Location = System::Drawing::Point(56, 177);
+			this->label6->Location = System::Drawing::Point(63, 221);
 			this->label6->Name = L"label6";
-			this->label6->Size = System::Drawing::Size(130, 17);
+			this->label6->Size = System::Drawing::Size(147, 20);
 			this->label6->TabIndex = 15;
 			this->label6->Text = L"Max download KB/s";
-			this->numericUpSpeed->Location = System::Drawing::Point(228, 205);
+			// 
+			// numericUpSpeed
+			// 
+			this->numericUpSpeed->Location = System::Drawing::Point(256, 256);
+			this->numericUpSpeed->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->numericUpSpeed->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) { 65535, 0, 0, 0 });
 			this->numericUpSpeed->Name = L"numericUpSpeed";
-			this->numericUpSpeed->Size = System::Drawing::Size(120, 22);
+			this->numericUpSpeed->Size = System::Drawing::Size(135, 26);
 			this->numericUpSpeed->TabIndex = 14;
-			this->numericDlSpeed->Location = System::Drawing::Point(228, 177);
+			// 
+			// numericDlSpeed
+			// 
+			this->numericDlSpeed->Location = System::Drawing::Point(256, 221);
+			this->numericDlSpeed->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->numericDlSpeed->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) { 65535, 0, 0, 0 });
 			this->numericDlSpeed->Name = L"numericDlSpeed";
-			this->numericDlSpeed->Size = System::Drawing::Size(120, 22);
+			this->numericDlSpeed->Size = System::Drawing::Size(135, 26);
 			this->numericDlSpeed->TabIndex = 13;
-			this->buttonMagnet->Location = System::Drawing::Point(59, 303);
+			// 
+			// buttonMagnet
+			// 
+			this->buttonMagnet->Location = System::Drawing::Point(65, 421);
+			this->buttonMagnet->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->buttonMagnet->Name = L"buttonMagnet";
-			this->buttonMagnet->Size = System::Drawing::Size(291, 27);
+			this->buttonMagnet->Size = System::Drawing::Size(327, 34);
 			this->buttonMagnet->TabIndex = 17;
 			this->buttonMagnet->Text = L"Associate with magnet links";
 			this->buttonMagnet->UseVisualStyleBackColor = true;
 			this->buttonMagnet->Click += gcnew System::EventHandler(this, &SettingsForm::buttonMagnet_Click);
-			this->AutoScaleDimensions = System::Drawing::SizeF(8, 16);
+			// 
+			// utpCheckBox
+			// 
+			this->utpCheckBox->AutoSize = true;
+			this->utpCheckBox->Location = System::Drawing::Point(65, 377);
+			this->utpCheckBox->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
+			this->utpCheckBox->Name = L"utpCheckBox";
+			this->utpCheckBox->Size = System::Drawing::Size(167, 24);
+			this->utpCheckBox->TabIndex = 18;
+			this->utpCheckBox->Text = L"uTP (experimental)";
+			this->utpCheckBox->UseVisualStyleBackColor = true;
+			// 
+			// SettingsForm
+			// 
+			this->AutoScaleDimensions = System::Drawing::SizeF(9, 20);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(400, 388);
+			this->ClientSize = System::Drawing::Size(450, 528);
+			this->Controls->Add(this->utpCheckBox);
 			this->Controls->Add(this->buttonMagnet);
 			this->Controls->Add(this->label5);
 			this->Controls->Add(this->label6);
@@ -257,6 +346,7 @@ namespace GuiLite {
 			this->Controls->Add(this->tcpPortNumeric);
 			this->Controls->Add(this->checkBoxDht);
 			this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedDialog;
+			this->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->MaximizeBox = false;
 			this->MinimizeBox = false;
 			this->Name = L"SettingsForm";

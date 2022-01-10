@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Network.h"
+#include "Logging.h"
 #include <mutex>
 #include <future>
 #include <memory>
@@ -40,6 +41,8 @@ public:
 	std::function<void(UdpRequest)> onCloseCallback;
 
 protected:
+
+	FileLog log;
 
 	std::mutex stateMutex;
 	enum { Clear, Initialized, Connected } state = Clear;

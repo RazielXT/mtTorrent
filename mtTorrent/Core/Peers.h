@@ -36,24 +36,7 @@ namespace mtt
 
 	private:
 
-		enum LogEvent : uint8_t { Connect, RemoteConnect, Remove, ConnectPeers };
-#ifdef PEER_DIAGNOSTICS
-		struct LogEventParams
-		{
-			LogEvent e;
-			char info;
-			uint16_t id2;
-			uint32_t id;
-			long time;
-		};
-		std::vector<LogEventParams> logevents;
-		std::mutex logmtx;
-		void addLogEvent(LogEvent e, Addr& id, char info = 0);
-		void saveLogEvents();
-#else
-		void addLogEvent(LogEvent, Addr&, char) {}
-		void saveLogEvents() {}
-#endif
+		FileLog log;
 
 		class PeersListener : public mtt::IPeerListener, public std::enable_shared_from_this<PeersListener>
 		{

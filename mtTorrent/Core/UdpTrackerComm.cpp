@@ -5,7 +5,7 @@
 #include "Logging.h"
 #include "Torrent.h"
 
-#define UDP_TRACKER_LOG(x) WRITE_LOG(LogTypeUdpTracker, info.hostname << " " << x)
+#define UDP_TRACKER_LOG(x) WRITE_GLOBAL_LOG(UdpTracker, info.hostname << " " << x)
 
 using namespace mtt;
 
@@ -226,11 +226,6 @@ UdpTrackerComm::UdpAnnounceResponse UdpTrackerComm::getAnnounceResponse(DataBuff
 
 	resp.udp.action = packet.pop32();
 	resp.udp.transaction = packet.pop32();
-
-	if (resp.udp.action == Error && buffer.size() > 8)
-	{
-		UDP_TRACKER_LOG("announce msg: " << (const char*)buffer.data() + 8);
-	}
 
 	if (buffer.size() < 26)
 		return resp;

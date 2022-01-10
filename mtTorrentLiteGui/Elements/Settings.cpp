@@ -16,6 +16,7 @@ void Settings::applySettings(GuiLite::SettingsForm^ form)
 	info.upnpEnabled = form->upnpMapCheckBox->Checked;
 	info.maxDownloadSpeed = (unsigned int)form->numericDlSpeed->Value * 1024;
 	info.maxUploadSpeed = (unsigned int)form->numericUpSpeed->Value * 1024;
+	info.utpEnabled = form->utpCheckBox->Checked;
 
 	core.IoctlFunc(mtBI::MessageId::SetSettings, &info, nullptr);
 }
@@ -34,6 +35,7 @@ void Settings::showSettingsForm()
 		form.upnpMapCheckBox->Checked = info.upnpEnabled;
 		form.numericDlSpeed->Value = info.maxDownloadSpeed / 1024;
 		form.numericUpSpeed->Value = info.maxUploadSpeed / 1024;
+		form.utpCheckBox->Checked = info.utpEnabled;
 	}
 
 	form.ShowDialog();

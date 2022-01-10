@@ -5,7 +5,6 @@
 #include "IPeerListener.h"
 #include "PiecesProgress.h"
 #include "PeerStream.h"
-#include "Diagnostics/Diagnostics.h"
 
 namespace mtt
 {
@@ -19,7 +18,7 @@ namespace mtt
 		bool peerChoking = true;
 		bool peerInterested = false;
 
-		enum
+		enum : uint16_t
 		{
 			Disconnected,
 			Connecting,
@@ -77,9 +76,9 @@ namespace mtt
 
 		const std::shared_ptr<PeerStream> getStream() const;
 
-		Diagnostics::Peer diagnostics;
-
 	protected:
+
+		FileLog log;
 
 		IPeerListener& listener;
 
@@ -95,8 +94,6 @@ namespace mtt
 
 		void initializeStream();
 		void resetState();
-
-		bool enableDiagnostics = false;
 	};
 
 }

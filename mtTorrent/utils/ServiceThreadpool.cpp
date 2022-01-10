@@ -15,9 +15,9 @@ ServiceThreadpool::~ServiceThreadpool()
 	stop();
 }
 
-void ServiceThreadpool::start(uint32_t startWorkers, bool finishAfterWork)
+void ServiceThreadpool::start(uint32_t startWorkers)
 {
-	if(!finishAfterWork && !work)
+	if(!work)
 		work = std::make_shared<asio::io_service::work>(io);
 
 	if (workers >= startWorkers)
@@ -48,10 +48,4 @@ void ServiceThreadpool::stop()
 	io.reset();
 
 	workers = 0;
-}
-
-void ServiceThreadpool::adjust(uint32_t estimatedWork)
-{
-	uint32_t workers = ((uint32_t)(estimatedWork*0.26f)) + 2;
-	start(workers);
 }

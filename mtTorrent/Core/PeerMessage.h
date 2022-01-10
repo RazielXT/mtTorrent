@@ -5,27 +5,26 @@
 
 namespace mtt
 {
-	enum PeerMessageId
-	{
-		Choke = 0,
-		Unchoke,
-		Interested,
-		NotInterested,
-		Have,
-		Bitfield,
-		Request,
-		Piece,
-		Cancel,
-		Port,
-		Extended = 20,
-		Handshake,
-		KeepAlive,
-		Invalid
-	};
-
 	struct PeerMessage
 	{
-		PeerMessageId id = Invalid;
+		enum Id
+		{
+			Choke = 0,
+			Unchoke,
+			Interested,
+			NotInterested,
+			Have,
+			Bitfield,
+			Request,
+			Piece,
+			Cancel,
+			Port,
+			Extended = 20,
+			Handshake,
+			KeepAlive,
+			Invalid
+		};
+		Id id = Invalid;
 
 		uint32_t havePieceIndex;
 		DataBuffer bitfield;

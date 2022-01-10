@@ -2,7 +2,7 @@
 #include "Logging.h"
 #include "Configuration.h"
 
-#define UDP_LOG(x) WRITE_LOG(LogTypeUdpMgr, x)
+#define UDP_LOG(x) WRITE_GLOBAL_LOG(UdpMgr, x)
 
 std::shared_ptr<UdpAsyncComm> ptr;
 

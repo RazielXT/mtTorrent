@@ -106,7 +106,7 @@ void mtt::IncomingPeersListener::createListener()
 		{
 			PeerMessage msg(data);
 
-			if (msg.id == Handshake)
+			if (msg.id == PeerMessage::Handshake)
 			{
 				size_t sz = addPeer(sPtr, data, msg.handshake.info);
 				if (sz == 0)

@@ -12,7 +12,10 @@ namespace mtt
 
 		Uploader(TorrentPtr);
 
+		void stop();
+
 		void isInterested(PeerCommunication* p);
+		void cancelRequests(PeerCommunication* p);
 		void pieceRequest(PeerCommunication* p, const PieceBlockInfo& info);
 		void refreshRequest();
 
@@ -22,6 +25,7 @@ namespace mtt
 
 	private:
 
+		std::string name() override;
 		void assignBandwidth(int amount) override;
 		void requestBytes(uint32_t amount);
 		bool isActive() override;
@@ -31,7 +35,7 @@ namespace mtt
 
 		struct UploadRequest
 		{
-			std::shared_ptr<PeerCommunication> peer;
+			PeerCommunication* peer;
 			PieceBlockInfo block;
 		};
 		std::vector<UploadRequest> pendingRequests;

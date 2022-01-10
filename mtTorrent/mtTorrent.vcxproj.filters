@@ -47,9 +47,6 @@
     <Filter Include="Source Files\Core\Torrent\Utp">
       <UniqueIdentifier>{e8c21228-3d42-4e96-8e25-28abafac7897}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Core\Diagnostics">
-      <UniqueIdentifier>{e974f9de-3184-4dd2-ad03-98eede434e59}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Api">
       <UniqueIdentifier>{ce936252-3388-4661-a13f-2c284643a084}</UniqueIdentifier>
     </Filter>
@@ -113,9 +110,6 @@
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
     <ClCompile Include="Core\Configuration.cpp">
-      <Filter>Source Files\Core\General</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Logging.cpp">
       <Filter>Source Files\Core\General</Filter>
     </ClCompile>
     <ClCompile Include="Core\Dht\Node.cpp">
@@ -244,9 +238,6 @@
     <ClCompile Include="Core\Utp\UtpStream.cpp">
       <Filter>Source Files\Core\Torrent\Utp</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Diagnostics\Diagnostics.cpp">
-      <Filter>Source Files\Core\Diagnostics</Filter>
-    </ClCompile>
     <ClCompile Include="utils\NetAdaptersList.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
@@ -255,6 +246,9 @@
     </ClCompile>
     <ClCompile Include="Core\PeerStream.cpp">
       <Filter>Source Files\Core\Torrent\Peer</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Logging.cpp">
+      <Filter>Source Files\Core\General</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -476,9 +470,6 @@
     </ClInclude>
     <ClInclude Include="Core\Utp\UtpStream.h">
       <Filter>Source Files\Core\Torrent\Utp</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Diagnostics\Diagnostics.h">
-      <Filter>Source Files\Core\Diagnostics</Filter>
     </ClInclude>
     <ClInclude Include="Core\PeerStream.h">
       <Filter>Source Files\Core\Torrent\Peer</Filter>

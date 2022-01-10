@@ -31,7 +31,7 @@ Addr::Addr(const asio::ip::address& addr, uint16_t port_num)
 	set(addr, port_num);
 }
 
-Addr::Addr(const char* str)
+Addr Addr::fromString(const char* str)
 {
 	auto a = asio::ip::address::from_string(str);
 
@@ -42,14 +42,7 @@ Addr::Addr(const char* str)
 		else
 			portStart--;
 
-	set(a, (uint16_t)strtoul(str + portStart + 1, 0, 10));
-}
-
-static Addr emptyAddr;
-
-const Addr& Addr::Empty()
-{
-	return emptyAddr;
+	return Addr(a, (uint16_t)strtoul(str + portStart + 1, 0, 10));
 }
 
 void Addr::set(const uint8_t* ip, uint16_t p, bool isIpv6)
@@ -114,9 +107,39 @@ asio::ip::tcp::endpoint Addr::toTcpEndpoint() const
 		tcp::endpoint(asio::ip::address_v4(*reinterpret_cast<const asio::ip::address_v4::bytes_type*>(addrBytes)), port);
 }
 
+static void iToString(int i, std::string& s)
+{
+	if (i > 99)
+	{
+		int value = (i / 100);
+		s += '0' + value;
+		i -= value * 100;
+	}
+	if (i > 9)
+	{
+		int value = (i / 10);
+		s += '0' + value;
+		i -= value * 10;
+	}
+	s += '0' + i;
+}
+
+static std::string toIpv4String(const uint8_t* buffer)
+{
+	std::string out;
+	iToString(buffer[0], out);
+	out += '.';
+	iToString(buffer[1], out);
+	out += '.';
+	iToString(buffer[2], out);
+	out += '.';
+	iToString(buffer[3], out);
+	return out;
+}
+
 std::string Addr::toString() const
 {
-	return toUdpEndpoint().address().to_string() + ":" + std::to_string(port);
+	return (ipv6 ? toUdpEndpoint().address().to_string() : toIpv4String(addrBytes)) + ":" + std::to_string(port);
 }
 
 uint32_t Addr::toUint()
@@ -148,10 +171,23 @@ BufferView::BufferView(const DataBuffer& d)
 	size = d.size();
 }
 
+BufferView::BufferView(DataBuffer&& d)
+{
+	localbuffer = std::move(d);
+	data = localbuffer.data();
+	size = localbuffer.size();
+}
+
 void BufferView::store(const uint8_t* d, size_t s)
 {
 	localbuffer.resize(s);
 	memcpy(localbuffer.data(), d, s);
 	data = localbuffer.data();
 	size = localbuffer.size();
+}
+
+void BufferView::store()
+{
+	if (localbuffer.empty() && data && size)
+		store(data, size);
 }

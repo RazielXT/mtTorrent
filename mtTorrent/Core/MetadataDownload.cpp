@@ -4,7 +4,7 @@
 #include "Configuration.h"
 #include "utils/HexEncoding.h"
 
-#define BT_UTM_LOG(x) WRITE_LOG(LogTypeBtUtm, x)
+#define BT_UTM_LOG(x) WRITE_GLOBAL_LOG(MetadataDownload, x)
 
 mtt::MetadataDownload::MetadataDownload(Peers& p, ServiceThreadpool& s) : peers(p), service(s)
 {
@@ -131,7 +131,7 @@ void mtt::MetadataDownload::handshakeFinished(PeerCommunication* p)
 {
 	if (!p->info.supportsExtensions())
 	{
-		BT_UTM_LOG("unwanted");
+		BT_UTM_LOG("not supportsExtensions");
 
 		peers.disconnect(p);
 	}
@@ -184,6 +184,7 @@ void mtt::MetadataDownload::extHandshakeFinished(PeerCommunication* peer)
 		addToBackup(peer->shared_from_this());
 	else
 	{
+		BT_UTM_LOG("no UtMetadataEx support " << peer->getStream()->getAddress());
 		peers.disconnect(peer);
 	}
 }

@@ -1,18 +1,18 @@
 #include "SslAsyncStream.h"
-#include "Logging.h"
 
 #ifdef MTT_WITH_SSL
 
-#define SSL_TCP_LOG(x) WRITE_LOG("SslTcp", info.host << " " << x)
+#define SSL_TCP_LOG(x) WRITE_LOG(x)
 
 SslAsyncStream::SslAsyncStream(asio::io_service& io) : io_service(io), socket(io, ctx), ctx(asio::ssl::context::tls)
 {
+	CREATE_LOG(SslTcp);
 	ctx.set_default_verify_paths();
 }
 
 SslAsyncStream::~SslAsyncStream()
 {
-
+	NAME_LOG(info.host);
 }
 
 void SslAsyncStream::init(const std::string& hostname, const std::string& service)

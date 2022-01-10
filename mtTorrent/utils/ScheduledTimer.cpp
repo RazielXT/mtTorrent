@@ -40,23 +40,6 @@ void ScheduledTimer::disable()
 	func = nullptr;
 }
 
-uint32_t ScheduledTimer::getSecondsTillNextUpdate()
-{
-	if (!timer)
-		return 0;
-	else
-	{
-		auto now = std::chrono::steady_clock::now();
-		auto expTime = timer->expires_at();
-
-		if (expTime < now)
-			return 0;
-		else
-
-			return std::chrono::duration_cast<std::chrono::duration<uint32_t>>(expTime - now).count();
-	}
-}
-
 void ScheduledTimer::checkTimer(const asio::error_code& error)
 {
 	std::function<void()> runFunc;

@@ -6,7 +6,11 @@
 #include "Uploader.h"
 #include <fstream>
 
-#define PEERS_LOG(x) WRITE_LOG("Peers", x)
+enum class LogEvent : uint8_t { Connect, RemoteConnect, Remove, ConnectPeers };
+
+#define DIAGNOSTICS(eventType, x) WRITE_DIAGNOSTIC_LOG((char)LogEvent::##eventType << x)
+
+#define PEERS_LOG(x) WRITE_LOG(x)
 
 mtt::Peers::Peers(TorrentPtr t) : torrent(t), trackers(t), dht(*this, t)
 {
@@ -14,6 +18,8 @@ mtt::Peers::Peers(TorrentPtr t) : torrent(t), trackers(t), dht(*this, t)
 	remoteInfo.hostname = "Remote";
 	trackers.addTrackers(t->infoFile.announceList);
 	peersListener = std::make_shared<PeersListener>(this);
+
+	CREATE_NAMED_LOG(Peers, torrent->name() + "_peers");
 }
 
 void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listener)
@@ -57,8 +63,6 @@ void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listen
 
 void mtt::Peers::stop()
 {
-	saveLogEvents();
-
 	trackers.stop();
 	dht.stop();
 
@@ -69,14 +73,14 @@ void mtt::Peers::stop()
 		std::lock_guard<std::mutex> guard(peersMutex);
 
 		int i = 0;
-		for (auto c : activeConnections)
+		for (const auto& c : activeConnections)
 		{	
 			if (c.comm)
 			{
 				auto& peer = knownPeers[c.idx];
 				peer.lastQuality = c.comm->isEstablished() ? Peers::PeerQuality::Closed : Peers::PeerQuality::Unknown;
 
-				addLogEvent(Remove, peer.address, (char)peer.lastQuality);
+				DIAGNOSTICS(Remove, peer.address << (char)peer.lastQuality);
 
 				c.comm->close();
 			}
@@ -120,15 +124,6 @@ void mtt::Peers::connectNext(uint32_t count)
 			leastConnectionAttempts = p.connectionAttempts;
 	}
 
-#ifdef PEER_DIAGNOSTICS
-	if (origCount > 0)
-	{
-		std::lock_guard<std::mutex> guard(logmtx);
-
-		logevents.push_back({ ConnectPeers, 0,  (uint16_t)count, origCount, clock() });
-	}
-#endif
-
 	if (count > 0)
 	{
 		for (size_t i = 0; i < knownPeers.size(); i++)
@@ -145,15 +140,6 @@ void mtt::Peers::connectNext(uint32_t count)
 				count--;
 			}
 		}
-
-#ifdef PEER_DIAGNOSTICS
-		if (origCount > 0)
-		{
-			std::lock_guard<std::mutex> guard(logmtx);
-
-			logevents.push_back({ ConnectPeers, 0,  (uint16_t)count, origCount, clock() });
-		}
-#endif
 	}
 
 	PEERS_LOG("connected " << (origCount - count));
@@ -190,7 +176,7 @@ size_t mtt::Peers::add(std::shared_ptr<TcpAsyncStream> stream, const BufferView&
 
 		peer.idx = (uint32_t)knownPeers.size() - 1;
 		activeConnections.push_back(peer);
-		addLogEvent(RemoteConnect, p.address, 0);
+		DIAGNOSTICS(RemoteConnect, p.address);
 
 		remoteInfo.peers++;
 	}
@@ -218,7 +204,7 @@ std::shared_ptr<mtt::PeerCommunication> mtt::Peers::disconnect(PeerCommunication
 			}
 
 			activeConnections.erase(it);
-			addLogEvent(Remove, peer.address, (char)peer.lastQuality);
+			DIAGNOSTICS(Remove, peer.address << (char)peer.lastQuality);
 
 			return ptr;
 		}
@@ -383,7 +369,7 @@ void mtt::Peers::connect(uint32_t idx)
 	peer.idx = idx;
 	activeConnections.emplace_back(std::move(peer));
 
-	addLogEvent(Connect, knownPeer.address, 0);
+	DIAGNOSTICS(Connect, knownPeer.address);
 }
 
 std::shared_ptr<mtt::PeerCommunication> mtt::Peers::getActivePeer(const Addr& addr)
@@ -538,7 +524,7 @@ void mtt::Peers::PeersListener::connectionClosed(mtt::PeerCommunication* p, int 
 
 void mtt::Peers::PeersListener::messageReceived(mtt::PeerCommunication* p, mtt::PeerMessage& m)
 {
-	if (m.id == Port && m.port)
+	if (m.id == PeerMessage::Port && m.port)
 	{
 		if (mtt::config::getExternal().dht.enabled)
 		{
@@ -597,58 +583,3 @@ void mtt::Peers::PeersListener::setParent(Peers* p)
 	std::lock_guard<std::mutex> guard(mtx);
 	peers = p;
 }
-
-#ifdef PEER_DIAGNOSTICS
-void mtt::Peers::addLogEvent(LogEvent e, Addr& id, char info)
-{
-	std::lock_guard<std::mutex> guard(logmtx);
-
-	logevents.push_back({ e, info,  id.port, id.toUint(), clock() });
-}
-
-extern std::string FormatLogTime(long);
-
-void mtt::Peers::saveLogEvents()
-{
-	{
-		std::lock_guard<std::mutex> guard(logmtx);
-
-		if (logevents.empty())
-			return;
-	}
-
-	std::ofstream file("logs\\" + torrent->name() + "\\peers.log");
-
-	if (!file)
-		return;
-
-	{
-		std::lock_guard<std::mutex> guard(logmtx);
-		for (auto& e : logevents)
-		{
-			if (e.e == ConnectPeers)
-				file << FormatLogTime(e.time) << ": Event:" << (int)e.e << " Want:" << e.id << " Remains:" << e.id2 << "\n";
-			else
-				file << FormatLogTime(e.time) << ": Event:" << (int)e.e << " Ip:" << Addr(e.id, e.id2).toString() << " Quality:" << (int)e.info << "\n";
-		}
-	}
-
-	file << "\n\n\n";
-
-	std::lock_guard<std::mutex> guard2(peersMutex);
-
-	file << "Active:\n";
-	for (auto& peer : activeConnections)
-	{
-		file << peer.comm->getAddressName() << " Idx:" << peer.idx << "\n";
-	}
-
-	file << "\n\n\n";
-	file << "Known:\n";
-	int i = 0;
-	for (auto& peer : knownPeers)
-	{
-		file << i++ << " " << peer.address.toString() << " Q:" << (int)peer.lastQuality << " Conns:" << peer.connectionAttempts << "\n";
-	}
-}
-#endif

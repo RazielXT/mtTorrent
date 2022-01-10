@@ -22,5 +22,5 @@ uint32_t mttApi::Peers::receivedCount() const
 
 void mttApi::Peers::connect(const char* address)
 {
-	static_cast<mtt::Peers*>(this)->connect(Addr(address));
+	static_cast<mtt::Peers*>(this)->connect(Addr::fromString(address));
 }

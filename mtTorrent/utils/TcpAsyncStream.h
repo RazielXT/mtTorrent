@@ -8,6 +8,7 @@
 #include <array>
 #include <functional>
 #include <deque>
+#include "Logging.h"
 
 class TcpAsyncServer;
 
@@ -41,6 +42,7 @@ public:
 	void setBandwidthChannels(BandwidthChannel**, uint32_t count);
 	void setBandwidthPriority(int priority);
 	void setMinBandwidthRequest(uint32_t size);
+	std::string name() override;
 
 protected:
 
@@ -63,6 +65,8 @@ protected:
 
 	struct ReadBuffer
 	{
+		LogWriter* log;
+
 		void advanceBuffer(size_t size);
 		void consume(size_t size);
 		uint8_t* reserve(size_t size);
@@ -82,7 +86,7 @@ protected:
 	tcp::socket socket;
 
 	void checkTimeout(const asio::error_code& error);
-	asio::steady_timer  timeoutTimer;
+	std::unique_ptr<asio::steady_timer> timeoutTimer;
 
 	asio::io_service& io_service;
 
@@ -94,7 +98,6 @@ protected:
 	}
 	info;
 
-	int32_t timeout = 15;
 	bool writing = false;
 
 	uint32_t bw_quota = 0;
@@ -118,4 +121,6 @@ protected:
 
 	uint32_t lastReceiveSpeed = 0;
 	uint32_t lastReceiveTime = 0;
+
+	FileLog log;
 };

@@ -2,19 +2,22 @@
 #include <algorithm>
 #include <map>
 #include <cstring>
+#include "Logging.h"
+
+#define BW_LOG(x) WRITE_GLOBAL_LOG(Bandwidth, x)
 
 BandwidthChannel::BandwidthChannel()
-{}
+{
+}
 
 void BandwidthChannel::setLimit(int const l)
 {
 	limit = l;
 }
 
-int BandwidthChannel::getQuotaLeft() const
+int BandwidthChannel::getLimit() const
 {
-	if (limit == 0) return inf;
-	return std::max(int(quotaLeft), 0);
+	return limit;
 }
 
 void BandwidthChannel::updateQuota(int const dt_milliseconds)
@@ -35,21 +38,35 @@ void BandwidthChannel::updateQuota(int const dt_milliseconds)
 	}
 
 	distributeQuota = int(std::max(quotaLeft, std::int64_t(0)));
+
+	BW_LOG("updateQuota channel toAdd" << toAdd << ", distributeQuota " << distributeQuota << ", quotaLeft " << quotaLeft);
 }
 
 void BandwidthChannel::returnQuota(int const amount)
 {
 	if (limit == 0) return;
 	quotaLeft += amount;
+
+	BW_LOG("returnQuota " << amount << ", quotaLeft " << quotaLeft);
 }
 
 void BandwidthChannel::useQuota(int const amount)
 {
 	if (limit == 0) return;
-
 	quotaLeft -= amount;
+
+	BW_LOG("useQuota " << amount << ", quotaLeft " << quotaLeft);
 }
 
+bool BandwidthChannel::needQueueing(int amount)
+{
+	if (limit == 0) return false;
+	if (quotaLeft - amount < limit) return true;
+
+	quotaLeft -= amount;
+
+	return false;
+}
 
 BandwidthRequest::BandwidthRequest(std::shared_ptr<BandwidthUser> pe
 	, int blk, int prio)
@@ -57,10 +74,11 @@ BandwidthRequest::BandwidthRequest(std::shared_ptr<BandwidthUser> pe
 	, priority(prio)
 	, requestSize(blk)
 {
+	BW_LOG(user->name() << "Request " << requestSize);
 	memset(channel, 0, sizeof(channel));
 }
 
-int BandwidthRequest::assign_bandwidth()
+int BandwidthRequest::assignBandwidth()
 {
 	int quota = requestSize - assigned;
 
@@ -76,6 +94,8 @@ int BandwidthRequest::assign_bandwidth()
 	assigned += quota;
 	for (int j = 0; j < MaxBandwidthChannels && channel[j]; ++j)
 		channel[j]->useQuota(quota);
+
+	BW_LOG(user->name() << "assignBandwidth " << quota << " total " << assigned << " requested " << requestSize);
 
 	return quota;
 }
@@ -122,16 +142,6 @@ void BandwidthManager::close()
 	}
 }
 
-uint32_t BandwidthManager::queueSize() const
-{
-	return uint32_t(requestsQueue.size());
-}
-
-std::int64_t BandwidthManager::getQueuedBytes() const
-{
-	return queuedBytes;
-}
-
 uint32_t BandwidthManager::requestBandwidth(std::shared_ptr<BandwidthUser> peer, uint32_t amount, uint32_t priority, BandwidthChannel** chan, uint32_t num_channels)
 {
 	if (abort)
@@ -150,9 +160,10 @@ uint32_t BandwidthManager::requestBandwidth(std::shared_ptr<BandwidthUser> peer,
 			bwr.channel[k++] = chan[i];
 	}
 
-	if (k == 0) return amount;
+	if (k == 0) { BW_LOG("return " << amount);  return amount; }
 
 	queuedBytes += amount;
+	BW_LOG("queuedBytes " << queuedBytes);
 	requestsQueue.push_back(std::move(bwr));
 	return 0;
 }
@@ -168,6 +179,7 @@ void BandwidthManager::updateQuotas(uint32_t dt)
 
 	std::vector<BandwidthRequest> queue;
 
+	BW_LOG("updateQuotas dt " << dt);
 	{
 		std::lock_guard<std::mutex> guard(requestMutex);
 
@@ -183,6 +195,7 @@ void BandwidthManager::updateQuotas(uint32_t dt)
 				{
 					BandwidthChannel* bwc = i->channel[j];
 					bwc->returnQuota(i->assigned);
+					BW_LOG("returnQuota " << i->assigned);
 				}
 
 				i->assigned = 0;
@@ -216,7 +229,7 @@ void BandwidthManager::updateQuotas(uint32_t dt)
 		for (auto r = requestsQueue.begin(); r != requestsQueue.end();)
 		{
 			r->ttl -= dt;
-			int a = r->assign_bandwidth();
+			int a = r->assignBandwidth();
 			if (r->assigned == r->requestSize
 				|| (r->ttl <= 0 && r->assigned > 0))
 			{
@@ -229,6 +242,7 @@ void BandwidthManager::updateQuotas(uint32_t dt)
 				++r;
 			}
 			queuedBytes -= a;
+			BW_LOG("queuedBytes " << queuedBytes);
 		}
 	}	
 
@@ -238,4 +252,6 @@ void BandwidthManager::updateQuotas(uint32_t dt)
 		bwr.user->assignBandwidth(bwr.assigned);
 		queue.pop_back();
 	}
+
+	BW_LOG("updateQuotas finish");
 }

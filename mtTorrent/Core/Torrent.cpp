@@ -475,8 +475,10 @@ void mtt::Torrent::checkFiles(bool all)
 					localOnFinish();
 			});
 
-	std::lock_guard<std::mutex> guard(checkStateMutex);
-	checkState = request;
+	{
+		std::lock_guard<std::mutex> guard(checkStateMutex);
+		checkState = request;
+	}
 }
 
 float mtt::Torrent::checkingProgress() const

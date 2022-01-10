@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Network.h"
+#include "Logging.h"
 #include <mutex>
 #include <future>
 #include <memory>
@@ -57,6 +58,8 @@ protected:
 	DataBuffer writeBuffer;
 	DataBuffer readBuffer;
 	DataBuffer readBufferTmp;
+
+	FileLog log;
 };
 
 #endif

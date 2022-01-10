@@ -41,7 +41,7 @@ PeerMessage::PeerMessage(const BufferView& buffer)
 	}
 	else
 	{
-		id = PeerMessageId(reader.pop());
+		id = PeerMessage::Id(reader.pop());
 
 		if (id == Have && size == 5)
 		{
