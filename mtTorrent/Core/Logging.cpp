@@ -4,112 +4,224 @@
 #include <vector>
 #include <fstream>
 #include <cstring>
+#include <map>
+#include <filesystem>
 
-std::mutex logMutex;
+clock_t startTime = clock();
 
-void LockLog()
+float GetLogTimeT()
 {
-	logMutex.lock();
-}
-
-void UnlockLog()
-{
-	logMutex.unlock();
-}
-
-clock_t startLogTime = 0;
-
-void InitLogTime()
-{
-	startLogTime = clock();
-}
-
-std::string FormatLogTime(long time)
-{
-	clock_t t = time - startLogTime;
-	char buffer[10] = { 0 };
-	snprintf(buffer, 10, "%.3f ", ((float)t) / CLOCKS_PER_SEC);
-
-	return buffer;
-}
-
-std::string GetLogTime()
-{
-	static clock_t startTime = clock();
-
 	clock_t t = clock() - startTime;
-	char buffer[10] = { 0 };
-	snprintf(buffer, 10, "%.3f ", ((float)t) / CLOCKS_PER_SEC);
 
-	return buffer;
+	return ((float)t) / CLOCKS_PER_SEC;
 }
 
-bool isUdpType(const char* t)
+uint32_t EnabledLogsFlag = 0;// (uint32_t)LogType::Tcp | (uint32_t)LogType::Bandwidth | (uint32_t)LogType::Peer;// (uint32_t)LogType::UtpStream | (uint32_t)LogType::Downloader; //(uint32_t)LogType::PeerCommunicationDiagnostics | (uint32_t)LogType::UtpStream | (uint32_t)LogType::Downloader;
+
+void EnableLog(LogType t, bool enable)
 {
-	return strncmp(t, "Udp", 3) == 0;
+	if (enable)
+		EnabledLogsFlag |= (uint32_t)t;
+	else
+		EnabledLogsFlag &= ~(uint32_t)t;
 }
 
-bool isBtType(const char* t)
+bool LogEnabled(LogType t)
 {
-	return strncmp(t, "Bt", 2) == 0;
+	return EnabledLogsFlag & (uint32_t)t;
 }
 
-void WriteLogImplementation(const char * const type, std::stringstream& ss)
+LogWriter& LogWriter::operator<<(float f)
 {
-	LockLog();
-
-	std::cout << GetLogTime() << type << ": " << ss.str() << "\n";
-
-	UnlockLog();
+	data.push_back((char)LogWriter::FLOAT);
+	data.insert(data.end(), (char*)&f, ((char*)&f) + sizeof(float));
+	return *this;
 }
 
-class FileLogger
+LogWriter& LogWriter::operator<<(uint16_t i)
 {
-public:
-	std::vector<std::string> logStrings;
-	std::vector<std::string> prevLogStrings;
+	data.push_back((char)LogWriter::UINT16);
+	data.insert(data.end(), (char*)&i, ((char*)&i) + sizeof(uint16_t));
+	return *this;
+}
 
-	void serialize(bool append)
+LogWriter& LogWriter::operator<<(uint32_t i)
+{
+	data.push_back((char)LogWriter::UINT);
+	data.insert(data.end(), (char*)&i, ((char*)&i) + sizeof(uint32_t));
+	return *this;
+}
+
+LogWriter& LogWriter::operator<<(const Addr& a)
+{
+	data.push_back((char)LogWriter::ADDR);
+	data.insert(data.end(), (char*)a.addrBytes, ((char*)&a.addrBytes) + 4);
+	data.insert(data.end(), (char*)&a.port, ((char*)&a.port) + 2);
+	return *this;
+}
+
+LogWriter& LogWriter::operator<<(int64_t i)
+{
+	data.push_back((char)LogWriter::INT64);
+	data.insert(data.end(), (char*)&i, ((char*)&i) + sizeof(int64_t));
+	return *this;
+}
+
+uint8_t LogWriter::CreateLogLineId()
+{
+	static std::mutex logMutex;
+
+	std::lock_guard<std::mutex> guard(logMutex);
+
+	static std::map<LogType, uint8_t> logLineCounters;
+
+	return ++logLineCounters[type];
+}
+
+void LogWriter::StartLogLine(uint8_t id)
+{
+	*this << LogWriter::START;
+	data.push_back(id);
+	*this << GetLogTimeT();
+
+	if (id >= lineParams.size())
 	{
-		if (logStrings.empty())
-			return;
+		lineParams.resize(id + 1);
+	}
 
-		std::ofstream file("fileLogger", append ? std::ios_base::app : std::ios_base::out);
+	logLineIdFirstTime = (id == NoParamsLineId) ? NoParamsLineId : (lineParams[id].empty() ? id : NoParamsLineId);
+}
 
-		for (auto& s : logStrings)
+LogWriter& LogWriter::operator<<(const char*& ptr)
+{
+	data.push_back((char)LogWriter::STR);
+	data.insert(data.end(), ptr, ptr + strlen(ptr) + 1);
+
+	return *this;
+}
+
+LogWriter& LogWriter::operator<<(const std::string& str)
+{
+	data.push_back((char)LogWriter::STR);
+	data.insert(data.end(), str.c_str(), str.c_str() + str.length() + 1);
+	return *this;
+}
+
+LogWriter& LogWriter::operator<<(LogWriter::DataType t)
+{
+	data.push_back((char)t);
+
+	return *this;
+}
+
+LogWriter& LogWriter::operator<<(int i) { return *this << (uint32_t)i; };
+LogWriter& LogWriter::operator<<(size_t i) { return *this << (uint32_t)i; };
+
+LogWriter::LogWriter(LogType t) : type(t)
+{
+	//NoParamsLineId 0
+	lineParams.push_back({});
+}
+
+LogWriter::~LogWriter()
+{
+	if (data.empty() || name.empty() || name.back() == '_')
+		return;
+
+	std::replace(name.begin(), name.end(), ':', '.');
+
+	std::string folder = "./logs/";
+	std::error_code ec;
+	if (!std::filesystem::create_directories(folder, ec) && ec)
+	{
+		auto msg = ec.message();
+		return;
+	}
+
+	bool append = false;
+
+	std::ofstream file(folder + name + ".txt", append ? std::ios_base::app : std::ios_base::out);
+
+	size_t pos = 0;
+	uint8_t currentLineId = 0;
+	size_t currentLineParamPos = 0;
+
+	while (pos < data.size())
+	{
+		auto type = (LogWriter::DataType)data[pos];
+		pos++;
+
+		if (type == ENDL)
 		{
-			file << s << "\n";
+			file << "\n";
 		}
-
-		if(append)
-			logStrings.clear();
+		else if (type == START)
+		{
+			currentLineId = data[pos++];
+			currentLineParamPos = 0;
+		}
+		else if (type == UINT16)
+		{
+			file << *(uint16_t*)&data[pos] << " ";
+			pos += sizeof(uint16_t);
+		}
+		else if (type == UINT)
+		{
+			file << *(uint32_t*)&data[pos] << " ";
+			pos += sizeof(uint32_t);
+		}
+		else if (type == INT64)
+		{
+			file << *(int64_t*)&data[pos] << " ";
+			pos += sizeof(int64_t);
+		}
+		else if (type == FLOAT)
+		{
+			file << *(float*)&data[pos] << " ";
+			pos += sizeof(float);
+		}
+		else if (type == ADDR)
+		{
+			file << Addr((uint8_t*)&data[pos], (uint16_t&)data[pos+4], false).toString() << " ";
+			pos += 6;
+		}
+		else if (type == STR)
+		{
+			auto stringPtr = (const char*)&data[pos];
+			file << stringPtr << " ";
+			pos += strlen(stringPtr) + 1;
+		}
+		else if (type == PARAM && currentLineId != NoParamsLineId)
+		{
+			auto stringPtr = lineParams[currentLineId][currentLineParamPos++];
+			file << stringPtr;
+		}
 	}
-
-	~FileLogger()
-	{
-		serialize(false);
-	}
-};
-
-FileLogger fileLogger;
-
-void serializeFileLog()
-{
-	LockLog();
-	fileLogger.serialize(true);
-	UnlockLog();
 }
 
-void WriteLogFileImplementation(const char* const type, std::stringstream& ss)
+LogWriter* LogWriter::GetGlobalLog(LogType t, const char* name)
 {
-	LockLog();
+	static std::mutex logMutex;
+	static std::map<const char*, FileLog> writers;
 
-	fileLogger.logStrings.push_back(GetLogTime() + " (" + type + "): " + ss.str());
-	if (fileLogger.logStrings.size() > 50000)
+	std::lock_guard<std::mutex> guard(logMutex);
+
+	if (writers.find(name) == writers.end())
 	{
-		std::swap(fileLogger.logStrings, fileLogger.prevLogStrings);
-		fileLogger.logStrings.clear();
+		auto ptr = Create(t);
+		ptr->name = name;
+		writers[name] = std::move(ptr);
 	}
 
-	UnlockLog();
+	return writers[name].get();
+}
+
+FileLog LogWriter::Create(LogType type)
+{
+	return std::move(std::make_unique<LogWriter>(type));
+}
+
+bool LogWriter::Enabled() const
+{
+	return LogEnabled(type);
 }
