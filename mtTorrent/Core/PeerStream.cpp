@@ -3,12 +3,10 @@
 
 mtt::PeerStream::PeerStream(asio::io_service& io) : io_service(io)
 {
-
 }
 
 mtt::PeerStream::~PeerStream()
 {
-
 }
 
 void mtt::PeerStream::fromStream(std::shared_ptr<TcpAsyncStream> stream)
@@ -29,10 +27,12 @@ void mtt::PeerStream::fromStream(utp::StreamPtr stream)
 
 void mtt::PeerStream::open(const Addr& address)
 {
-	if (mtt::config::getExternal().transfer.utp.enabled)
+	if (mtt::config::getExternal().connection.enableUtpOut)
 		openUtpStream(address);
-	else
+	else if (mtt::config::getExternal().connection.enableTcpOut)
 		openTcpStream(address);
+	else
+		io_service.post([this] { connectionClosed(Type::Tcp, 0); });
 }
 
 void mtt::PeerStream::write(const DataBuffer& data)
@@ -47,6 +47,8 @@ void mtt::PeerStream::close()
 {
 	if (tcpStream)
 		tcpStream->close(false);
+	else if (utpStream)
+		utpStream->close();
 }
 
 Addr mtt::PeerStream::getAddress() const
@@ -56,7 +58,7 @@ Addr mtt::PeerStream::getAddress() const
 	if (utpStream)
 		return utpStream->getAddress();
 
-	return Addr::Empty();
+	return {};
 }
 
 std::string mtt::PeerStream::getAddressName() const
@@ -107,37 +109,42 @@ void mtt::PeerStream::openTcpStream(const Addr& address)
 
 void mtt::PeerStream::initializeUtpStream()
 {
-	utpStream->onCloseCallback = std::bind(&PeerStream::connectionClosed, shared_from_this(), Type::Utp, std::placeholders::_1);
+	utpStream = std::make_shared<mtt::utp::Stream>(io_service);
+
+	utpStream->onConnectCallback = std::bind(&PeerStream::connectionOpened, shared_from_this(), Type::Utp);
+	utpStream->onCloseCallback = [this](int code) { connectionClosed(Type::Utp, code); };
 	utpStream->onReceiveCallback = [this](const BufferView& buffer) { return dataReceived(Type::Utp, buffer); };
 }
 
 void mtt::PeerStream::openUtpStream(const Addr& address)
 {
-	utpStream = utp::Manager::get().createStream(address.toUdpEndpoint(), [this, address](bool success)
-		{
-			if (success)
-			{
-				initializeUtpStream();
-				connectionOpened(Type::Utp);
-			}
-			else
-			{
-				openTcpStream(address);
-			}
-		});
+	initializeUtpStream();
+	utp::Manager::get().connectStream(utpStream, address.toUdpEndpoint());
 }
 
 void mtt::PeerStream::connectionOpened(Type t)
 {
-	if (t != Type::Utp)
-		utpStream = nullptr;
-
-	return onOpenCallback();
+	onOpenCallback();
 }
 
-void mtt::PeerStream::connectionClosed(Type, int code)
+void mtt::PeerStream::connectionClosed(Type t, int code)
 {
-	return onCloseCallback(code);
+	if (t == Type::Utp && !utpStream->wasConnected() && code != 0 && mtt::config::getExternal().connection.enableTcpOut)
+	{
+		openTcpStream(utpStream->getAddress());
+		utpStream = nullptr;
+		return;
+	}
+
+	auto ptr = shared_from_this();
+
+	onCloseCallback(code);
+
+	//clean shared_from_this bind
+	if (utpStream)
+		utpStream->onConnectCallback = nullptr;
+	if (tcpStream)
+		tcpStream->onConnectCallback = nullptr;
 }
 
 size_t mtt::PeerStream::dataReceived(Type, const BufferView& buffer)

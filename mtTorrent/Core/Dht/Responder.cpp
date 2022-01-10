@@ -4,19 +4,14 @@
 #include "Configuration.h"
 #include "utils/HexEncoding.h"
 
-#define DHT_LOG(x) WRITE_LOG(LogTypeDht, "REMOTE " << x)
+#define DHT_LOG(x) WRITE_GLOBAL_LOG(Dht, "REMOTE " << x)
 
 mtt::dht::Responder::Responder(DataListener& l) : listener(l)
 {
-
+	tokenSecret[0] = tokenSecret[1] = (int)rand();
 }
 
-void parseWantedNodeType(mtt::BencodeParser::Object* requestData, bool& v4, bool& v6)
-{
-
-}
-
-bool mtt::dht::Responder::handlePacket(udp::endpoint& endpoint, DataBuffer& data)
+bool mtt::dht::Responder::handlePacket(const udp::endpoint& endpoint, DataBuffer& data)
 {
 	if (data.empty())
 		return false;
@@ -97,7 +92,7 @@ bool mtt::dht::Responder::handlePacket(udp::endpoint& endpoint, DataBuffer& data
 	return true;
 }
 
-bool mtt::dht::Responder::writeNodes(const char* hash, udp::endpoint& endpoint, const mtt::BencodeParser::Object* requestData, PacketBuilder& out)
+bool mtt::dht::Responder::writeNodes(const char* hash, const udp::endpoint& endpoint, const mtt::BencodeParser::Object* requestData, PacketBuilder& out)
 {
 	bool wantV4 = endpoint.address().is_v4();
 	bool wantV6 = endpoint.address().is_v6();
@@ -152,7 +147,7 @@ bool mtt::dht::Responder::writeNodes(const char* hash, udp::endpoint& endpoint, 
 	return false;
 }
 
-bool mtt::dht::Responder::writeValues(const char* infoHash, udp::endpoint& endpoint, PacketBuilder& out)
+bool mtt::dht::Responder::writeValues(const char* infoHash, const udp::endpoint& endpoint, PacketBuilder& out)
 {
 	auto it = values.find(*(NodeId*)infoHash);
 	if (it == values.end())
@@ -238,15 +233,15 @@ void mtt::dht::Responder::refreshStoredValues()
 	}
 }
 
-bool mtt::dht::Responder::isValidToken(uint32_t token, udp::endpoint& e)
+bool mtt::dht::Responder::isValidToken(uint32_t token, const udp::endpoint& e)
 {
 	std::lock_guard<std::mutex> guard(tokenMutex);
 	
 	auto addr = e.address().to_string();
 
-	if (getAnnounceToken(addr, 0) == token)
+	if (getAnnounceToken(addr, tokenSecret[0]) == token)
 		return true;
-	if (getAnnounceToken(addr, 1) == token)
+	if (getAnnounceToken(addr, tokenSecret[1]) == token)
 		return true;
 
 	return false;

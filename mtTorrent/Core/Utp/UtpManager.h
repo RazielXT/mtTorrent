@@ -22,12 +22,11 @@ namespace mtt
 
 			static Manager& get();
 
-			void start(uint16_t port);
+			void init();
+			void start();
 			void stop();
 
-			StreamPtr createStream(const udp::endpoint& e, std::function<void(bool)> onResult);
-
-			StreamPtr getStream() { return streams.begin()->second; }
+			void connectStream(StreamPtr s, const udp::endpoint& e);
 
 			std::function<void(StreamPtr)> onConnection;
 

@@ -104,14 +104,7 @@ void mtt::Core::init()
 				dht->stop();
 		});
 
-	if (mtt::config::getExternal().transfer.utp.enabled)
-		utp.start(mtt::config::getExternal().connection.udpPort);
-
-	config::registerOnChangeCallback(config::ValueType::Transfer, [this]()
-		{
-			if (mtt::config::getExternal().transfer.utp.enabled)
-				utp.start(mtt::config::getExternal().connection.udpPort);
-		});
+	utp.init();
 
 	UdpAsyncComm::Get()->listen([this](udp::endpoint& e, std::vector<DataBuffer*>& b)
 		{
@@ -157,6 +150,8 @@ void mtt::Core::deinit()
 	}
 
 	UdpAsyncComm::Deinit();
+
+	utp.stop();
 
 	mtt::config::save();
 }

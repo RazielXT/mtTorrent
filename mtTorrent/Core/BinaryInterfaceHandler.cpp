@@ -299,7 +299,7 @@ extern "C"
 			resp->upnpEnabled = settings.connection.upnpPortMapping;
 			resp->maxDownloadSpeed = settings.transfer.maxDownloadSpeed;
 			resp->maxUploadSpeed = settings.transfer.maxUploadSpeed;
-			resp->utpEnabled = settings.transfer.utp.enabled;
+			resp->utpEnabled = settings.connection.enableUtpIn;
 		}
 		else if (id == mtBI::MessageId::SetSettings)
 		{
@@ -314,7 +314,7 @@ extern "C"
 			settings.connection.upnpPortMapping = info->upnpEnabled;
 			settings.transfer.maxDownloadSpeed = info->maxDownloadSpeed;
 			settings.transfer.maxUploadSpeed = info->maxUploadSpeed;
-			settings.transfer.utp.enabled = info->utpEnabled;
+			settings.connection.enableUtpIn = info->utpEnabled;
 
 			mtt::config::setValues(settings.dht);
 			mtt::config::setValues(settings.connection);

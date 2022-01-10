@@ -88,6 +88,10 @@ namespace mtt
 			changed |= val.udpPort != external.connection.udpPort;
 			changed |= val.maxTorrentConnections != external.connection.maxTorrentConnections;
 			changed |= val.upnpPortMapping != external.connection.upnpPortMapping;
+			changed |= val.enableTcpIn != external.connection.enableTcpIn;
+			changed |= val.enableTcpOut != external.connection.enableTcpOut;
+			changed |= val.enableUtpIn != external.connection.enableUtpIn;
+			changed |= val.enableUtpOut != external.connection.enableUtpOut;
 
 			if (changed)
 			{
@@ -122,7 +126,6 @@ namespace mtt
 		{
 			bool changed = val.maxDownloadSpeed != external.transfer.maxDownloadSpeed;
 			changed |= val.maxUploadSpeed != external.transfer.maxUploadSpeed;
-			changed |= val.utp.enabled != external.transfer.utp.enabled;
 
 			if (changed)
 			{
@@ -223,6 +226,14 @@ namespace mtt
 							external.connection.maxTorrentConnections = (uint32_t)i->getBigInt();
 						if (auto i = cSettings->getIntItem("upnpPortMapping"))
 							external.connection.upnpPortMapping = (bool)i->getBigInt();
+						if (auto i = cSettings->getIntItem("enableTcpIn"))
+							external.connection.enableTcpIn = (bool)i->getInt();
+						if (auto i = cSettings->getIntItem("enableTcpOut"))
+							external.connection.enableTcpOut = (bool)i->getInt();
+						if (auto i = cSettings->getIntItem("enableUtpIn"))
+							external.connection.enableUtpIn = (bool)i->getInt();
+						if (auto i = cSettings->getIntItem("enableUtpOut"))
+							external.connection.enableUtpOut = (bool)i->getInt();
 					}
 					if (auto dhtSettings = externalSettings->getDictItem("dht"))
 					{
@@ -235,8 +246,6 @@ namespace mtt
 							external.transfer.maxDownloadSpeed = (uint32_t)i->getBigInt();
 						if (auto i = tSettings->getIntItem("maxUploadSpeed"))
 							external.transfer.maxUploadSpeed = (uint32_t)i->getBigInt();
-						if (auto i = tSettings->getIntItem("utpEnable"))
-							external.transfer.utp.enabled = (bool)i->getInt();
 					}
 					if (auto fSettings = externalSettings->getDictItem("files"))
 					{
@@ -276,6 +285,10 @@ namespace mtt
 					writer.addItem("udpPort", external.connection.udpPort);
 					writer.addItem("maxTorrentConnections", external.connection.maxTorrentConnections);
 					writer.addItem("upnpPortMapping", external.connection.upnpPortMapping);
+					writer.addItem("enableTcpIn", external.connection.enableTcpIn);
+					writer.addItem("enableTcpOut", external.connection.enableTcpOut);
+					writer.addItem("enableUtpIn", external.connection.enableUtpIn);
+					writer.addItem("enableUtpOut", external.connection.enableUtpOut);
 					writer.endMap();
 
 					writer.startMap("dht");
@@ -285,7 +298,6 @@ namespace mtt
 					writer.startMap("transfer");
 					writer.addItem("maxDownloadSpeed", external.transfer.maxDownloadSpeed);
 					writer.addItem("maxUploadSpeed", external.transfer.maxUploadSpeed);
-					writer.addItem("utpEnable", (int)external.transfer.utp.enabled);
 					writer.endMap();
 
 					writer.startMap("files");

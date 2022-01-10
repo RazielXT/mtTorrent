@@ -6,7 +6,7 @@
 
 mtt::dht::Communication* comm;
 
-#define DHT_LOG(x) WRITE_LOG(LogTypeDht, x)
+#define DHT_LOG(x) WRITE_GLOBAL_LOG(Dht, x)
 
 mtt::dht::Communication::Communication() : responder(*this)
 {

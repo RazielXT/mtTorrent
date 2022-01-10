@@ -1,5 +1,5 @@
 #include "UtpManager.h"
-#include "Api/Configuration.h"
+#include "Configuration.h"
 #include <set>
 
 static mtt::utp::Manager* mgr = nullptr;
@@ -19,11 +19,13 @@ mtt::utp::Manager& mtt::utp::Manager::get()
 	return *mgr;
 }
 
-void mtt::utp::Manager::start(uint16_t port)
+void mtt::utp::Manager::start()
 {
-	currentUdpPort = port;
+	auto& conn = mtt::config::getExternal().connection;
 
-	if (!active)
+	currentUdpPort = conn.udpPort;
+
+	if (!active && (conn.enableUtpIn || conn.enableUtpOut))
 	{
 		active = true;
 		service.start(4);
@@ -39,6 +41,16 @@ void mtt::utp::Manager::start(uint16_t port)
 
 }
 
+void mtt::utp::Manager::init()
+{
+	start();
+
+	config::registerOnChangeCallback(config::ValueType::Transfer, [this]()
+		{
+			start();
+		});
+}
+
 void mtt::utp::Manager::stop()
 {
 	{
@@ -47,21 +59,25 @@ void mtt::utp::Manager::stop()
 		active = false;
 	}
 
-	timeoutTimer->disable();
+	if (timeoutTimer)
+		timeoutTimer->disable();
+
 	service.stop();
 }
 
-mtt::utp::StreamPtr mtt::utp::Manager::createStream(const udp::endpoint& e, std::function<void(bool)> onResult)
+void mtt::utp::Manager::connectStream(StreamPtr s, const udp::endpoint& e)
 {
-	std::lock_guard<std::mutex> guard(streamsMutex);
+	s->init(e, currentUdpPort);
 
-	auto stream = std::make_shared<mtt::utp::Stream>(service.io);
-	stream->onConnectCallback = onResult;
-	stream->connect(e, currentUdpPort);
+	service.io.post([s, this]
+		{
+			{
+				std::lock_guard<std::mutex> guard(streamsMutex);
+				streams.insert({ s->getId(), s });
+			}
 
-	streams.insert({ stream->getId(), stream });
-
-	return stream;
+			s->connect();
+		});
 }
 
 bool mtt::utp::Manager::onUdpPacket(udp::endpoint& e, std::vector<DataBuffer*>& buffers)
@@ -118,6 +134,7 @@ bool mtt::utp::Manager::onUdpPacket(udp::endpoint& e, std::vector<DataBuffer*>& 
 				affected.emplace(currentStream);
 				return true;
 			}
+			stream++;
 		}
 		return false;
 	};
@@ -164,6 +181,9 @@ void mtt::utp::Manager::refresh()
 
 void mtt::utp::Manager::onNewConnection(const udp::endpoint& e, const MessageHeader& header)
 {
+	if (!mtt::config::getExternal().connection.enableUtpIn)
+		return;
+
 	auto stream = std::make_shared<utp::Stream>(service.io);
 	streams.insert({ header.connection_id + 1, stream });
 

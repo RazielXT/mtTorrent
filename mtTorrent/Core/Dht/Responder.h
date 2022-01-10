@@ -18,7 +18,7 @@ namespace mtt
 
 			void refresh();
 
-			bool handlePacket(udp::endpoint&, DataBuffer&);
+			bool handlePacket(const udp::endpoint&, DataBuffer&);
 
 			std::shared_ptr<Table> table;
 
@@ -26,8 +26,8 @@ namespace mtt
 
 			DataListener& listener;
 
-			bool writeNodes(const char* hash, udp::endpoint& e, const mtt::BencodeParser::Object* requestData, PacketBuilder& out);
-			bool writeValues(const char* infoHash, udp::endpoint& e, PacketBuilder& out);
+			bool writeNodes(const char* hash, const udp::endpoint& e, const mtt::BencodeParser::Object* requestData, PacketBuilder& out);
+			bool writeValues(const char* infoHash, const udp::endpoint& e, PacketBuilder& out);
 
 			struct StoredValue
 			{
@@ -44,7 +44,7 @@ namespace mtt
 			std::mutex tokenMutex;
 			uint32_t tokenSecret[2];
 
-			bool isValidToken(uint32_t token, udp::endpoint& e);
+			bool isValidToken(uint32_t token, const udp::endpoint& e);
 			uint32_t getAnnounceToken(const udp::endpoint& e);
 			uint32_t getAnnounceToken(const std::string& addr, uint32_t secret);
 		};

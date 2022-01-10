@@ -4,7 +4,7 @@
 #include "utils/BencodeParser.h"
 #include "utils/HexEncoding.h"
 
-#define DHT_LOG(x) WRITE_LOG(LogTypeDht, x)
+#define DHT_LOG(x) WRITE_GLOBAL_LOG(Dht, x)
 
 using namespace mtt::dht;
 

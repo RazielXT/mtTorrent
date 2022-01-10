@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Logging.h"
 #include "utils/UdpAsyncWriter.h"
 #include "utils/ByteSwap.h"
 #include <mutex>
@@ -20,14 +21,16 @@ namespace mtt
 		{
 		public:
 
-			//initiate
 			Stream(asio::io_service& io_service);
+			~Stream();
 
-			void connect(const udp::endpoint&, uint16_t bindPort);
+			void init(const udp::endpoint&, uint16_t bindPort);
+			void connect();
+
 			//from remote request
 			void connect(const udp::endpoint&, uint16_t bindPort, const MessageHeader& header);
 
-			std::function<void(bool)> onConnectCallback;
+			std::function<void()> onConnectCallback;
 			std::function<size_t(const BufferView&)> onReceiveCallback;
 			std::function<void(int)> onCloseCallback;
 
@@ -44,15 +47,18 @@ namespace mtt
 			std::string getHostname() const;
 			Addr getAddress() const;
 			uint64_t getReceivedDataCount() const;
-
-		private:
+			bool wasConnected() const;
 
 			void close();
+
+		private:
 
 			void sendSyn();
 			void sendState();
 			void sendFin();
 			void prepareStateHeader(MessageType);
+			uint8_t getSelectiveAckDataSize();
+			void prepareSelectiveAckData(uint8_t* data, uint8_t size);
 			void flushSendData();
 
 			bool updateState(const MessageHeader& msg);
@@ -80,7 +86,6 @@ namespace mtt
 
 			struct
 			{
-				uint32_t wnd_size = 0x100000;
 				uint32_t peer_wnd_size = 0x100000;
 
 				uint32_t last_reply_delay = 0;
@@ -94,6 +99,7 @@ namespace mtt
 				uint32_t timeoutCount = 0;
 				TimePoint nextTimeout;
 				TimePoint lastReceive;
+				bool wasConnected = false;
 			}
 			connection;
 			
@@ -147,6 +153,7 @@ namespace mtt
 
 			struct 
 			{
+				const uint32_t wnd_size = 1024 * 1024;
 				DataBuffer receiveBuffer;
 
 				struct ReceivedDataUnsynced
@@ -170,9 +177,14 @@ namespace mtt
 			void flushReceivedData();
 			void appendReceiveBuffer(const BufferView& data);
 			void storeReceivedData(uint16_t sequenceId, const BufferView& data);
+			uint32_t getReceiveWindow();
 
 			std::pair<DataBuffer&, uint16_t> createDataBuffer(size_t size);
 			std::vector<DataBuffer> dataBuffers;//cache for reuse
+
+			asio::io_service& io_service;
+
+			FileLog log;
 		};
 
 		template <class T, T(*F)(T) >
