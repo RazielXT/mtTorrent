@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29418.71
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mtTorrent", "mtTorrent\mtTorrent.vcxproj", "{7A7123CF-1E7A-408F-8281-6A0ADB328253}"
 EndProject
@@ -10,8 +10,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "countryIpListParser", "countryIpListParser\countryIpListParser.vcxproj", "{841FA89C-34F1-4180-BECC-193231E68E8F}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SdkExample", "SdkExample\SdkExample.vcxproj", "{8D1AE2D0-94D2-4705-91B2-CA824F565537}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "diagnosticsReport", "diagnosticsReport\diagnosticsReport.vcxproj", "{C7EEA4BB-E7EC-4347-AC7A-16893FC01446}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SdkGuiExample", "SdkGuiExample\SdkGuiExample.vcxproj", "{3A4E8FE1-A933-4B5A-AC16-15379E937B1D}"
 EndProject
@@ -90,22 +88,6 @@ Global
 		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.ReleaseWithSSL|x64.Build.0 = Release|x64
 		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.ReleaseWithSSL|x86.ActiveCfg = Release|Win32
 		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.ReleaseWithSSL|x86.Build.0 = Release|Win32
-		{C7EEA4BB-E7EC-4347-AC7A-16893FC01446}.Debug|x64.ActiveCfg = Debug|x64
-		{C7EEA4BB-E7EC-4347-AC7A-16893FC01446}.Debug|x64.Build.0 = Debug|x64
-		{C7EEA4BB-E7EC-4347-AC7A-16893FC01446}.Debug|x86.ActiveCfg = Debug|Win32
-		{C7EEA4BB-E7EC-4347-AC7A-16893FC01446}.Debug|x86.Build.0 = Debug|Win32
-		{C7EEA4BB-E7EC-4347-AC7A-16893FC01446}.Release|x64.ActiveCfg = Release|x64
-		{C7EEA4BB-E7EC-4347-AC7A-16893FC01446}.Release|x64.Build.0 = Release|x64
-		{C7EEA4BB-E7EC-4347-AC7A-16893FC01446}.Release|x86.ActiveCfg = Release|Win32
-		{C7EEA4BB-E7EC-4347-AC7A-16893FC01446}.Release|x86.Build.0 = Release|Win32
-		{C7EEA4BB-E7EC-4347-AC7A-16893FC01446}.ReleaseWithSSL MT|x64.ActiveCfg = Release|x64
-		{C7EEA4BB-E7EC-4347-AC7A-16893FC01446}.ReleaseWithSSL MT|x64.Build.0 = Release|x64
-		{C7EEA4BB-E7EC-4347-AC7A-16893FC01446}.ReleaseWithSSL MT|x86.ActiveCfg = Release|Win32
-		{C7EEA4BB-E7EC-4347-AC7A-16893FC01446}.ReleaseWithSSL MT|x86.Build.0 = Release|Win32
-		{C7EEA4BB-E7EC-4347-AC7A-16893FC01446}.ReleaseWithSSL|x64.ActiveCfg = Release|x64
-		{C7EEA4BB-E7EC-4347-AC7A-16893FC01446}.ReleaseWithSSL|x64.Build.0 = Release|x64
-		{C7EEA4BB-E7EC-4347-AC7A-16893FC01446}.ReleaseWithSSL|x86.ActiveCfg = Release|Win32
-		{C7EEA4BB-E7EC-4347-AC7A-16893FC01446}.ReleaseWithSSL|x86.Build.0 = Release|Win32
 		{3A4E8FE1-A933-4B5A-AC16-15379E937B1D}.Debug|x64.ActiveCfg = Debug|x64
 		{3A4E8FE1-A933-4B5A-AC16-15379E937B1D}.Debug|x64.Build.0 = Debug|x64
 		{3A4E8FE1-A933-4B5A-AC16-15379E937B1D}.Debug|x86.ActiveCfg = Debug|Win32
