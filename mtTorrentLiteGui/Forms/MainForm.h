@@ -1563,7 +1563,16 @@ private: System::Void  peersView_SortCompare(System::Object^ sender, DataGridVie
 		auto bytesID = gcnew String(e->Column->Name == "DL2" ? "DlBytes2" : "UpBytes2");
 		auto v1 = Int32::Parse(peersGridView->Rows[e->RowIndex1]->Cells[bytesID]->Value->ToString());
 		auto v2 = Int32::Parse(peersGridView->Rows[e->RowIndex2]->Cells[bytesID]->Value->ToString());
-		e->SortResult = v1 > v2 ? 1 : -1;
+
+		if (v1 == 0 && e->CellValue1->ToString()->StartsWith("0"))
+			v1 = 1;
+		if (v2 == 0 && e->CellValue2->ToString()->StartsWith("0"))
+			v2 = 1;
+
+		if (v1 == 0 && v2 == 0)
+			e->SortResult = System::String::Compare(e->CellValue1->ToString(), e->CellValue2->ToString());
+		else
+			e->SortResult = v1 > v2 ? 1 : -1;
 	}
 	else
 		e->SortResult = System::String::Compare(e->CellValue1->ToString(), e->CellValue2->ToString());
