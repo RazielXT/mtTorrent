@@ -2,6 +2,7 @@
 #include "FileSelectionForm.h"
 #include "../Utils/Utils.h"
 #include "../AppCore.h"
+#include "MainForm.h"
 
 FileSelection::FileSelection(AppCore& c) : core(c)
 {
@@ -138,7 +139,7 @@ void FileSelection::fillFilesSelectionForm()
 void showFilesSelectionFormThread()
 {
 	GuiLite::FileSelectionForm form;
-	form.ShowDialog();
+	form.ShowDialog(GuiLite::MainForm::instance);
 	GuiLite::FileSelectionForm::instance = nullptr;
 }
 

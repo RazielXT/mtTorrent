@@ -147,8 +147,17 @@ void AppCore::processProgramArgument(System::String^ arg)
 
 void AppCore::showWindow()
 {
-	GuiLite::MainForm::instance->Show();
-	GuiLite::MainForm::instance->WindowState = System::Windows::Forms::FormWindowState::Normal;
+	GuiLite::MainForm::instance->Activate();
+
+	if (GuiLite::MainForm::instance->WindowState == System::Windows::Forms::FormWindowState::Minimized)
+	{
+		ShowWindow((HWND)GuiLite::MainForm::instance->Handle.ToInt64(), SW_RESTORE);
+	}
+	else
+	{
+		ShowWindow((HWND)GuiLite::MainForm::instance->Handle.ToInt64(), SW_MINIMIZE);
+		ShowWindow((HWND)GuiLite::MainForm::instance->Handle.ToInt64(), SW_RESTORE);
+	}
 }
 
 mtt::Status AppCore::addTorrentFromFile(const char* filepath)
