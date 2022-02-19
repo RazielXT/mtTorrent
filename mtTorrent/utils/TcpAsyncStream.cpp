@@ -17,7 +17,7 @@ TcpAsyncStream::~TcpAsyncStream()
 
 void TcpAsyncStream::connect(const uint8_t* ip, uint16_t port, bool ipv6)
 {
-	if (state != Disconnected)
+	if (state != Clear)
 		return;
 
 	info.address.set(ip, port, ipv6); 
@@ -32,7 +32,7 @@ void TcpAsyncStream::connect(const uint8_t* ip, uint16_t port, bool ipv6)
 
 void TcpAsyncStream::connect(const std::string& ip, uint16_t port)
 {
-	if (state != Disconnected)
+	if (state != Clear)
 		return;
 
 	info.address.set(asio::ip::address::from_string(ip), port);
@@ -286,7 +286,7 @@ void TcpAsyncStream::do_write(DataBuffer data)
 				std::bind(&TcpAsyncStream::handle_write, shared_from_this(), std::placeholders::_1));
 		}
 	}
-	else if (state != Connecting)
+	else if (state == Clear)
 	{
 		if (info.addressResolved)
 		{
@@ -362,12 +362,12 @@ void TcpAsyncStream::handle_receive(const std::error_code& error, std::size_t by
 	TCP_LOG("received " << bytes_transferred << " bytes");
 	waiting_for_data = false;
 
+	if (state == Disconnected)
+		return;
+
 	if (!error)
 	{
 		std::lock_guard<std::mutex> guard(receive_mutex);
-
-		if (state == Disconnected)
-			return;
 
 		appendData(bytes_transferred);
 

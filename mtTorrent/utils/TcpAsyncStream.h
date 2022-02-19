@@ -52,7 +52,7 @@ protected:
 
 	void postFail(const char* place, const std::error_code& error);
 
-	enum { Disconnected, Connecting, Connected } state = Disconnected;
+	enum { Clear, Connecting, Connected, Disconnected } state = Clear;
 	void handle_resolve(const std::error_code& error, tcp::resolver::iterator iterator, std::shared_ptr<tcp::resolver> resolver);
 	void handle_resolver_connect(const std::error_code& err, tcp::resolver::iterator endpoint_iterator, std::shared_ptr<tcp::resolver> resolver);
 	void handle_connect(const std::error_code& err);
