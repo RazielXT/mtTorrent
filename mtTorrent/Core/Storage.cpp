@@ -502,7 +502,7 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 	}
 }
 
-mtt::Status mtt::Storage::preallocate(const File& file, size_t size)
+mtt::Status mtt::Storage::preallocate(const File& file, uint64_t size)
 {
 	auto fullpath = getFullpath(file);
 	createPath(fullpath);

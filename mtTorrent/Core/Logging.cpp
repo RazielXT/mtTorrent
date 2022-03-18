@@ -115,7 +115,7 @@ LogWriter& LogWriter::operator<<(LogWriter::DataType t)
 }
 
 LogWriter& LogWriter::operator<<(int i) { return *this << (uint32_t)i; };
-LogWriter& LogWriter::operator<<(size_t i) { return *this << (uint32_t)i; };
+LogWriter& LogWriter::operator<<(uint64_t i) { return *this << (uint32_t)i; };
 
 LogWriter::LogWriter(LogType t) : type(t)
 {

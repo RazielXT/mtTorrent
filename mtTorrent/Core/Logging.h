@@ -54,7 +54,7 @@ struct LogWriter
 	LogWriter& operator<<(uint32_t);
 	LogWriter& operator<<(int);
 	LogWriter& operator<<(int64_t);
-	LogWriter& operator<<(size_t);
+	LogWriter& operator<<(uint64_t);
 	LogWriter& operator<<(LogWriter::DataType);
 	LogWriter& operator<<(const char*&);
 	LogWriter& operator<<(const std::string&);
