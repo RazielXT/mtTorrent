@@ -127,6 +127,7 @@ namespace mtBI
 		{
 			uint8_t hash[20];
 			bool active;
+			uint64_t activeTimestamp;
 		};
 		mtt::array<TorrentBasicInfo> list;
 	};
@@ -146,13 +147,13 @@ namespace mtBI
 		mtt::string name;
 		mtt::string downloadLocation;
 		mtt::string createdBy;
-		int creationDate;
+		uint64_t creationDate;
+		uint64_t timeAdded;
 	};
 
 	struct TorrentStateInfo
 	{
 		mtt::string name;
-		uint64_t timeAdded;
 		float progress;
 		float selectionProgress;
 		uint64_t downloaded;
@@ -180,6 +181,15 @@ namespace mtBI
 		mtt::string addr;
 		mtt::string client;
 		mtt::string country;
+		uint32_t flags;
+
+		enum Flag
+		{
+			Tcp = 1,
+			Utp = 2,
+			Remote = 4,
+			Encrypted = 8
+		};
 	};
 
 	struct TorrentPeersInfo

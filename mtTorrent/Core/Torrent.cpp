@@ -31,7 +31,7 @@ mtt::TorrentPtr mtt::Torrent::fromFile(mtt::TorrentFileInfo fileInfo)
 
 	torrent->peers = std::make_shared<Peers>(torrent);
 	torrent->fileTransfer = std::make_shared<FileTransfer>(torrent);
-	torrent->addedTime = (int64_t)time(0);
+	torrent->addedTime = (uint64_t)time(0);
 
 	return torrent;
 }
@@ -45,7 +45,7 @@ mtt::TorrentPtr mtt::Torrent::fromMagnetLink(std::string link)
 
 	torrent->peers = std::make_shared<Peers>(torrent);
 	torrent->fileTransfer = std::make_shared<FileTransfer>(torrent);
-	torrent->addedTime = (int64_t)time(0);
+	torrent->addedTime = (uint64_t)time(0);
 
 	return torrent;
 }
@@ -71,7 +71,7 @@ mtt::TorrentPtr mtt::Torrent::fromSavedState(std::string name)
 	}
 
 	torrent->files.initialize(state.selection, state.downloadPath);
-	torrent->lastStateTime = state.lastStateTime;
+	torrent->lastFileTime = state.lastStateTime;
 	torrent->addedTime = state.addedTime;
 
 	if (torrent->addedTime == 0)
@@ -123,7 +123,7 @@ void mtt::Torrent::save()
 	saveState.info.name = name();
 	saveState.info.pieceSize = infoFile.info.pieceSize;
 	saveState.downloadPath = files.storage.getPath();
-	saveState.lastStateTime = lastStateTime = files.storage.getLastModifiedTime();
+	saveState.lastStateTime = lastFileTime = files.storage.getLastModifiedTime();
 	saveState.addedTime = addedTime;
 	saveState.started = state == ActiveState::Started;
 	saveState.uploaded = fileTransfer->getUploadSum();
@@ -213,7 +213,7 @@ void mtt::Torrent::refreshLastState()
 	if (!checking)
 	{
 		bool needRecheck = false;
-		int64_t filesTime = 0;
+		uint64_t filesTime = 0;
 
 		const auto& tfiles = infoFile.info.files;
 		for (size_t i = 0; i < tfiles.size(); i++)
@@ -223,17 +223,17 @@ void mtt::Torrent::refreshLastState()
 			if (filesTime < fileTime)
 				filesTime = fileTime;
 
-			bool checkFile = !lastStateTime;
+			bool checkFile = !lastFileTime;
 			if (!fileTime && files.progress.hasPiece(tfiles[i].startPieceIndex) && tfiles[i].size != 0)
 				needRecheck = true;
 		}
 
-		if (filesTime != lastStateTime || needRecheck)
+		if (filesTime != lastFileTime || needRecheck)
 		{
 			fileTransfer->clearUnfinishedPieces();
 
 			if (filesTime == 0)
-				lastStateTime = 0;
+				lastFileTime = 0;
 
 			checkFiles();
 		}
@@ -242,6 +242,7 @@ void mtt::Torrent::refreshLastState()
 
 void mtt::Torrent::downloadMetadata()
 {
+	activityTime = TimeClock::now();
 	service.start(4);
 
 	if(!utmDl)
@@ -282,6 +283,11 @@ mttApi::Torrent::State mtt::Torrent::getState() const
 		return mttApi::Torrent::State::Seeding;
 	else
 		return mttApi::Torrent::State::Downloading;
+}
+
+mttApi::Torrent::TimePoint mtt::Torrent::getActiveTimestamp() const
+{
+	return activityTime;
 }
 
 void mtt::Torrent::initialize()
@@ -325,7 +331,7 @@ mtt::Status mtt::Torrent::start()
 			lastError = files.prepareSelection();
 
 			if (lastError == mtt::Status::Success)
-				lastStateTime = files.storage.getLastModifiedTime();
+				lastFileTime = files.storage.getLastModifiedTime();
 		}
 	}
 
@@ -340,6 +346,7 @@ mtt::Status mtt::Torrent::start()
 
 	state = ActiveState::Started;
 	stateChanged = true;
+	activityTime = TimeClock::now();
 
 	if (!checking)
 		fileTransfer->start();
@@ -404,7 +411,12 @@ void mtt::Torrent::checkFiles(bool all)
 
 	if (all)
 	{
-		lastStateTime = 0;
+		lastFileTime = 0;
+	}
+
+	if (state == mttApi::Torrent::ActiveState::Stopped)
+	{
+		activityTime = TimeClock::now();
 	}
 
 	auto request = std::make_shared<mtt::PiecesCheck>(files.progress);
@@ -414,12 +426,12 @@ void mtt::Torrent::checkFiles(bool all)
 	const auto& tfiles = infoFile.info.files;
 	for (size_t i = 0; i < tfiles.size(); i++)
 	{
-		bool checkFile = !lastStateTime;
+		bool checkFile = !lastFileTime;
 		if (!checkFile)
 		{
 			auto fileTime = files.storage.getLastModifiedTime(i);
 
-			if (lastStateTime < fileTime || (!fileTime && files.progress.selectedPiece(tfiles[i].startPieceIndex)))
+			if (lastFileTime < fileTime || (!fileTime && files.progress.selectedPiece(tfiles[i].startPieceIndex)))
 				checkFile = true;
 		}
 
@@ -444,7 +456,7 @@ void mtt::Torrent::checkFiles(bool all)
 		if (!request->rejected)
 		{
 			files.progress.select(infoFile.info, files.selection);
-			lastStateTime = files.storage.getLastModifiedTime();
+			lastFileTime = files.storage.getLastModifiedTime();
 			stateChanged = true;
 
 			if (state == ActiveState::Started)
@@ -453,7 +465,7 @@ void mtt::Torrent::checkFiles(bool all)
 				stop();
 		}
 		else
-			lastStateTime = 0;
+			lastFileTime = 0;
 	};
 
 	checking = true;
@@ -562,7 +574,7 @@ bool mtt::Torrent::selectionFinished() const
 	return files.progress.getSelectedPercentage() == 1;
 }
 
-int64_t mtt::Torrent::getTimeAdded() const
+uint64_t mtt::Torrent::getTimeAdded() const
 {
 	return addedTime;
 }

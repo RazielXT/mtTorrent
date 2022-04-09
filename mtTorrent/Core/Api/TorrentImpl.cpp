@@ -23,6 +23,11 @@ mttApi::Torrent::State mttApi::Torrent::getState() const
 	return static_cast<const mtt::Torrent*>(this)->getState();
 }
 
+mttApi::Torrent::TimePoint mttApi::Torrent::getActiveTimestamp() const
+{
+	return static_cast<const mtt::Torrent*>(this)->getActiveTimestamp();
+}
+
 mtt::Status mttApi::Torrent::getLastError() const
 {
 	return static_cast<const mtt::Torrent*>(this)->lastError;
@@ -108,7 +113,7 @@ bool mttApi::Torrent::selectionFinished() const
 	return static_cast<const mtt::Torrent*>(this)->selectionFinished();
 }
 
-int64_t mttApi::Torrent::getTimeAdded() const
+uint64_t mttApi::Torrent::getTimeAdded() const
 {
 	return static_cast<const mtt::Torrent*>(this)->getTimeAdded();
 }

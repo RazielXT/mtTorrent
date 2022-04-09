@@ -86,6 +86,7 @@ extern "C"
 				memcpy(resp->list[i].hash, t->hash(), 20);
 				auto state = t->getState();
 				resp->list[i].active = (state != mttApi::Torrent::State::Inactive && state != mttApi::Torrent::State::Interrupted);
+				resp->list[i].activeTimestamp = std::chrono::duration_cast<std::chrono::milliseconds>(t->getActiveTimestamp().time_since_epoch()).count();
 			}
 		}
 		else if (id == mtBI::MessageId::GetTorrentStateInfo)
@@ -95,7 +96,6 @@ extern "C"
 				return mtt::Status::E_InvalidInput;
 			auto resp = (mtBI::TorrentStateInfo*) output;
 			resp->name = torrent->name();
-			resp->timeAdded = torrent->getTimeAdded();
 			resp->connectedPeers = torrent->getPeers()->connectedCount();
 			resp->checkingProgress = torrent->checkingProgress();
 			resp->checking = resp->checkingProgress < 1;
@@ -136,6 +136,7 @@ extern "C"
 					out.upSpeed = peer.uploadSpeed;
 					out.client = peer.client;
 					out.country = peer.country;
+					out.flags = peer.flags;
 				}
 			}
 		}
@@ -152,6 +153,7 @@ extern "C"
 			resp->fullsize = fileInfo.info.fullSize;
 			resp->createdBy = fileInfo.about.createdBy;
 			resp->creationDate = fileInfo.about.creationDate;
+			resp->timeAdded = torrent->getTimeAdded();
 
 			auto selection = torrent->getFilesSelection();
 			resp->files.resize(selection.size());

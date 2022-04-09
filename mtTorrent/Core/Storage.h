@@ -33,8 +33,8 @@ namespace mtt
 		void checkStoredPieces(PiecesCheck& checkState, const std::vector<PieceInfo>& piecesInfo, uint32_t workersCount, uint32_t workerIdx, const std::vector<bool>& wantedChecks);
 
 		Status deleteAll();
-		int64_t getLastModifiedTime();
-		int64_t getLastModifiedTime(size_t fileIdx);
+		uint64_t getLastModifiedTime();
+		uint64_t getLastModifiedTime(size_t fileIdx);
 
 	private:
 

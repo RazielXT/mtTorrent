@@ -73,7 +73,7 @@ namespace mtt
 		struct
 		{
 			std::string createdBy;
-			int creationDate = 0;
+			uint64_t creationDate = 0;
 		}
 		about;
 

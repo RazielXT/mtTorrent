@@ -6,7 +6,7 @@
 #include "Peers.h"
 #include "MagnetDownload.h"
 #include <memory>
-
+#include <chrono>
 
 namespace mttApi
 {
@@ -28,7 +28,7 @@ namespace mttApi
 		};
 
 		/*
-			Get active state, that is if torrent tries to achieve connection to other peers
+			Get active state, that is if torrent tries to connect to other peers
 		*/
 		API_EXPORT ActiveState getActiveState() const;
 
@@ -44,8 +44,16 @@ namespace mttApi
 		};
 
 		API_EXPORT State getState() const;
+
+		using TimeClock = std::chrono::system_clock;
+		using TimePoint = TimeClock::time_point;
+
 		/*
-			Get specific error which happened in caused Interrupted state
+			get last time when torrent entered active state (not Inactive/Interrupted)
+		*/
+		API_EXPORT TimePoint getActiveTimestamp() const;
+		/*
+			get specific error which happened in Interrupted state
 		*/
 		API_EXPORT mtt::Status getLastError() const;
 
@@ -126,7 +134,7 @@ namespace mttApi
 		/*
 			get unit timestamp of date when torrent was added
 		*/
-		API_EXPORT int64_t getTimeAdded() const;
+		API_EXPORT uint64_t getTimeAdded() const;
 
 		/*
 			get loaded torrent file

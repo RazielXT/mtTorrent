@@ -211,12 +211,12 @@ mtt::Status mtt::Storage::deleteAll()
 	return Status::Success;
 }
 
-static int64_t getWriteTime(const std::filesystem::path& filepath)
+static uint64_t getWriteTime(const std::filesystem::path& filepath)
 {
 #ifdef __GNUC__
 	struct stat attrib = {};
 	stat(filepath.u8string().data(), &attrib);
-	return attrib.st_mtime;
+	return (uint64_t) attrib.st_mtime;
 #else
 	std::error_code ec;
 	auto tm = std::filesystem::last_write_time(filepath, ec);
@@ -224,9 +224,9 @@ static int64_t getWriteTime(const std::filesystem::path& filepath)
 #endif
 }
 
-int64_t mtt::Storage::getLastModifiedTime()
+uint64_t mtt::Storage::getLastModifiedTime()
 {
-	int64_t time = 0;
+	uint64_t time = 0;
 
 	std::lock_guard<std::mutex> guard(storageMutex);
 
@@ -244,7 +244,7 @@ int64_t mtt::Storage::getLastModifiedTime()
 	return time;
 }
 
-int64_t mtt::Storage::getLastModifiedTime(size_t fileIdx)
+uint64_t mtt::Storage::getLastModifiedTime(size_t fileIdx)
 {
 	auto path = getFullpath(info.files[fileIdx]);
 	return getWriteTime(path);
