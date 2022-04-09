@@ -15,7 +15,7 @@ namespace mtt
 {
 	namespace bt
 	{
-		DataBuffer createHandshake(uint8_t* torrentHash, const uint8_t* clientHash)
+		DataBuffer createHandshake(const uint8_t* torrentHash, const uint8_t* clientHash)
 		{
 			PacketBuilder packet(70);
 			packet.add(19);
@@ -44,7 +44,7 @@ namespace mtt
 			return packet.getBuffer();
 		}
 
-		DataBuffer createBlockRequest(PieceBlockInfo& block)
+		DataBuffer createBlockRequest(const PieceBlockInfo& block)
 		{
 			PacketBuilder packet(17);
 			packet.add32(13);
@@ -128,20 +128,11 @@ mtt::PeerCommunication::~PeerCommunication()
 	NAME_LOG(stream->getAddressName());
 }
 
-size_t mtt::PeerCommunication::fromStream(std::shared_ptr<TcpAsyncStream> s, const BufferView& streamData)
+size_t mtt::PeerCommunication::fromStream(std::shared_ptr<PeerStream> s, const BufferView& streamData)
 {
+	stream = s;
 	initializeStream();
-	stream->fromStream(s);
-
-	DIAGNOSTICS(RemoteConnected, state.action);
-
-	return dataReceived(streamData);
-}
-
-size_t mtt::PeerCommunication::fromStream(utp::StreamPtr s, const BufferView& streamData)
-{
-	initializeStream();
-	stream->fromStream(s);
+	state.action = PeerCommunicationState::Connected;
 
 	DIAGNOSTICS(RemoteConnected, state.action);
 
@@ -150,7 +141,7 @@ size_t mtt::PeerCommunication::fromStream(utp::StreamPtr s, const BufferView& st
 
 void mtt::PeerCommunication::initializeStream()
 {
-	ext.write = [this](const DataBuffer& data)
+	ext.write = [this](DataBuffer data)
 	{
 		stream->write(data);
 	};
@@ -179,7 +170,7 @@ void mtt::PeerCommunication::sendHandshake(const Addr& address)
 	state.action = PeerCommunicationState::Connecting;
 
 	initializeStream();
-	stream->open(address);
+	stream->open(address, torrent.hash);
 }
 
 void mtt::PeerCommunication::sendHandshake()
@@ -373,11 +364,13 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 	}
 	else if (message.id == PeerMessage::Unchoke)
 	{
+		BT_LOG("Peer state Unchoke");
 		state.peerChoking = false;
 		stream->setMinBandwidthRequest(BlockRequestMaxSize + 20);
 	}
 	else if (message.id == PeerMessage::Choke)
 	{
+		BT_LOG("Peer state Choke");
 		state.peerChoking = true;
 		stream->setMinBandwidthRequest(100);
 	}

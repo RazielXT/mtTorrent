@@ -250,6 +250,21 @@
     <ClCompile Include="Core\Logging.cpp">
       <Filter>Source Files\Core\General</Filter>
     </ClCompile>
+    <ClCompile Include="Core\ProtocolEncryption.cpp">
+      <Filter>Source Files\Core\Torrent\Peer\Protocol</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\DataBuffer.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\DiffieHellman.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\RC4.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\BigNumber.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Storage.h">
@@ -473,6 +488,21 @@
     </ClInclude>
     <ClInclude Include="Core\PeerStream.h">
       <Filter>Source Files\Core\Torrent\Peer</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\ProtocolEncryption.h">
+      <Filter>Source Files\Core\Torrent\Peer\Protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\DataBuffer.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\DiffieHellman.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\RC4.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\BigNumber.h">
+      <Filter>Source Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

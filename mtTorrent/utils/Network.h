@@ -1,5 +1,7 @@
 #pragma once
 
+#include "DataBuffer.h"
+
 #define _WIN32_WINDOWS 0x0603
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
@@ -9,24 +11,6 @@
 #endif
 using asio::ip::tcp;
 using asio::ip::udp;
-
-using DataBuffer = std::vector<uint8_t>;
-
-struct BufferView
-{
-	BufferView();
-	BufferView(const DataBuffer&);
-	BufferView(DataBuffer&&);
-	BufferView(const uint8_t* data, size_t size);
-
-	const uint8_t* data = nullptr;
-	size_t size = 0;
-
-	void store(const uint8_t* data, size_t size);
-	void store();
-private:
-	DataBuffer localbuffer;
-};
 
 struct Addr
 {

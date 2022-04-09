@@ -17,6 +17,8 @@ namespace mtt
 {
 	namespace config
 	{
+		enum class Encryption { Allow, Require, Refuse };
+
 		/*
 			External settings available usually to user
 		*/
@@ -37,6 +39,8 @@ namespace mtt
 				bool enableTcpOut = true;
 				bool enableUtpIn = false;
 				bool enableUtpOut = false;
+
+				Encryption encryption = Encryption::Allow;
 			}
 			connection;
 

@@ -48,8 +48,7 @@ namespace mtt
 		PeerCommunication(TorrentInfo& torrent, IPeerListener& listener, asio::io_service& io_service);
 		~PeerCommunication();
 
-		size_t fromStream(std::shared_ptr<TcpAsyncStream> stream, const BufferView& streamData);
-		size_t fromStream(utp::StreamPtr stream, const BufferView& streamData);
+		size_t fromStream(std::shared_ptr<PeerStream> stream, const BufferView& streamData);
 
 		PeerInfo info;
 		PeerCommunicationState state;

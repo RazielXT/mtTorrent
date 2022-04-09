@@ -149,45 +149,5 @@ uint32_t Addr::toUint()
 
 bool Addr::operator==(const Addr& r)
 {
-	if (r.ipv6 && !ipv6)
-		return false;
-
-	return memcmp(addrBytes, r.addrBytes, ipv6 ? 16 : 4) == 0;
-}
-
-BufferView::BufferView()
-{
-}
-
-BufferView::BufferView(const uint8_t* d, size_t s)
-{
-	data = d;
-	size = s;
-}
-
-BufferView::BufferView(const DataBuffer& d)
-{
-	data = d.data();
-	size = d.size();
-}
-
-BufferView::BufferView(DataBuffer&& d)
-{
-	localbuffer = std::move(d);
-	data = localbuffer.data();
-	size = localbuffer.size();
-}
-
-void BufferView::store(const uint8_t* d, size_t s)
-{
-	localbuffer.resize(s);
-	memcpy(localbuffer.data(), d, s);
-	data = localbuffer.data();
-	size = localbuffer.size();
-}
-
-void BufferView::store()
-{
-	if (localbuffer.empty() && data && size)
-		store(data, size);
+	return port == r.port && memcmp(addrBytes, r.addrBytes, ipv6 ? 16 : 4) == 0;
 }

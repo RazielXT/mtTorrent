@@ -158,7 +158,7 @@ void mtt::Peers::connect(const Addr& addr)
 	}
 }
 
-size_t mtt::Peers::add(std::shared_ptr<TcpAsyncStream> stream, const BufferView& data)
+size_t mtt::Peers::add(std::shared_ptr<PeerStream> stream, const BufferView& data)
 {
 	if (torrent->getState() == mttApi::Torrent::State::Inactive)
 		return 0;

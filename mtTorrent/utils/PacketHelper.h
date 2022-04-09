@@ -69,6 +69,11 @@ struct PacketReader
 		return ptr;
 	}
 
+	void move(size_t size)
+	{
+		pos += size;
+	}
+
 private:
 
 	const uint8_t* buffer = nullptr;

@@ -314,6 +314,7 @@
     <ClCompile Include="Core\IncomingPeersListener.cpp" />
     <ClCompile Include="Core\Interface.cpp" />
     <ClCompile Include="Core\PeerStream.cpp" />
+    <ClCompile Include="Core\ProtocolEncryption.cpp" />
     <ClCompile Include="Core\Torrent.cpp" />
     <ClCompile Include="Core\MetadataDownload.cpp" />
     <ClCompile Include="Core\Configuration.cpp" />
@@ -343,9 +344,13 @@
     <ClCompile Include="utils\Bandwidth.cpp" />
     <ClCompile Include="utils\Base32.cpp" />
     <ClCompile Include="utils\BencodeWriter.cpp" />
+    <ClCompile Include="utils\BigNumber.cpp" />
+    <ClCompile Include="utils\DataBuffer.cpp" />
+    <ClCompile Include="utils\DiffieHellman.cpp" />
     <ClCompile Include="utils\FastIpToCountry.cpp" />
     <ClCompile Include="utils\HttpHeader.cpp" />
     <ClCompile Include="utils\NetAdaptersList.cpp" />
+    <ClCompile Include="utils\RC4.cpp" />
     <ClCompile Include="utils\SHA.cpp" />
     <ClCompile Include="utils\SslAsyncStream.cpp" />
     <ClCompile Include="utils\TcpAsyncStream.cpp" />
@@ -383,6 +388,7 @@
     <ClInclude Include="Core\IncomingPeersListener.h" />
     <ClInclude Include="Core\Peers.h" />
     <ClInclude Include="Core\PeerStream.h" />
+    <ClInclude Include="Core\ProtocolEncryption.h" />
     <ClInclude Include="Core\Torrent.h" />
     <ClInclude Include="Core\MetadataDownload.h" />
     <ClInclude Include="Core\Configuration.h" />
@@ -419,9 +425,13 @@
     <ClInclude Include="utils\Bandwidth.h" />
     <ClInclude Include="utils\Base32.h" />
     <ClInclude Include="utils\BencodeWriter.h" />
+    <ClInclude Include="utils\BigNumber.h" />
+    <ClInclude Include="utils\DataBuffer.h" />
+    <ClInclude Include="utils\DiffieHellman.h" />
     <ClInclude Include="utils\FastIpToCountry.h" />
     <ClInclude Include="utils\HttpHeader.h" />
     <ClInclude Include="utils\NetAdaptersList.h" />
+    <ClInclude Include="utils\RC4.h" />
     <ClInclude Include="utils\SHA.h" />
     <ClInclude Include="utils\SslAsyncStream.h" />
     <ClInclude Include="utils\TcpAsyncStream.h" />
