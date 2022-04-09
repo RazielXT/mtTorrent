@@ -234,6 +234,21 @@
     <ClCompile Include="..\mtTorrent\Core\Diagnostics\Diagnostics.cpp">
       <Filter>Source Files\mtt\diag</Filter>
     </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\BigNumber.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\RC4.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\DiffieHellman.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\utils\DataBuffer.cpp">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\ProtocolEncryption.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Test.h">
@@ -430,6 +445,21 @@
     </ClInclude>
     <ClInclude Include="..\mtTorrent\Core\Diagnostics\Diagnostics.h">
       <Filter>Source Files\mtt\diag</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\BigNumber.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\RC4.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\DiffieHellman.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\utils\DataBuffer.h">
+      <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\ProtocolEncryption.h">
+      <Filter>Source Files\mtt</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

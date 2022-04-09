@@ -18,6 +18,9 @@
 #include "Utp/UtpManager.h"
 #include <iostream>
 #include <chrono>
+#include "utils/BigNumber.h"
+#include "utils/SHA.h"
+#include "utils/DiffieHellman.h"
 
 using namespace mtt;
 
@@ -459,9 +462,9 @@ void TorrentTest::testPeerListen()
 
 	ServiceThreadpool service(2);
 
-	std::shared_ptr<TcpAsyncStream> peerStream;
+	std::shared_ptr<PeerStream> peerStream;
 	TcpAsyncServer server(service.io, mtt::config::getExternal().connection.tcpPort, false);
-	server.acceptCallback = [&](std::shared_ptr<TcpAsyncStream> c) { peerStream = c; };
+	server.acceptCallback = [&](std::shared_ptr<TcpAsyncStream> c) { peerStream = std::make_shared<PeerStream>(service.io); peerStream->fromStream(c); };
 	server.listen();
 
 	WAITFOR(peerStream);
@@ -511,7 +514,7 @@ void TorrentTest::testPeerListen()
 	listener.storage = &storage;
 
 	PeerCommunication comm(torrent.info, listener, service.io);
-	comm.fromStream(peerStream, {nullptr, 0});
+	comm.fromStream(peerStream, { });
 	listener.comm = &comm;
 
 	WAITFOR(listener.success || listener.closed);
@@ -1329,7 +1332,10 @@ void testUtpLocalProtocol()
 
 	uploaderListener.utpMgr.onConnection = [&](utp::StreamPtr s)
 	{
-		downloader->fromStream(s, {});
+		std::shared_ptr<PeerStream> stream = std::make_shared<PeerStream>(pool.io);
+		stream->fromStream(s);
+
+		downloader->fromStream(stream, {});
 	};
 
 	uploader->sendHandshake(Addr::fromString("127.0.0.1:57000"));
@@ -1357,8 +1363,184 @@ void testUtpLocalProtocol()
 	}
 }
 
+DataBuffer createHandshake(const uint8_t* torrentHash, const uint8_t* clientHash)
+{
+	PacketBuilder packet(70);
+	packet.add(19);
+	packet.add("BitTorrent protocol", 19);
+
+	uint8_t reserved_byte[8] = { 0 };
+	reserved_byte[5] |= 0x10;	//Extension Protocol
+
+	if (mtt::config::getExternal().dht.enabled)
+		reserved_byte[7] |= 0x80;
+
+	packet.add(reserved_byte, 8);
+
+	packet.add(torrentHash, 20);
+	packet.add(clientHash, 20);
+
+	return packet.getBuffer();
+}
+
+void testLocalPeerEncryption()
+{
+	const size_t keySize = 2 * sizeof(uint64_t);
+
+	DataBuffer random(keySize);
+
+	BigNumber privateKey;
+	Random::Data(random);
+	privateKey.Set(random.data(), keySize);
+
+	BigNumber privateKey2;
+	Random::Data(random);
+	privateKey2.Set(random.data(), keySize);
+
+	BigNumber generator(2, keySize);
+
+	BigNumber publicKey;
+	BigNumber::Powm(publicKey, generator, privateKey, privateKey2);
+
+	TorrentPtr torrent = Torrent::fromMagnetLink("bc8e4a520c4dfee5058129bd990bb8c7334f008e");
+	bool closed = false;
+
+	ServiceThreadpool service;
+	service.start(2);
+
+	ProtocolEncryptionHandshake peHandshake;
+
+	std::shared_ptr<TcpAsyncStream> stream = std::make_shared<TcpAsyncStream>(service.io);
+
+	stream->onCloseCallback = [&](int)
+	{
+		stream.reset();
+		closed = true;
+	};
+	stream->onConnectCallback = [&]()
+	{
+		DataBuffer randomId(20);
+		Random::Data(randomId);
+		DataBuffer request = peHandshake.initiate(torrent->hash(), createHandshake(torrent->hash(), randomId.data()));
+		stream->write(request);
+	};
+	stream->onReceiveCallback = [&](BufferSpan data) -> size_t
+	{
+		if (peHandshake.established())
+		{
+			peHandshake.pe->decrypt(data.data, data.size);
+		}
+
+		DataBuffer response;
+		auto sz = peHandshake.readRemoteDataAsInitiator(data, response);
+
+		if (response.size())
+		{
+			stream->write(response);
+		}
+
+		if (peHandshake.established())
+		{
+			//done
+		}
+
+		return sz;
+	};
+
+	stream->connect("127.0.0.1", 51630);
+
+	WAITFOR(closed);
+}
+
+void testLocalPeerEncryptionListen()
+{
+// 	TorrentPtr torrent = Torrent::fromMagnetLink("bc8e4a520c4dfee5058129bd990bb8c7334f008e");
+// 	ProtocolEncryptionListener listener;
+// 	listener.addTorrent(torrent);
+// 
+// 	ProtocolEncryptionHandshake peHandshake;
+// 	std::shared_ptr<TcpAsyncStream> stream;
+// 	bool closed = false;
+// 
+// 	ServiceThreadpool pool;
+// 	pool.start(2);
+// 
+// 	auto addPeer = [&](TcpAsyncStream* s, ProtocolEncryptionHandshake& pe)
+// 	{
+// 		//get torrent by pe hash
+// 		//get stream by ptr
+// 
+// 		return torrent->peers->add(stream, pe.getBtMessage()/*, pe.pe*/);
+// 	};
+// 
+// 	TcpAsyncServer receiver(pool.io, 51515, false);
+// 	receiver.acceptCallback = [&](std::shared_ptr<TcpAsyncStream> c)
+// 	{
+// 		stream = c;
+// 		auto sPtr = c.get();
+// 
+// 		c->onCloseCallback = [&](int)
+// 		{
+// 			stream.reset();
+// 			closed = true;
+// 		};
+// 		c->onReceiveCallback = [sPtr, &peHandshake, &listener, addPeer](BufferSpan data) -> size_t
+// 		{
+// 			if (data.size < 20)
+// 				return 0;
+// 
+// 			// standard handshake
+// 			if (!peHandshake.started() && PeerMessage::startsAsHandshake(data))
+// 			{
+// 				PeerMessage msg(data);
+// 
+// 				if (msg.id == PeerMessage::Handshake)
+// 				{
+// 					size_t sz = 0;// addPeer(sPtr, data, msg.handshake.info);
+// 					if (sz == 0)
+// 					{
+// 						sPtr->close(false);
+// 					}
+// 					return sz;
+// 				}
+// 
+// 				return 0;
+// 			}
+// 		
+// 			// protocol encryption handshake
+// 			{
+// 				//get pe
+// 
+// 				DataBuffer response;
+// 				size_t sz = peHandshake.readRemoteDataAsListener(data, response, listener);
+// 
+// 				if (response.size())
+// 				{
+// 					sPtr->write(response);
+// 				}
+// 
+// 				if (peHandshake.established())
+// 				{
+// 					sz += addPeer(sPtr, peHandshake);
+// 				}
+// 				else if (peHandshake.failed())
+// 				{
+// 					//removePeer
+// 				}
+// 
+// 				return sz;
+// 			}
+// 			
+// 			return 0;
+// 		};
+// 	};
+// 
+// 	receiver.listen();
+// 	WAITFOR(closed);
+}
+
 void TorrentTest::start()
 {
 	//testDumpStoredPiece();
-	testUtpLocalConnection();
+	testLocalPeerEncryption();
 }

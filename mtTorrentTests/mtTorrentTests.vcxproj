@@ -183,6 +183,7 @@
     <ClCompile Include="..\mtTorrent\Core\Peers.cpp" />
     <ClCompile Include="..\mtTorrent\Core\PeerStream.cpp" />
     <ClCompile Include="..\mtTorrent\Core\PiecesProgress.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\ProtocolEncryption.cpp" />
     <ClCompile Include="..\mtTorrent\Core\State.cpp" />
     <ClCompile Include="..\mtTorrent\Core\Storage.cpp" />
     <ClCompile Include="..\mtTorrent\Core\Torrent.cpp" />
@@ -195,12 +196,16 @@
     <ClCompile Include="..\mtTorrent\utils\Base32.cpp" />
     <ClCompile Include="..\mtTorrent\utils\BencodeParser.cpp" />
     <ClCompile Include="..\mtTorrent\utils\BencodeWriter.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\BigNumber.cpp" />
     <ClCompile Include="..\mtTorrent\utils\ByteSwap.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\DataBuffer.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\DiffieHellman.cpp" />
     <ClCompile Include="..\mtTorrent\utils\FastIpToCountry.cpp" />
     <ClCompile Include="..\mtTorrent\utils\HexEncoding.cpp" />
     <ClCompile Include="..\mtTorrent\utils\HttpHeader.cpp" />
     <ClCompile Include="..\mtTorrent\utils\NetAdaptersList.cpp" />
     <ClCompile Include="..\mtTorrent\utils\Network.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\RC4.cpp" />
     <ClCompile Include="..\mtTorrent\utils\ScheduledTimer.cpp" />
     <ClCompile Include="..\mtTorrent\utils\ServiceThreadpool.cpp" />
     <ClCompile Include="..\mtTorrent\utils\SHA.cpp" />
@@ -249,6 +254,7 @@
     <ClInclude Include="..\mtTorrent\Core\Peers.h" />
     <ClInclude Include="..\mtTorrent\Core\PeerStream.h" />
     <ClInclude Include="..\mtTorrent\Core\PiecesProgress.h" />
+    <ClInclude Include="..\mtTorrent\Core\ProtocolEncryption.h" />
     <ClInclude Include="..\mtTorrent\Core\State.h" />
     <ClInclude Include="..\mtTorrent\Core\Storage.h" />
     <ClInclude Include="..\mtTorrent\Core\Torrent.h" />
@@ -261,7 +267,10 @@
     <ClInclude Include="..\mtTorrent\utils\Base32.h" />
     <ClInclude Include="..\mtTorrent\utils\BencodeParser.h" />
     <ClInclude Include="..\mtTorrent\utils\BencodeWriter.h" />
+    <ClInclude Include="..\mtTorrent\utils\BigNumber.h" />
     <ClInclude Include="..\mtTorrent\utils\ByteSwap.h" />
+    <ClInclude Include="..\mtTorrent\utils\DataBuffer.h" />
+    <ClInclude Include="..\mtTorrent\utils\DiffieHellman.h" />
     <ClInclude Include="..\mtTorrent\utils\FastIpToCountry.h" />
     <ClInclude Include="..\mtTorrent\utils\Filesystem.h" />
     <ClInclude Include="..\mtTorrent\utils\HexEncoding.h" />
@@ -269,6 +278,7 @@
     <ClInclude Include="..\mtTorrent\utils\NetAdaptersList.h" />
     <ClInclude Include="..\mtTorrent\utils\Network.h" />
     <ClInclude Include="..\mtTorrent\utils\PacketHelper.h" />
+    <ClInclude Include="..\mtTorrent\utils\RC4.h" />
     <ClInclude Include="..\mtTorrent\utils\ScheduledTimer.h" />
     <ClInclude Include="..\mtTorrent\utils\ServiceThreadpool.h" />
     <ClInclude Include="..\mtTorrent\utils\SHA.h" />
