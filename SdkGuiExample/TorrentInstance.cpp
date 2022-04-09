@@ -171,7 +171,7 @@ void TorrentInstance::drawInfoWindow()
 
 void TorrentInstance::drawPeersWindow()
 {
-	static ImGuiTableFlags flags = ImGuiTableFlags_SizingPolicyFixed | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
+	static ImGuiTableFlags flags = /*ImGuiTableFlags_SizingPolicyFixed | */ ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
 
 	ImGui::SetNextWindowPos({ 110, 210 }, ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize({ 1030, 470 }, ImGuiCond_FirstUseEver);
@@ -244,7 +244,7 @@ std::string formatSeconds(uint32_t seconds)
 
 void TorrentInstance::drawSourcesWindow()
 {
-	static ImGuiTableFlags flags = ImGuiTableFlags_SizingPolicyFixed | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
+	static ImGuiTableFlags flags = /*ImGuiTableFlags_SizingPolicyFixed | */ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
 
 	ImGui::SetNextWindowPos({ 695, 8 }, ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize({ 515, 200 }, ImGuiCond_FirstUseEver);
