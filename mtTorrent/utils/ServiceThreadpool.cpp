@@ -18,7 +18,7 @@ ServiceThreadpool::~ServiceThreadpool()
 void ServiceThreadpool::start(uint32_t startWorkers)
 {
 	if(!work)
-		work = std::make_shared<asio::io_service::work>(io);
+		work = std::make_shared<workType>(io.get_executor());
 
 	if (workers >= startWorkers)
 		return;
@@ -38,13 +38,12 @@ void ServiceThreadpool::stop()
 	if (work)
 		work = nullptr;
 
-	io.stop();
-
 	for (size_t i = 0; i < workers; i++)
 	{
 		myThreads[i].join();
 	}
 
+	io.stop();
 	io.reset();
 
 	workers = 0;

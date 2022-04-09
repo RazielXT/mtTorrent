@@ -42,7 +42,7 @@ namespace mttApi
 		/*
 			Get object of Listener, used for receiving incoming connections from other peers
 		*/
-		API_EXPORT std::shared_ptr<Listener> getListener();
+		API_EXPORT const Listener* getListener();
 
 		/*
 			Remove torrent and optionally all created torrent files

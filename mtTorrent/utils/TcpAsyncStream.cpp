@@ -68,6 +68,11 @@ void TcpAsyncStream::write(const DataBuffer& data)
 	io_service.post(std::bind(&TcpAsyncStream::do_write, shared_from_this(), data));
 }
 
+void TcpAsyncStream::write(DataBuffer&& data)
+{
+	io_service.post(std::bind(&TcpAsyncStream::do_write, shared_from_this(), std::move(data)));
+}
+
 const std::string& TcpAsyncStream::getHostname() const
 {
 	return info.host;
@@ -271,16 +276,16 @@ void TcpAsyncStream::do_write(DataBuffer data)
 {
 	std::lock_guard<std::mutex> guard(write_msgs_mutex);
 
-	write_msgs.push_back(data);
+	write_msgs.emplace_back(std::move(data));
 
 	if (state == Connected)
 	{
-		TCP_LOG("writing " << data.size() << " bytes");
+		bool writeInProgress = write_msgs.size() > 1;
 
-		bool write_in_progress = write_msgs.size() > 1;
-
-		if (!write_in_progress)
+		if (!writeInProgress)
 		{
+			TCP_LOG("writing " << write_msgs.front().size() << " bytes");
+
 			asio::async_write(socket,
 				asio::buffer(write_msgs.front().data(), write_msgs.front().size()),
 				std::bind(&TcpAsyncStream::handle_write, shared_from_this(), std::placeholders::_1));
@@ -446,6 +451,9 @@ void TcpAsyncStream::requestBandwidth(uint32_t bytes)
 
 void TcpAsyncStream::startReceive()
 {
+	if (!isActive())
+		return;
+
 	uint32_t bytes = wantedTransfer();
 	requestBandwidth(bytes);
 
@@ -479,8 +487,7 @@ void TcpAsyncStream::assignBandwidth(int amount)
 	waiting_for_bw = false;
 	bw_quota += amount;
 
-	if(isActive())
-		startReceive();
+	startReceive();
 }
 
 void TcpAsyncStream::ReadBuffer::advanceBuffer(size_t size)
@@ -496,9 +503,8 @@ void TcpAsyncStream::ReadBuffer::consume(size_t size)
 
 	if (pos && size)
 	{
-		auto tmp = DataBuffer(data.begin() + size, data.begin() + size + pos);
+		memmove(data.data(), data.data() + size, pos);
 		data.resize(pos);
-		memcpy(data.data(), tmp.data(), pos);
 	}
 
 	TCP_LOG("Buffer consume " << size << " - Buffer pos " << pos << ", reserved " << reserved() << ", fullsize " << data.size());

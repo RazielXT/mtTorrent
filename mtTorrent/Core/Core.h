@@ -30,7 +30,7 @@ namespace mtt
 	{
 	public:
 
-		std::shared_ptr<IncomingPeersListener> listener;
+		std::unique_ptr<IncomingPeersListener> listener;
 		std::shared_ptr<dht::Communication> dht;
 
 		std::vector<TorrentPtr> torrents;

@@ -10,10 +10,21 @@ mtt::dht::Communication* comm;
 
 mtt::dht::Communication::Communication() : responder(*this)
 {
-	udp = UdpAsyncComm::Get();
+	udp = UdpAsyncComm::Init();
 	comm = this;
 	
 	responder.table = table = std::make_shared<Table>();
+
+	if (mtt::config::getExternal().dht.enabled)
+		start();
+
+	config::registerOnChangeCallback(config::ValueType::Dht, [this]()
+		{
+			if (mtt::config::getExternal().dht.enabled)
+				start();
+			else
+				stop();
+		});
 }
 
 mtt::dht::Communication::~Communication()

@@ -45,7 +45,7 @@ void mtt::utp::Manager::init()
 {
 	start();
 
-	config::registerOnChangeCallback(config::ValueType::Transfer, [this]()
+	config::registerOnChangeCallback(config::ValueType::Connection, [this]()
 		{
 			start();
 		});
@@ -61,6 +61,7 @@ void mtt::utp::Manager::stop()
 
 	if (timeoutTimer)
 		timeoutTimer->disable();
+	timeoutTimer = nullptr;
 
 	service.stop();
 }

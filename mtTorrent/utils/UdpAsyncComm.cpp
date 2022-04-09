@@ -1,17 +1,20 @@
 #include "UdpAsyncComm.h"
 #include "Logging.h"
-#include "Configuration.h"
 
 #define UDP_LOG(x) WRITE_GLOBAL_LOG(UdpMgr, x)
 
-std::shared_ptr<UdpAsyncComm> ptr;
+static UdpCommPtr ptr;
 
-std::shared_ptr<UdpAsyncComm> UdpAsyncComm::Get()
+UdpCommPtr UdpAsyncComm::Get()
+{
+	return ptr;
+}
+
+UdpCommPtr UdpAsyncComm::Init()
 {
 	if (!ptr)
 	{
 		ptr = std::make_shared<UdpAsyncComm>();
-		ptr->setBindPort(mtt::config::getExternal().connection.udpPort);
 		ptr->pool.start(4);
 	}
 
@@ -32,7 +35,13 @@ void UdpAsyncComm::Deinit()
 
 void UdpAsyncComm::setBindPort(uint16_t port)
 {
-	bindPort = port;
+	if (bindPort != port)
+	{
+		bindPort = port;
+
+		if (listener || onUnhandledReceive)
+			startListening();
+	}
 }
 
 void UdpAsyncComm::listen(UdpPacketCallback receive)
@@ -117,6 +126,7 @@ void UdpAsyncComm::removeCallback(UdpRequest target)
 	{
 		if ((*it)->client == target)
 		{
+			target->close();
 			pendingResponses.erase(it);
 			break;
 		}
@@ -169,7 +179,7 @@ void UdpAsyncComm::onUdpReceiveBuffers(udp::endpoint& source, std::vector<DataBu
 			unhandled.push_back(data);
 	}
 
-	if (buffers.size() && onUnhandledReceive)
+	if (!buffers.empty() && onUnhandledReceive)
 		onUnhandledReceive(source, unhandled);
 }
 
@@ -200,7 +210,7 @@ void UdpAsyncComm::onDirectUdpReceive(UdpRequest client, DataBuffer* data)
 
 	bool handled = false;
 
-	for (auto r : foundPendingResponses)
+	for (const auto& r : foundPendingResponses)
 	{
 		if (!handled && r->onResponse(r->client, data))
 		{
@@ -243,7 +253,7 @@ bool UdpAsyncComm::onUdpReceive(udp::endpoint& source, DataBuffer& data)
 
 	bool handled = false;
 
-	for (auto r : foundPendingResponses)
+	for (const auto& r : foundPendingResponses)
 	{
 		if (!handled && r->onResponse(r->client, &data))
 		{
@@ -286,7 +296,7 @@ void UdpAsyncComm::onUdpClose(UdpRequest source)
 		}
 	}
 
-	for (auto r : foundPendingResponses)
+	for (const auto& r : foundPendingResponses)
 	{
 		r->reset();
 		r->onResponse(source, nullptr);
@@ -297,6 +307,12 @@ void UdpAsyncComm::onUdpClose(UdpRequest source)
 
 void UdpAsyncComm::startListening()
 {
+	if (listener)
+		listener->stop();
+
+	if (!bindPort)
+		return;
+
 	listener = std::make_shared<UdpAsyncReceiver>(pool.io, bindPort, false);
 	listener->receiveCallback = std::bind(&UdpAsyncComm::onUdpReceiveBuffers, this, std::placeholders::_1, std::placeholders::_2);
 	listener->listen();
@@ -311,7 +327,7 @@ void UdpAsyncComm::checkTimeout(UdpRequest client, const asio::error_code& error
 	{
 		std::lock_guard<std::mutex> guard(responsesMutex);
 
-		for (auto r : pendingResponses)
+		for (const auto& r : pendingResponses)
 		{
 			if (r->client == client)
 			{
@@ -341,9 +357,15 @@ void UdpAsyncComm::checkTimeout(UdpRequest client, const asio::error_code& error
 	}
 }
 
+UdpAsyncComm::ResponseRetryInfo::~ResponseRetryInfo()
+{
+	if (client)
+		client->close();
+}
+
 void UdpAsyncComm::ResponseRetryInfo::reset()
 {
-	client.reset();
 	retries = 255;
 	timeoutTimer->cancel();
+	timeoutTimer = nullptr;
 }

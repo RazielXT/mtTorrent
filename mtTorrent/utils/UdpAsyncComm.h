@@ -14,6 +14,8 @@ class UdpAsyncComm
 public:
 
 	static UdpCommPtr Get();
+
+	static UdpCommPtr Init();
 	static void Deinit();
 
 	void setBindPort(uint16_t port);
@@ -33,6 +35,8 @@ private:
 
 	struct ResponseRetryInfo
 	{
+		~ResponseRetryInfo();
+
 		UdpRequest client;
 		uint8_t retries = 0;
 		UdpResponseCallback onResponse;

@@ -55,9 +55,6 @@ void UdpAsyncWriter::setBindPort(uint16_t port)
 
 void UdpAsyncWriter::close()
 {
-	onResponse = nullptr;
-	onCloseCallback = nullptr;
-
 	io_service.post(std::bind(&UdpAsyncWriter::do_close, shared_from_this()));
 }
 
@@ -73,8 +70,6 @@ void UdpAsyncWriter::write()
 
 void UdpAsyncWriter::write(const BufferView& data, WriteOption option)
 {
-	//std::lock_guard<std::mutex> guard(stateMutex);
-
 	if (state == Connected)
 		send_message(data, option);
 	else
@@ -165,11 +160,10 @@ void UdpAsyncWriter::do_close()
 	if (state == Connected)
 		state = Initialized;
 
-	std::error_code error;
-
 	if (socket.is_open())
 	{
-		socket.shutdown(asio::socket_base::shutdown_both);
+		std::error_code error;
+		socket.shutdown(asio::socket_base::shutdown_both, error);
 		socket.close(error);
 	}	
 }

@@ -281,5 +281,8 @@ mtt::GlobalBandwidth::GlobalBandwidth()
 
 mtt::GlobalBandwidth::~GlobalBandwidth()
 {
+	bwTimer->disable();
+	bwTimer = nullptr;
+
 	BandwidthManager::Get().close();
 }

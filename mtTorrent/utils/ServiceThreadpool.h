@@ -19,7 +19,8 @@ public:
 
 private:
 
-	std::shared_ptr<asio::io_service::work> work;
+	using workType = asio::executor_work_guard<asio::io_context::executor_type>;
+	std::shared_ptr<workType> work;
 
 	std::thread myThreads[10];
 	uint32_t workers = 0;

@@ -27,11 +27,11 @@ public:
 
 	void close(bool immediate = true);
 
+	void write(DataBuffer&& data);
 	void write(const DataBuffer& data);
 
-	std::mutex callbackMutex;
 	std::function<void()> onConnectCallback;
-	std::function<size_t(const BufferView&)> onReceiveCallback;
+	std::function<size_t(BufferSpan)> onReceiveCallback;
 	std::function<void(int)> onCloseCallback;
 
 	const std::string& getHostname() const;
@@ -42,9 +42,10 @@ public:
 	void setBandwidthChannels(BandwidthChannel**, uint32_t count);
 	void setBandwidthPriority(int priority);
 	void setMinBandwidthRequest(uint32_t size);
-	std::string name() override;
 
 protected:
+
+	std::mutex callbackMutex;
 
 	void connectByHostname();
 	void connectByAddress();
@@ -98,8 +99,6 @@ protected:
 	}
 	info;
 
-	bool writing = false;
-
 	uint32_t bw_quota = 0;
 	bool waiting_for_bw = false;
 	bool waiting_for_data = false;
@@ -110,8 +109,9 @@ protected:
 	void startReceive();
 	bool readAvailableData();
 
-	virtual void assignBandwidth(int amount) override;
-	virtual bool isActive() override;
+	void assignBandwidth(int amount) override;
+	bool isActive() override;
+	std::string name() override;
 
 	uint32_t expecting_size = 100;
 	int priority = 1;

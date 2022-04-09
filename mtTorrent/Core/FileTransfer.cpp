@@ -78,6 +78,7 @@ void mtt::FileTransfer::stop()
 
 	if (refreshTimer)
 		refreshTimer->disable();
+	refreshTimer = nullptr;
 
 	uploader->stop();
 }
