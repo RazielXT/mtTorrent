@@ -101,24 +101,7 @@ void mtt::FileTransfer::clearUnfinishedPieces()
 
 void mtt::FileTransfer::refreshSelection()
 {
-	piecesPriority.resize(torrent->infoFile.info.pieces.size(), Priority(0));
-	std::vector<uint32_t> selected;
-
-	for (size_t i = 0; i < torrent->infoFile.info.files.size(); i++)
-	{
-		const auto& file = torrent->infoFile.info.files[i];
-		const auto& selection = torrent->files.selection[i];
-
-		for (size_t i = file.startPieceIndex; i <= file.endPieceIndex; i++)
-		{
-			piecesPriority[i] = std::max(piecesPriority[i], selection.priority);
-
-			if (selection.selected && (selected.empty() || i != selected.back()))
-				selected.push_back((uint32_t)i);
-		}
-	}
-
-	downloader.refreshSelection(std::move(selected));
+	downloader.refreshSelection(torrent->files.selection);
 	evaluateMorePeers();
 }
 
@@ -256,6 +239,7 @@ std::vector<mtt::ActivePeerInfo> mtt::FileTransfer::getPeersInfo() const
 		out[i].client = comm->ext.state.client;
 		out[i].connected = comm->isEstablished();
 		out[i].choking = comm->state.peerChoking;
+		out[i].flags = comm->getStream()->getFlags();
 
 		for (auto& active : activePeers)
 		{
@@ -469,7 +453,7 @@ void mtt::FileTransfer::pieceFinished(const mtt::DownloadedPiece& piece)
 void mtt::FileTransfer::evaluateMorePeers()
 {
 	TRANSFER_LOG("evaluateMorePeers");
-	if (activePeers.size() < mtt::config::getExternal().connection.maxTorrentConnections && !torrent->selectionFinished())
+	if (activePeers.size() < mtt::config::getExternal().connection.maxTorrentConnections && !torrent->selectionFinished() && !torrent->checking)
 		torrent->service.io.post([this]()
 			{
 				TRANSFER_LOG("connectNext");
@@ -631,6 +615,6 @@ void mtt::FileTransfer::updateMeasures()
 
 	if (!torrent->selectionFinished())
 	{
-		downloader.sortPriority(piecesPriority, piecesAvailability);
+		downloader.sortPriority(piecesAvailability);
 	}
 }

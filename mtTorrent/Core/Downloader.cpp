@@ -40,12 +40,12 @@ std::vector<mtt::DownloadedPiece> mtt::Downloader::stop()
 	return out;
 }
 
-void mtt::Downloader::sortPriority(const std::vector<Priority>& priority, const std::vector<uint32_t>& availability)
+void mtt::Downloader::sortPriority(const std::vector<uint32_t>& availability)
 {
 	std::lock_guard<std::mutex> guard(priorityMutex);
 
 	std::sort(selectedPieces.begin(), selectedPieces.end(),
-		[&availability, &priority](uint32_t i1, uint32_t i2) { return priority[i1] > priority[i2] || (priority[i1] == priority[i2] && availability[i1] < availability[i2]); });
+		[&](uint32_t i1, uint32_t i2) { return piecesPriority[i1] > piecesPriority[i2] || (piecesPriority[i1] == piecesPriority[i2] && availability[i1] < availability[i2]); });
 }
 
 std::vector<uint32_t> mtt::Downloader::getCurrentRequests() const
@@ -227,12 +227,29 @@ void mtt::Downloader::progressUpdated(PeerCommunication* p, uint32_t idx)
 		evaluateNextRequests(peer);
 }
 
-void mtt::Downloader::refreshSelection(std::vector<uint32_t> selected)
+void mtt::Downloader::refreshSelection(const DownloadSelection& s)
 {
 	auto peers = client.getPeers();
 
 	{
 		std::lock_guard<std::mutex> guard(priorityMutex);
+
+		piecesPriority.resize(torrentInfo.pieces.size(), Priority(0));
+		std::vector<uint32_t> selected;
+
+		for (size_t i = 0; i < torrentInfo.files.size(); i++)
+		{
+			const auto& file = torrentInfo.files[i];
+			const auto& selection = s[i];
+
+			for (size_t i = file.startPieceIndex; i <= file.endPieceIndex; i++)
+			{
+				piecesPriority[i] = std::max(piecesPriority[i], selection.priority);
+
+				if (selection.selected && (selected.empty() || i != selected.back()))
+					selected.push_back((uint32_t)i);
+			}
+		}
 
 		selectedPieces = std::move(selected);
 
@@ -302,6 +319,7 @@ std::vector<uint32_t> mtt::Downloader::getBestNextPieces(ActivePeer* p)
 	std::vector<uint32_t> out;
 	std::vector<uint32_t> requestedElsewhere;
 	auto currentTime = (uint32_t)time(0);
+	Priority lastPriority = Priority::Low;
 
 	std::lock_guard<std::mutex> guard(priorityMutex);
 
@@ -322,12 +340,22 @@ std::vector<uint32_t> mtt::Downloader::getBestNextPieces(ActivePeer* p)
 
 			if (!alreadyRequested)
 			{
+				if (lastPriority > piecesPriority[idx] && !requestedElsewhere.empty())
+				{
+					auto addCount = std::min(MaxPreparedPieces - out.size(), requestedElsewhere.size());
+					for (size_t i = 0; i < addCount; i++)
+					{
+						out.push_back(requestedElsewhere[i]);
+					}
+					requestedElsewhere.clear();
+				}
+
 				std::lock_guard<std::mutex> guard(requestsMutex);
 				for (auto& r : requests)
 				{
 					if (r.pieceIdx == idx)
 					{
-						if (r.lastActivityTime + 10 > currentTime)
+						if (r.lastActivityTime + 5 > currentTime)
 						{
 							if (requestedElsewhere.size() + out.size() < MaxPreparedPieces)
 								requestedElsewhere.push_back(idx);
@@ -345,6 +373,8 @@ std::vector<uint32_t> mtt::Downloader::getBestNextPieces(ActivePeer* p)
 
 			if (out.size() >= MaxPreparedPieces)
 				break;
+
+			lastPriority = piecesPriority[idx];
 		}
 	}
 

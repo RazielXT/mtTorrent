@@ -40,7 +40,6 @@ namespace mtt
 		FileLog log;
 
 		std::vector<uint32_t> piecesAvailability;
-		std::vector<Priority> piecesPriority;
 
 		std::vector<ActivePeer> activePeers;
 		mutable std::mutex peersMutex;

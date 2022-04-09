@@ -79,9 +79,9 @@ namespace mtt
 		void messageReceived(PeerCommunication*, PeerMessage&);
 		void progressUpdated(PeerCommunication*, uint32_t idx);
 
-		void sortPriority(const std::vector<Priority>& priority, const std::vector<uint32_t>& availability);
+		void sortPriority(const std::vector<uint32_t>& availability);
 
-		void refreshSelection(std::vector<uint32_t> selectedPieces);
+		void refreshSelection(const DownloadSelection& selectedPieces);
 
 	private:
 
@@ -96,6 +96,7 @@ namespace mtt
 		std::vector<uint32_t> selectedPieces;
 
 		std::mutex priorityMutex;
+		std::vector<Priority> piecesPriority;
 
 		struct RequestInfo
 		{
