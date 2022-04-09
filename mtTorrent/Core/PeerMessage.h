@@ -45,6 +45,8 @@ namespace mtt
 
 		PeerMessage(const BufferView& buffer);
 
+		static bool startsAsHandshake(const BufferView& buffer);
+
 		struct
 		{
 			uint8_t id;

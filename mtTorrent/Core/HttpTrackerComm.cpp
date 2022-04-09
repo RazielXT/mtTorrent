@@ -114,7 +114,7 @@ size_t mtt::HttpTrackerComm::onTcpReceived(const BufferView& respData)
 
 DataBuffer mtt::HttpTracker::createAnnounceRequest(std::string path, std::string host, std::string port)
 {
-	PacketBuilder builder(500);
+	PacketBuilder builder(520);
 	builder << "GET " << path << "?info_hash=" << UrlEncode(torrent->hash(), 20);
 	builder << "&peer_id=" << UrlEncode(mtt::config::getInternal().hashId, 20);
 	builder << "&port=" << std::to_string(mtt::config::getExternal().connection.tcpPort);
@@ -124,6 +124,10 @@ DataBuffer mtt::HttpTracker::createAnnounceRequest(std::string path, std::string
 	builder << "&numwant=" << std::to_string(mtt::config::getInternal().maxPeersPerTrackerRequest);
 	builder << "&compact=1&no_peer_id=0&key=" << std::to_string(mtt::config::getInternal().trackerKey);
 	builder << "&event=" << (torrent->finished() ? "completed" : "started");
+	if (mtt::config::getExternal().connection.encryption == config::Encryption::Require)
+		builder << "&requirecrypto=1";
+	else if (mtt::config::getExternal().connection.encryption == config::Encryption::Allow)
+		builder << "&supportcrypto=1";
 	builder << " HTTP/1.1\r\n";
 	builder << "User-Agent: " << MT_NAME << "\r\n";
 	builder << "Connection: close\r\n";

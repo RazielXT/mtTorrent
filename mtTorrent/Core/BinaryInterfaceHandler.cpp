@@ -314,7 +314,7 @@ extern "C"
 			settings.connection.upnpPortMapping = info->upnpEnabled;
 			settings.transfer.maxDownloadSpeed = info->maxDownloadSpeed;
 			settings.transfer.maxUploadSpeed = info->maxUploadSpeed;
-			settings.connection.enableUtpIn = info->utpEnabled;
+			settings.connection.enableUtpIn = settings.connection.enableUtpOut = info->utpEnabled;
 
 			mtt::config::setValues(settings.dht);
 			mtt::config::setValues(settings.connection);

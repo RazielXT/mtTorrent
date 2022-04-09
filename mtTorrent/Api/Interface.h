@@ -120,6 +120,17 @@ namespace mtt
 		uint32_t partsCount = 0;	//0 until first peer connection
 	};
 
+	namespace PeerFlags
+	{
+		enum Flag
+		{
+			Tcp = 1,
+			Utp = 2,
+			RemoteConnection = 4,
+			Encrypted = 8
+		};
+	}
+
 	struct ActivePeerInfo
 	{
 		std::string address;
@@ -131,6 +142,7 @@ namespace mtt
 		bool choking = false;
 		bool requesting = false;
 		std::string country;
+		uint32_t flags = 0;
 	};
 
 	struct AlertMessage

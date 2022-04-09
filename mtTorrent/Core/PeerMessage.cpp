@@ -11,19 +11,16 @@ PeerMessage::PeerMessage(const BufferView& buffer)
 		return;
 	}
 
-	if (buffer.size >= 68 && buffer.data[0] == 19)
+	if (buffer.size >= 68 && PeerMessage::startsAsHandshake(buffer))
 	{
-		if (memcmp(buffer.data + 1, "BitTorrent protocol", 19) == 0)
-		{
-			id = Handshake;
+		id = Handshake;
 
-			messageSize = 68;
-			memcpy(handshake.reservedBytes, buffer.data + 20, 8);
-			memcpy(handshake.info, buffer.data + 20 + 8, 20);
-			memcpy(handshake.peerId, buffer.data + 20 + 8 + 20, 20);
+		messageSize = 68;
+		memcpy(handshake.reservedBytes, buffer.data + 20, 8);
+		memcpy(handshake.info, buffer.data + 20 + 8, 20);
+		memcpy(handshake.peerId, buffer.data + 20 + 8 + 20, 20);
 
-			return;
-		}
+		return;
 	}
 
 	PacketReader reader(buffer.data, buffer.size);
@@ -86,4 +83,9 @@ PeerMessage::PeerMessage(const BufferView& buffer)
 		id = Invalid;
 		messageSize = 0;
 	}
+}
+
+bool PeerMessage::startsAsHandshake(const BufferView& buffer)
+{
+	return buffer.size >= 20 && buffer.data[0] == 19 && memcmp(buffer.data + 1, "BitTorrent protocol", 19) == 0;
 }

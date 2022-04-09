@@ -37,8 +37,10 @@ namespace mtt
 
 				bool enableTcpIn = true;
 				bool enableTcpOut = true;
-				bool enableUtpIn = false;
-				bool enableUtpOut = false;
+				bool enableUtpIn = true;
+				bool enableUtpOut = true;
+
+				bool preferUtp = false;
 
 				Encryption encryption = Encryption::Allow;
 			}
@@ -74,7 +76,7 @@ namespace mtt
 			uint8_t hashId[20];
 
 			uint32_t trackerKey;
-			uint32_t maxPeersPerTrackerRequest = 100;
+			uint32_t maxPeersPerTrackerRequest = 200;
 
 			struct
 			{

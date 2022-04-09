@@ -31,7 +31,7 @@ namespace mtt
 			void connect(const udp::endpoint&, uint16_t bindPort, const MessageHeader& header);
 
 			std::function<void()> onConnectCallback;
-			std::function<size_t(const BufferView&)> onReceiveCallback;
+			std::function<size_t(BufferSpan)> onReceiveCallback;
 			std::function<void(int)> onCloseCallback;
 
 			void write(const DataBuffer&);
@@ -183,6 +183,8 @@ namespace mtt
 			std::vector<DataBuffer> dataBuffers;//cache for reuse
 
 			asio::io_service& io_service;
+
+			std::mutex callbackMutex;
 
 			FileLog log;
 		};

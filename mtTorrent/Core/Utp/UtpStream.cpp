@@ -184,15 +184,17 @@ void mtt::utp::Stream::readFinish()
 	}
 	if (receiving.state.appended)
 	{
+		std::lock_guard<std::mutex> guard(callbackMutex);
+
 		if (onReceiveCallback)
 		{
 			size_t consumed = onReceiveCallback({ receiving.receiveBuffer });
 
 			if (consumed < receiving.receiveBuffer.size())
 			{
-				auto tmp = DataBuffer(receiving.receiveBuffer.begin() + consumed, receiving.receiveBuffer.end());
-				receiving.receiveBuffer.resize(tmp.size());
-				memcpy(receiving.receiveBuffer.data(), tmp.data(), tmp.size());
+				size_t left = receiving.receiveBuffer.size() - consumed;
+				memmove(receiving.receiveBuffer.data(), receiving.receiveBuffer.data() + consumed, left);
+				receiving.receiveBuffer.resize(left);
 			}
 			else
 				receiving.receiveBuffer.clear();
@@ -287,15 +289,15 @@ void mtt::utp::Stream::close()
 
 	io_service.post([this]() 
 		{
-			std::lock_guard<std::mutex> guard(state.mutex);
+			std::lock_guard<std::mutex> guard(callbackMutex);
 
-			if (state.step != StateType::CLOSED)
-			{
-				state.step = StateType::CLOSED;
+			state.step = StateType::CLOSED;
 
-				if (onCloseCallback)
-					onCloseCallback(0);
-			}
+			if (onCloseCallback)
+				onCloseCallback(0);
+
+			onCloseCallback = nullptr;
+			onReceiveCallback = nullptr;
 		});
 }
 
@@ -334,7 +336,7 @@ void mtt::utp::Stream::sendFin()
 
 void mtt::utp::Stream::prepareStateHeader(MessageType type)
 {
-	size_t headerSize = sizeof(utp::MessageHeader);
+	const size_t headerSize = sizeof(utp::MessageHeader);
 	uint8_t extSize = getSelectiveAckDataSize();
 
 	sending.stateBuffer.resize(headerSize + extSize);
@@ -512,6 +514,8 @@ bool mtt::utp::Stream::updateState(const MessageHeader& header)
 	if (connected)
 	{
 		UTP_LOG("Connected, seq " << header.seq_nr << ", ack " << header.ack_nr);
+
+		std::lock_guard<std::mutex> guard(callbackMutex);
 
 		if (onConnectCallback)
 			onConnectCallback();

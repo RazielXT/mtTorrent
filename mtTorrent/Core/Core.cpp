@@ -64,17 +64,21 @@ void mtt::Core::init()
 
 	dht = std::make_shared<dht::Communication>();
 
-	if(mtt::config::getExternal().dht.enabled)
-		dht->start();
-
 	bandwidth = std::make_unique<GlobalBandwidth>();
 
-	listener = std::make_shared<IncomingPeersListener>([this](std::shared_ptr<TcpAsyncStream> s, const BufferView& data, const uint8_t* hash)
-	{
-		auto t = getTorrent(hash);
-		return t ? t->peers->add(s, data) : 0;
-	}
-	);
+	UdpAsyncComm::Get()->listen([this](udp::endpoint& e, std::vector<DataBuffer*>& b)
+		{
+			utp.onUdpPacket(e, b);
+			dht->onUdpPacket(e, b);
+		});
+
+	listener = std::make_unique<IncomingPeersListener>([this](std::shared_ptr<PeerStream> s, const BufferView& data, const uint8_t* hash)
+		{
+			auto t = getTorrent(hash);
+			return t ? t->peers->add(s, data) : 0;
+		});
+
+	utp.init();
 
 	TorrentsList list;
 	list.load();
@@ -90,23 +94,8 @@ void mtt::Core::init()
 			continue;
 
 		torrents.push_back(tPtr);
+		listener->addTorrent(tPtr->hash());
 	}
-
-	config::registerOnChangeCallback(config::ValueType::Dht, [this]()
-		{
-			if (mtt::config::getExternal().dht.enabled)
-				dht->start();
-			else
-				dht->stop();
-		});
-
-	utp.init();
-
-	UdpAsyncComm::Get()->listen([this](udp::endpoint& e, std::vector<DataBuffer*>& b)
-		{
-			utp.onUdpPacket(e, b);
-			dht->onUdpPacket(e, b);
-		});
 }
 
 static void saveTorrentList(const std::vector<mtt::TorrentPtr>& torrents)
@@ -191,6 +180,7 @@ std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addFile(const uint8_t* data, 
 
 	torrent->saveTorrentFile((const char*)data, size);
 	torrents.push_back(torrent);
+	listener->addTorrent(torrent->hash());
 	saveTorrentList(torrents);
 
 	return { mtt::Status::Success, torrent };
@@ -213,6 +203,7 @@ std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addMagnet(const char* magnet)
 
 	torrent->downloadMetadata();
 	torrents.push_back(torrent);
+	listener->addTorrent(torrent->hash());
 	saveTorrentList(torrents);
 
 	return { mtt::Status::Success, torrent };
@@ -240,6 +231,7 @@ mtt::Status mtt::Core::removeTorrent(const uint8_t* hash, bool deleteFiles)
 
 			t->removeMetaFiles();
 
+			listener->removeTorrent((*it)->hash());
 			torrents.erase(it);
 	
 			if (deleteFiles)
