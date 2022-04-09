@@ -16,7 +16,7 @@ float GetLogTimeT()
 	return ((float)t) / CLOCKS_PER_SEC;
 }
 
-uint32_t EnabledLogsFlag = 0;// (uint32_t)LogType::Tcp | (uint32_t)LogType::Bandwidth | (uint32_t)LogType::Peer;// (uint32_t)LogType::UtpStream | (uint32_t)LogType::Downloader; //(uint32_t)LogType::PeerCommunicationDiagnostics | (uint32_t)LogType::UtpStream | (uint32_t)LogType::Downloader;
+uint32_t EnabledLogsFlag = 0;// (uint32_t)LogType::TcpStream | (uint32_t)LogType::Peer | (uint32_t)LogType::Downloader;// (uint32_t)LogType::Tcp | (uint32_t)LogType::Bandwidth | (uint32_t)LogType::Peer;// (uint32_t)LogType::UtpStream | (uint32_t)LogType::Downloader; //(uint32_t)LogType::PeerCommunicationDiagnostics | (uint32_t)LogType::UtpStream | (uint32_t)LogType::Downloader;
 
 void EnableLog(LogType t, bool enable)
 {

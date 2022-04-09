@@ -6,7 +6,7 @@ TcpAsyncStream::TcpAsyncStream(asio::io_service& io) : io_service(io), socket(io
 {
 	timeoutTimer = std::make_unique<asio::steady_timer>(io);
 	setBandwidthChannels(nullptr, 0);
-	CREATE_LOG(Tcp);
+	CREATE_LOG(TcpStream);
 	readBuffer.log = log.get();
 }
 

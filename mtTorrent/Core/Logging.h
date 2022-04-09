@@ -24,6 +24,8 @@ enum class LogType
 	UtpStream = FIRST << 14,
 	BencodeParser = FIRST << 15,
 	Bandwidth = FIRST << 16,
+	PeersListener = FIRST << 17,
+	TcpStream = FIRST << 18,
 
 	Test = FIRST << 30
 };
