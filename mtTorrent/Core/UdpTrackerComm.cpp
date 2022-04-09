@@ -130,8 +130,7 @@ DataBuffer UdpTrackerComm::createAnnounceRequest()
 
 	packet.add32(mtt::config::getInternal().trackerKey);
 	packet.add32(mtt::config::getInternal().maxPeersPerTrackerRequest);
-	packet.add32(mtt::config::getExternal().connection.tcpPort);
-	packet.add16(0);
+	packet.add16(mtt::config::getExternal().connection.tcpPort);
 
 	return packet.getBuffer();
 }

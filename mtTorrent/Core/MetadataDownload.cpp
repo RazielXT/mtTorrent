@@ -53,10 +53,8 @@ void mtt::MetadataDownload::start(std::function<void(Status, MetadataDownloadSta
 void mtt::MetadataDownload::stop()
 {
 	if (retryTimer)
-	{
 		retryTimer->disable();
-		retryTimer = nullptr;
-	}
+	retryTimer = nullptr;
 
 	addEventLog(nullptr, EventInfo::End, 0);
 

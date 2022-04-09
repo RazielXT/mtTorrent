@@ -43,14 +43,14 @@ namespace mtt
 
 			UdpCommPtr udp;
 
-			virtual uint32_t onFoundPeers(const uint8_t* hash, const std::vector<Addr>& values) override;
-			virtual void findingPeersFinished(const uint8_t* hash, uint32_t count) override;
+			uint32_t onFoundPeers(const uint8_t* hash, const std::vector<Addr>& values) override;
+			void findingPeersFinished(const uint8_t* hash, uint32_t count) override;
 
-			virtual UdpRequest sendMessage(const Addr&, const DataBuffer&, UdpResponseCallback response) override;
-			virtual void sendMessage(const udp::endpoint&, const DataBuffer&) override;
-			virtual void stopMessage(UdpRequest r) override;
+			UdpRequest sendMessage(const Addr&, const DataBuffer&, UdpResponseCallback response) override;
+			void sendMessage(const udp::endpoint&, const DataBuffer&) override;
+			void stopMessage(UdpRequest r) override;
 
-			virtual void announceTokenReceived(const uint8_t* hash, const std::string& token, const udp::endpoint& source) override;
+			void announceTokenReceived(const uint8_t* hash, const std::string& token, const udp::endpoint& source) override;
 
 		private:
 
