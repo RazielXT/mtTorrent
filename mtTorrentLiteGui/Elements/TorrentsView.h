@@ -17,6 +17,7 @@ public:
 	void refreshSelection();
 
 	void updateList();
+	void update(const uint8_t* hash);
 
 	struct SelectedTorrent
 	{
@@ -44,6 +45,7 @@ private:
 	struct TorrentState
 	{
 		bool active = true;
+		uint64_t tm;
 	};
 	std::map<int, TorrentState> torrentState;
 

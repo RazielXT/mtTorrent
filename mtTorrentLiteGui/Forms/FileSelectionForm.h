@@ -468,10 +468,11 @@ private: System::Void SelectAllButton_Click(System::Object^ sender, System::Even
 private: System::Void DeselectAllButton_Click(System::Object^ sender, System::EventArgs^ e) {
 	onButtonClick(ButtonId::SelectionNone);
 }
+
 private: System::Void buttonBrowse_Click(System::Object^ sender, System::EventArgs^ e) {
 
 	System::Windows::Forms::FolderBrowserDialog dialog;
-	auto result = dialog.ShowDialog(this);
+	auto result = dialog.ShowDialog();
 
 	if (result == System::Windows::Forms::DialogResult::OK && dialog.SelectedPath->Length > 0)
 	{

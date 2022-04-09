@@ -26,6 +26,10 @@ enum class ButtonId
 	Schedule,
 	MagnetLogs,
 	CheckFiles,
+	QueueNext,
+	QueueLast,
+	StopAfterFinish,
+	StopSchedule
 };
 
 extern void onButtonClick(ButtonId id);
@@ -36,6 +40,7 @@ struct TorrentCtxMenuInfo
 	bool active;
 	bool utmLogs;
 	bool noInfo;
+	bool scheduled;
 };
 extern TorrentCtxMenuInfo getTorrentContexMenuInfo();
 

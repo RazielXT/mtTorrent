@@ -6,7 +6,7 @@ using namespace System::Windows::Forms;
 
 AppCore core;
 
-[STAThread]
+
 void FormsMain(cli::array<System::String ^>^ args)
 {
 	if (Environment::OSVersion->Version->Major >= 6)
@@ -27,6 +27,7 @@ void FormsMain(cli::array<System::String ^>^ args)
 	core.deinit();
 }
 
+[STAThreadAttribute]
 int Main(cli::array<System::String ^>^ args)
 {
 	if (HWND h = GetExistingMainWindow())

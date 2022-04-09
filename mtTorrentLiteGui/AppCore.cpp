@@ -83,6 +83,8 @@ TorrentCtxMenuInfo AppCore::getTorrentContexMenuInfo()
 	mtBI::MagnetLinkProgress magnetProgress{};
 	info.noInfo = IoctlFunc(mtBI::MessageId::GetMagnetLinkProgress, firstSelectedHash, &magnetProgress) == mtt::Status::Success && !magnetProgress.finished;
 
+	info.scheduled = !info.active && (scheduler.isQueued(firstSelectedHash) || scheduler.isScheduled(firstSelectedHash));
+
 	return info;
 }
 
@@ -187,6 +189,11 @@ void AppCore::checkAlerts()
 				torrentsView.updateList();
 				fileSelection.showFilesSelectionForm(alert.hash, true);
 			}
+			else if (alert.id == mtt::AlertId::TorrentFinished)
+			{
+				scheduler.torrentFinished(alert.hash);
+				torrentsView.updateList();
+			}
 			else if (alert.id == mtt::AlertId::MetadataFinished)
 			{
 				if (memcmp(firstSelectedHash, alert.hash, 20) == 0)
@@ -230,7 +237,7 @@ void AppCore::stopRunningTorrents()
 		if (core.IoctlFunc(mtBI::MessageId::Stop, s.hash, nullptr) == mtt::Status::Success)
 			core.forceRefresh = true;
 
-		core.scheduler.stopSchedule(s.hash);
+		core.scheduler.stop(s.hash);
 	}
 }
 
@@ -280,6 +287,40 @@ void AppCore::onButtonClick(ButtonId id, System::String^ param)
 		mtTorrentLiteGui::ScheduleForm form;
 		form.ShowDialog();
 	}
+	else if (id == ButtonId::QueueNext)
+	{
+		auto selection = torrentsView.getAllSelectedTorrents();
+
+		for (auto& s : selection)
+		{
+			scheduler.queueTorrent(s.hash, true);
+			torrentsView.updateList();
+		}
+	}
+	else if (id == ButtonId::QueueLast)
+	{
+		auto selection = torrentsView.getAllSelectedTorrents();
+
+		for (auto& s : selection)
+		{
+			scheduler.queueTorrent(s.hash, false);
+			torrentsView.updateList();
+		}
+	}
+	else if (id == ButtonId::StopAfterFinish)
+	{
+		auto selection = torrentsView.getAllSelectedTorrents();
+
+		for (auto& s : selection)
+			scheduler.stopAfterFinish(s.hash);
+	}
+	else if (id == ButtonId::StopSchedule)
+	{
+		auto selection = torrentsView.getAllSelectedTorrents();
+
+		for (auto& s : selection)
+			scheduler.stop(s.hash);
+	}
 	else if (id == ButtonId::Remove)
 	{
 		if (!selected)
@@ -310,7 +351,6 @@ void AppCore::onButtonClick(ButtonId id, System::String^ param)
 			IoctlFunc(mtBI::MessageId::Remove, &request, nullptr);
 		}
 
-		forceRefresh = true;
 		torrentsView.updateList();
 	}
 	else if (id == ButtonId::AddTorrentFile)
@@ -331,10 +371,9 @@ void AppCore::onButtonClick(ButtonId id, System::String^ param)
 
 			for (auto s : selection)
 			{
-				if (IoctlFunc(mtBI::MessageId::Start, s.hash, nullptr) == mtt::Status::Success)
-					forceRefresh = true;
+				IoctlFunc(mtBI::MessageId::Start, s.hash, nullptr);
 
-				scheduler.stopSchedule(s.hash);
+				scheduler.stop(s.hash);
 			}
 		}
 	}
@@ -346,8 +385,6 @@ void AppCore::onButtonClick(ButtonId id, System::String^ param)
 			newThread->SetApartmentState(System::Threading::ApartmentState::STA);
 			newThread->Start();
 		}
-
-		forceRefresh = true;
 	}
 	else if (id == ButtonId::Settings)
 	{
@@ -370,6 +407,8 @@ void AppCore::onButtonClick(ButtonId id, System::String^ param)
 		fileSelection.onButtonClick(id);
 		magnetProgress.onButtonClick(id);
 	}
+
+	forceRefresh = true;
 }
 
 System::String^ AppCore::getUpnpInfo()

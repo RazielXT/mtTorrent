@@ -31,6 +31,23 @@ void TorrentsView::update()
 		piecesProgress.update();
 }
 
+void TorrentsView::update(const uint8_t* hash)
+{
+	auto hashStr = hexToString(hash, 20);
+
+	auto hashToInt = [](const std::string& hash)
+	{
+		int i = 1;
+		for (int j = 0; j < 20; j++)
+			i += ((uint8_t)hash[j]) * i;
+		return i;
+	};
+
+	int hashId = hashToInt(hashStr);
+
+	torrentState[hashId].active = true;
+}
+
 void TorrentsView::refreshSelection()
 {
 	core.selected = GuiLite::MainForm::instance->getGrid()->SelectedRows->Count > 0;
@@ -140,6 +157,13 @@ void TorrentsView::refreshTorrentInfo(uint8_t* hash)
 		infoLines->AppendText(creationStr);
 	}
 
+	if (info.timeAdded)
+	{
+		infoLines->AppendText(System::Environment::NewLine);
+		infoLines->AppendText("Added: \t");
+		infoLines->AppendText(System::DateTimeOffset::FromUnixTimeSeconds(info.timeAdded).ToString("MM/dd/yyyy"));
+	}
+
 	speedChart.resetChart();
 }
 
@@ -208,7 +232,6 @@ void TorrentsView::refreshTorrentsGrid()
 		int rowId = 0;
 		auto hashStr = hexToString(t.hash, 20);
 		{
-			auto hashStr = hexToString(t.hash, 20);
 			int hashId = hashToInt(hashStr);
 
 			auto existingRowId = torrentRows.find(hashId);
@@ -238,13 +261,11 @@ void TorrentsView::refreshTorrentsGrid()
 			}
 
 			//no need to update stopped info state
-			if (!t.active && !torrentState[hashId].active && !listChanged)
+			if (!t.active && !torrentState[hashId].active && !listChanged && t.activeTimestamp == torrentState[hashId].tm)
 				continue;
 
-			torrentState[hashId] = { t.active };
+			torrentState[hashId] = { t.active, t.activeTimestamp };
 		}
-
-		listChanged = false;
 
 		if (core.IoctlFunc(mtBI::MessageId::GetTorrentStateInfo, t.hash, &info) == mtt::Status::Success)
 		{
@@ -262,16 +283,20 @@ void TorrentsView::refreshTorrentsGrid()
 			}
 			else if (!t.active)
 			{
-				int schedule = core.scheduler.getSchedule(t.hash);
-
-				if (schedule <= 0)
-					activeStatus = "Stopped";
-				else
+				if (int schedule = core.scheduler.getSchedule(t.hash))
 				{
 					activeStatus = "Scheduled (";
 					System::TimeSpan time = System::TimeSpan::FromSeconds((double)schedule);
 					activeStatus += time.ToString("d\\d\\ hh\\hmm\\mss\\s")->TrimStart(' ', 'd', 'h', 'm', 's', '0');
 					activeStatus += ")";
+				}
+				else if (int queue = core.scheduler.getQueue(t.hash))
+				{
+					activeStatus = "Queue #" + queue.ToString();
+				}
+				else
+				{
+					activeStatus = "Stopped";
 				}
 			}
 			else if (info.stopping)
@@ -348,6 +373,8 @@ void TorrentsView::refreshTorrentsGrid()
 		}
 	}
 
+	listChanged = false;
+
 	if (torrentGrid->SortedColumn)
 		torrentGrid->Sort(torrentGrid->SortedColumn, torrentGrid->SortOrder == System::Windows::Forms::SortOrder::Ascending ? System::ComponentModel::ListSortDirection::Ascending : System::ComponentModel::ListSortDirection::Descending);
 
@@ -370,12 +397,19 @@ void TorrentsView::refreshPeers()
 	for (uint32_t i = 0; i < peersInfo.peers.size(); i++)
 	{
 		auto& peerInfo = peersInfo.peers[i];
-		auto peerRow = gcnew cli::array< System::String^  >(8) {
+
+		auto connectionInfo = gcnew System::String(peerInfo.flags & mtBI::PeerInfo::Tcp ? "TCP" : "UTP");
+		if (peerInfo.flags & mtBI::PeerInfo::Remote)
+			connectionInfo += " R";
+		if (peerInfo.flags & mtBI::PeerInfo::Encrypted)
+			connectionInfo += " E";
+
+		auto peerRow = gcnew cli::array< System::String^  >(9) {
 			gcnew System::String(peerInfo.addr.data),
 				!peerInfo.connected ? "Connecting" : ((peerInfo.dlSpeed == 0 && peerInfo.choking) ? (peerInfo.requesting ? "Requesting" : "Idle") : formatBytesSpeed(peerInfo.dlSpeed)), int(peerInfo.dlSpeed).ToString(),
 				formatBytesSpeed(peerInfo.upSpeed), int(peerInfo.upSpeed).ToString(),
 				float(peerInfo.progress).ToString("P"), gcnew System::String(peerInfo.client.data, 0, (int)peerInfo.client.length, System::Text::Encoding::UTF8),
-				gcnew System::String(peerInfo.country.data)
+				gcnew System::String(peerInfo.country.data), connectionInfo
 		};
 
 		peersGrid->Rows[i]->SetValues(peerRow);

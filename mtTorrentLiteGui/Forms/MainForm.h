@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "../AppCoreCallbacks.h"
+#include "FileSelectionForm.h"
 
 namespace GuiLite {
 
@@ -78,22 +79,6 @@ namespace GuiLite {
 	public: System::Windows::Forms::TabPage^ progressTabPage;
 	public: System::Windows::Forms::DataVisualization::Charting::Chart^ pieceChart;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	public: System::Windows::Forms::DataGridView^ filesProgressGridView;
 
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ Index;
@@ -105,13 +90,6 @@ private: System::Windows::Forms::DataGridViewTextBoxColumn^ SizeBytes;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ PiecesCount;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ PiecesRemaining;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ PiecesActive;
-
-
-
-
-
-
-
 
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentConnected;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentFoundPeers;
@@ -134,6 +112,14 @@ private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column3;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Peers;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Downloaded;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Uploaded;
+
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn1;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn2;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn3;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column5;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column6;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column1;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn4;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ gridPeerAddress;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ DL2;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ DlBytes2;
@@ -142,84 +128,8 @@ private: System::Windows::Forms::DataGridViewTextBoxColumn^ UpBytes2;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ gridPeerPercentage;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ peerSource;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ peerCountry;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn1;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn2;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn3;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column5;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column6;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column1;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn4;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ connection;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ Size;
 
 	public:
 
@@ -248,6 +158,20 @@ private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxC
 				return TabType::Sources;
 
 			return TabType::General;
+		}
+
+		delegate void showFilesSelectionFormThreadDel();
+
+		void showFilesSelectionFormThread()
+		{
+			GuiLite::FileSelectionForm form;
+			form.ShowDialog(GuiLite::MainForm::instance);
+			GuiLite::FileSelectionForm::instance = nullptr;
+		}
+
+	public: void showFilesSelectionForm()
+		{
+			Invoke(gcnew showFilesSelectionFormThreadDel(this, &MainForm::showFilesSelectionFormThread));
 		}
 
 	private: System::Windows::Forms::SplitContainer^  splitContainer2;
@@ -322,9 +246,6 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle12 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle16 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle17 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle13 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle14 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle15 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle18 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle23 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle24 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
@@ -352,6 +273,9 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 				1));
 			System::Windows::Forms::DataVisualization::Charting::Series^ series4 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
 			System::Windows::Forms::DataVisualization::Charting::Title^ title1 = (gcnew System::Windows::Forms::DataVisualization::Charting::Title());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle13 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle14 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle15 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			this->splitContainer1 = (gcnew System::Windows::Forms::SplitContainer());
 			this->splitContainer2 = (gcnew System::Windows::Forms::SplitContainer());
 			this->buttonRemove = (gcnew System::Windows::Forms::Button());
@@ -378,14 +302,6 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->torrentInfoLabel = (gcnew System::Windows::Forms::TextBox());
 			this->tabPage2 = (gcnew System::Windows::Forms::TabPage());
 			this->peersGridView = (gcnew System::Windows::Forms::DataGridView());
-			this->gridPeerAddress = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->DL2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->DlBytes2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->UP2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->UpBytes2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->gridPeerPercentage = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->peerSource = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->peerCountry = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->peersContextMenuStrip = (gcnew System::Windows::Forms::ContextMenuStrip(this->components));
 			this->toolStripMenuItem1 = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->sourcesTab = (gcnew System::Windows::Forms::TabPage());
@@ -406,12 +322,21 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->Selected = (gcnew System::Windows::Forms::DataGridViewCheckBoxColumn());
 			this->dataGridViewTextBoxColumn5 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->FProgress = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->TSize = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->Size = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->SizeBytes = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->PiecesCount = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->PiecesRemaining = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->PiecesActive = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->pieceChart = (gcnew System::Windows::Forms::DataVisualization::Charting::Chart());
+			this->gridPeerAddress = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->DL2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->DlBytes2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->UP2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->UpBytes2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->gridPeerPercentage = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->peerSource = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->peerCountry = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->connection = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->splitContainer1))->BeginInit();
 			this->splitContainer1->Panel1->SuspendLayout();
 			this->splitContainer1->Panel2->SuspendLayout();
@@ -829,9 +754,9 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			dataGridViewCellStyle12->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
 			this->peersGridView->ColumnHeadersDefaultCellStyle = dataGridViewCellStyle12;
 			this->peersGridView->ColumnHeadersHeightSizeMode = System::Windows::Forms::DataGridViewColumnHeadersHeightSizeMode::AutoSize;
-			this->peersGridView->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(8) {
+			this->peersGridView->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(9) {
 				this->gridPeerAddress,
-					this->DL2, this->DlBytes2, this->UP2, this->UpBytes2, this->gridPeerPercentage, this->peerSource, this->peerCountry
+					this->DL2, this->DlBytes2, this->UP2, this->UpBytes2, this->gridPeerPercentage, this->peerSource, this->peerCountry, this->connection
 			});
 			this->peersGridView->ContextMenuStrip = this->peersContextMenuStrip;
 			dataGridViewCellStyle16->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleLeft;
@@ -864,78 +789,6 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->peersGridView->SelectionMode = System::Windows::Forms::DataGridViewSelectionMode::FullRowSelect;
 			this->peersGridView->Size = System::Drawing::Size(1528, 301);
 			this->peersGridView->TabIndex = 2;
-			// 
-			// gridPeerAddress
-			// 
-			this->gridPeerAddress->AutoSizeMode = System::Windows::Forms::DataGridViewAutoSizeColumnMode::Fill;
-			this->gridPeerAddress->HeaderText = L"Address";
-			this->gridPeerAddress->MinimumWidth = 20;
-			this->gridPeerAddress->Name = L"gridPeerAddress";
-			this->gridPeerAddress->ReadOnly = true;
-			// 
-			// DL2
-			// 
-			dataGridViewCellStyle13->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->DL2->DefaultCellStyle = dataGridViewCellStyle13;
-			this->DL2->HeaderText = L"Download speed";
-			this->DL2->MinimumWidth = 6;
-			this->DL2->Name = L"DL2";
-			this->DL2->ReadOnly = true;
-			this->DL2->Width = 150;
-			// 
-			// DlBytes2
-			// 
-			this->DlBytes2->HeaderText = L"DlBytes2";
-			this->DlBytes2->MinimumWidth = 6;
-			this->DlBytes2->Name = L"DlBytes2";
-			this->DlBytes2->ReadOnly = true;
-			this->DlBytes2->Visible = false;
-			this->DlBytes2->Width = 125;
-			// 
-			// UP2
-			// 
-			dataGridViewCellStyle14->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->UP2->DefaultCellStyle = dataGridViewCellStyle14;
-			this->UP2->HeaderText = L"Upload speed";
-			this->UP2->MinimumWidth = 6;
-			this->UP2->Name = L"UP2";
-			this->UP2->ReadOnly = true;
-			this->UP2->Width = 150;
-			// 
-			// UpBytes2
-			// 
-			this->UpBytes2->HeaderText = L"UpBytes2";
-			this->UpBytes2->MinimumWidth = 6;
-			this->UpBytes2->Name = L"UpBytes2";
-			this->UpBytes2->ReadOnly = true;
-			this->UpBytes2->Visible = false;
-			this->UpBytes2->Width = 125;
-			// 
-			// gridPeerPercentage
-			// 
-			dataGridViewCellStyle15->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->gridPeerPercentage->DefaultCellStyle = dataGridViewCellStyle15;
-			this->gridPeerPercentage->HeaderText = L"%";
-			this->gridPeerPercentage->MinimumWidth = 6;
-			this->gridPeerPercentage->Name = L"gridPeerPercentage";
-			this->gridPeerPercentage->ReadOnly = true;
-			this->gridPeerPercentage->Width = 125;
-			// 
-			// peerSource
-			// 
-			this->peerSource->HeaderText = L"Source";
-			this->peerSource->MinimumWidth = 6;
-			this->peerSource->Name = L"peerSource";
-			this->peerSource->ReadOnly = true;
-			this->peerSource->Width = 150;
-			// 
-			// peerCountry
-			// 
-			this->peerCountry->HeaderText = L"Country";
-			this->peerCountry->MinimumWidth = 6;
-			this->peerCountry->Name = L"peerCountry";
-			this->peerCountry->ReadOnly = true;
-			this->peerCountry->Width = 125;
 			// 
 			// peersContextMenuStrip
 			// 
@@ -1174,7 +1027,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->filesProgressGridView->ColumnHeadersHeightSizeMode = System::Windows::Forms::DataGridViewColumnHeadersHeightSizeMode::AutoSize;
 			this->filesProgressGridView->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(9) {
 				this->Index,
-					this->Selected, this->dataGridViewTextBoxColumn5, this->FProgress, this->TSize, this->SizeBytes, this->PiecesCount, this->PiecesRemaining,
+					this->Selected, this->dataGridViewTextBoxColumn5, this->FProgress, this->Size, this->SizeBytes, this->PiecesCount, this->PiecesRemaining,
 					this->PiecesActive
 			});
 			dataGridViewCellStyle31->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleLeft;
@@ -1250,12 +1103,12 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			// Size
 			// 
 			dataGridViewCellStyle27->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->TSize->DefaultCellStyle = dataGridViewCellStyle27;
-			this->TSize->FillWeight = 20;
-			this->TSize->HeaderText = L"Size";
-			this->TSize->MinimumWidth = 80;
-			this->TSize->Name = L"Size";
-			this->TSize->ReadOnly = true;
+			this->Size->DefaultCellStyle = dataGridViewCellStyle27;
+			this->Size->FillWeight = 20;
+			this->Size->HeaderText = L"Size";
+			this->Size->MinimumWidth = 80;
+			this->Size->Name = L"Size";
+			this->Size->ReadOnly = true;
 			// 
 			// SizeBytes
 			// 
@@ -1354,6 +1207,86 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			title1->TextOrientation = System::Windows::Forms::DataVisualization::Charting::TextOrientation::Horizontal;
 			this->pieceChart->Titles->Add(title1);
 			// 
+			// gridPeerAddress
+			// 
+			this->gridPeerAddress->AutoSizeMode = System::Windows::Forms::DataGridViewAutoSizeColumnMode::Fill;
+			this->gridPeerAddress->HeaderText = L"Address";
+			this->gridPeerAddress->MinimumWidth = 20;
+			this->gridPeerAddress->Name = L"gridPeerAddress";
+			this->gridPeerAddress->ReadOnly = true;
+			// 
+			// DL2
+			// 
+			dataGridViewCellStyle13->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->DL2->DefaultCellStyle = dataGridViewCellStyle13;
+			this->DL2->HeaderText = L"Download speed";
+			this->DL2->MinimumWidth = 6;
+			this->DL2->Name = L"DL2";
+			this->DL2->ReadOnly = true;
+			this->DL2->Width = 150;
+			// 
+			// DlBytes2
+			// 
+			this->DlBytes2->HeaderText = L"DlBytes2";
+			this->DlBytes2->MinimumWidth = 6;
+			this->DlBytes2->Name = L"DlBytes2";
+			this->DlBytes2->ReadOnly = true;
+			this->DlBytes2->Visible = false;
+			this->DlBytes2->Width = 125;
+			// 
+			// UP2
+			// 
+			dataGridViewCellStyle14->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->UP2->DefaultCellStyle = dataGridViewCellStyle14;
+			this->UP2->HeaderText = L"Upload speed";
+			this->UP2->MinimumWidth = 6;
+			this->UP2->Name = L"UP2";
+			this->UP2->ReadOnly = true;
+			this->UP2->Width = 150;
+			// 
+			// UpBytes2
+			// 
+			this->UpBytes2->HeaderText = L"UpBytes2";
+			this->UpBytes2->MinimumWidth = 6;
+			this->UpBytes2->Name = L"UpBytes2";
+			this->UpBytes2->ReadOnly = true;
+			this->UpBytes2->Visible = false;
+			this->UpBytes2->Width = 125;
+			// 
+			// gridPeerPercentage
+			// 
+			dataGridViewCellStyle15->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->gridPeerPercentage->DefaultCellStyle = dataGridViewCellStyle15;
+			this->gridPeerPercentage->HeaderText = L"%";
+			this->gridPeerPercentage->MinimumWidth = 6;
+			this->gridPeerPercentage->Name = L"gridPeerPercentage";
+			this->gridPeerPercentage->ReadOnly = true;
+			this->gridPeerPercentage->Width = 125;
+			// 
+			// peerSource
+			// 
+			this->peerSource->HeaderText = L"Client";
+			this->peerSource->MinimumWidth = 6;
+			this->peerSource->Name = L"peerSource";
+			this->peerSource->ReadOnly = true;
+			this->peerSource->Width = 150;
+			// 
+			// peerCountry
+			// 
+			this->peerCountry->HeaderText = L"Country";
+			this->peerCountry->MinimumWidth = 6;
+			this->peerCountry->Name = L"peerCountry";
+			this->peerCountry->ReadOnly = true;
+			this->peerCountry->Width = 125;
+			// 
+			// connection
+			// 
+			this->connection->HeaderText = L"Connection";
+			this->connection->MinimumWidth = 30;
+			this->connection->Name = L"connection";
+			this->connection->ReadOnly = true;
+			this->connection->Width = 150;
+			// 
 			// MainForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(9, 20);
@@ -1418,11 +1351,36 @@ private: System::Void torrentsGrid_CellContentClick(System::Object^  sender, Sys
 				clickEvent->Click += gcnew System::EventHandler(this, &MainForm::menuItem_Click);
 				m->MenuItems->Add(clickEvent);
 
+				auto scheduleMenuItem = gcnew System::Windows::Forms::MenuItem("Schedule");
+				scheduleMenuItem->Click += gcnew System::EventHandler(this, &MainForm::menuItem_Click);
+				m->MenuItems->Add(scheduleMenuItem);
+
 				if (!info.active)
 				{
-					clickEvent = gcnew System::Windows::Forms::MenuItem("Schedule");
+					if (info.scheduled)
+					{
+						clickEvent = gcnew System::Windows::Forms::MenuItem("Abort");
+						clickEvent->Click += gcnew System::EventHandler(this, &MainForm::menuItem_Click);
+						scheduleMenuItem->MenuItems->Add(clickEvent);
+					}
+
+					clickEvent = gcnew System::Windows::Forms::MenuItem("Time");
 					clickEvent->Click += gcnew System::EventHandler(this, &MainForm::menuItem_Click);
-					m->MenuItems->Add(clickEvent);
+					scheduleMenuItem->MenuItems->Add(clickEvent);
+
+					clickEvent = gcnew System::Windows::Forms::MenuItem("Queue next");
+					clickEvent->Click += gcnew System::EventHandler(this, &MainForm::menuItem_Click);
+					scheduleMenuItem->MenuItems->Add(clickEvent);
+
+					clickEvent = gcnew System::Windows::Forms::MenuItem("Queue last");
+					clickEvent->Click += gcnew System::EventHandler(this, &MainForm::menuItem_Click);
+					scheduleMenuItem->MenuItems->Add(clickEvent);
+				}
+				else
+				{
+					clickEvent = gcnew System::Windows::Forms::MenuItem("Stop after finish");
+					clickEvent->Click += gcnew System::EventHandler(this, &MainForm::menuItem_Click);
+					scheduleMenuItem->MenuItems->Add(clickEvent);
 				}
 
 				if (info.utmLogs)
@@ -1452,7 +1410,7 @@ private: System::Void torrentsGrid_CellContentClick(System::Object^  sender, Sys
 
 		if(buttonText == "Open location")
 			onButtonClick(ButtonId::OpenLocation);
-		else if (buttonText == "Schedule")
+		else if (buttonText == "Time")
 			onButtonClick(ButtonId::Schedule);
 		else if (buttonText == "Magnet logs")
 			onButtonClick(ButtonId::MagnetLogs);
@@ -1460,6 +1418,14 @@ private: System::Void torrentsGrid_CellContentClick(System::Object^  sender, Sys
 			onButtonClick(ButtonId::SelectFiles);
 		else if (buttonText == "Check files")
 			onButtonClick(ButtonId::CheckFiles);
+		else if (buttonText == "Queue next")
+			onButtonClick(ButtonId::QueueNext);
+		else if (buttonText == "Queue last")
+			onButtonClick(ButtonId::QueueLast);
+		else if (buttonText == "Stop after finish")
+			onButtonClick(ButtonId::StopAfterFinish);
+		else if (buttonText == "Abort")
+			onButtonClick(ButtonId::StopSchedule);
 	}
 	private: System::Void buttonStart_Click(System::Object^  sender, System::EventArgs^  e) {
 		onButtonClick(ButtonId::Start);

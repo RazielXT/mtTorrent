@@ -371,7 +371,7 @@ private: System::Void buttonOk_Click(System::Object^  sender, System::EventArgs^
 private: System::Void buttonCancel_Click(System::Object^  sender, System::EventArgs^  e) {
 	Close();
 }
-		private: bool requestTooltip = false;
+private: bool requestTooltip = false;
 private: System::Void UpnpToolTip_Popup(System::Object^ sender, System::Windows::Forms::PopupEventArgs^ e) {
 
 	if (!requestTooltip)

@@ -136,13 +136,6 @@ void FileSelection::fillFilesSelectionForm()
 	updateSelectionFormFooter();
 }
 
-void showFilesSelectionFormThread()
-{
-	GuiLite::FileSelectionForm form;
-	form.ShowDialog(GuiLite::MainForm::instance);
-	GuiLite::FileSelectionForm::instance = nullptr;
-}
-
 void FileSelection::showFilesSelectionForm(const uint8_t* hash, bool added)
 {
 	if (GuiLite::FileSelectionForm::instance)
@@ -151,9 +144,7 @@ void FileSelection::showFilesSelectionForm(const uint8_t* hash, bool added)
 	memcpy(state.hash, hash, 20);
 	state.added = added;
 
-	System::Threading::Thread^ newThread = gcnew System::Threading::Thread(gcnew System::Threading::ThreadStart(&showFilesSelectionFormThread));
-	newThread->SetApartmentState(System::Threading::ApartmentState::STA);
-	newThread->Start();
+	GuiLite::MainForm::instance->showFilesSelectionForm();
 }
 
 void FileSelection::onButtonClick(ButtonId id)
@@ -181,7 +172,7 @@ void FileSelection::onButtonClick(ButtonId id)
 
 			if (status == mtt::Status::E_NotEmpty)
 			{
-				auto result = ::MessageBox(NULL, L"Folder not empty, inherit containing files?", L"Torrent folder", MB_YESNO);
+				auto result = ::MessageBox((HWND)form->Handle.ToInt64(), L"Folder not empty, inherit containing files?", L"Torrent folder", MB_YESNO);
 
 				if (result == IDYES)
 				{
@@ -198,6 +189,7 @@ void FileSelection::onButtonClick(ButtonId id)
 					form->labelError->Text = "Path not empty";
 				else
 					form->labelError->Text = "Error setting location path";
+
 				form->labelError->Visible = true;
 				return;
 			}
