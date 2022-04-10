@@ -1,5 +1,6 @@
 #include "DataBuffer.h"
 #include <random>
+#include <cstring>
 
 BufferView::BufferView()
 {

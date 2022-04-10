@@ -93,7 +93,7 @@ private:
 
 //----------
 
-#define CREATE_LOG(type) log = LogEnabled(LogType::##type) ? LogWriter::Create(LogType::##type) : nullptr; if (log) log->name = #type "_";
+#define CREATE_LOG(type) log = LogEnabled(LogType::type) ? LogWriter::Create(LogType::type) : nullptr; if (log) log->name = #type "_";
 #define CREATE_NAMED_LOG(type, n) CREATE_LOG(type) if (log) log->name += n;
 #define NAME_LOG(n)if (log) log->name += n;
 
@@ -103,4 +103,4 @@ private:
 
 //----------
 
-#define WRITE_GLOBAL_LOG(type, logdata) if (LogEnabled(LogType::##type)) { static auto log = LogWriter::GetGlobalLog(LogType::##type, #type); std::lock_guard<std::mutex> guard(log->mtx); static auto LogId = log->CreateLogLineId(); log->StartLogLine(LogId); *log << logdata << LogWriter::ENDL;}
+#define WRITE_GLOBAL_LOG(type, logdata) if (LogEnabled(LogType::type)) { static auto log = LogWriter::GetGlobalLog(LogType::type, #type); std::lock_guard<std::mutex> guard(log->mtx); static auto LogId = log->CreateLogLineId(); log->StartLogLine(LogId); *log << logdata << LogWriter::ENDL;}

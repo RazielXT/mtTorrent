@@ -8,7 +8,7 @@
 
 enum class LogEvent : uint8_t { Connect, RemoteConnect, Remove, ConnectPeers };
 
-#define DIAGNOSTICS(eventType, x) WRITE_DIAGNOSTIC_LOG((char)LogEvent::##eventType << x)
+#define DIAGNOSTICS(eventType, x) WRITE_DIAGNOSTIC_LOG((char)LogEvent::eventType << x)
 
 #define PEERS_LOG(x) WRITE_LOG(x)
 

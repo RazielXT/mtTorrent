@@ -7,8 +7,6 @@
 
 namespace mtt
 {
-	class PeerCommunication;
-
 	namespace ext
 	{
 		enum MessageType
@@ -58,8 +56,6 @@ namespace mtt
 
 		struct ExtensionProtocol
 		{
-			friend class PeerCommunication;
-
 			struct
 			{
 				bool sentHandshake = false;
@@ -76,8 +72,6 @@ namespace mtt
 			PeerExchange pex;
 
 			UtMetadata utm;
-
-		private:
 
 			void sendHandshake();
 

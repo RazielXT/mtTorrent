@@ -1,6 +1,7 @@
 #include "BigNumber.h"
 #include <cstdlib>
 #include <algorithm>
+#include <cstring>
 
 BigNumber::BigNumber(const uint8_t* src, const size_t size)
 {

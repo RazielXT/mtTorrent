@@ -84,7 +84,7 @@ void TorrentInstance::drawInfoWindow()
 		static char input[1024] = "";
 
 		ImGui::SetNextItemWidth(ImGui::GetWindowWidth());
-		ImGui::InputText("", input, IM_ARRAYSIZE(input));
+		ImGui::InputText("Input", input, IM_ARRAYSIZE(input));
 
 		if (ImGui::Button("Add Magnet"))
 			std::tie(status, torrentPtr) = core->addMagnet(input);

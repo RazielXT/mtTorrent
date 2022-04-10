@@ -27,6 +27,8 @@ set (core_sources
 	TrackerManager
 	UdpTrackerComm
 	Uploader
+	PeerStream
+	ProtocolEncryption
 )
 
 list(TRANSFORM core_sources PREPEND "Core/")
@@ -52,12 +54,6 @@ set (core_dht_sources
 )
 
 list(TRANSFORM core_dht_sources PREPEND "Core/Dht/")
-
-set (core_diagnostics_sources
-	Diagnostics
-)
-
-list(TRANSFORM core_diagnostics_sources PREPEND "Core/Diagnostics/")
 
 set (core_utp_sources
 	UtpManager
@@ -98,6 +94,10 @@ set (utils_sources
 	Uri
 	UrlEncoding
 	XmlParser
+	BigNumber
+	DataBuffer
+	DiffieHellman
+	RC4
 )
 
 list(TRANSFORM utils_sources PREPEND "utils/")
@@ -108,7 +108,6 @@ add_library (mtTorrent
 	${core_sources}
 	${core_api_sources}
 	${core_dht_sources}
-	${core_diagnostics_sources}
 	${core_utp_sources}
 	${public_sources}
 	${utils_sources}

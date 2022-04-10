@@ -1,9 +1,10 @@
 #pragma once
 
 #include "ByteSwap.h"
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 #include <sstream>
+#include <algorithm>
 
 struct PacketReader
 {

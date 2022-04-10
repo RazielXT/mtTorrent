@@ -1,5 +1,5 @@
 #include "RC4.h"
-#include <memory>
+#include <cstring>
 
 void RC4::init(const unsigned char* in, size_t len)
 {
