@@ -60,6 +60,11 @@ namespace GuiLite {
 	public: System::Windows::Forms::NumericUpDown^ numericDlSpeed;
 	private: System::Windows::Forms::Button^ buttonMagnet;
 	public: System::Windows::Forms::CheckBox^ utpCheckBox;
+	public: System::Windows::Forms::ComboBox^ encryptComboBox;
+
+	private: System::Windows::Forms::Label^ labelPe;
+	public:
+
 	private:
 
 	private:
@@ -117,6 +122,8 @@ namespace GuiLite {
 			this->numericDlSpeed = (gcnew System::Windows::Forms::NumericUpDown());
 			this->buttonMagnet = (gcnew System::Windows::Forms::Button());
 			this->utpCheckBox = (gcnew System::Windows::Forms::CheckBox());
+			this->encryptComboBox = (gcnew System::Windows::Forms::ComboBox());
+			this->labelPe = (gcnew System::Windows::Forms::Label());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->tcpPortNumeric))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->udpPortNumeric))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->maxConnectionsNumeric))->BeginInit();
@@ -211,7 +218,7 @@ namespace GuiLite {
 			// 
 			// buttonOk
 			// 
-			this->buttonOk->Location = System::Drawing::Point(133, 478);
+			this->buttonOk->Location = System::Drawing::Point(132, 542);
 			this->buttonOk->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->buttonOk->Name = L"buttonOk";
 			this->buttonOk->Size = System::Drawing::Size(91, 34);
@@ -222,7 +229,7 @@ namespace GuiLite {
 			// 
 			// buttonCancel
 			// 
-			this->buttonCancel->Location = System::Drawing::Point(231, 478);
+			this->buttonCancel->Location = System::Drawing::Point(230, 542);
 			this->buttonCancel->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->buttonCancel->Name = L"buttonCancel";
 			this->buttonCancel->Size = System::Drawing::Size(94, 34);
@@ -301,7 +308,7 @@ namespace GuiLite {
 			// 
 			// buttonMagnet
 			// 
-			this->buttonMagnet->Location = System::Drawing::Point(65, 421);
+			this->buttonMagnet->Location = System::Drawing::Point(64, 485);
 			this->buttonMagnet->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->buttonMagnet->Name = L"buttonMagnet";
 			this->buttonMagnet->Size = System::Drawing::Size(327, 34);
@@ -316,16 +323,37 @@ namespace GuiLite {
 			this->utpCheckBox->Location = System::Drawing::Point(65, 377);
 			this->utpCheckBox->Margin = System::Windows::Forms::Padding(3, 4, 3, 4);
 			this->utpCheckBox->Name = L"utpCheckBox";
-			this->utpCheckBox->Size = System::Drawing::Size(167, 24);
+			this->utpCheckBox->Size = System::Drawing::Size(63, 24);
 			this->utpCheckBox->TabIndex = 18;
-			this->utpCheckBox->Text = L"uTP (experimental)";
+			this->utpCheckBox->Text = L"uTP";
 			this->utpCheckBox->UseVisualStyleBackColor = true;
+			// 
+			// encryptComboBox
+			// 
+			this->encryptComboBox->DropDownStyle = System::Windows::Forms::ComboBoxStyle::DropDownList;
+			this->encryptComboBox->FormattingEnabled = true;
+			this->encryptComboBox->Items->AddRange(gcnew cli::array< System::Object^  >(3) { L"Deny", L"Allow", L"Require" });
+			this->encryptComboBox->Location = System::Drawing::Point(256, 417);
+			this->encryptComboBox->Name = L"encryptComboBox";
+			this->encryptComboBox->Size = System::Drawing::Size(133, 28);
+			this->encryptComboBox->TabIndex = 19;
+			// 
+			// labelPe
+			// 
+			this->labelPe->AutoSize = true;
+			this->labelPe->Location = System::Drawing::Point(64, 420);
+			this->labelPe->Name = L"labelPe";
+			this->labelPe->Size = System::Drawing::Size(144, 20);
+			this->labelPe->TabIndex = 20;
+			this->labelPe->Text = L"Protocol encryption";
 			// 
 			// SettingsForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(9, 20);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(450, 528);
+			this->ClientSize = System::Drawing::Size(450, 593);
+			this->Controls->Add(this->labelPe);
+			this->Controls->Add(this->encryptComboBox);
 			this->Controls->Add(this->utpCheckBox);
 			this->Controls->Add(this->buttonMagnet);
 			this->Controls->Add(this->label5);

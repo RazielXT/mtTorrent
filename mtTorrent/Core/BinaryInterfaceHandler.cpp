@@ -302,6 +302,7 @@ extern "C"
 			resp->maxDownloadSpeed = settings.transfer.maxDownloadSpeed;
 			resp->maxUploadSpeed = settings.transfer.maxUploadSpeed;
 			resp->utpEnabled = settings.connection.enableUtpIn;
+			resp->encryption = (mtBI::SettingsInfo::ProtocolEncryption)settings.connection.encryption;
 		}
 		else if (id == mtBI::MessageId::SetSettings)
 		{
@@ -317,6 +318,7 @@ extern "C"
 			settings.transfer.maxDownloadSpeed = info->maxDownloadSpeed;
 			settings.transfer.maxUploadSpeed = info->maxUploadSpeed;
 			settings.connection.enableUtpIn = settings.connection.enableUtpOut = info->utpEnabled;
+			settings.connection.encryption = (mtt::config::Encryption)info->encryption;
 
 			mtt::config::setValues(settings.dht);
 			mtt::config::setValues(settings.connection);

@@ -57,6 +57,7 @@ namespace mtBI
 		uint32_t maxDownloadSpeed;
 		uint32_t maxUploadSpeed;
 		bool utpEnabled;
+		enum class ProtocolEncryption { Deny, Allow, Require } encryption;
 	};
 
 	struct PiecesInfo

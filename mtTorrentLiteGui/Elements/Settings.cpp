@@ -17,6 +17,7 @@ void Settings::applySettings(GuiLite::SettingsForm^ form)
 	info.maxDownloadSpeed = (unsigned int)form->numericDlSpeed->Value * 1024;
 	info.maxUploadSpeed = (unsigned int)form->numericUpSpeed->Value * 1024;
 	info.utpEnabled = form->utpCheckBox->Checked;
+	info.encryption = (mtBI::SettingsInfo::ProtocolEncryption)form->encryptComboBox->SelectedIndex;
 
 	core.IoctlFunc(mtBI::MessageId::SetSettings, &info, nullptr);
 }
@@ -36,6 +37,7 @@ void Settings::showSettingsForm()
 		form.numericDlSpeed->Value = info.maxDownloadSpeed / 1024;
 		form.numericUpSpeed->Value = info.maxUploadSpeed / 1024;
 		form.utpCheckBox->Checked = info.utpEnabled;
+		form.encryptComboBox->SelectedIndex = (int)info.encryption;
 	}
 
 	form.ShowDialog();

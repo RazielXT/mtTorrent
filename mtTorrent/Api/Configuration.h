@@ -17,7 +17,7 @@ namespace mtt
 {
 	namespace config
 	{
-		enum class Encryption { Allow, Require, Refuse };
+		enum class Encryption { Refuse, Allow, Require };
 
 		/*
 			External settings available usually to user
