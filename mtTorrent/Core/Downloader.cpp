@@ -10,7 +10,7 @@
 
 const size_t MaxPreparedPieces = 10;
 const uint32_t MinPendingPeerRequests = 5;
-const uint32_t MaxPendingPeerRequests = 40;
+const uint32_t MaxPendingPeerRequests = 50;
 const float DlSpeedPerMoreRequest = 40*1024.f;
 
 mtt::Downloader::Downloader(const TorrentInfo& info, DownloaderClient& c) : torrentInfo(info), client(c)
@@ -235,7 +235,7 @@ void mtt::Downloader::refreshSelection(const DownloadSelection& s)
 		std::lock_guard<std::mutex> guard(priorityMutex);
 
 		piecesPriority.resize(torrentInfo.pieces.size(), Priority(0));
-		std::vector<uint32_t> selected;
+		selectedPieces.clear();
 
 		for (size_t i = 0; i < torrentInfo.files.size(); i++)
 		{
@@ -246,12 +246,10 @@ void mtt::Downloader::refreshSelection(const DownloadSelection& s)
 			{
 				piecesPriority[i] = std::max(piecesPriority[i], selection.priority);
 
-				if (selection.selected && (selected.empty() || i != selected.back()))
-					selected.push_back((uint32_t)i);
+				if (selection.selected && (selectedPieces.empty() || i != selectedPieces.back()))
+					selectedPieces.push_back((uint32_t)i);
 			}
 		}
-
-		selectedPieces = std::move(selected);
 
 		auto rng = std::minstd_rand{ (uint32_t)time(0) };
 		std::shuffle(selectedPieces.begin(), selectedPieces.end(), rng);
@@ -428,7 +426,7 @@ void mtt::Downloader::sendPieceRequests(ActivePeer* p)
 			if (!request)
 			{
 				DL_LOG("Request add idx" << currentPiece.idx);
-				requests.push_back(RequestInfo());
+				requests.emplace_back(RequestInfo());
 				request = &requests.back();
 				request->pieceIdx = currentPiece.idx;
 				request->blocksCount = (uint16_t)torrentInfo.getPieceBlocksCount(currentPiece.idx);

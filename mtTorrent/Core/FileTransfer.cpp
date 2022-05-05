@@ -607,10 +607,10 @@ void mtt::FileTransfer::updateMeasures()
 
 	lastSpeedMeasure = std::move(currentMeasure);
 
-// 	const uint32_t updateMeasuresExtraInterval = 10;
-// 	if (updateMeasuresCounter-- > 0)
-// 		return;
-// 	updateMeasuresCounter = updateMeasuresExtraInterval;
+	const int32_t updateMeasuresExtraInterval = 5;
+	if (updateMeasuresCounter-- > 0)
+		return;
+	updateMeasuresCounter = updateMeasuresExtraInterval;
 
 	if (!torrent->selectionFinished())
 	{
