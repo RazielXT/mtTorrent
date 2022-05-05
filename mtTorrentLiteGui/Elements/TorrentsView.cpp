@@ -96,6 +96,44 @@ std::vector<TorrentsView::SelectedTorrent> TorrentsView::getAllSelectedTorrents(
 	return out;
 }
 
+void TorrentsView::select(const uint8_t* id)
+{
+	auto t = hexToString(id, 20);
+	auto idStr = gcnew System::String(t.c_str());
+
+	for (int i = 0; i < GuiLite::MainForm::instance->getGrid()->Rows->Count; i++)
+	{
+		auto val = (System::String^)GuiLite::MainForm::instance->getGrid()->Rows[i]->Cells[0]->Value;
+		if (val == idStr)
+		{
+			GuiLite::MainForm::instance->getGrid()->Rows[i]->Selected = true;
+		}
+		else
+		{
+			GuiLite::MainForm::instance->getGrid()->Rows[i]->Selected = false;
+		}
+	}
+}
+
+void TorrentsView::saveState(System::Xml::XmlElement^ selection)
+{
+	auto e = selection->OwnerDocument->CreateElement("fileProgressScrollIdx");
+	e->InnerText = System::Convert::ToString(GuiLite::MainForm::instance->filesProgressGridView->FirstDisplayedScrollingRowIndex);
+	selection->AppendChild(e);
+}
+
+void TorrentsView::loadState(System::Xml::XmlNode^ e)
+{
+	for each (System::Xml::XmlNode ^ el in e->ChildNodes)
+	{
+		if (el->Name == "fileProgressScrollIdx")
+			lastState.fileScrollIdx = System::Convert::ToInt32(el->InnerText);
+
+		if (el->Name == "id")
+			decodeHexa(getUtf8String(el->InnerText), lastState.selected);
+	}
+}
+
 void TorrentsView::refreshTorrentInfo(uint8_t* hash)
 {
 	if (!core.IoctlFunc)
@@ -139,7 +177,7 @@ void TorrentsView::refreshTorrentInfo(uint8_t* hash)
 	System::String^ creationStr = "";
 	if (info.creationDate != 0)
 	{
-		creationStr = System::DateTimeOffset::FromUnixTimeSeconds(info.creationDate).ToString("MM/dd/yyyy");
+		creationStr = System::DateTimeOffset::FromUnixTimeSeconds(info.creationDate).ToString("dd-MMM-yy H:mm");
 		creationStr += " ";
 	}
 
@@ -161,7 +199,7 @@ void TorrentsView::refreshTorrentInfo(uint8_t* hash)
 	{
 		infoLines->AppendText(System::Environment::NewLine);
 		infoLines->AppendText("Added: \t");
-		infoLines->AppendText(System::DateTimeOffset::FromUnixTimeSeconds(info.timeAdded).ToString("MM/dd/yyyy"));
+		infoLines->AppendText(System::DateTimeOffset::FromUnixTimeSeconds(info.timeAdded).ToString("dd-MMM-yy H:mm"));
 	}
 
 	speedChart.resetChart();
@@ -335,19 +373,19 @@ void TorrentsView::refreshTorrentsGrid()
 					if (magnetProgress.progress > 1.0f)
 						magnetProgress.progress = 1.0f;
 
-					name = "Metadata download " + float(magnetProgress.progress).ToString("P");
+					name = "Metadata download " + magnetProgress.progress.ToString("P");
 				}
 			}
 
 			System::String^ progress;
 			if (info.checking)
-				progress = "Checking " + float(info.checkingProgress).ToString("P");
+				progress = "Checking " + info.checkingProgress.ToString("P");
 			else
 			{
-				progress = float(info.selectionProgress).ToString("P");
+				progress = info.selectionProgress.ToString("P");
 
 				if (info.progress != info.selectionProgress)
-					progress += " (" + float(info.progress).ToString("P") + ")";
+					progress += " (" + info.progress.ToString("P") + ")";
 			}
 
 			//torrent row - visual/logic data columns
@@ -372,6 +410,12 @@ void TorrentsView::refreshTorrentsGrid()
 				lastInfoIncomplete = info.utmActive;
 			}
 		}
+	}
+
+	if (!lastStateHandled)
+	{
+		select(lastState.selected);
+		lastStateHandled = true;
 	}
 
 	listChanged = false;

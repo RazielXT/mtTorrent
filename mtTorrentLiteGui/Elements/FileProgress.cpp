@@ -2,6 +2,7 @@
 #include "MainForm.h"
 #include "../AppCore.h"
 #include "../Utils/Utils.h"
+#include "../../mtTorrent/utils/HexEncoding.h"
 
 FileProgress::FileProgress(AppCore& c) : core(c)
 {
@@ -198,5 +199,17 @@ void FileProgress::updateFilesProgress()
 				filesGrid->ClearSelection();
 			}
 		}
+	}
+
+	auto& lastState = core.torrentsView.lastState;
+	if (selectionChanged && lastState.fileScrollIdx > 0)
+	{
+		if (memcmp(core.firstSelectedHash, lastState.selected, 20) == 0)
+		{
+			if (filesGrid->RowCount > lastState.fileScrollIdx)
+				filesGrid->FirstDisplayedScrollingRowIndex = lastState.fileScrollIdx;
+		}
+
+		lastState.fileScrollIdx = 0;
 	}
 }

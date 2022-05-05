@@ -2,6 +2,7 @@
 #include "AppCore.h"
 #include <fstream>
 #include "MainForm.h"
+#include "../mtTorrent/utils/HexEncoding.h"
 
 extern AppCore core;
 
@@ -99,6 +100,10 @@ UserWindowState^ getWindowState()
 									System::Boolean::TryParse(el->InnerText, state->torrentSortColumnDesc);
 							}
 						}
+						else if (e->Name == "selectedTorrent")
+						{
+							core.torrentsView.loadState(e);
+						}
 					}
 				}
 			}
@@ -151,10 +156,10 @@ void saveWindowState()
 			e->InnerText = state->splitterDistance.ToString();
 			root->AppendChild(e);
 
-			XmlElement^ torrents = doc->CreateElement("torrentsGrid");
-
 			if (state->torrentSortColumn)
 			{
+				XmlElement^ torrents = doc->CreateElement("torrentsGrid");
+
 				e = doc->CreateElement("sortColumn");
 				e->InnerText = state->torrentSortColumn;
 				torrents->AppendChild(e);
@@ -162,9 +167,23 @@ void saveWindowState()
 				e = doc->CreateElement("sortDesc");
 				e->InnerText = state->torrentSortColumnDesc.ToString();
 				torrents->AppendChild(e);
+
+				root->AppendChild(torrents);
 			}
 
-			root->AppendChild(torrents);
+			if (core.selected)
+			{
+				XmlElement^ selection = doc->CreateElement("selectedTorrent");
+
+				auto t = hexToString(core.firstSelectedHash, 20);
+				e = doc->CreateElement("id");
+				e->InnerText = gcnew System::String(t.c_str());
+				selection->AppendChild(e);
+
+				core.torrentsView.saveState(selection);
+
+				root->AppendChild(selection);
+			}
 		}
 
 		try

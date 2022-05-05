@@ -25,7 +25,19 @@ public:
 	};
 	std::vector<SelectedTorrent> getAllSelectedTorrents();
 
+	void select(const uint8_t* id);
+
 	FileProgress piecesProgress;
+
+	void saveState(System::Xml::XmlElement^);
+	void loadState(System::Xml::XmlNode^);
+
+	struct
+	{
+		uint8_t selected[20];
+		int fileScrollIdx = 0;
+	}
+	lastState;
 
 private:
 
@@ -50,4 +62,6 @@ private:
 	std::map<int, TorrentState> torrentState;
 
 	bool listChanged = true;
+
+	bool lastStateHandled = false;
 };
