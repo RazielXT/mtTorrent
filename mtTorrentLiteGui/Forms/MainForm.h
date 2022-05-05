@@ -100,18 +100,18 @@ private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column3;
 
 
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ FProgress;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ torrentId;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentName;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentProgress;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column4;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ DL;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ DlBytes;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ UP;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ UpBytes;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Connections;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Peers;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Downloaded;
-	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Uploaded;
+
+
+
+
+
+
+
+
+
+
+
+
 
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn1;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn2;
@@ -130,6 +130,46 @@ private: System::Windows::Forms::DataGridViewTextBoxColumn^ peerSource;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ peerCountry;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ connection;
 private: System::Windows::Forms::DataGridViewTextBoxColumn^ Size;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ torrentId;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentName;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentProgress;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column4;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ DL;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ DlBytes;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ UP;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ UpBytes;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ Connections;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ Peers;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ Downloaded;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ Uploaded;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ Added;
+private: System::Windows::Forms::DataGridViewTextBoxColumn^ AddedDate;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	public:
 
@@ -233,38 +273,33 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 		{
 			this->components = (gcnew System::ComponentModel::Container());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle1 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle10 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle11 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle2 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle3 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle4 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle5 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle6 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle7 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle8 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle9 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle12 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle16 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle13 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle17 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle18 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle23 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle24 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle14 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle15 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle16 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle19 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle24 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle25 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle20 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle21 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle22 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle23 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataVisualization::Charting::ChartArea^ chartArea1 = (gcnew System::Windows::Forms::DataVisualization::Charting::ChartArea());
 			System::Windows::Forms::DataVisualization::Charting::Legend^ legend1 = (gcnew System::Windows::Forms::DataVisualization::Charting::Legend());
 			System::Windows::Forms::DataVisualization::Charting::Series^ series1 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
 			System::Windows::Forms::DataVisualization::Charting::Series^ series2 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle25 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle31 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle32 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle26 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle32 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle33 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle27 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle28 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle29 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle30 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle31 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			System::Windows::Forms::DataVisualization::Charting::ChartArea^ chartArea2 = (gcnew System::Windows::Forms::DataVisualization::Charting::ChartArea());
 			System::Windows::Forms::DataVisualization::Charting::Series^ series3 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
 			System::Windows::Forms::DataVisualization::Charting::DataPoint^ dataPoint1 = (gcnew System::Windows::Forms::DataVisualization::Charting::DataPoint(2,
@@ -273,9 +308,15 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 				1));
 			System::Windows::Forms::DataVisualization::Charting::Series^ series4 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
 			System::Windows::Forms::DataVisualization::Charting::Title^ title1 = (gcnew System::Windows::Forms::DataVisualization::Charting::Title());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle13 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle14 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
-			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle15 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle2 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle3 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle4 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle5 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle6 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle7 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle8 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle9 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
+			System::Windows::Forms::DataGridViewCellStyle^ dataGridViewCellStyle10 = (gcnew System::Windows::Forms::DataGridViewCellStyle());
 			this->splitContainer1 = (gcnew System::Windows::Forms::SplitContainer());
 			this->splitContainer2 = (gcnew System::Windows::Forms::SplitContainer());
 			this->buttonRemove = (gcnew System::Windows::Forms::Button());
@@ -285,23 +326,20 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->buttonStart = (gcnew System::Windows::Forms::Button());
 			this->buttonAddTorrent = (gcnew System::Windows::Forms::Button());
 			this->torrentsGrid = (gcnew System::Windows::Forms::DataGridView());
-			this->torrentId = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->TorrentName = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->TorrentProgress = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->Column4 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->DL = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->DlBytes = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->UP = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->UpBytes = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->Connections = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->Peers = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->Downloaded = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->Uploaded = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->TorrentTabs = (gcnew System::Windows::Forms::TabControl());
 			this->tabPage1 = (gcnew System::Windows::Forms::TabPage());
 			this->torrentInfoLabel = (gcnew System::Windows::Forms::TextBox());
 			this->tabPage2 = (gcnew System::Windows::Forms::TabPage());
 			this->peersGridView = (gcnew System::Windows::Forms::DataGridView());
+			this->gridPeerAddress = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->DL2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->DlBytes2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->UP2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->UpBytes2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->gridPeerPercentage = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->peerSource = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->peerCountry = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->connection = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->peersContextMenuStrip = (gcnew System::Windows::Forms::ContextMenuStrip(this->components));
 			this->toolStripMenuItem1 = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->sourcesTab = (gcnew System::Windows::Forms::TabPage());
@@ -328,15 +366,20 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->PiecesRemaining = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->PiecesActive = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->pieceChart = (gcnew System::Windows::Forms::DataVisualization::Charting::Chart());
-			this->gridPeerAddress = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->DL2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->DlBytes2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->UP2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->UpBytes2 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->gridPeerPercentage = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->peerSource = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->peerCountry = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->connection = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->torrentId = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->TorrentName = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->TorrentProgress = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->Column4 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->DL = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->DlBytes = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->UP = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->UpBytes = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->Connections = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->Peers = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->Downloaded = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->Uploaded = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->Added = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->AddedDate = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->splitContainer1))->BeginInit();
 			this->splitContainer1->Panel1->SuspendLayout();
 			this->splitContainer1->Panel2->SuspendLayout();
@@ -521,34 +564,34 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			dataGridViewCellStyle1->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
 			this->torrentsGrid->ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
 			this->torrentsGrid->ColumnHeadersHeightSizeMode = System::Windows::Forms::DataGridViewColumnHeadersHeightSizeMode::AutoSize;
-			this->torrentsGrid->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(12) {
+			this->torrentsGrid->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(14) {
 				this->torrentId,
 					this->TorrentName, this->TorrentProgress, this->Column4, this->DL, this->DlBytes, this->UP, this->UpBytes, this->Connections,
-					this->Peers, this->Downloaded, this->Uploaded
+					this->Peers, this->Downloaded, this->Uploaded, this->Added, this->AddedDate
 			});
-			dataGridViewCellStyle10->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleLeft;
-			dataGridViewCellStyle10->BackColor = System::Drawing::SystemColors::Window;
-			dataGridViewCellStyle10->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
+			dataGridViewCellStyle11->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleLeft;
+			dataGridViewCellStyle11->BackColor = System::Drawing::SystemColors::Window;
+			dataGridViewCellStyle11->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
 				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(134)));
-			dataGridViewCellStyle10->ForeColor = System::Drawing::SystemColors::ControlText;
-			dataGridViewCellStyle10->SelectionBackColor = System::Drawing::Color::SkyBlue;
-			dataGridViewCellStyle10->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
-			dataGridViewCellStyle10->WrapMode = System::Windows::Forms::DataGridViewTriState::False;
-			this->torrentsGrid->DefaultCellStyle = dataGridViewCellStyle10;
+			dataGridViewCellStyle11->ForeColor = System::Drawing::SystemColors::ControlText;
+			dataGridViewCellStyle11->SelectionBackColor = System::Drawing::Color::SkyBlue;
+			dataGridViewCellStyle11->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
+			dataGridViewCellStyle11->WrapMode = System::Windows::Forms::DataGridViewTriState::False;
+			this->torrentsGrid->DefaultCellStyle = dataGridViewCellStyle11;
 			this->torrentsGrid->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->torrentsGrid->Location = System::Drawing::Point(0, 0);
 			this->torrentsGrid->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
 			this->torrentsGrid->Name = L"torrentsGrid";
 			this->torrentsGrid->ReadOnly = true;
-			dataGridViewCellStyle11->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			dataGridViewCellStyle11->BackColor = System::Drawing::SystemColors::Control;
-			dataGridViewCellStyle11->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
+			dataGridViewCellStyle12->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			dataGridViewCellStyle12->BackColor = System::Drawing::SystemColors::Control;
+			dataGridViewCellStyle12->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
 				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(134)));
-			dataGridViewCellStyle11->ForeColor = System::Drawing::SystemColors::WindowText;
-			dataGridViewCellStyle11->SelectionBackColor = System::Drawing::SystemColors::Highlight;
-			dataGridViewCellStyle11->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
-			dataGridViewCellStyle11->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
-			this->torrentsGrid->RowHeadersDefaultCellStyle = dataGridViewCellStyle11;
+			dataGridViewCellStyle12->ForeColor = System::Drawing::SystemColors::WindowText;
+			dataGridViewCellStyle12->SelectionBackColor = System::Drawing::SystemColors::Highlight;
+			dataGridViewCellStyle12->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
+			dataGridViewCellStyle12->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
+			this->torrentsGrid->RowHeadersDefaultCellStyle = dataGridViewCellStyle12;
 			this->torrentsGrid->RowHeadersVisible = false;
 			this->torrentsGrid->RowHeadersWidth = 51;
 			this->torrentsGrid->RowTemplate->Height = 35;
@@ -559,6 +602,610 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->torrentsGrid->CellMouseDoubleClick += gcnew System::Windows::Forms::DataGridViewCellMouseEventHandler(this, &MainForm::TorrentsGrid_CellContentClick_1);
 			this->torrentsGrid->Sorted += gcnew System::EventHandler(this, &MainForm::torrentsGridView_Sorted);
 			this->torrentsGrid->MouseClick += gcnew System::Windows::Forms::MouseEventHandler(this, &MainForm::torrentsGrid_MouseClick);
+			// 
+			// TorrentTabs
+			// 
+			this->TorrentTabs->Controls->Add(this->tabPage1);
+			this->TorrentTabs->Controls->Add(this->tabPage2);
+			this->TorrentTabs->Controls->Add(this->sourcesTab);
+			this->TorrentTabs->Controls->Add(this->tabPage3);
+			this->TorrentTabs->Controls->Add(this->progressTabPage);
+			this->TorrentTabs->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->TorrentTabs->Location = System::Drawing::Point(0, 0);
+			this->TorrentTabs->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
+			this->TorrentTabs->Name = L"TorrentTabs";
+			this->TorrentTabs->SelectedIndex = 0;
+			this->TorrentTabs->Size = System::Drawing::Size(1542, 338);
+			this->TorrentTabs->TabIndex = 0;
+			this->TorrentTabs->Selecting += gcnew System::Windows::Forms::TabControlCancelEventHandler(this, &MainForm::filesProgressGridView_TabClick);
+			// 
+			// tabPage1
+			// 
+			this->tabPage1->Controls->Add(this->torrentInfoLabel);
+			this->tabPage1->Location = System::Drawing::Point(4, 29);
+			this->tabPage1->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
+			this->tabPage1->Name = L"tabPage1";
+			this->tabPage1->Padding = System::Windows::Forms::Padding(3, 2, 3, 2);
+			this->tabPage1->Size = System::Drawing::Size(1534, 305);
+			this->tabPage1->TabIndex = 0;
+			this->tabPage1->Text = L"General";
+			this->tabPage1->UseVisualStyleBackColor = true;
+			// 
+			// torrentInfoLabel
+			// 
+			this->torrentInfoLabel->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->torrentInfoLabel->Font = (gcnew System::Drawing::Font(L"Verdana", 8));
+			this->torrentInfoLabel->Location = System::Drawing::Point(3, 2);
+			this->torrentInfoLabel->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
+			this->torrentInfoLabel->Multiline = true;
+			this->torrentInfoLabel->Name = L"torrentInfoLabel";
+			this->torrentInfoLabel->ReadOnly = true;
+			this->torrentInfoLabel->ScrollBars = System::Windows::Forms::ScrollBars::Both;
+			this->torrentInfoLabel->Size = System::Drawing::Size(1528, 301);
+			this->torrentInfoLabel->TabIndex = 0;
+			// 
+			// tabPage2
+			// 
+			this->tabPage2->Controls->Add(this->peersGridView);
+			this->tabPage2->Location = System::Drawing::Point(4, 29);
+			this->tabPage2->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
+			this->tabPage2->Name = L"tabPage2";
+			this->tabPage2->Padding = System::Windows::Forms::Padding(3, 2, 3, 2);
+			this->tabPage2->Size = System::Drawing::Size(1534, 305);
+			this->tabPage2->TabIndex = 1;
+			this->tabPage2->Text = L"Peers";
+			this->tabPage2->UseVisualStyleBackColor = true;
+			// 
+			// peersGridView
+			// 
+			this->peersGridView->AllowUserToAddRows = false;
+			this->peersGridView->AllowUserToDeleteRows = false;
+			this->peersGridView->AllowUserToOrderColumns = true;
+			this->peersGridView->AllowUserToResizeRows = false;
+			this->peersGridView->BackgroundColor = System::Drawing::SystemColors::Window;
+			this->peersGridView->CellBorderStyle = System::Windows::Forms::DataGridViewCellBorderStyle::SingleHorizontal;
+			dataGridViewCellStyle13->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			dataGridViewCellStyle13->BackColor = System::Drawing::SystemColors::Control;
+			dataGridViewCellStyle13->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.2F, System::Drawing::FontStyle::Regular,
+				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
+			dataGridViewCellStyle13->ForeColor = System::Drawing::SystemColors::WindowText;
+			dataGridViewCellStyle13->SelectionBackColor = System::Drawing::SystemColors::Desktop;
+			dataGridViewCellStyle13->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
+			dataGridViewCellStyle13->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
+			this->peersGridView->ColumnHeadersDefaultCellStyle = dataGridViewCellStyle13;
+			this->peersGridView->ColumnHeadersHeightSizeMode = System::Windows::Forms::DataGridViewColumnHeadersHeightSizeMode::AutoSize;
+			this->peersGridView->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(9) {
+				this->gridPeerAddress,
+					this->DL2, this->DlBytes2, this->UP2, this->UpBytes2, this->gridPeerPercentage, this->peerSource, this->peerCountry, this->connection
+			});
+			this->peersGridView->ContextMenuStrip = this->peersContextMenuStrip;
+			dataGridViewCellStyle17->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleLeft;
+			dataGridViewCellStyle17->BackColor = System::Drawing::SystemColors::Window;
+			dataGridViewCellStyle17->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
+				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(134)));
+			dataGridViewCellStyle17->ForeColor = System::Drawing::SystemColors::ControlText;
+			dataGridViewCellStyle17->SelectionBackColor = System::Drawing::Color::SkyBlue;
+			dataGridViewCellStyle17->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
+			dataGridViewCellStyle17->WrapMode = System::Windows::Forms::DataGridViewTriState::False;
+			this->peersGridView->DefaultCellStyle = dataGridViewCellStyle17;
+			this->peersGridView->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->peersGridView->Location = System::Drawing::Point(3, 2);
+			this->peersGridView->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
+			this->peersGridView->MultiSelect = false;
+			this->peersGridView->Name = L"peersGridView";
+			this->peersGridView->ReadOnly = true;
+			dataGridViewCellStyle18->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			dataGridViewCellStyle18->BackColor = System::Drawing::SystemColors::Control;
+			dataGridViewCellStyle18->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
+				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(134)));
+			dataGridViewCellStyle18->ForeColor = System::Drawing::SystemColors::WindowText;
+			dataGridViewCellStyle18->SelectionBackColor = System::Drawing::SystemColors::Highlight;
+			dataGridViewCellStyle18->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
+			dataGridViewCellStyle18->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
+			this->peersGridView->RowHeadersDefaultCellStyle = dataGridViewCellStyle18;
+			this->peersGridView->RowHeadersVisible = false;
+			this->peersGridView->RowHeadersWidth = 51;
+			this->peersGridView->RowTemplate->Height = 24;
+			this->peersGridView->SelectionMode = System::Windows::Forms::DataGridViewSelectionMode::FullRowSelect;
+			this->peersGridView->Size = System::Drawing::Size(1528, 301);
+			this->peersGridView->TabIndex = 2;
+			// 
+			// gridPeerAddress
+			// 
+			this->gridPeerAddress->AutoSizeMode = System::Windows::Forms::DataGridViewAutoSizeColumnMode::Fill;
+			this->gridPeerAddress->HeaderText = L"Address";
+			this->gridPeerAddress->MinimumWidth = 20;
+			this->gridPeerAddress->Name = L"gridPeerAddress";
+			this->gridPeerAddress->ReadOnly = true;
+			// 
+			// DL2
+			// 
+			dataGridViewCellStyle14->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->DL2->DefaultCellStyle = dataGridViewCellStyle14;
+			this->DL2->HeaderText = L"Download speed";
+			this->DL2->MinimumWidth = 6;
+			this->DL2->Name = L"DL2";
+			this->DL2->ReadOnly = true;
+			this->DL2->Width = 150;
+			// 
+			// DlBytes2
+			// 
+			this->DlBytes2->HeaderText = L"DlBytes2";
+			this->DlBytes2->MinimumWidth = 6;
+			this->DlBytes2->Name = L"DlBytes2";
+			this->DlBytes2->ReadOnly = true;
+			this->DlBytes2->Visible = false;
+			this->DlBytes2->Width = 125;
+			// 
+			// UP2
+			// 
+			dataGridViewCellStyle15->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->UP2->DefaultCellStyle = dataGridViewCellStyle15;
+			this->UP2->HeaderText = L"Upload speed";
+			this->UP2->MinimumWidth = 6;
+			this->UP2->Name = L"UP2";
+			this->UP2->ReadOnly = true;
+			this->UP2->Width = 150;
+			// 
+			// UpBytes2
+			// 
+			this->UpBytes2->HeaderText = L"UpBytes2";
+			this->UpBytes2->MinimumWidth = 6;
+			this->UpBytes2->Name = L"UpBytes2";
+			this->UpBytes2->ReadOnly = true;
+			this->UpBytes2->Visible = false;
+			this->UpBytes2->Width = 125;
+			// 
+			// gridPeerPercentage
+			// 
+			dataGridViewCellStyle16->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->gridPeerPercentage->DefaultCellStyle = dataGridViewCellStyle16;
+			this->gridPeerPercentage->HeaderText = L"%";
+			this->gridPeerPercentage->MinimumWidth = 6;
+			this->gridPeerPercentage->Name = L"gridPeerPercentage";
+			this->gridPeerPercentage->ReadOnly = true;
+			this->gridPeerPercentage->Width = 125;
+			// 
+			// peerSource
+			// 
+			this->peerSource->HeaderText = L"Client";
+			this->peerSource->MinimumWidth = 6;
+			this->peerSource->Name = L"peerSource";
+			this->peerSource->ReadOnly = true;
+			this->peerSource->Width = 150;
+			// 
+			// peerCountry
+			// 
+			this->peerCountry->HeaderText = L"Country";
+			this->peerCountry->MinimumWidth = 6;
+			this->peerCountry->Name = L"peerCountry";
+			this->peerCountry->ReadOnly = true;
+			this->peerCountry->Width = 125;
+			// 
+			// connection
+			// 
+			this->connection->HeaderText = L"Connection";
+			this->connection->MinimumWidth = 30;
+			this->connection->Name = L"connection";
+			this->connection->ReadOnly = true;
+			this->connection->Width = 150;
+			// 
+			// peersContextMenuStrip
+			// 
+			this->peersContextMenuStrip->ImageScalingSize = System::Drawing::Size(20, 20);
+			this->peersContextMenuStrip->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) { this->toolStripMenuItem1 });
+			this->peersContextMenuStrip->Name = L"peersContextMenuStrip";
+			this->peersContextMenuStrip->Size = System::Drawing::Size(159, 36);
+			// 
+			// toolStripMenuItem1
+			// 
+			this->toolStripMenuItem1->Name = L"toolStripMenuItem1";
+			this->toolStripMenuItem1->Size = System::Drawing::Size(158, 32);
+			this->toolStripMenuItem1->Text = L"Add peer";
+			this->toolStripMenuItem1->Click += gcnew System::EventHandler(this, &MainForm::ToolStripMenuItem1_Click);
+			// 
+			// sourcesTab
+			// 
+			this->sourcesTab->Controls->Add(this->sourcesGrid);
+			this->sourcesTab->Location = System::Drawing::Point(4, 29);
+			this->sourcesTab->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
+			this->sourcesTab->Name = L"sourcesTab";
+			this->sourcesTab->Padding = System::Windows::Forms::Padding(3, 2, 3, 2);
+			this->sourcesTab->Size = System::Drawing::Size(1534, 305);
+			this->sourcesTab->TabIndex = 2;
+			this->sourcesTab->Text = L"Sources";
+			this->sourcesTab->UseVisualStyleBackColor = true;
+			// 
+			// sourcesGrid
+			// 
+			this->sourcesGrid->AllowUserToAddRows = false;
+			this->sourcesGrid->AllowUserToDeleteRows = false;
+			this->sourcesGrid->AllowUserToOrderColumns = true;
+			this->sourcesGrid->AllowUserToResizeRows = false;
+			this->sourcesGrid->BackgroundColor = System::Drawing::SystemColors::Window;
+			this->sourcesGrid->CellBorderStyle = System::Windows::Forms::DataGridViewCellBorderStyle::SingleHorizontal;
+			dataGridViewCellStyle19->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			dataGridViewCellStyle19->BackColor = System::Drawing::SystemColors::Control;
+			dataGridViewCellStyle19->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.2F, System::Drawing::FontStyle::Regular,
+				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
+			dataGridViewCellStyle19->ForeColor = System::Drawing::SystemColors::WindowText;
+			dataGridViewCellStyle19->SelectionBackColor = System::Drawing::SystemColors::Desktop;
+			dataGridViewCellStyle19->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
+			dataGridViewCellStyle19->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
+			this->sourcesGrid->ColumnHeadersDefaultCellStyle = dataGridViewCellStyle19;
+			this->sourcesGrid->ColumnHeadersHeightSizeMode = System::Windows::Forms::DataGridViewColumnHeadersHeightSizeMode::AutoSize;
+			this->sourcesGrid->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(7) {
+				this->dataGridViewTextBoxColumn1,
+					this->dataGridViewTextBoxColumn2, this->dataGridViewTextBoxColumn3, this->Column5, this->Column6, this->Column1, this->dataGridViewTextBoxColumn4
+			});
+			dataGridViewCellStyle24->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleLeft;
+			dataGridViewCellStyle24->BackColor = System::Drawing::SystemColors::Window;
+			dataGridViewCellStyle24->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
+				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(134)));
+			dataGridViewCellStyle24->ForeColor = System::Drawing::SystemColors::ControlText;
+			dataGridViewCellStyle24->SelectionBackColor = System::Drawing::Color::SkyBlue;
+			dataGridViewCellStyle24->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
+			dataGridViewCellStyle24->WrapMode = System::Windows::Forms::DataGridViewTriState::False;
+			this->sourcesGrid->DefaultCellStyle = dataGridViewCellStyle24;
+			this->sourcesGrid->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->sourcesGrid->Location = System::Drawing::Point(3, 2);
+			this->sourcesGrid->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
+			this->sourcesGrid->Name = L"sourcesGrid";
+			this->sourcesGrid->ReadOnly = true;
+			dataGridViewCellStyle25->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			dataGridViewCellStyle25->BackColor = System::Drawing::SystemColors::Control;
+			dataGridViewCellStyle25->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
+				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(134)));
+			dataGridViewCellStyle25->ForeColor = System::Drawing::SystemColors::WindowText;
+			dataGridViewCellStyle25->SelectionBackColor = System::Drawing::SystemColors::Highlight;
+			dataGridViewCellStyle25->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
+			dataGridViewCellStyle25->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
+			this->sourcesGrid->RowHeadersDefaultCellStyle = dataGridViewCellStyle25;
+			this->sourcesGrid->RowHeadersVisible = false;
+			this->sourcesGrid->RowHeadersWidth = 51;
+			this->sourcesGrid->RowTemplate->Height = 24;
+			this->sourcesGrid->SelectionMode = System::Windows::Forms::DataGridViewSelectionMode::FullRowSelect;
+			this->sourcesGrid->Size = System::Drawing::Size(1528, 301);
+			this->sourcesGrid->TabIndex = 3;
+			this->sourcesGrid->MouseClick += gcnew System::Windows::Forms::MouseEventHandler(this, &MainForm::sourcesGrid_MouseClick);
+			// 
+			// dataGridViewTextBoxColumn1
+			// 
+			this->dataGridViewTextBoxColumn1->AutoSizeMode = System::Windows::Forms::DataGridViewAutoSizeColumnMode::Fill;
+			this->dataGridViewTextBoxColumn1->HeaderText = L"Name";
+			this->dataGridViewTextBoxColumn1->MinimumWidth = 20;
+			this->dataGridViewTextBoxColumn1->Name = L"dataGridViewTextBoxColumn1";
+			this->dataGridViewTextBoxColumn1->ReadOnly = true;
+			// 
+			// dataGridViewTextBoxColumn2
+			// 
+			dataGridViewCellStyle20->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->dataGridViewTextBoxColumn2->DefaultCellStyle = dataGridViewCellStyle20;
+			this->dataGridViewTextBoxColumn2->HeaderText = L"State";
+			this->dataGridViewTextBoxColumn2->MinimumWidth = 6;
+			this->dataGridViewTextBoxColumn2->Name = L"dataGridViewTextBoxColumn2";
+			this->dataGridViewTextBoxColumn2->ReadOnly = true;
+			this->dataGridViewTextBoxColumn2->Width = 120;
+			// 
+			// dataGridViewTextBoxColumn3
+			// 
+			dataGridViewCellStyle21->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->dataGridViewTextBoxColumn3->DefaultCellStyle = dataGridViewCellStyle21;
+			this->dataGridViewTextBoxColumn3->HeaderText = L"Peers";
+			this->dataGridViewTextBoxColumn3->MinimumWidth = 6;
+			this->dataGridViewTextBoxColumn3->Name = L"dataGridViewTextBoxColumn3";
+			this->dataGridViewTextBoxColumn3->ReadOnly = true;
+			this->dataGridViewTextBoxColumn3->Width = 125;
+			// 
+			// Column5
+			// 
+			dataGridViewCellStyle22->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->Column5->DefaultCellStyle = dataGridViewCellStyle22;
+			this->Column5->HeaderText = L"Seeds";
+			this->Column5->MinimumWidth = 6;
+			this->Column5->Name = L"Column5";
+			this->Column5->ReadOnly = true;
+			this->Column5->Width = 125;
+			// 
+			// Column6
+			// 
+			dataGridViewCellStyle23->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->Column6->DefaultCellStyle = dataGridViewCellStyle23;
+			this->Column6->HeaderText = L"Leechers";
+			this->Column6->MinimumWidth = 6;
+			this->Column6->Name = L"Column6";
+			this->Column6->ReadOnly = true;
+			this->Column6->Width = 125;
+			// 
+			// Column1
+			// 
+			this->Column1->HeaderText = L"Next check";
+			this->Column1->MinimumWidth = 6;
+			this->Column1->Name = L"Column1";
+			this->Column1->ReadOnly = true;
+			this->Column1->Width = 125;
+			// 
+			// dataGridViewTextBoxColumn4
+			// 
+			this->dataGridViewTextBoxColumn4->HeaderText = L"Interval";
+			this->dataGridViewTextBoxColumn4->MinimumWidth = 6;
+			this->dataGridViewTextBoxColumn4->Name = L"dataGridViewTextBoxColumn4";
+			this->dataGridViewTextBoxColumn4->ReadOnly = true;
+			this->dataGridViewTextBoxColumn4->Width = 125;
+			// 
+			// tabPage3
+			// 
+			this->tabPage3->Controls->Add(this->panel1);
+			this->tabPage3->Location = System::Drawing::Point(4, 29);
+			this->tabPage3->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
+			this->tabPage3->Name = L"tabPage3";
+			this->tabPage3->Padding = System::Windows::Forms::Padding(3, 2, 3, 2);
+			this->tabPage3->Size = System::Drawing::Size(1534, 305);
+			this->tabPage3->TabIndex = 3;
+			this->tabPage3->Text = L"Statistics";
+			this->tabPage3->UseVisualStyleBackColor = true;
+			// 
+			// panel1
+			// 
+			this->panel1->Controls->Add(this->dlSpeedChart);
+			this->panel1->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->panel1->Location = System::Drawing::Point(3, 2);
+			this->panel1->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
+			this->panel1->Name = L"panel1";
+			this->panel1->Size = System::Drawing::Size(1528, 301);
+			this->panel1->TabIndex = 0;
+			// 
+			// dlSpeedChart
+			// 
+			this->dlSpeedChart->BorderlineWidth = 5;
+			chartArea1->AxisX->Title = L"Time (seconds)";
+			chartArea1->AxisY->Title = L"MB/s";
+			chartArea1->Name = L"ChartArea1";
+			this->dlSpeedChart->ChartAreas->Add(chartArea1);
+			this->dlSpeedChart->Dock = System::Windows::Forms::DockStyle::Fill;
+			legend1->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(224)), static_cast<System::Int32>(static_cast<System::Byte>(224)),
+				static_cast<System::Int32>(static_cast<System::Byte>(224)));
+			legend1->Docking = System::Windows::Forms::DataVisualization::Charting::Docking::Top;
+			legend1->IsDockedInsideChartArea = false;
+			legend1->ItemColumnSpacing = 0;
+			legend1->LegendStyle = System::Windows::Forms::DataVisualization::Charting::LegendStyle::Row;
+			legend1->MaximumAutoSize = 10;
+			legend1->Name = L"Legend1";
+			legend1->TableStyle = System::Windows::Forms::DataVisualization::Charting::LegendTableStyle::Tall;
+			legend1->TextWrapThreshold = 0;
+			this->dlSpeedChart->Legends->Add(legend1);
+			this->dlSpeedChart->Location = System::Drawing::Point(0, 0);
+			this->dlSpeedChart->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
+			this->dlSpeedChart->Name = L"dlSpeedChart";
+			this->dlSpeedChart->Palette = System::Windows::Forms::DataVisualization::Charting::ChartColorPalette::Bright;
+			series1->ChartArea = L"ChartArea1";
+			series1->Legend = L"Legend1";
+			series1->LegendText = L"Download";
+			series1->Name = L"DlSeries";
+			series2->ChartArea = L"ChartArea1";
+			series2->Legend = L"Legend1";
+			series2->LegendText = L"Upload";
+			series2->Name = L"UpSeries";
+			this->dlSpeedChart->Series->Add(series1);
+			this->dlSpeedChart->Series->Add(series2);
+			this->dlSpeedChart->Size = System::Drawing::Size(1528, 301);
+			this->dlSpeedChart->TabIndex = 0;
+			this->dlSpeedChart->Text = L"Download speed";
+			// 
+			// progressTabPage
+			// 
+			this->progressTabPage->Controls->Add(this->filesProgressGridView);
+			this->progressTabPage->Controls->Add(this->pieceChart);
+			this->progressTabPage->Location = System::Drawing::Point(4, 29);
+			this->progressTabPage->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
+			this->progressTabPage->Name = L"progressTabPage";
+			this->progressTabPage->Padding = System::Windows::Forms::Padding(3, 2, 3, 2);
+			this->progressTabPage->Size = System::Drawing::Size(1534, 305);
+			this->progressTabPage->TabIndex = 4;
+			this->progressTabPage->Text = L"Progress";
+			this->progressTabPage->UseVisualStyleBackColor = true;
+			// 
+			// filesProgressGridView
+			// 
+			this->filesProgressGridView->AllowUserToAddRows = false;
+			this->filesProgressGridView->AllowUserToDeleteRows = false;
+			this->filesProgressGridView->AllowUserToOrderColumns = true;
+			this->filesProgressGridView->AllowUserToResizeRows = false;
+			this->filesProgressGridView->AutoSizeColumnsMode = System::Windows::Forms::DataGridViewAutoSizeColumnsMode::Fill;
+			this->filesProgressGridView->BackgroundColor = System::Drawing::SystemColors::Window;
+			this->filesProgressGridView->BorderStyle = System::Windows::Forms::BorderStyle::None;
+			this->filesProgressGridView->CellBorderStyle = System::Windows::Forms::DataGridViewCellBorderStyle::SunkenHorizontal;
+			dataGridViewCellStyle26->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			dataGridViewCellStyle26->BackColor = System::Drawing::SystemColors::Control;
+			dataGridViewCellStyle26->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.2F, System::Drawing::FontStyle::Regular,
+				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
+			dataGridViewCellStyle26->ForeColor = System::Drawing::SystemColors::WindowText;
+			dataGridViewCellStyle26->SelectionBackColor = System::Drawing::SystemColors::Desktop;
+			dataGridViewCellStyle26->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
+			dataGridViewCellStyle26->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
+			this->filesProgressGridView->ColumnHeadersDefaultCellStyle = dataGridViewCellStyle26;
+			this->filesProgressGridView->ColumnHeadersHeightSizeMode = System::Windows::Forms::DataGridViewColumnHeadersHeightSizeMode::AutoSize;
+			this->filesProgressGridView->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(9) {
+				this->Index,
+					this->Selected, this->dataGridViewTextBoxColumn5, this->FProgress, this->Size, this->SizeBytes, this->PiecesCount, this->PiecesRemaining,
+					this->PiecesActive
+			});
+			dataGridViewCellStyle32->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleLeft;
+			dataGridViewCellStyle32->BackColor = System::Drawing::SystemColors::Window;
+			dataGridViewCellStyle32->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
+				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(134)));
+			dataGridViewCellStyle32->ForeColor = System::Drawing::SystemColors::ControlText;
+			dataGridViewCellStyle32->SelectionBackColor = System::Drawing::Color::SkyBlue;
+			dataGridViewCellStyle32->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
+			dataGridViewCellStyle32->WrapMode = System::Windows::Forms::DataGridViewTriState::False;
+			this->filesProgressGridView->DefaultCellStyle = dataGridViewCellStyle32;
+			this->filesProgressGridView->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->filesProgressGridView->GridColor = System::Drawing::Color::LightGray;
+			this->filesProgressGridView->Location = System::Drawing::Point(3, 52);
+			this->filesProgressGridView->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
+			this->filesProgressGridView->MultiSelect = false;
+			this->filesProgressGridView->Name = L"filesProgressGridView";
+			dataGridViewCellStyle33->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			dataGridViewCellStyle33->BackColor = System::Drawing::SystemColors::Control;
+			dataGridViewCellStyle33->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
+				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(134)));
+			dataGridViewCellStyle33->ForeColor = System::Drawing::SystemColors::WindowText;
+			dataGridViewCellStyle33->SelectionBackColor = System::Drawing::SystemColors::Highlight;
+			dataGridViewCellStyle33->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
+			dataGridViewCellStyle33->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
+			this->filesProgressGridView->RowHeadersDefaultCellStyle = dataGridViewCellStyle33;
+			this->filesProgressGridView->RowHeadersVisible = false;
+			this->filesProgressGridView->RowHeadersWidth = 51;
+			this->filesProgressGridView->RowTemplate->Height = 30;
+			this->filesProgressGridView->SelectionMode = System::Windows::Forms::DataGridViewSelectionMode::FullRowSelect;
+			this->filesProgressGridView->Size = System::Drawing::Size(1528, 251);
+			this->filesProgressGridView->TabIndex = 3;
+			this->filesProgressGridView->CellClick += gcnew System::Windows::Forms::DataGridViewCellEventHandler(this, &MainForm::filesProgressGridView_CellClick);
+			this->filesProgressGridView->CellMouseUp += gcnew System::Windows::Forms::DataGridViewCellMouseEventHandler(this, &MainForm::filesProgressGridView_CellMouseUp);
+			this->filesProgressGridView->CellValueChanged += gcnew System::Windows::Forms::DataGridViewCellEventHandler(this, &MainForm::filesProgressGridView_CellValueChanged);
+			this->filesProgressGridView->SelectionChanged += gcnew System::EventHandler(this, &MainForm::FilesProgressSelection);
+			this->filesProgressGridView->Sorted += gcnew System::EventHandler(this, &MainForm::filesProgressGridView_Sorted);
+			// 
+			// Index
+			// 
+			this->Index->HeaderText = L"Index";
+			this->Index->MinimumWidth = 6;
+			this->Index->Name = L"Index";
+			this->Index->Visible = false;
+			// 
+			// Selected
+			// 
+			this->Selected->AutoSizeMode = System::Windows::Forms::DataGridViewAutoSizeColumnMode::Fill;
+			this->Selected->FillWeight = 5;
+			this->Selected->HeaderText = L"";
+			this->Selected->MinimumWidth = 6;
+			this->Selected->Name = L"Selected";
+			this->Selected->SortMode = System::Windows::Forms::DataGridViewColumnSortMode::Automatic;
+			// 
+			// dataGridViewTextBoxColumn5
+			// 
+			this->dataGridViewTextBoxColumn5->AutoSizeMode = System::Windows::Forms::DataGridViewAutoSizeColumnMode::Fill;
+			this->dataGridViewTextBoxColumn5->HeaderText = L"Filename";
+			this->dataGridViewTextBoxColumn5->MinimumWidth = 150;
+			this->dataGridViewTextBoxColumn5->Name = L"dataGridViewTextBoxColumn5";
+			this->dataGridViewTextBoxColumn5->ReadOnly = true;
+			// 
+			// FProgress
+			// 
+			dataGridViewCellStyle27->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->FProgress->DefaultCellStyle = dataGridViewCellStyle27;
+			this->FProgress->FillWeight = 20;
+			this->FProgress->HeaderText = L"Progress";
+			this->FProgress->MinimumWidth = 50;
+			this->FProgress->Name = L"FProgress";
+			this->FProgress->ReadOnly = true;
+			// 
+			// Size
+			// 
+			dataGridViewCellStyle28->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->Size->DefaultCellStyle = dataGridViewCellStyle28;
+			this->Size->FillWeight = 20;
+			this->Size->HeaderText = L"Size";
+			this->Size->MinimumWidth = 80;
+			this->Size->Name = L"Size";
+			this->Size->ReadOnly = true;
+			// 
+			// SizeBytes
+			// 
+			this->SizeBytes->HeaderText = L"SizeBytes";
+			this->SizeBytes->MinimumWidth = 6;
+			this->SizeBytes->Name = L"SizeBytes";
+			this->SizeBytes->Visible = false;
+			// 
+			// PiecesCount
+			// 
+			dataGridViewCellStyle29->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->PiecesCount->DefaultCellStyle = dataGridViewCellStyle29;
+			this->PiecesCount->FillWeight = 10;
+			this->PiecesCount->HeaderText = L"Pieces";
+			this->PiecesCount->MinimumWidth = 50;
+			this->PiecesCount->Name = L"PiecesCount";
+			this->PiecesCount->ReadOnly = true;
+			// 
+			// PiecesRemaining
+			// 
+			dataGridViewCellStyle30->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->PiecesRemaining->DefaultCellStyle = dataGridViewCellStyle30;
+			this->PiecesRemaining->FillWeight = 10;
+			this->PiecesRemaining->HeaderText = L"Remaining";
+			this->PiecesRemaining->MinimumWidth = 50;
+			this->PiecesRemaining->Name = L"PiecesRemaining";
+			this->PiecesRemaining->ReadOnly = true;
+			// 
+			// PiecesActive
+			// 
+			dataGridViewCellStyle31->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->PiecesActive->DefaultCellStyle = dataGridViewCellStyle31;
+			this->PiecesActive->FillWeight = 10;
+			this->PiecesActive->HeaderText = L"Active";
+			this->PiecesActive->MinimumWidth = 50;
+			this->PiecesActive->Name = L"PiecesActive";
+			this->PiecesActive->ReadOnly = true;
+			// 
+			// pieceChart
+			// 
+			this->pieceChart->BorderlineWidth = 0;
+			chartArea2->AxisX->Crossing = 1.7976931348623157E+308;
+			chartArea2->AxisX->Enabled = System::Windows::Forms::DataVisualization::Charting::AxisEnabled::True;
+			chartArea2->AxisX->InterlacedColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(255)),
+				static_cast<System::Int32>(static_cast<System::Byte>(192)), static_cast<System::Int32>(static_cast<System::Byte>(255)));
+			chartArea2->AxisX->Interval = 10;
+			chartArea2->AxisX->IntervalAutoMode = System::Windows::Forms::DataVisualization::Charting::IntervalAutoMode::VariableCount;
+			chartArea2->AxisX->IntervalOffsetType = System::Windows::Forms::DataVisualization::Charting::DateTimeIntervalType::Number;
+			chartArea2->AxisX->IsMarginVisible = false;
+			chartArea2->AxisX->LabelStyle->Enabled = false;
+			chartArea2->AxisX->Minimum = 0;
+			chartArea2->AxisY->Crossing = 1.7976931348623157E+308;
+			chartArea2->AxisY->Enabled = System::Windows::Forms::DataVisualization::Charting::AxisEnabled::False;
+			chartArea2->AxisY->Interval = 1;
+			chartArea2->AxisY->IsMarginVisible = false;
+			chartArea2->AxisY->Maximum = 1;
+			chartArea2->AxisY->MaximumAutoSize = 1;
+			chartArea2->AxisY->Minimum = 0;
+			chartArea2->AxisY->TitleAlignment = System::Drawing::StringAlignment::Far;
+			chartArea2->BackColor = System::Drawing::Color::Silver;
+			chartArea2->BorderWidth = 0;
+			chartArea2->IsSameFontSizeForAllAxes = true;
+			chartArea2->Name = L"ChartArea1";
+			chartArea2->Position->Auto = false;
+			chartArea2->Position->Height = 94;
+			chartArea2->Position->Width = 90;
+			chartArea2->Position->X = 1;
+			chartArea2->Position->Y = 1;
+			this->pieceChart->ChartAreas->Add(chartArea2);
+			this->pieceChart->Dock = System::Windows::Forms::DockStyle::Top;
+			this->pieceChart->Location = System::Drawing::Point(3, 2);
+			this->pieceChart->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
+			this->pieceChart->Name = L"pieceChart";
+			this->pieceChart->Palette = System::Windows::Forms::DataVisualization::Charting::ChartColorPalette::Fire;
+			series3->ChartArea = L"ChartArea1";
+			series3->Color = System::Drawing::Color::RoyalBlue;
+			series3->CustomProperties = L"PointWidth=2";
+			series3->Name = L"HasSeries";
+			series3->Points->Add(dataPoint1);
+			series3->Points->Add(dataPoint2);
+			series4->ChartArea = L"ChartArea1";
+			series4->Color = System::Drawing::Color::DarkOrange;
+			series4->CustomProperties = L"EmptyPointValue=Zero, PointWidth=2";
+			series4->Name = L"Request";
+			this->pieceChart->Series->Add(series3);
+			this->pieceChart->Series->Add(series4);
+			this->pieceChart->Size = System::Drawing::Size(1528, 50);
+			this->pieceChart->TabIndex = 0;
+			this->pieceChart->Text = L"pieceChart";
+			title1->Alignment = System::Drawing::ContentAlignment::MiddleRight;
+			title1->Docking = System::Windows::Forms::DataVisualization::Charting::Docking::Right;
+			title1->Name = L"Title";
+			title1->Position->Auto = false;
+			title1->Position->Height = 100;
+			title1->Position->X = 99;
+			title1->TextOrientation = System::Windows::Forms::DataVisualization::Charting::TextOrientation::Horizontal;
+			this->pieceChart->Titles->Add(title1);
 			// 
 			// torrentId
 			// 
@@ -683,609 +1330,24 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->Uploaded->ReadOnly = true;
 			this->Uploaded->Width = 150;
 			// 
-			// TorrentTabs
-			// 
-			this->TorrentTabs->Controls->Add(this->tabPage1);
-			this->TorrentTabs->Controls->Add(this->tabPage2);
-			this->TorrentTabs->Controls->Add(this->sourcesTab);
-			this->TorrentTabs->Controls->Add(this->tabPage3);
-			this->TorrentTabs->Controls->Add(this->progressTabPage);
-			this->TorrentTabs->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->TorrentTabs->Location = System::Drawing::Point(0, 0);
-			this->TorrentTabs->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
-			this->TorrentTabs->Name = L"TorrentTabs";
-			this->TorrentTabs->SelectedIndex = 0;
-			this->TorrentTabs->Size = System::Drawing::Size(1542, 338);
-			this->TorrentTabs->TabIndex = 0;
-			this->TorrentTabs->Selecting += gcnew System::Windows::Forms::TabControlCancelEventHandler(this, &MainForm::filesProgressGridView_TabClick);
-			// 
-			// tabPage1
-			// 
-			this->tabPage1->Controls->Add(this->torrentInfoLabel);
-			this->tabPage1->Location = System::Drawing::Point(4, 29);
-			this->tabPage1->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
-			this->tabPage1->Name = L"tabPage1";
-			this->tabPage1->Padding = System::Windows::Forms::Padding(3, 2, 3, 2);
-			this->tabPage1->Size = System::Drawing::Size(1534, 305);
-			this->tabPage1->TabIndex = 0;
-			this->tabPage1->Text = L"General";
-			this->tabPage1->UseVisualStyleBackColor = true;
-			// 
-			// torrentInfoLabel
-			// 
-			this->torrentInfoLabel->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->torrentInfoLabel->Font = (gcnew System::Drawing::Font(L"Verdana", 8));
-			this->torrentInfoLabel->Location = System::Drawing::Point(3, 2);
-			this->torrentInfoLabel->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
-			this->torrentInfoLabel->Multiline = true;
-			this->torrentInfoLabel->Name = L"torrentInfoLabel";
-			this->torrentInfoLabel->ReadOnly = true;
-			this->torrentInfoLabel->ScrollBars = System::Windows::Forms::ScrollBars::Both;
-			this->torrentInfoLabel->Size = System::Drawing::Size(1528, 301);
-			this->torrentInfoLabel->TabIndex = 0;
-			// 
-			// tabPage2
-			// 
-			this->tabPage2->Controls->Add(this->peersGridView);
-			this->tabPage2->Location = System::Drawing::Point(4, 29);
-			this->tabPage2->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
-			this->tabPage2->Name = L"tabPage2";
-			this->tabPage2->Padding = System::Windows::Forms::Padding(3, 2, 3, 2);
-			this->tabPage2->Size = System::Drawing::Size(1534, 305);
-			this->tabPage2->TabIndex = 1;
-			this->tabPage2->Text = L"Peers";
-			this->tabPage2->UseVisualStyleBackColor = true;
-			// 
-			// peersGridView
-			// 
-			this->peersGridView->AllowUserToAddRows = false;
-			this->peersGridView->AllowUserToDeleteRows = false;
-			this->peersGridView->AllowUserToOrderColumns = true;
-			this->peersGridView->AllowUserToResizeRows = false;
-			this->peersGridView->BackgroundColor = System::Drawing::SystemColors::Window;
-			this->peersGridView->CellBorderStyle = System::Windows::Forms::DataGridViewCellBorderStyle::SingleHorizontal;
-			dataGridViewCellStyle12->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			dataGridViewCellStyle12->BackColor = System::Drawing::SystemColors::Control;
-			dataGridViewCellStyle12->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.2F, System::Drawing::FontStyle::Regular,
-				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
-			dataGridViewCellStyle12->ForeColor = System::Drawing::SystemColors::WindowText;
-			dataGridViewCellStyle12->SelectionBackColor = System::Drawing::SystemColors::Desktop;
-			dataGridViewCellStyle12->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
-			dataGridViewCellStyle12->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
-			this->peersGridView->ColumnHeadersDefaultCellStyle = dataGridViewCellStyle12;
-			this->peersGridView->ColumnHeadersHeightSizeMode = System::Windows::Forms::DataGridViewColumnHeadersHeightSizeMode::AutoSize;
-			this->peersGridView->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(9) {
-				this->gridPeerAddress,
-					this->DL2, this->DlBytes2, this->UP2, this->UpBytes2, this->gridPeerPercentage, this->peerSource, this->peerCountry, this->connection
-			});
-			this->peersGridView->ContextMenuStrip = this->peersContextMenuStrip;
-			dataGridViewCellStyle16->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleLeft;
-			dataGridViewCellStyle16->BackColor = System::Drawing::SystemColors::Window;
-			dataGridViewCellStyle16->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
-				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(134)));
-			dataGridViewCellStyle16->ForeColor = System::Drawing::SystemColors::ControlText;
-			dataGridViewCellStyle16->SelectionBackColor = System::Drawing::Color::SkyBlue;
-			dataGridViewCellStyle16->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
-			dataGridViewCellStyle16->WrapMode = System::Windows::Forms::DataGridViewTriState::False;
-			this->peersGridView->DefaultCellStyle = dataGridViewCellStyle16;
-			this->peersGridView->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->peersGridView->Location = System::Drawing::Point(3, 2);
-			this->peersGridView->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
-			this->peersGridView->MultiSelect = false;
-			this->peersGridView->Name = L"peersGridView";
-			this->peersGridView->ReadOnly = true;
-			dataGridViewCellStyle17->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			dataGridViewCellStyle17->BackColor = System::Drawing::SystemColors::Control;
-			dataGridViewCellStyle17->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
-				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(134)));
-			dataGridViewCellStyle17->ForeColor = System::Drawing::SystemColors::WindowText;
-			dataGridViewCellStyle17->SelectionBackColor = System::Drawing::SystemColors::Highlight;
-			dataGridViewCellStyle17->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
-			dataGridViewCellStyle17->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
-			this->peersGridView->RowHeadersDefaultCellStyle = dataGridViewCellStyle17;
-			this->peersGridView->RowHeadersVisible = false;
-			this->peersGridView->RowHeadersWidth = 51;
-			this->peersGridView->RowTemplate->Height = 24;
-			this->peersGridView->SelectionMode = System::Windows::Forms::DataGridViewSelectionMode::FullRowSelect;
-			this->peersGridView->Size = System::Drawing::Size(1528, 301);
-			this->peersGridView->TabIndex = 2;
-			// 
-			// peersContextMenuStrip
-			// 
-			this->peersContextMenuStrip->ImageScalingSize = System::Drawing::Size(20, 20);
-			this->peersContextMenuStrip->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) { this->toolStripMenuItem1 });
-			this->peersContextMenuStrip->Name = L"peersContextMenuStrip";
-			this->peersContextMenuStrip->Size = System::Drawing::Size(159, 36);
-			// 
-			// toolStripMenuItem1
-			// 
-			this->toolStripMenuItem1->Name = L"toolStripMenuItem1";
-			this->toolStripMenuItem1->Size = System::Drawing::Size(158, 32);
-			this->toolStripMenuItem1->Text = L"Add peer";
-			this->toolStripMenuItem1->Click += gcnew System::EventHandler(this, &MainForm::ToolStripMenuItem1_Click);
-			// 
-			// sourcesTab
-			// 
-			this->sourcesTab->Controls->Add(this->sourcesGrid);
-			this->sourcesTab->Location = System::Drawing::Point(4, 29);
-			this->sourcesTab->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
-			this->sourcesTab->Name = L"sourcesTab";
-			this->sourcesTab->Padding = System::Windows::Forms::Padding(3, 2, 3, 2);
-			this->sourcesTab->Size = System::Drawing::Size(1534, 305);
-			this->sourcesTab->TabIndex = 2;
-			this->sourcesTab->Text = L"Sources";
-			this->sourcesTab->UseVisualStyleBackColor = true;
-			// 
-			// sourcesGrid
-			// 
-			this->sourcesGrid->AllowUserToAddRows = false;
-			this->sourcesGrid->AllowUserToDeleteRows = false;
-			this->sourcesGrid->AllowUserToOrderColumns = true;
-			this->sourcesGrid->AllowUserToResizeRows = false;
-			this->sourcesGrid->BackgroundColor = System::Drawing::SystemColors::Window;
-			this->sourcesGrid->CellBorderStyle = System::Windows::Forms::DataGridViewCellBorderStyle::SingleHorizontal;
-			dataGridViewCellStyle18->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			dataGridViewCellStyle18->BackColor = System::Drawing::SystemColors::Control;
-			dataGridViewCellStyle18->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.2F, System::Drawing::FontStyle::Regular,
-				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
-			dataGridViewCellStyle18->ForeColor = System::Drawing::SystemColors::WindowText;
-			dataGridViewCellStyle18->SelectionBackColor = System::Drawing::SystemColors::Desktop;
-			dataGridViewCellStyle18->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
-			dataGridViewCellStyle18->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
-			this->sourcesGrid->ColumnHeadersDefaultCellStyle = dataGridViewCellStyle18;
-			this->sourcesGrid->ColumnHeadersHeightSizeMode = System::Windows::Forms::DataGridViewColumnHeadersHeightSizeMode::AutoSize;
-			this->sourcesGrid->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(7) {
-				this->dataGridViewTextBoxColumn1,
-					this->dataGridViewTextBoxColumn2, this->dataGridViewTextBoxColumn3, this->Column5, this->Column6, this->Column1, this->dataGridViewTextBoxColumn4
-			});
-			dataGridViewCellStyle23->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleLeft;
-			dataGridViewCellStyle23->BackColor = System::Drawing::SystemColors::Window;
-			dataGridViewCellStyle23->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
-				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(134)));
-			dataGridViewCellStyle23->ForeColor = System::Drawing::SystemColors::ControlText;
-			dataGridViewCellStyle23->SelectionBackColor = System::Drawing::Color::SkyBlue;
-			dataGridViewCellStyle23->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
-			dataGridViewCellStyle23->WrapMode = System::Windows::Forms::DataGridViewTriState::False;
-			this->sourcesGrid->DefaultCellStyle = dataGridViewCellStyle23;
-			this->sourcesGrid->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->sourcesGrid->Location = System::Drawing::Point(3, 2);
-			this->sourcesGrid->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
-			this->sourcesGrid->Name = L"sourcesGrid";
-			this->sourcesGrid->ReadOnly = true;
-			dataGridViewCellStyle24->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			dataGridViewCellStyle24->BackColor = System::Drawing::SystemColors::Control;
-			dataGridViewCellStyle24->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
-				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(134)));
-			dataGridViewCellStyle24->ForeColor = System::Drawing::SystemColors::WindowText;
-			dataGridViewCellStyle24->SelectionBackColor = System::Drawing::SystemColors::Highlight;
-			dataGridViewCellStyle24->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
-			dataGridViewCellStyle24->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
-			this->sourcesGrid->RowHeadersDefaultCellStyle = dataGridViewCellStyle24;
-			this->sourcesGrid->RowHeadersVisible = false;
-			this->sourcesGrid->RowHeadersWidth = 51;
-			this->sourcesGrid->RowTemplate->Height = 24;
-			this->sourcesGrid->SelectionMode = System::Windows::Forms::DataGridViewSelectionMode::FullRowSelect;
-			this->sourcesGrid->Size = System::Drawing::Size(1528, 301);
-			this->sourcesGrid->TabIndex = 3;
-			this->sourcesGrid->MouseClick += gcnew System::Windows::Forms::MouseEventHandler(this, &MainForm::sourcesGrid_MouseClick);
-			// 
-			// dataGridViewTextBoxColumn1
-			// 
-			this->dataGridViewTextBoxColumn1->AutoSizeMode = System::Windows::Forms::DataGridViewAutoSizeColumnMode::Fill;
-			this->dataGridViewTextBoxColumn1->HeaderText = L"Name";
-			this->dataGridViewTextBoxColumn1->MinimumWidth = 20;
-			this->dataGridViewTextBoxColumn1->Name = L"dataGridViewTextBoxColumn1";
-			this->dataGridViewTextBoxColumn1->ReadOnly = true;
-			// 
-			// dataGridViewTextBoxColumn2
-			// 
-			dataGridViewCellStyle19->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->dataGridViewTextBoxColumn2->DefaultCellStyle = dataGridViewCellStyle19;
-			this->dataGridViewTextBoxColumn2->HeaderText = L"State";
-			this->dataGridViewTextBoxColumn2->MinimumWidth = 6;
-			this->dataGridViewTextBoxColumn2->Name = L"dataGridViewTextBoxColumn2";
-			this->dataGridViewTextBoxColumn2->ReadOnly = true;
-			this->dataGridViewTextBoxColumn2->Width = 120;
-			// 
-			// dataGridViewTextBoxColumn3
-			// 
-			dataGridViewCellStyle20->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->dataGridViewTextBoxColumn3->DefaultCellStyle = dataGridViewCellStyle20;
-			this->dataGridViewTextBoxColumn3->HeaderText = L"Peers";
-			this->dataGridViewTextBoxColumn3->MinimumWidth = 6;
-			this->dataGridViewTextBoxColumn3->Name = L"dataGridViewTextBoxColumn3";
-			this->dataGridViewTextBoxColumn3->ReadOnly = true;
-			this->dataGridViewTextBoxColumn3->Width = 125;
-			// 
-			// Column5
-			// 
-			dataGridViewCellStyle21->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->Column5->DefaultCellStyle = dataGridViewCellStyle21;
-			this->Column5->HeaderText = L"Seeds";
-			this->Column5->MinimumWidth = 6;
-			this->Column5->Name = L"Column5";
-			this->Column5->ReadOnly = true;
-			this->Column5->Width = 125;
-			// 
-			// Column6
-			// 
-			dataGridViewCellStyle22->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->Column6->DefaultCellStyle = dataGridViewCellStyle22;
-			this->Column6->HeaderText = L"Leechers";
-			this->Column6->MinimumWidth = 6;
-			this->Column6->Name = L"Column6";
-			this->Column6->ReadOnly = true;
-			this->Column6->Width = 125;
-			// 
-			// Column1
-			// 
-			this->Column1->HeaderText = L"Next check";
-			this->Column1->MinimumWidth = 6;
-			this->Column1->Name = L"Column1";
-			this->Column1->ReadOnly = true;
-			this->Column1->Width = 125;
-			// 
-			// dataGridViewTextBoxColumn4
-			// 
-			this->dataGridViewTextBoxColumn4->HeaderText = L"Interval";
-			this->dataGridViewTextBoxColumn4->MinimumWidth = 6;
-			this->dataGridViewTextBoxColumn4->Name = L"dataGridViewTextBoxColumn4";
-			this->dataGridViewTextBoxColumn4->ReadOnly = true;
-			this->dataGridViewTextBoxColumn4->Width = 125;
-			// 
-			// tabPage3
-			// 
-			this->tabPage3->Controls->Add(this->panel1);
-			this->tabPage3->Location = System::Drawing::Point(4, 29);
-			this->tabPage3->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
-			this->tabPage3->Name = L"tabPage3";
-			this->tabPage3->Padding = System::Windows::Forms::Padding(3, 2, 3, 2);
-			this->tabPage3->Size = System::Drawing::Size(1534, 305);
-			this->tabPage3->TabIndex = 3;
-			this->tabPage3->Text = L"Statistics";
-			this->tabPage3->UseVisualStyleBackColor = true;
-			// 
-			// panel1
-			// 
-			this->panel1->Controls->Add(this->dlSpeedChart);
-			this->panel1->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->panel1->Location = System::Drawing::Point(3, 2);
-			this->panel1->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
-			this->panel1->Name = L"panel1";
-			this->panel1->Size = System::Drawing::Size(1528, 301);
-			this->panel1->TabIndex = 0;
-			// 
-			// dlSpeedChart
-			// 
-			this->dlSpeedChart->BorderlineWidth = 5;
-			chartArea1->AxisX->Title = L"Time (seconds)";
-			chartArea1->AxisY->Title = L"MB/s";
-			chartArea1->Name = L"ChartArea1";
-			this->dlSpeedChart->ChartAreas->Add(chartArea1);
-			this->dlSpeedChart->Dock = System::Windows::Forms::DockStyle::Fill;
-			legend1->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(224)), static_cast<System::Int32>(static_cast<System::Byte>(224)),
-				static_cast<System::Int32>(static_cast<System::Byte>(224)));
-			legend1->Docking = System::Windows::Forms::DataVisualization::Charting::Docking::Top;
-			legend1->IsDockedInsideChartArea = false;
-			legend1->ItemColumnSpacing = 0;
-			legend1->LegendStyle = System::Windows::Forms::DataVisualization::Charting::LegendStyle::Row;
-			legend1->MaximumAutoSize = 10;
-			legend1->Name = L"Legend1";
-			legend1->TableStyle = System::Windows::Forms::DataVisualization::Charting::LegendTableStyle::Tall;
-			legend1->TextWrapThreshold = 0;
-			this->dlSpeedChart->Legends->Add(legend1);
-			this->dlSpeedChart->Location = System::Drawing::Point(0, 0);
-			this->dlSpeedChart->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
-			this->dlSpeedChart->Name = L"dlSpeedChart";
-			this->dlSpeedChart->Palette = System::Windows::Forms::DataVisualization::Charting::ChartColorPalette::Bright;
-			series1->ChartArea = L"ChartArea1";
-			series1->Legend = L"Legend1";
-			series1->LegendText = L"Download";
-			series1->Name = L"DlSeries";
-			series2->ChartArea = L"ChartArea1";
-			series2->Legend = L"Legend1";
-			series2->LegendText = L"Upload";
-			series2->Name = L"UpSeries";
-			this->dlSpeedChart->Series->Add(series1);
-			this->dlSpeedChart->Series->Add(series2);
-			this->dlSpeedChart->Size = System::Drawing::Size(1528, 301);
-			this->dlSpeedChart->TabIndex = 0;
-			this->dlSpeedChart->Text = L"Download speed";
-			// 
-			// progressTabPage
-			// 
-			this->progressTabPage->Controls->Add(this->filesProgressGridView);
-			this->progressTabPage->Controls->Add(this->pieceChart);
-			this->progressTabPage->Location = System::Drawing::Point(4, 29);
-			this->progressTabPage->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
-			this->progressTabPage->Name = L"progressTabPage";
-			this->progressTabPage->Padding = System::Windows::Forms::Padding(3, 2, 3, 2);
-			this->progressTabPage->Size = System::Drawing::Size(1534, 305);
-			this->progressTabPage->TabIndex = 4;
-			this->progressTabPage->Text = L"Progress";
-			this->progressTabPage->UseVisualStyleBackColor = true;
-			// 
-			// filesProgressGridView
-			// 
-			this->filesProgressGridView->AllowUserToAddRows = false;
-			this->filesProgressGridView->AllowUserToDeleteRows = false;
-			this->filesProgressGridView->AllowUserToOrderColumns = true;
-			this->filesProgressGridView->AllowUserToResizeRows = false;
-			this->filesProgressGridView->AutoSizeColumnsMode = System::Windows::Forms::DataGridViewAutoSizeColumnsMode::Fill;
-			this->filesProgressGridView->BackgroundColor = System::Drawing::SystemColors::Window;
-			this->filesProgressGridView->BorderStyle = System::Windows::Forms::BorderStyle::None;
-			this->filesProgressGridView->CellBorderStyle = System::Windows::Forms::DataGridViewCellBorderStyle::SunkenHorizontal;
-			dataGridViewCellStyle25->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			dataGridViewCellStyle25->BackColor = System::Drawing::SystemColors::Control;
-			dataGridViewCellStyle25->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.2F, System::Drawing::FontStyle::Regular,
-				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
-			dataGridViewCellStyle25->ForeColor = System::Drawing::SystemColors::WindowText;
-			dataGridViewCellStyle25->SelectionBackColor = System::Drawing::SystemColors::Desktop;
-			dataGridViewCellStyle25->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
-			dataGridViewCellStyle25->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
-			this->filesProgressGridView->ColumnHeadersDefaultCellStyle = dataGridViewCellStyle25;
-			this->filesProgressGridView->ColumnHeadersHeightSizeMode = System::Windows::Forms::DataGridViewColumnHeadersHeightSizeMode::AutoSize;
-			this->filesProgressGridView->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(9) {
-				this->Index,
-					this->Selected, this->dataGridViewTextBoxColumn5, this->FProgress, this->Size, this->SizeBytes, this->PiecesCount, this->PiecesRemaining,
-					this->PiecesActive
-			});
-			dataGridViewCellStyle31->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleLeft;
-			dataGridViewCellStyle31->BackColor = System::Drawing::SystemColors::Window;
-			dataGridViewCellStyle31->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
-				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(134)));
-			dataGridViewCellStyle31->ForeColor = System::Drawing::SystemColors::ControlText;
-			dataGridViewCellStyle31->SelectionBackColor = System::Drawing::Color::SkyBlue;
-			dataGridViewCellStyle31->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
-			dataGridViewCellStyle31->WrapMode = System::Windows::Forms::DataGridViewTriState::False;
-			this->filesProgressGridView->DefaultCellStyle = dataGridViewCellStyle31;
-			this->filesProgressGridView->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->filesProgressGridView->GridColor = System::Drawing::Color::LightGray;
-			this->filesProgressGridView->Location = System::Drawing::Point(3, 52);
-			this->filesProgressGridView->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
-			this->filesProgressGridView->MultiSelect = false;
-			this->filesProgressGridView->Name = L"filesProgressGridView";
-			dataGridViewCellStyle32->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			dataGridViewCellStyle32->BackColor = System::Drawing::SystemColors::Control;
-			dataGridViewCellStyle32->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 7.8F, System::Drawing::FontStyle::Regular,
-				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(134)));
-			dataGridViewCellStyle32->ForeColor = System::Drawing::SystemColors::WindowText;
-			dataGridViewCellStyle32->SelectionBackColor = System::Drawing::SystemColors::Highlight;
-			dataGridViewCellStyle32->SelectionForeColor = System::Drawing::SystemColors::HighlightText;
-			dataGridViewCellStyle32->WrapMode = System::Windows::Forms::DataGridViewTriState::True;
-			this->filesProgressGridView->RowHeadersDefaultCellStyle = dataGridViewCellStyle32;
-			this->filesProgressGridView->RowHeadersVisible = false;
-			this->filesProgressGridView->RowHeadersWidth = 51;
-			this->filesProgressGridView->RowTemplate->Height = 30;
-			this->filesProgressGridView->SelectionMode = System::Windows::Forms::DataGridViewSelectionMode::FullRowSelect;
-			this->filesProgressGridView->Size = System::Drawing::Size(1528, 251);
-			this->filesProgressGridView->TabIndex = 3;
-			this->filesProgressGridView->CellClick += gcnew System::Windows::Forms::DataGridViewCellEventHandler(this, &MainForm::filesProgressGridView_CellClick);
-			this->filesProgressGridView->CellMouseUp += gcnew System::Windows::Forms::DataGridViewCellMouseEventHandler(this, &MainForm::filesProgressGridView_CellMouseUp);
-			this->filesProgressGridView->CellValueChanged += gcnew System::Windows::Forms::DataGridViewCellEventHandler(this, &MainForm::filesProgressGridView_CellValueChanged);
-			this->filesProgressGridView->SelectionChanged += gcnew System::EventHandler(this, &MainForm::FilesProgressSelection);
-			this->filesProgressGridView->Sorted += gcnew System::EventHandler(this, &MainForm::filesProgressGridView_Sorted);
-			// 
-			// Index
-			// 
-			this->Index->HeaderText = L"Index";
-			this->Index->MinimumWidth = 6;
-			this->Index->Name = L"Index";
-			this->Index->Visible = false;
-			// 
-			// Selected
-			// 
-			this->Selected->AutoSizeMode = System::Windows::Forms::DataGridViewAutoSizeColumnMode::Fill;
-			this->Selected->FillWeight = 5;
-			this->Selected->HeaderText = L"";
-			this->Selected->MinimumWidth = 6;
-			this->Selected->Name = L"Selected";
-			this->Selected->SortMode = System::Windows::Forms::DataGridViewColumnSortMode::Automatic;
-			// 
-			// dataGridViewTextBoxColumn5
-			// 
-			this->dataGridViewTextBoxColumn5->AutoSizeMode = System::Windows::Forms::DataGridViewAutoSizeColumnMode::Fill;
-			this->dataGridViewTextBoxColumn5->HeaderText = L"Filename";
-			this->dataGridViewTextBoxColumn5->MinimumWidth = 150;
-			this->dataGridViewTextBoxColumn5->Name = L"dataGridViewTextBoxColumn5";
-			this->dataGridViewTextBoxColumn5->ReadOnly = true;
-			// 
-			// FProgress
-			// 
-			dataGridViewCellStyle26->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->FProgress->DefaultCellStyle = dataGridViewCellStyle26;
-			this->FProgress->FillWeight = 20;
-			this->FProgress->HeaderText = L"Progress";
-			this->FProgress->MinimumWidth = 50;
-			this->FProgress->Name = L"FProgress";
-			this->FProgress->ReadOnly = true;
-			// 
-			// Size
-			// 
-			dataGridViewCellStyle27->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->Size->DefaultCellStyle = dataGridViewCellStyle27;
-			this->Size->FillWeight = 20;
-			this->Size->HeaderText = L"Size";
-			this->Size->MinimumWidth = 80;
-			this->Size->Name = L"Size";
-			this->Size->ReadOnly = true;
-			// 
-			// SizeBytes
-			// 
-			this->SizeBytes->HeaderText = L"SizeBytes";
-			this->SizeBytes->MinimumWidth = 6;
-			this->SizeBytes->Name = L"SizeBytes";
-			this->SizeBytes->Visible = false;
-			// 
-			// PiecesCount
-			// 
-			dataGridViewCellStyle28->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->PiecesCount->DefaultCellStyle = dataGridViewCellStyle28;
-			this->PiecesCount->FillWeight = 10;
-			this->PiecesCount->HeaderText = L"Pieces";
-			this->PiecesCount->MinimumWidth = 50;
-			this->PiecesCount->Name = L"PiecesCount";
-			this->PiecesCount->ReadOnly = true;
-			// 
-			// PiecesRemaining
-			// 
-			dataGridViewCellStyle29->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->PiecesRemaining->DefaultCellStyle = dataGridViewCellStyle29;
-			this->PiecesRemaining->FillWeight = 10;
-			this->PiecesRemaining->HeaderText = L"Remaining";
-			this->PiecesRemaining->MinimumWidth = 50;
-			this->PiecesRemaining->Name = L"PiecesRemaining";
-			this->PiecesRemaining->ReadOnly = true;
-			// 
-			// PiecesActive
-			// 
-			dataGridViewCellStyle30->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->PiecesActive->DefaultCellStyle = dataGridViewCellStyle30;
-			this->PiecesActive->FillWeight = 10;
-			this->PiecesActive->HeaderText = L"Active";
-			this->PiecesActive->MinimumWidth = 50;
-			this->PiecesActive->Name = L"PiecesActive";
-			this->PiecesActive->ReadOnly = true;
-			// 
-			// pieceChart
-			// 
-			this->pieceChart->BorderlineWidth = 0;
-			chartArea2->AxisX->Crossing = 1.7976931348623157E+308;
-			chartArea2->AxisX->Enabled = System::Windows::Forms::DataVisualization::Charting::AxisEnabled::True;
-			chartArea2->AxisX->InterlacedColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(255)),
-				static_cast<System::Int32>(static_cast<System::Byte>(192)), static_cast<System::Int32>(static_cast<System::Byte>(255)));
-			chartArea2->AxisX->Interval = 10;
-			chartArea2->AxisX->IntervalAutoMode = System::Windows::Forms::DataVisualization::Charting::IntervalAutoMode::VariableCount;
-			chartArea2->AxisX->IntervalOffsetType = System::Windows::Forms::DataVisualization::Charting::DateTimeIntervalType::Number;
-			chartArea2->AxisX->IsMarginVisible = false;
-			chartArea2->AxisX->LabelStyle->Enabled = false;
-			chartArea2->AxisX->Minimum = 0;
-			chartArea2->AxisY->Crossing = 1.7976931348623157E+308;
-			chartArea2->AxisY->Enabled = System::Windows::Forms::DataVisualization::Charting::AxisEnabled::False;
-			chartArea2->AxisY->Interval = 1;
-			chartArea2->AxisY->IsMarginVisible = false;
-			chartArea2->AxisY->Maximum = 1;
-			chartArea2->AxisY->MaximumAutoSize = 1;
-			chartArea2->AxisY->Minimum = 0;
-			chartArea2->AxisY->TitleAlignment = System::Drawing::StringAlignment::Far;
-			chartArea2->BackColor = System::Drawing::Color::Silver;
-			chartArea2->BorderWidth = 0;
-			chartArea2->IsSameFontSizeForAllAxes = true;
-			chartArea2->Name = L"ChartArea1";
-			chartArea2->Position->Auto = false;
-			chartArea2->Position->Height = 94;
-			chartArea2->Position->Width = 90;
-			chartArea2->Position->X = 1;
-			chartArea2->Position->Y = 1;
-			this->pieceChart->ChartAreas->Add(chartArea2);
-			this->pieceChart->Dock = System::Windows::Forms::DockStyle::Top;
-			this->pieceChart->Location = System::Drawing::Point(3, 2);
-			this->pieceChart->Margin = System::Windows::Forms::Padding(3, 2, 3, 2);
-			this->pieceChart->Name = L"pieceChart";
-			this->pieceChart->Palette = System::Windows::Forms::DataVisualization::Charting::ChartColorPalette::Fire;
-			series3->ChartArea = L"ChartArea1";
-			series3->Color = System::Drawing::Color::RoyalBlue;
-			series3->CustomProperties = L"PointWidth=2";
-			series3->Name = L"HasSeries";
-			series3->Points->Add(dataPoint1);
-			series3->Points->Add(dataPoint2);
-			series4->ChartArea = L"ChartArea1";
-			series4->Color = System::Drawing::Color::DarkOrange;
-			series4->CustomProperties = L"EmptyPointValue=Zero, PointWidth=2";
-			series4->Name = L"Request";
-			this->pieceChart->Series->Add(series3);
-			this->pieceChart->Series->Add(series4);
-			this->pieceChart->Size = System::Drawing::Size(1528, 50);
-			this->pieceChart->TabIndex = 0;
-			this->pieceChart->Text = L"pieceChart";
-			title1->Alignment = System::Drawing::ContentAlignment::MiddleRight;
-			title1->Docking = System::Windows::Forms::DataVisualization::Charting::Docking::Right;
-			title1->Name = L"Title";
-			title1->Position->Auto = false;
-			title1->Position->Height = 100;
-			title1->Position->X = 99;
-			title1->TextOrientation = System::Windows::Forms::DataVisualization::Charting::TextOrientation::Horizontal;
-			this->pieceChart->Titles->Add(title1);
-			// 
-			// gridPeerAddress
-			// 
-			this->gridPeerAddress->AutoSizeMode = System::Windows::Forms::DataGridViewAutoSizeColumnMode::Fill;
-			this->gridPeerAddress->HeaderText = L"Address";
-			this->gridPeerAddress->MinimumWidth = 20;
-			this->gridPeerAddress->Name = L"gridPeerAddress";
-			this->gridPeerAddress->ReadOnly = true;
-			// 
-			// DL2
-			// 
-			dataGridViewCellStyle13->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->DL2->DefaultCellStyle = dataGridViewCellStyle13;
-			this->DL2->HeaderText = L"Download speed";
-			this->DL2->MinimumWidth = 6;
-			this->DL2->Name = L"DL2";
-			this->DL2->ReadOnly = true;
-			this->DL2->Width = 150;
-			// 
-			// DlBytes2
-			// 
-			this->DlBytes2->HeaderText = L"DlBytes2";
-			this->DlBytes2->MinimumWidth = 6;
-			this->DlBytes2->Name = L"DlBytes2";
-			this->DlBytes2->ReadOnly = true;
-			this->DlBytes2->Visible = false;
-			this->DlBytes2->Width = 125;
-			// 
-			// UP2
-			// 
-			dataGridViewCellStyle14->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->UP2->DefaultCellStyle = dataGridViewCellStyle14;
-			this->UP2->HeaderText = L"Upload speed";
-			this->UP2->MinimumWidth = 6;
-			this->UP2->Name = L"UP2";
-			this->UP2->ReadOnly = true;
-			this->UP2->Width = 150;
-			// 
-			// UpBytes2
-			// 
-			this->UpBytes2->HeaderText = L"UpBytes2";
-			this->UpBytes2->MinimumWidth = 6;
-			this->UpBytes2->Name = L"UpBytes2";
-			this->UpBytes2->ReadOnly = true;
-			this->UpBytes2->Visible = false;
-			this->UpBytes2->Width = 125;
-			// 
-			// gridPeerPercentage
-			// 
-			dataGridViewCellStyle15->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->gridPeerPercentage->DefaultCellStyle = dataGridViewCellStyle15;
-			this->gridPeerPercentage->HeaderText = L"%";
-			this->gridPeerPercentage->MinimumWidth = 6;
-			this->gridPeerPercentage->Name = L"gridPeerPercentage";
-			this->gridPeerPercentage->ReadOnly = true;
-			this->gridPeerPercentage->Width = 125;
-			// 
-			// peerSource
-			// 
-			this->peerSource->HeaderText = L"Client";
-			this->peerSource->MinimumWidth = 6;
-			this->peerSource->Name = L"peerSource";
-			this->peerSource->ReadOnly = true;
-			this->peerSource->Width = 150;
-			// 
-			// peerCountry
-			// 
-			this->peerCountry->HeaderText = L"Country";
-			this->peerCountry->MinimumWidth = 6;
-			this->peerCountry->Name = L"peerCountry";
-			this->peerCountry->ReadOnly = true;
-			this->peerCountry->Width = 125;
-			// 
-			// connection
-			// 
-			this->connection->HeaderText = L"Connection";
-			this->connection->MinimumWidth = 30;
-			this->connection->Name = L"connection";
-			this->connection->ReadOnly = true;
-			this->connection->Width = 150;
+			// Added
+			// 
+			dataGridViewCellStyle10->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
+			this->Added->DefaultCellStyle = dataGridViewCellStyle10;
+			this->Added->HeaderText = L"Added";
+			this->Added->MinimumWidth = 8;
+			this->Added->Name = L"Added";
+			this->Added->ReadOnly = true;
+			this->Added->Width = 150;
+			// 
+			// AddedDate
+			// 
+			this->AddedDate->HeaderText = L"AddedDate";
+			this->AddedDate->MinimumWidth = 8;
+			this->AddedDate->Name = L"AddedDate";
+			this->AddedDate->ReadOnly = true;
+			this->AddedDate->Visible = false;
+			this->AddedDate->Width = 150;
 			// 
 			// MainForm
 			// 
@@ -1481,6 +1543,12 @@ private: System::Void  torrentGridView_SortCompare(System::Object^ sender, DataG
 		auto bytesID = gcnew String(e->Column->Name == "DL" ? "DlBytes" : "UpBytes");
 		auto v1 = Int32::Parse(torrentsGrid->Rows[e->RowIndex1]->Cells[bytesID]->Value->ToString());
 		auto v2 = Int32::Parse(torrentsGrid->Rows[e->RowIndex2]->Cells[bytesID]->Value->ToString());
+		e->SortResult = v1 > v2 ? 1 : -1;
+	}
+	else if (e->Column->Name == "Added")
+	{
+		auto v1 = UInt32::Parse(torrentsGrid->Rows[e->RowIndex1]->Cells["AddedDate"]->Value->ToString());
+		auto v2 = UInt32::Parse(torrentsGrid->Rows[e->RowIndex2]->Cells["AddedDate"]->Value->ToString());
 		e->SortResult = v1 > v2 ? 1 : -1;
 	}
 	else if (e->Column->Name == "TorrentProgress")

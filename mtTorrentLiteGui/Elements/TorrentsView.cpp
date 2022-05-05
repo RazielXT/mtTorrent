@@ -351,14 +351,15 @@ void TorrentsView::refreshTorrentsGrid()
 			}
 
 			//torrent row - visual/logic data columns
-			auto row = gcnew cli::array< System::String^  >(12) {
+			auto row = gcnew cli::array< System::String^  >(14) {
 				gcnew System::String(hashStr.data()),
 					name, progress, activeStatus,
-					speedInfo, int(info.downloadSpeed).ToString(),
-					info.uploadSpeed ? formatBytesSpeed(info.uploadSpeed) : "", int(info.uploadSpeed).ToString(),
-					(t.active || info.connectedPeers) ? int(info.connectedPeers).ToString() : "",
-					(t.active || info.foundPeers) ? int(info.foundPeers).ToString() : "",
-					formatBytes(info.downloaded), formatBytes(info.uploaded)
+					speedInfo, info.downloadSpeed.ToString(),
+					info.uploadSpeed ? formatBytesSpeed(info.uploadSpeed) : "", info.uploadSpeed.ToString(),
+					(t.active || info.connectedPeers) ? info.connectedPeers.ToString() : "",
+					(t.active || info.foundPeers) ? info.foundPeers.ToString() : "",
+					formatBytes(info.downloaded), formatBytes(info.uploaded),
+					System::DateTimeOffset::FromUnixTimeSeconds(info.timeAdded).ToString("dd-MMM-yy H:mm"), info.timeAdded.ToString()
 			};
 
 			torrentGrid->Rows[rowId]->SetValues(row);

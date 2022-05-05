@@ -110,6 +110,7 @@ extern "C"
 			resp->started = torrent->getActiveState() == mttApi::Torrent::ActiveState::Started;
 			resp->stopping = torrent->getState() == mttApi::Torrent::State::Stopping;
 			resp->utmActive = torrent->getState() == mttApi::Torrent::State::DownloadingMetadata;
+			resp->timeAdded = torrent->getTimeAdded();
 		}
 		else if (id == mtBI::MessageId::GetPeersInfo)
 		{

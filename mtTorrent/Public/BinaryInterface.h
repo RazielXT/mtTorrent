@@ -169,6 +169,7 @@ namespace mtBI
 		bool checking;
 		float checkingProgress;
 		mtt::Status activeStatus;
+		uint64_t timeAdded;
 	};
 
 	struct PeerInfo
