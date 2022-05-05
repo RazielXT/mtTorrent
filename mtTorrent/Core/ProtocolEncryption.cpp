@@ -194,7 +194,7 @@ void ProtocolEncryptionHandshake::createPe3Handshake(DataBuffer& buffer)
 	memset(dataPtr, 0, 8);
 	dataPtr += 8;
 
-	*reinterpret_cast<uint32_t*>(dataPtr) = swap32(2);
+	*reinterpret_cast<uint32_t*>(dataPtr) = swap32(3);
 	dataPtr += 4;
 
 	*reinterpret_cast<uint16_t*>(dataPtr) = swap16((uint16_t)pad);
@@ -270,10 +270,21 @@ size_t ProtocolEncryptionHandshake::readPe3Handshake(const BufferView& data, Pro
 	}
 
 	auto options = reader.pop32();
+
+	if (options & 2)
+		type = Type::RC4;
+	else if (options & 1)
+		type = Type::PlainText;
+	else
+	{
+		nextStep = Step::Error;
+		return data.size;
+	}
+
 	auto pad = reader.pop16();
 
 	pos += 8 + 4 + 2;
-	if (pos + uint32_t(pad + 2) > data.size)
+	if (pos + uint32_t(pad) + 2 > data.size)
 		return minimumReadSize;
 
 	pe->rcIn.skip(pad);
@@ -308,7 +319,7 @@ void ProtocolEncryptionHandshake::createPe4Handshake(DataBuffer& buffer)
 	memset(dataPtr, 0, 8);
 	dataPtr += 8;
 
-	*reinterpret_cast<uint32_t*>(dataPtr) = swap32(2);
+	*reinterpret_cast<uint32_t*>(dataPtr) = swap32(type == Type::RC4 ? 2 : 1);
 	dataPtr += 4;
 
 	*reinterpret_cast<uint16_t*>(dataPtr) = swap16((uint16_t)pad);
@@ -349,6 +360,17 @@ size_t ProtocolEncryptionHandshake::readPe4Handshake(const BufferView& data)
 
 	PacketReader reader(buffer);
 	auto options = reader.pop32();
+
+	if (options & 2)
+		type = Type::RC4;
+	else if (options & 1)
+		type = Type::PlainText;
+	else
+	{
+		nextStep = Step::Error;
+		return data.size;
+	}
+
 	auto pad = reader.pop16();
 
 	pos += 6 + pad;
