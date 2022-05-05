@@ -24,7 +24,7 @@ void BandwidthChannel::updateQuota(int const dt_milliseconds)
 {
 	if (limit == 0) return;
 
-	std::int64_t const toAdd = (std::int64_t(limit) * dt_milliseconds + 500) / 1000;
+	const std::int64_t toAdd = (std::int64_t(limit) * dt_milliseconds + 500) / 1000;
 
 	if (toAdd > inf - quotaLeft)
 	{
@@ -230,8 +230,7 @@ void BandwidthManager::updateQuotas(uint32_t dt)
 		{
 			r->ttl -= dt;
 			int a = r->assignBandwidth();
-			if (r->assigned == r->requestSize
-				|| (r->ttl <= 0 && r->assigned > 0))
+			if (r->assigned == r->requestSize || (r->ttl <= 0 && r->assigned > 0))
 			{
 				a += r->requestSize - r->assigned;
 				queue.push_back(std::move(*r));

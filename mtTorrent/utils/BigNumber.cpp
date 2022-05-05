@@ -14,11 +14,6 @@ BigNumber::BigNumber(const uint32_t value, const size_t size)
 	Set(value);
 }
 
-BigNumber::BigNumber(const BigNumber& other)
-{
-	m_data = other.m_data;
-}
-
 void BigNumber::Export(uint8_t* out, size_t size)
 {
 	int i = ((int)std::min(GetByteSize(), size)) - 1;

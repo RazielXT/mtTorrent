@@ -57,7 +57,7 @@ namespace mtt
 				memcpy(buffer, items, size * sizeof(T));
 		}
 
-		void assign(const T value, size_t count)
+		void assign(const T& value, size_t count)
 		{
 			resize(count);
 
@@ -116,7 +116,7 @@ namespace mtt
 
 		struct iterator {
 		public:
-			iterator(const T* ptr) : ptr(ptr) {}
+			iterator(const T* p) : ptr(p) {}
 			iterator operator++() { ptr++; return *this; }
 			bool operator!=(const iterator& other) const { return ptr != other.ptr; }
 			const T& operator*() const { return *ptr; }

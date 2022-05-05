@@ -14,7 +14,6 @@ public:
 	BigNumber() = default;
 	BigNumber(const uint8_t* src, const size_t size);
 	BigNumber(const uint32_t value, const size_t size);
-	BigNumber(const BigNumber& other);
 
 	void Set(const uint8_t* data, size_t size);
 	void Export(uint8_t* out, size_t size);

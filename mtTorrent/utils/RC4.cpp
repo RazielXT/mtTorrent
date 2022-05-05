@@ -70,7 +70,6 @@ void RC4::skip(size_t sz)
 		x = (x + 1) & 255;
 		y = (y + s[x]) & 255;
 		tmp = s[x]; s[x] = s[y]; s[y] = tmp;
-		tmp = (s[x] + s[y]) & 255;
 	}
 	xs = x;
 	ys = y;

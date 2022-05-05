@@ -275,7 +275,7 @@ void mtt::PeerCommunication::setChoke(bool enabled)
 	stream->write(mtt::bt::createStateMessage(enabled ? PeerMessage::Choke : PeerMessage::Unchoke));
 }
 
-void mtt::PeerCommunication::requestPieceBlock(PieceBlockInfo& pieceInfo)
+void mtt::PeerCommunication::requestPieceBlock(const PieceBlockInfo& pieceInfo)
 {
 	if (!isEstablished())
 		return;

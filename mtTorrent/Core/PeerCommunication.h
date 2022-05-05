@@ -59,7 +59,7 @@ namespace mtt
 		void setInterested(bool enabled);
 		void setChoke(bool enabled);
 
-		void requestPieceBlock(PieceBlockInfo& pieceInfo);
+		void requestPieceBlock(const PieceBlockInfo& pieceInfo);
 		bool isEstablished() const;
 
 		void sendKeepAlive();

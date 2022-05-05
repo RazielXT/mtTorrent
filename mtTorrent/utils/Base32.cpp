@@ -33,7 +33,7 @@ std::string base32decode(const std::string& s)
 			else if (in == '1')
 				inbuf[j] = 'I' - 'A';
 			else
-				return std::string();
+				return {};
 		}
 
 		// decode inbuf to outbuf
@@ -50,7 +50,7 @@ std::string base32decode(const std::string& s)
 		outbuf[4] = ((inbuf[6] & 0x07) << 5) & 0xff;
 		outbuf[4] |= inbuf[7];
 
-		int input_output_mapping[] = { 5, 1, 1, 2, 2, 3, 4, 4, 5 };
+		const int input_output_mapping[] = { 5, 1, 1, 2, 2, 3, 4, 4, 5 };
 		int num_out = input_output_mapping[pad_start];
 
 		// write output

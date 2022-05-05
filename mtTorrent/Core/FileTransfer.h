@@ -53,7 +53,7 @@ namespace mtt
 
 		void updateMeasures();
 		std::vector<std::pair<PeerCommunication*, std::pair<uint64_t, uint64_t>>> lastSpeedMeasure;
-		uint32_t updateMeasuresCounter = 0;
+		int32_t updateMeasuresCounter = 0;
 
 		void evalCurrentPeers();
 		void disconnectPeers(const std::vector<uint32_t>& positions);

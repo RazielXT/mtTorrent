@@ -163,9 +163,11 @@ namespace mtt
 		mttApi::TorrentPtr torrent;
 	};
 
-	struct MetadataAlert : public TorrentAlert
+	struct MetadataAlert : public AlertMessage
 	{
 		static const mtt::AlertCategory category = mtt::AlertCategory::Metadata;
+
+		mttApi::TorrentPtr torrent;
 	};
 
 	struct ConfigAlert : public AlertMessage
