@@ -39,15 +39,13 @@ void UdpAsyncComm::setBindPort(uint16_t port)
 	{
 		bindPort = port;
 
-		if (listener || onUnhandledReceive)
-			startListening();
+		startListening();
 	}
 }
 
 void UdpAsyncComm::listen(UdpPacketCallback receive)
 {
-	if (!listener)
-		startListening();
+	std::lock_guard<std::mutex> guard(respondingMutex);
 
 	onUnhandledReceive = receive;
 }
@@ -135,9 +133,6 @@ void UdpAsyncComm::removeCallback(UdpRequest target)
 
 void UdpAsyncComm::addPendingResponse(UdpRequest c, UdpResponseCallback response, uint32_t timeout, bool anySource)
 {
-	if (!listener)
-		startListening();
-
 	auto info = std::make_shared<ResponseRetryInfo>();
 	info->client = c;
 	info->defaultTimeout = timeout;
@@ -307,6 +302,8 @@ void UdpAsyncComm::onUdpClose(UdpRequest source)
 
 void UdpAsyncComm::startListening()
 {
+	std::lock_guard<std::mutex> guard(respondingMutex);
+
 	if (listener)
 		listener->stop();
 

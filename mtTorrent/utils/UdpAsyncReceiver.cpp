@@ -33,7 +33,7 @@ void UdpAsyncReceiver::handle_receive(const std::error_code& error)
 	if (!error)
 		readSocket();
 
-	listen();
+	socket_.async_receive(asio::null_buffers(), std::bind(&UdpAsyncReceiver::handle_receive, shared_from_this(), std::placeholders::_1));
 }
 
 void UdpAsyncReceiver::readSocket()

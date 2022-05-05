@@ -15,9 +15,6 @@ mtt::dht::Communication::Communication() : responder(*this)
 	
 	responder.table = table = std::make_shared<Table>();
 
-	if (mtt::config::getExternal().dht.enabled)
-		start();
-
 	config::registerOnChangeCallback(config::ValueType::Dht, [this]()
 		{
 			if (mtt::config::getExternal().dht.enabled)

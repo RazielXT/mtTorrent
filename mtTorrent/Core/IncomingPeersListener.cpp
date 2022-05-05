@@ -56,8 +56,6 @@ mtt::IncomingPeersListener::IncomingPeersListener(std::function<size_t(std::shar
 			if (usedPorts.tcp != settings.tcpPort)
 				createTcpListener();
 
-			UdpAsyncComm::Get()->setBindPort(settings.udpPort);
-
 			usedPorts.tcp = settings.tcpPort;
 			usedPorts.udp = settings.udpPort;
 			upnpEnabled = settings.upnpPortMapping;
@@ -133,8 +131,6 @@ void mtt::IncomingPeersListener::createTcpListener()
 void mtt::IncomingPeersListener::createUtpListener()
 {
 	auto& utp = utp::Manager::get();
-
-	UdpAsyncComm::Get()->setBindPort(mtt::config::getExternal().connection.udpPort);
 
 	utp.onConnection = [this](utp::StreamPtr s)
 	{
