@@ -420,6 +420,9 @@ void mtt::Peers::DhtSource::start()
 {
 	std::lock_guard<std::mutex> guard(timerMtx);
 
+	if (dhtRefreshTimer)
+		return;
+
 	auto refreshFunc = [this]
 	{
 		std::lock_guard<std::mutex> guard(timerMtx);

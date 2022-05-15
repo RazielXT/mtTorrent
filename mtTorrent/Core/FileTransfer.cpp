@@ -33,6 +33,9 @@ mtt::FileTransfer::FileTransfer(TorrentPtr t) : downloader(t->infoFile.info, *th
 
 void mtt::FileTransfer::start()
 {
+	if (refreshTimer)
+		return;
+
 	piecesAvailability.resize(torrent->infoFile.info.pieces.size());
 	refreshSelection();
 
