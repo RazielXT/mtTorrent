@@ -103,6 +103,11 @@ uint64_t mttApi::Torrent::uploaded() const
 	return static_cast<const mtt::Torrent*>(this)->uploaded();
 }
 
+uint64_t mttApi::Torrent::receivedBytes() const
+{
+	return static_cast<const mtt::Torrent*>(this)->receivedBytes();
+}
+
 bool mttApi::Torrent::finished() const
 {
 	return static_cast<const mtt::Torrent*>(this)->finished();

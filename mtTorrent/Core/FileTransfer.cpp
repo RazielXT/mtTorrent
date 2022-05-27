@@ -170,6 +170,11 @@ void mtt::FileTransfer::progressUpdated(PeerCommunication* p, uint32_t idx)
 	}
 }
 
+uint64_t& mtt::FileTransfer::getDownloadSum()
+{
+	return downloader.downloaded;
+}
+
 uint64_t& mtt::FileTransfer::getUploadSum()
 {
 	return uploader->uploaded;

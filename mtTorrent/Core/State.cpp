@@ -26,6 +26,7 @@ void mtt::TorrentState::save(const std::string& name)
 	writer.startMap("info");
 	writer.addRawItem("4:name", info.name);
 	writer.addRawItem("9:pieceSize", info.pieceSize);
+	writer.addRawItem("8:fullSize", info.fullSize);
 	writer.endMap();
 
 	writer.addRawItem("12:downloadPath", downloadPath);
@@ -34,6 +35,8 @@ void mtt::TorrentState::save(const std::string& name)
 	writer.addRawItem("9:addedTime", addedTime);
 	writer.addRawItem("7:started", started);
 	writer.addRawItem("8:uploaded", uploaded);
+	writer.addRawItem("10:downloaded", downloaded);
+	writer.addRawItem("7:version", version);
 
 	writer.startRawArrayItem("10:unfinished");
 	for (auto& p : unfinishedPieces)
@@ -83,6 +86,7 @@ bool mtt::TorrentState::load(const std::string& name)
 		{
 			info.name = pInfo->getTxt("name");
 			info.pieceSize = (uint32_t)pInfo->getInt("pieceSize");
+			info.fullSize = (uint32_t)pInfo->getBigInt("fullSize");
 		}
 
 		downloadPath = root->getTxt("downloadPath");
@@ -90,6 +94,8 @@ bool mtt::TorrentState::load(const std::string& name)
 		addedTime = (int64_t)root->getBigInt("addedTime");
 		started = root->getInt("started");
 		uploaded = root->getBigInt("uploaded");
+		downloaded = root->getBigInt("downloaded");
+		version = root->getInt("version");
 
 		if (auto pItem = root->getTxtItem("pieces"))
 		{

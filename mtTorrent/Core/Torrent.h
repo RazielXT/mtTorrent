@@ -49,6 +49,7 @@ namespace mtt
 		size_t downloadSpeed() const;
 		uint64_t uploaded() const;
 		size_t uploadSpeed() const;
+		uint64_t receivedBytes() const;
 		uint64_t dataLeft() const;
 		bool finished() const;
 		bool selectionFinished() const;

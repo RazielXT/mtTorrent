@@ -101,6 +101,7 @@ extern "C"
 			resp->checking = resp->checkingProgress < 1;
 			resp->foundPeers = torrent->getPeers()->receivedCount();
 			resp->downloaded = torrent->downloaded();
+			resp->receivedBytes = torrent->receivedBytes();
 			resp->uploaded = torrent->uploaded();
 			resp->downloadSpeed = torrent->getFileTransfer() ? torrent->getFileTransfer()->getDownloadSpeed() : 0;
 			resp->uploadSpeed = torrent->getFileTransfer() ? torrent->getFileTransfer()->getUploadSpeed() : 0;

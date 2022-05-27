@@ -20,6 +20,7 @@ namespace mtt
 
 		void refreshSelection();
 
+		uint64_t& getDownloadSum();
 		uint32_t getDownloadSpeed() const;
 		uint64_t& getUploadSum();
 		uint32_t getUploadSpeed() const;

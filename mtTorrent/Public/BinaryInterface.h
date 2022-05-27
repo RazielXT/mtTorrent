@@ -159,6 +159,7 @@ namespace mtBI
 		float selectionProgress;
 		uint64_t downloaded;
 		uint32_t downloadSpeed;
+		uint64_t receivedBytes;
 		uint64_t uploaded;
 		uint32_t uploadSpeed;
 		uint32_t foundPeers;

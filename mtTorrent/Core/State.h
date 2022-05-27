@@ -14,6 +14,7 @@ namespace mtt
 		{
 			std::string name;
 			uint32_t pieceSize = 0;
+			uint64_t fullSize = 0;
 		}
 		info;
 
@@ -28,7 +29,10 @@ namespace mtt
 
 		std::vector<DownloadedPiece> unfinishedPieces;
 
+		uint64_t downloaded = 0;
 		uint64_t uploaded = 0;
+
+		uint32_t version = 1;
 
 		void save(const std::string& name);
 		bool load(const std::string& name);

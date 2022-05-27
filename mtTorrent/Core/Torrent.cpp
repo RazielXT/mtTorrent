@@ -60,6 +60,7 @@ mtt::TorrentPtr mtt::Torrent::fromSavedState(std::string name)
 
 	torrent->infoFile.info.name = state.info.name;
 	torrent->infoFile.info.pieceSize = state.info.pieceSize;
+	torrent->infoFile.info.fullSize = state.info.fullSize;
 	decodeHexa(name, torrent->infoFile.info.hash);
 
 	if (state.info.name.empty())
@@ -80,8 +81,21 @@ mtt::TorrentPtr mtt::Torrent::fromSavedState(std::string name)
 	torrent->peers = std::make_shared<Peers>(torrent);
 	torrent->fileTransfer = std::make_shared<FileTransfer>(torrent);
 
+	torrent->fileTransfer->getDownloadSum() = state.downloaded;
 	torrent->fileTransfer->getUploadSum() = state.uploaded;
 	torrent->fileTransfer->addUnfinishedPieces(state.unfinishedPieces);
+
+	if (state.version == 0)
+	{
+		torrent->loadFileInfo();
+		if (torrent->fileTransfer->getDownloadSum() == 0)
+		{
+			torrent->fileTransfer->getDownloadSum() = torrent->downloaded();
+
+			if (torrent->fileTransfer->getDownloadSum())
+				torrent->stateChanged = true;
+		}
+	}
 
 	if (state.started)
 		torrent->start();
@@ -122,11 +136,13 @@ void mtt::Torrent::save()
 	TorrentState saveState(files.progress.pieces);
 	saveState.info.name = name();
 	saveState.info.pieceSize = infoFile.info.pieceSize;
+	saveState.info.fullSize = infoFile.info.fullSize;
 	saveState.downloadPath = files.storage.getPath();
 	saveState.lastStateTime = lastFileTime = files.storage.getLastModifiedTime();
 	saveState.addedTime = addedTime;
 	saveState.started = state == ActiveState::Started;
 	saveState.uploaded = fileTransfer->getUploadSum();
+	saveState.downloaded = fileTransfer->getDownloadSum();
 
 	if (fileTransfer)
 		saveState.unfinishedPieces = std::move(fileTransfer->getUnfinishedPiecesState());
@@ -640,7 +656,7 @@ float mtt::Torrent::selectionProgress() const
 
 uint64_t mtt::Torrent::downloaded() const
 {
-	return (uint64_t)(infoFile.info.fullSize * (double)files.progress.getPercentage()) + (fileTransfer ? fileTransfer->getUnfinishedPiecesDownloadSize() : 0);
+	return files.progress.getReceivedBytes(infoFile.info.pieceSize, infoFile.info.fullSize) + (fileTransfer ? fileTransfer->getUnfinishedPiecesDownloadSize() : 0);
 }
 
 size_t mtt::Torrent::downloadSpeed() const
@@ -656,6 +672,11 @@ uint64_t mtt::Torrent::uploaded() const
 size_t mtt::Torrent::uploadSpeed() const
 {
 	return fileTransfer ? fileTransfer->getUploadSpeed() : 0;
+}
+
+uint64_t mtt::Torrent::receivedBytes() const
+{
+	return fileTransfer ? fileTransfer->getDownloadSum() : 0;
 }
 
 uint64_t mtt::Torrent::dataLeft() const

@@ -23,6 +23,7 @@ namespace mtt
 		bool empty() const;
 		float getPercentage() const;
 		float getSelectedPercentage() const;
+		uint64_t getReceivedBytes(uint32_t pieceSize, uint64_t fullSize) const;
 
 		void addPiece(uint32_t index);
 		bool hasPiece(uint32_t index) const;

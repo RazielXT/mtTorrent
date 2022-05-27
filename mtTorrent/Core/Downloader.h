@@ -83,6 +83,8 @@ namespace mtt
 
 		void refreshSelection(const DownloadSelection& selectedPieces);
 
+		uint64_t downloaded = 0;
+
 	private:
 
 		void unchokePeer(ActivePeer*);

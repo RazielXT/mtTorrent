@@ -124,6 +124,10 @@ namespace mttApi
 		*/
 		API_EXPORT uint64_t uploaded() const;
 		/*
+			downloaded size in bytes including duplicate/invalid data
+		*/
+		API_EXPORT uint64_t receivedBytes() const;
+		/*
 			finished state of whole torrent
 		*/
 		API_EXPORT bool finished() const;
