@@ -134,6 +134,11 @@ void TorrentsView::loadState(System::Xml::XmlNode^ e)
 	}
 }
 
+System::String^ formatTime(uint64_t time)
+{
+	return System::DateTimeOffset::FromUnixTimeSeconds(time).ToLocalTime().ToString("dd-MMM-yy H:mm");
+}
+
 void TorrentsView::refreshTorrentInfo(uint8_t* hash)
 {
 	if (!core.IoctlFunc)
@@ -177,7 +182,7 @@ void TorrentsView::refreshTorrentInfo(uint8_t* hash)
 	System::String^ creationStr = "";
 	if (info.creationDate != 0)
 	{
-		creationStr = System::DateTimeOffset::FromUnixTimeSeconds(info.creationDate).ToString("dd-MMM-yy H:mm");
+		creationStr = formatTime(info.creationDate);
 		creationStr += " ";
 	}
 
@@ -199,7 +204,19 @@ void TorrentsView::refreshTorrentInfo(uint8_t* hash)
 	{
 		infoLines->AppendText(System::Environment::NewLine);
 		infoLines->AppendText("Added: \t");
-		infoLines->AppendText(System::DateTimeOffset::FromUnixTimeSeconds(info.timeAdded).ToString("dd-MMM-yy H:mm"));
+		infoLines->AppendText(formatTime(info.timeAdded));
+	}
+
+	mtBI::TorrentStateInfo stateInfo;
+	if (core.IoctlFunc(mtBI::MessageId::GetTorrentStateInfo, hash, &stateInfo) == mtt::Status::Success)
+	{
+		infoLines->AppendText(System::Environment::NewLine);
+		infoLines->AppendText(System::Environment::NewLine);
+		infoLines->AppendText("Downloaded: \t");
+		infoLines->AppendText(formatBytes(stateInfo.downloaded));
+		infoLines->AppendText(" (");
+		infoLines->AppendText(formatBytes(stateInfo.receivedBytes));
+		infoLines->AppendText(")");
 	}
 
 	speedChart.resetChart();
@@ -397,7 +414,7 @@ void TorrentsView::refreshTorrentsGrid()
 					(t.active || info.connectedPeers) ? info.connectedPeers.ToString() : "",
 					(t.active || info.foundPeers) ? info.foundPeers.ToString() : "",
 					formatBytes(info.downloaded), formatBytes(info.uploaded),
-					System::DateTimeOffset::FromUnixTimeSeconds(info.timeAdded).ToString("dd-MMM-yy H:mm"), info.timeAdded.ToString()
+					formatTime(info.timeAdded), info.timeAdded.ToString()
 			};
 
 			torrentGrid->Rows[rowId]->SetValues(row);
