@@ -65,7 +65,7 @@ namespace mtt
 
 			std::lock_guard<std::mutex> guard(cbMutex);
 
-			for (auto cb : callbacks)
+			for (const auto& cb : callbacks)
 			{
 				if(cb.second.first == type)
 					cb.second.second();
@@ -92,6 +92,7 @@ namespace mtt
 			changed |= val.enableTcpOut != external.connection.enableTcpOut;
 			changed |= val.enableUtpIn != external.connection.enableUtpIn;
 			changed |= val.enableUtpOut != external.connection.enableUtpOut;
+			changed |= val.encryption != external.connection.encryption;
 
 			if (changed)
 			{
@@ -208,7 +209,7 @@ namespace mtt
 								auto str = host.getTxt();
 								size_t portStart = str.find_last_of(':');
 								if (portStart != std::string::npos)
-									internal_.dht.defaultRootHosts.push_back({ str.substr(0, portStart) , str.substr(portStart + 1) });
+									internal_.dht.defaultRootHosts.emplace_back(str.substr(0, portStart) , str.substr(portStart + 1));
 							}
 						}
 					}
@@ -322,7 +323,7 @@ namespace mtt
 			programFolderPath = std::string(".") + pathSeparator + "data" + pathSeparator;
 			stateFolder = programFolderPath + "state";
 
-			srand((int)::time(NULL));
+			srand((int)::time(0));
 			
 			memcpy(hashId, MT_HASH_NAME, std::size(MT_HASH_NAME));
 
@@ -331,9 +332,9 @@ namespace mtt
 
 			for (size_t i = std::size(MT_HASH_NAME) - 1; i < 20; i++)
 			{
-				hashId[i] = (uint8_t)printable[rand() % strlen(printable)];
+				hashId[i] = (uint8_t)printable[Random::Number() % std::size(printable)];
 			}
-			trackerKey = (uint32_t)rand();
+			trackerKey = Random::Number();
 
 			dht.defaultRootHosts = { { "dht.transmissionbt.com", "6881" },{ "router.bittorrent.com" , "6881" } };
 		}

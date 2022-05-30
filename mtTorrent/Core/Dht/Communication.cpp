@@ -59,8 +59,8 @@ void mtt::dht::Communication::stop()
 	{
 		std::lock_guard<std::mutex> guard(peersQueriesMutex);
 
-		for (auto it = peersQueries.begin(); it != peersQueries.end(); it++)
-			it->q->stop();
+		for (auto& peersQuery : peersQueries)
+			peersQuery.q->stop();
 
 		peersQueries.clear();
 	}
@@ -100,8 +100,8 @@ void mtt::dht::Communication::findPeers(const uint8_t* hash, ResultsListener* li
 	{
 		std::lock_guard<std::mutex> guard(peersQueriesMutex);
 
-		for (auto it = peersQueries.begin(); it != peersQueries.end(); it++)
-			if (it->q == hash)
+		for (auto& peersQuery : peersQueries)
+			if (peersQuery.q == hash)
 				return;
 	}
 

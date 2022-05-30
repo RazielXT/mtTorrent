@@ -337,7 +337,7 @@ void mtt::FileTransfer::storePieceBlock(const PieceBlock& block)
  	auto buffer = getDataBuffer();
 	buffer->assign(block.buffer.data, block.buffer.data + block.buffer.size);
  
- 	unsavedPieceBlocks.push_back({ block.info, buffer });
+	unsavedPieceBlocks.emplace_back(block.info, buffer);
 
 	if (unsavedPieceBlocks.size() >= unsavedPieceBlocksMaxSize)
 	{

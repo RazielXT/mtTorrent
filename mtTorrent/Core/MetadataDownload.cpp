@@ -36,7 +36,7 @@ void mtt::MetadataDownload::start(std::function<void(Status, MetadataDownloadSta
 			if (state.active && !state.finished && lastActivityTime + 5 < currentTime)
 			{
 				std::lock_guard<std::mutex> guard(commsMutex);
-				for (auto a : activeComms)
+				for (const auto& a : activeComms)
 				{
 					requestPiece(a);
 				}

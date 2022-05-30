@@ -20,6 +20,16 @@ float mtt::PiecesProgress::getSelectedPercentage() const
 	return selectedPieces == 0 ? 0 : (selectedReceivedPiecesCount / (float)selectedPieces);
 }
 
+bool mtt::PiecesProgress::finished() const
+{
+	return receivedPiecesCount == pieces.size();
+}
+
+bool mtt::PiecesProgress::selectedFinished() const
+{
+	return selectedReceivedPiecesCount == selectedPieces;
+}
+
 uint64_t mtt::PiecesProgress::getReceivedBytes(uint32_t pieceSize, uint64_t fullSize) const
 {
 	if (pieces.empty())
@@ -168,7 +178,7 @@ void mtt::PiecesProgress::addPiece(uint32_t index)
 
 bool mtt::PiecesProgress::hasPiece(uint32_t index) const
 {
-	return pieces[index] & HasFlag;
+	return finished() || pieces[index] & HasFlag;
 }
 
 void mtt::PiecesProgress::removePiece(uint32_t index)

@@ -147,7 +147,7 @@ void mtt::Downloader::pieceBlockReceived(PieceBlock& block, PeerCommunication* s
 
 	downloaded += block.buffer.size;
 
-	PieceStatus status = finished ? (valid ? PieceStatus::Finished : PieceStatus::Invalid) : PieceStatus::Ok;
+	PieceStatus status = finished ? PieceStatus::Finished : PieceStatus::Ok;
 
 	auto peers = client.getPeers();
 	refreshPeerBlockRequests(peers.get(), block, status, source);

@@ -577,12 +577,12 @@ void mtt::Torrent::setFilesPriority(const std::vector<mtt::Priority>& priority)
 
 bool mtt::Torrent::finished() const
 {
-	return files.progress.getPercentage() == 1;
+	return files.progress.finished();
 }
 
 bool mtt::Torrent::selectionFinished() const
 {
-	return files.progress.getSelectedPercentage() == 1;
+	return files.progress.selectedFinished();
 }
 
 uint64_t mtt::Torrent::getTimeAdded() const

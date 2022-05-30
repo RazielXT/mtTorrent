@@ -120,7 +120,7 @@ LogWriter& LogWriter::operator<<(uint64_t i) { return *this << (uint32_t)i; };
 LogWriter::LogWriter(LogType t) : type(t)
 {
 	//NoParamsLineId 0
-	lineParams.push_back({});
+	lineParams.emplace_back();
 }
 
 LogWriter::~LogWriter()

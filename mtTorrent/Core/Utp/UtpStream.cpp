@@ -80,10 +80,10 @@ mtt::utp::Stream::~Stream()
 void mtt::utp::Stream::init(const udp::endpoint& e, uint16_t bindPort)
 {
 	state.step = StateType::SYN_SEND;
-	state.id_recv = (uint16_t)rand();
+	state.id_recv = (uint16_t)Random::Number();
 	state.id_send = state.id_recv + 1;
 
-	//state.sequence = (uint16_t)rand();
+	state.sequence = (uint16_t)Random::Number();
 
 	writer->setAddress(e);
 	writer->setBindPort(bindPort);
@@ -102,7 +102,7 @@ void mtt::utp::Stream::connect(const udp::endpoint& e, uint16_t bindPort, const 
 	state.id_send = header.connection_id;
 	state.id_recv = state.id_send + 1;
 	
-	state.sequence = (uint16_t)rand();
+	state.sequence = (uint16_t)Random::Number();
 	state.ack = header.seq_nr;
 
 	writer->setAddress(e);
@@ -287,7 +287,8 @@ void mtt::utp::Stream::close()
 	if (state.step == StateType::CLOSED)
 		return;
 
-	io_service.post([this]() 
+	auto self = shared_from_this();
+	io_service.post([this, self]()
 		{
 			std::lock_guard<std::mutex> guard(callbackMutex);
 

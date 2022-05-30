@@ -138,16 +138,22 @@ void TcpAsyncStream::connectByAddress()
 
 void TcpAsyncStream::setAsConnected()
 {
+	std::error_code ec;
+	auto endpoint = socket.remote_endpoint();
+	if (ec)
+	{
+		postFail("remote_endpoint", ec);
+		return;
+	}
+
 	state = Connected;
 
-	auto endpoint = socket.remote_endpoint();
 	info.address.set(endpoint.address(), endpoint.port());
 	info.addressResolved = true;
 	info.host = endpoint.address().to_string();
 
 	TCP_LOG("connected");
 
-	std::error_code ec;
 	socket.non_blocking(true, ec);
 	if (ec)
 	{

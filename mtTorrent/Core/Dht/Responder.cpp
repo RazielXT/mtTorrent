@@ -8,7 +8,7 @@
 
 mtt::dht::Responder::Responder(DataListener& l) : listener(l)
 {
-	tokenSecret[0] = tokenSecret[1] = (int)rand();
+	tokenSecret[0] = tokenSecret[1] = Random::Number();
 }
 
 bool mtt::dht::Responder::handlePacket(const udp::endpoint& endpoint, DataBuffer& data)
@@ -274,6 +274,6 @@ void mtt::dht::Responder::refresh()
 		std::lock_guard<std::mutex> guard(tokenMutex);
 
 		tokenSecret[1] = tokenSecret[0];
-		tokenSecret[0] = (int)rand();
+		tokenSecret[0] = Random::Number();
 	}
 }

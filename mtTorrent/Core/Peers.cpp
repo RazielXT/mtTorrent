@@ -44,7 +44,7 @@ void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listen
 	dht.start();
 
 	std::lock_guard<std::mutex> guard(peersMutex);
-	for (auto c : activeConnections)
+	for (const auto& c : activeConnections)
 	{
 		if (c.comm->isEstablished())
 		{
@@ -221,10 +221,10 @@ std::vector<mtt::TrackerInfo> mtt::Peers::getSourcesInfo()
 	auto tr = trackers.getTrackers();
 	out.reserve(tr.size() + 2);
 
-	for (size_t i = 0; i < tr.size(); i++)
+	for (auto& t : tr)
 	{
-		out.push_back(tr[i].second ? tr[i].second->info : mtt::TrackerInfo{});
-		out.back().hostname = tr[i].first;
+		out.push_back(t.second ? t.second->info : mtt::TrackerInfo{});
+		out.back().hostname = t.first;
 	}
 
 	out.push_back(pexInfo);
@@ -315,9 +315,9 @@ uint32_t mtt::Peers::updateKnownPeers(const std::vector<Addr>& peers, PeerSource
 			addedPeersPtr = &knownPeers[knownPeers.size() - accepted.size()];
 		}
 
-		for (uint32_t i = 0; i < accepted.size(); i++)
+		for (uint32_t i : accepted)
 		{
-			addedPeersPtr->address = peers[accepted[i]];
+			addedPeersPtr->address = peers[i];
 			PEERS_LOG("New peer " << addedPeersPtr->address.toString() << " source " << (int)source);
 			addedPeersPtr->source = source;
 			addedPeersPtr++;
@@ -358,7 +358,7 @@ void mtt::Peers::connect(uint32_t idx)
 	if (knownPeer.lastQuality == PeerQuality::Unknown)
 		knownPeer.lastQuality = PeerQuality::Connecting;
 
-	knownPeer.lastConnectionTime = (uint32_t)::time(0);;
+	knownPeer.lastConnectionTime = (uint32_t)::time(0);
 	knownPeer.connectionAttempts++;
 
 	PEERS_LOG("connect " << knownPeer.address.toString());

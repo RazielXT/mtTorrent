@@ -1,13 +1,8 @@
-#include <iostream>
-#include <istream>
-#include <ostream>
-#include <string>
-
 #ifdef _WIN32
 #include <windows.h>
 
-int __stdcall Main(HINSTANCE h, ULONG ulReason, PVOID pvReserved) {
-
+int __stdcall Main(HINSTANCE h, ULONG ulReason, PVOID pvReserved)
+{
 	switch (ulReason)
 	{
 	case DLL_PROCESS_ATTACH:

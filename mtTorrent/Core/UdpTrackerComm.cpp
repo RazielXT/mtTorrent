@@ -34,7 +34,7 @@ void mtt::UdpTrackerComm::deinit()
 
 DataBuffer UdpTrackerComm::createConnectRequest()
 {
-	auto transaction = (uint32_t)rand();
+	auto transaction = Random::Number();
 	uint64_t connectId = 0x41727101980;
 
 	lastMessage = { Connnect, transaction };
@@ -109,7 +109,7 @@ bool mtt::UdpTrackerComm::onConnectUdpResponse(UdpRequest comm, DataBuffer* data
 */
 DataBuffer UdpTrackerComm::createAnnounceRequest()
 {
-	auto transaction = (uint32_t)rand();
+	auto transaction = Random::Number();
 
 	lastMessage = { Announce, transaction };
 

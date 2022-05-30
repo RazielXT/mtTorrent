@@ -42,13 +42,13 @@ namespace mtt
 		{
 		public:
 			PeersListener(Peers*);
-			virtual void handshakeFinished(mtt::PeerCommunication*) override;
-			virtual void connectionClosed(mtt::PeerCommunication*, int) override;
-			virtual void messageReceived(mtt::PeerCommunication*, mtt::PeerMessage&) override;
-			virtual void extHandshakeFinished(mtt::PeerCommunication*) override;
-			virtual void metadataPieceReceived(mtt::PeerCommunication*, mtt::ext::UtMetadata::Message&) override;
-			virtual void pexReceived(mtt::PeerCommunication*, mtt::ext::PeerExchange::Message&) override;
-			virtual void progressUpdated(mtt::PeerCommunication*, uint32_t) override;
+			void handshakeFinished(mtt::PeerCommunication*) override;
+			void connectionClosed(mtt::PeerCommunication*, int) override;
+			void messageReceived(mtt::PeerCommunication*, mtt::PeerMessage&) override;
+			void extHandshakeFinished(mtt::PeerCommunication*) override;
+			void metadataPieceReceived(mtt::PeerCommunication*, mtt::ext::UtMetadata::Message&) override;
+			void pexReceived(mtt::PeerCommunication*, mtt::ext::PeerExchange::Message&) override;
+			void progressUpdated(mtt::PeerCommunication*, uint32_t) override;
 			void setTarget(mtt::IPeerListener*);
 			void setParent(Peers*);
 
@@ -106,8 +106,8 @@ namespace mtt
 			TrackerInfo info;
 
 		private:
-			virtual uint32_t dhtFoundPeers(const uint8_t* hash, const std::vector<Addr>& values) override;
-			virtual void dhtFindingPeersFinished(const uint8_t* hash, uint32_t count) override;
+			uint32_t dhtFoundPeers(const uint8_t* hash, const std::vector<Addr>& values) override;
+			void dhtFindingPeersFinished(const uint8_t* hash, uint32_t count) override;
 
 			std::shared_ptr<ScheduledTimer> dhtRefreshTimer;
 			std::mutex timerMtx;
