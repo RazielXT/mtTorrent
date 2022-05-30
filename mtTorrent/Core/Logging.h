@@ -26,6 +26,7 @@ enum class LogType
 	Bandwidth = FIRST << 16,
 	PeersListener = FIRST << 17,
 	TcpStream = FIRST << 18,
+	PeerStream = FIRST << 19,
 
 	Test = FIRST << 30
 };

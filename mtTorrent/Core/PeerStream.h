@@ -48,6 +48,7 @@ namespace mtt
 		void openUtpStream(const Addr& address);
 
 		void reconnectStream();
+		void closeStream();
 
 		void startProtocolEncryption(const DataBuffer&);
 
@@ -84,5 +85,7 @@ namespace mtt
 		state;
 
 		const uint8_t* infoHash;
+
+		FileLog log;
 	};
 }
