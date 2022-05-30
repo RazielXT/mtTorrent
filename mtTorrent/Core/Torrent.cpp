@@ -29,8 +29,8 @@ mtt::TorrentPtr mtt::Torrent::fromFile(mtt::TorrentFileInfo fileInfo)
 	torrent->loadedState = LoadedState::Full;
 	torrent->initialize();
 
-	torrent->peers = std::make_shared<Peers>(torrent);
-	torrent->fileTransfer = std::make_shared<FileTransfer>(torrent);
+	torrent->peers = std::make_unique<Peers>(*torrent);
+	torrent->fileTransfer = std::make_unique<FileTransfer>(*torrent);
 	torrent->addedTime = (uint64_t)time(0);
 
 	return torrent;
@@ -43,8 +43,8 @@ mtt::TorrentPtr mtt::Torrent::fromMagnetLink(std::string link)
 	if (torrent->infoFile.parseMagnetLink(link) != Status::Success)
 		return nullptr;
 
-	torrent->peers = std::make_shared<Peers>(torrent);
-	torrent->fileTransfer = std::make_shared<FileTransfer>(torrent);
+	torrent->peers = std::make_unique<Peers>(*torrent);
+	torrent->fileTransfer = std::make_unique<FileTransfer>(*torrent);
 	torrent->addedTime = (uint64_t)time(0);
 
 	return torrent;
@@ -78,8 +78,8 @@ mtt::TorrentPtr mtt::Torrent::fromSavedState(std::string name)
 	if (torrent->addedTime == 0)
 		torrent->addedTime = (int64_t)time(0);
 
-	torrent->peers = std::make_shared<Peers>(torrent);
-	torrent->fileTransfer = std::make_shared<FileTransfer>(torrent);
+	torrent->peers = std::make_unique<Peers>(*torrent);
+	torrent->fileTransfer = std::make_unique<FileTransfer>(*torrent);
 
 	torrent->fileTransfer->getDownloadSum() = state.downloaded;
 	torrent->fileTransfer->getUploadSum() = state.uploaded;
@@ -143,9 +143,7 @@ void mtt::Torrent::save()
 	saveState.started = state == ActiveState::Started;
 	saveState.uploaded = fileTransfer->getUploadSum();
 	saveState.downloaded = fileTransfer->getDownloadSum();
-
-	if (fileTransfer)
-		saveState.unfinishedPieces = std::move(fileTransfer->getUnfinishedPiecesState());
+	saveState.unfinishedPieces = std::move(fileTransfer->getUnfinishedPiecesState());
 
 	for (auto& f : files.selection)
 		saveState.selection.push_back({ f.selected, f.priority });
@@ -262,7 +260,7 @@ void mtt::Torrent::downloadMetadata()
 	service.start(4);
 
 	if(!utmDl)
-		utmDl = std::make_shared<MetadataDownload>(*peers, service);
+		utmDl = std::make_unique<MetadataDownload>(*peers, service);
 
 	utmDl->start([this](Status s, MetadataDownloadState& state)
 	{
@@ -399,11 +397,7 @@ void mtt::Torrent::stop(StopReason reason)
 	}
 
 	stopping = true;
-
-	if (fileTransfer)
-	{
-		fileTransfer->stop();
-	}
+	fileTransfer->stop();
 
 	if (reason != StopReason::Internal)
 		service.stop();
@@ -531,9 +525,7 @@ bool mtt::Torrent::selectFiles(const std::vector<bool>& s)
 	if (state == ActiveState::Started)
 	{
 		lastError = files.prepareSelection();
-
-		if (fileTransfer)
-			fileTransfer->refreshSelection();
+		fileTransfer->refreshSelection();
 
 		return lastError == Status::Success;
 	}
@@ -551,9 +543,7 @@ bool mtt::Torrent::selectFile(uint32_t index, bool selected)
 	if (state == ActiveState::Started)
 	{
 		lastError = files.prepareSelection();
-
-		if (fileTransfer)
-			fileTransfer->refreshSelection();
+		fileTransfer->refreshSelection();
 
 		return lastError == Status::Success;
 	}
@@ -614,7 +604,7 @@ float mtt::Torrent::progress() const
 {
 	float progress = files.progress.getPercentage();
 
-	if (fileTransfer && infoFile.info.pieceSize)
+	if (infoFile.info.pieceSize)
 	{
 		float unfinishedPieces = fileTransfer->getUnfinishedPiecesDownloadSize() / (float)infoFile.info.pieceSize;
 		progress += unfinishedPieces / files.progress.pieces.size();
@@ -633,7 +623,7 @@ float mtt::Torrent::selectionProgress() const
 
 	float progress = files.progress.getSelectedPercentage();
 
-	if (fileTransfer && infoFile.info.pieceSize)
+	if (infoFile.info.pieceSize)
 	{
 		auto unfinishedPieces = fileTransfer->getUnfinishedPiecesDownloadSizeMap();
 
@@ -656,27 +646,27 @@ float mtt::Torrent::selectionProgress() const
 
 uint64_t mtt::Torrent::downloaded() const
 {
-	return files.progress.getReceivedBytes(infoFile.info.pieceSize, infoFile.info.fullSize) + (fileTransfer ? fileTransfer->getUnfinishedPiecesDownloadSize() : 0);
+	return files.progress.getReceivedBytes(infoFile.info.pieceSize, infoFile.info.fullSize) + fileTransfer->getUnfinishedPiecesDownloadSize();
 }
 
 size_t mtt::Torrent::downloadSpeed() const
 {
-	return fileTransfer ? fileTransfer->getDownloadSpeed() : 0;
+	return fileTransfer->getDownloadSpeed();
 }
 
 uint64_t mtt::Torrent::uploaded() const
 {
-	return fileTransfer ? fileTransfer->getUploadSum() : 0;
+	return fileTransfer->getUploadSum();
 }
 
 size_t mtt::Torrent::uploadSpeed() const
 {
-	return fileTransfer ? fileTransfer->getUploadSpeed() : 0;
+	return fileTransfer->getUploadSpeed();
 }
 
 uint64_t mtt::Torrent::receivedBytes() const
 {
-	return fileTransfer ? fileTransfer->getDownloadSum() : 0;
+	return fileTransfer->getDownloadSum();
 }
 
 uint64_t mtt::Torrent::dataLeft() const

@@ -148,15 +148,16 @@ namespace mttApi
 		/*
 			see Api\Peers.h
 		*/
-		API_EXPORT std::shared_ptr<Peers> getPeers();
+		API_EXPORT Peers& getPeers();
 		/*
 			see Api\FileTransfer.h
 		*/
-		API_EXPORT std::shared_ptr<mttApi::FileTransfer> getFileTransfer();
+		API_EXPORT FileTransfer& getFileTransfer();
 		/*
 			see Api\MagnetDownload.h
+			optional
 		*/
-		API_EXPORT std::shared_ptr<mttApi::MagnetDownload> getMagnetDownload();
+		API_EXPORT const MagnetDownload* getMagnetDownload();
 
 		/*
 			get count of all pieces

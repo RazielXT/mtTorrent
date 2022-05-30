@@ -131,19 +131,19 @@ const mtt::TorrentFileInfo& mttApi::Torrent::getFileInfo()
 	return torrent->infoFile;
 }
 
-std::shared_ptr<mttApi::Peers> mttApi::Torrent::getPeers()
+mttApi::Peers& mttApi::Torrent::getPeers()
 {
-	return static_cast<mtt::Torrent*>(this)->peers;
+	return *static_cast<mtt::Torrent*>(this)->peers;
 }
 
-std::shared_ptr<mttApi::FileTransfer> mttApi::Torrent::getFileTransfer()
+mttApi::FileTransfer& mttApi::Torrent::getFileTransfer()
 {
-	return std::static_pointer_cast<mttApi::FileTransfer>(static_cast<mtt::Torrent*>(this)->fileTransfer);
+	return *static_cast<mtt::Torrent*>(this)->fileTransfer;
 }
 
-std::shared_ptr<mttApi::MagnetDownload> mttApi::Torrent::getMagnetDownload()
+const mttApi::MagnetDownload* mttApi::Torrent::getMagnetDownload()
 {
-	return std::static_pointer_cast<mttApi::MagnetDownload>(static_cast<mtt::Torrent*>(this)->utmDl);
+	return static_cast<mtt::Torrent*>(this)->utmDl.get();
 }
 
 size_t mttApi::Torrent::getPiecesCount() const

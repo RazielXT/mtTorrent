@@ -10,7 +10,7 @@ namespace mtt
 	{
 	public:
 
-		Uploader(TorrentPtr);
+		Uploader(Torrent&);
 
 		void stop();
 
@@ -46,6 +46,6 @@ namespace mtt
 
 		std::map<PeerCommunication*, uint32_t> handledRequests;
 
-		TorrentPtr torrent;
+		Torrent& torrent;
 	};
 }

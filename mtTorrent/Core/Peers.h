@@ -11,7 +11,7 @@ namespace mtt
 	{
 	public:
 
-		Peers(TorrentPtr torrent);
+		Peers(Torrent& torrent);
 
 		using PeersUpdateCallback = std::function<void(Status, PeerSource)>;
 		void start(PeersUpdateCallback onPeersUpdated, IPeerListener* peerListener);
@@ -26,7 +26,7 @@ namespace mtt
 		void refreshSource(const std::string& name);
 
 		TrackerManager trackers;
-		TorrentPtr torrent;
+		Torrent& torrent;
 
 		uint32_t connectedCount() const;
 		uint32_t receivedCount() const;
@@ -96,7 +96,7 @@ namespace mtt
 		{
 		public:
 
-			DhtSource(Peers&, TorrentPtr);
+			DhtSource(Peers&, Torrent&);
 
 			void start();
 			void stop();
@@ -113,7 +113,7 @@ namespace mtt
 			std::mutex timerMtx;
 
 			Peers& peers;
-			TorrentPtr torrent;
+			Torrent& torrent;
 
 			int cfgCallbackId = -1;
 		}

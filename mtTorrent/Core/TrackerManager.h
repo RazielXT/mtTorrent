@@ -11,7 +11,7 @@ namespace mtt
 	{
 	public:
 
-		TrackerManager(TorrentPtr t);
+		TrackerManager(Torrent& t);
 
 		using AnnounceCallback = std::function<void(Status, const AnnounceResponse*, Tracker*)>;
 		void start(AnnounceCallback announceCallback);
@@ -52,7 +52,7 @@ namespace mtt
 		void onAnnounce(AnnounceResponse&, Tracker*);
 		void onTrackerFail(Tracker*);
 
-		TorrentPtr torrent;
+		Torrent& torrent;
 		AnnounceCallback announceCallback;
 	};
 }

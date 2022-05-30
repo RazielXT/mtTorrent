@@ -12,14 +12,14 @@ enum class LogEvent : uint8_t { Connect, RemoteConnect, Remove, ConnectPeers };
 
 #define PEERS_LOG(x) WRITE_LOG(x)
 
-mtt::Peers::Peers(TorrentPtr t) : torrent(t), trackers(t), dht(*this, t)
+mtt::Peers::Peers(Torrent& t) : torrent(t), trackers(t), dht(*this, t)
 {
 	pexInfo.hostname = "PEX";
 	remoteInfo.hostname = "Remote";
-	trackers.addTrackers(t->infoFile.announceList);
+	trackers.addTrackers(torrent.infoFile.announceList);
 	peersListener = std::make_shared<PeersListener>(this);
 
-	CREATE_NAMED_LOG(Peers, torrent->name() + "_peers");
+	CREATE_NAMED_LOG(Peers, torrent.name() + "_peers");
 }
 
 void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listener)
@@ -164,7 +164,7 @@ size_t mtt::Peers::add(std::shared_ptr<PeerStream> stream, const BufferView& dat
 		return 0;
 
 	ActivePeer peer;
-	peer.comm = std::make_shared<PeerCommunication>(torrent->infoFile.info, *peersListener, torrent->service.io);
+	peer.comm = std::make_shared<PeerCommunication>(torrent.infoFile.info, *peersListener, torrent.service.io);
 
 	{
 		std::lock_guard<std::mutex> guard(peersMutex);
@@ -215,7 +215,7 @@ std::shared_ptr<mtt::PeerCommunication> mtt::Peers::disconnect(PeerCommunication
 
 std::vector<mtt::TrackerInfo> mtt::Peers::getSourcesInfo()
 {
-	torrent->loadFileInfo();
+	torrent.loadFileInfo();
 
 	std::vector<mtt::TrackerInfo> out;
 	auto tr = trackers.getTrackers();
@@ -271,14 +271,14 @@ std::vector<std::shared_ptr<mtt::PeerCommunication>> mtt::Peers::getActivePeers(
 void mtt::Peers::reloadTorrentInfo()
 {
 	if (trackers.getTrackersCount() == 0)
-		trackers.addTrackers(torrent->infoFile.announceList);
+		trackers.addTrackers(torrent.infoFile.announceList);
 
 	std::lock_guard<std::mutex> guard(peersMutex);
 
 	for (auto& peer : activeConnections)
 	{
 		if (peer.comm->state.finishedHandshake)
-			peer.comm->info.pieces.resize(torrent->infoFile.info.pieces.size());
+			peer.comm->info.pieces.resize(torrent.infoFile.info.pieces.size());
 	}
 }
 
@@ -364,7 +364,7 @@ void mtt::Peers::connect(uint32_t idx)
 	PEERS_LOG("connect " << knownPeer.address.toString());
 
 	ActivePeer peer;
-	peer.comm = std::make_shared<PeerCommunication>(torrent->infoFile.info, *peersListener, torrent->service.io);
+	peer.comm = std::make_shared<PeerCommunication>(torrent.infoFile.info, *peersListener, torrent.service.io);
 	peer.comm->sendHandshake(knownPeer.address);
 	peer.idx = idx;
 	activeConnections.emplace_back(std::move(peer));
@@ -410,7 +410,7 @@ bool mtt::Peers::KnownPeer::operator==(const Addr& r)
 	return address == r;
 }
 
-mtt::Peers::DhtSource::DhtSource(Peers& p, TorrentPtr t) : peers(p), torrent(t)
+mtt::Peers::DhtSource::DhtSource(Peers& p, Torrent& t) : peers(p), torrent(t)
 {
 	info.hostname = "DHT";
 	info.announceInterval = mtt::config::getInternal().dht.peersCheckInterval;
@@ -432,7 +432,7 @@ void mtt::Peers::DhtSource::start()
 
 		if (info.nextAnnounce <= currentTime)
 		{
-			if (torrent->selectionFinished())
+			if (torrent.selectionFinished())
 				info.nextAnnounce = currentTime + info.announceInterval;
 			else
 				findPeers();
@@ -448,7 +448,7 @@ void mtt::Peers::DhtSource::start()
 
 	cfgCallbackId = mtt::config::registerOnChangeCallback(config::ValueType::Dht, refreshFunc);
 
-	dhtRefreshTimer = ScheduledTimer::create(torrent->service.io, refreshFunc);
+	dhtRefreshTimer = ScheduledTimer::create(torrent.service.io, refreshFunc);
 
 	dhtRefreshTimer->schedule(1);
 }
@@ -462,7 +462,7 @@ void mtt::Peers::DhtSource::stop()
 			dhtRefreshTimer->disable();
 		dhtRefreshTimer = nullptr;
 
-		dht::Communication::get().stopFindingPeers(torrent->hash());
+		dht::Communication::get().stopFindingPeers(torrent.hash());
 	}
 
 	mtt::config::unregisterOnChangeCallback(cfgCallbackId);
@@ -475,7 +475,7 @@ void mtt::Peers::DhtSource::findPeers()
 	if (mtt::config::getExternal().dht.enabled && info.state != TrackerState::Announcing)
 	{
 		info.state = TrackerState::Announcing;
-		dht::Communication::get().findPeers(torrent->hash(), this);
+		dht::Communication::get().findPeers(torrent.hash(), this);
 	}
 }
 

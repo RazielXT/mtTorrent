@@ -16,9 +16,9 @@ bool ipToCountryLoaded = false;
 enum class LogEvalPeer { Ok, TooSoon, NotResponding, Upload, TooSlow };
 // #define DIAGNOSTICS(x) WRITE_DIAGNOSTICS_LOG(x)
 
-mtt::FileTransfer::FileTransfer(TorrentPtr t) : downloader(t->infoFile.info, *this), torrent(t)
+mtt::FileTransfer::FileTransfer(Torrent& t) : downloader(t.infoFile.info, *this), torrent(t)
 {
-	uploader = std::make_shared<Uploader>(t);
+	uploader = std::make_shared<Uploader>(torrent);
 
 	if (!ipToCountryLoaded)
 	{
@@ -28,7 +28,7 @@ mtt::FileTransfer::FileTransfer(TorrentPtr t) : downloader(t->infoFile.info, *th
 
 	unsavedPieceBlocksMaxSize = mtt::config::getInternal().fileStoringBufferSize / BlockRequestMaxSize;
 
-	CREATE_NAMED_LOG(Transfer, t->name());
+	CREATE_NAMED_LOG(Transfer, torrent.name());
 }
 
 void mtt::FileTransfer::start()
@@ -36,10 +36,10 @@ void mtt::FileTransfer::start()
 	if (refreshTimer)
 		return;
 
-	piecesAvailability.resize(torrent->infoFile.info.pieces.size());
+	piecesAvailability.resize(torrent.infoFile.info.pieces.size());
 	refreshSelection();
 
-	torrent->peers->start([this](Status s, mtt::PeerSource)
+	torrent.peers->start([this](Status s, mtt::PeerSource)
 		{
 			if (s == Status::Success)
 			{
@@ -48,7 +48,7 @@ void mtt::FileTransfer::start()
 		}
 	, this);
 
-	refreshTimer = ScheduledTimer::create(torrent->service.io, [this]
+	refreshTimer = ScheduledTimer::create(torrent.service.io, [this]
 		{
 			evalCurrentPeers();
 			updateMeasures();
@@ -71,7 +71,7 @@ void mtt::FileTransfer::stop()
 		freshPieces.clear();
 	}
 
-	torrent->peers->stop();
+	torrent.peers->stop();
 
 	auto unfinishedActive = downloader.stop();
 	unFinishedPieces.insert(unFinishedPieces.end(), unfinishedActive.begin(), unfinishedActive.end());
@@ -91,7 +91,7 @@ void mtt::FileTransfer::addUnfinishedPieces(std::vector<mtt::DownloadedPiece>& p
 
 	for (auto& p : pieces)
 	{
-		if (!torrent->files.progress.hasPiece(p.index))
+		if (!torrent.files.progress.hasPiece(p.index))
 			unFinishedPieces.emplace_back(std::move(p));
 	}
 }
@@ -103,15 +103,15 @@ void mtt::FileTransfer::clearUnfinishedPieces()
 
 void mtt::FileTransfer::refreshSelection()
 {
-	downloader.refreshSelection(torrent->files.selection);
+	downloader.refreshSelection(torrent.files.selection);
 	evaluateMorePeers();
 }
 
 void mtt::FileTransfer::handshakeFinished(PeerCommunication* p)
 {
 	TRANSFER_LOG("handshake " << p->getStream()->getAddressName());
-	if (!torrent->files.progress.empty())
-		p->sendBitfield(torrent->files.progress.toBitfield());
+	if (!torrent.files.progress.empty())
+		p->sendBitfield(torrent.files.progress.toBitfield());
 
 	addPeer(p);
 }
@@ -164,7 +164,7 @@ void mtt::FileTransfer::progressUpdated(PeerCommunication* p, uint32_t idx)
 		}
 	}
 
-	if (!torrent->selectionFinished())
+	if (!torrent.selectionFinished())
 	{
 		downloader.progressUpdated(p, idx);
 	}
@@ -229,7 +229,7 @@ std::map<uint32_t, uint32_t> mtt::FileTransfer::getUnfinishedPiecesDownloadSizeM
 
 std::vector<mtt::ActivePeerInfo> mtt::FileTransfer::getPeersInfo() const
 {
-	auto allPeers = torrent->peers->getActivePeers();
+	auto allPeers = torrent.peers->getActivePeers();
 
 	std::vector<mtt::ActivePeerInfo> out;
 	out.resize(allPeers.size());
@@ -315,19 +315,19 @@ void mtt::FileTransfer::disconnectPeers(const std::vector<uint32_t>& positions)
 	for (auto it = positions.rbegin(); it != positions.rend(); it++)
 	{
 		TRANSFER_LOG("disconnect " << activePeers[*it].comm->getStream()->getAddressName());
-		torrent->peers->disconnect(activePeers[*it].comm);
+		torrent.peers->disconnect(activePeers[*it].comm);
 		activePeers.erase(activePeers.begin() + *it);
 	}
 }
 
 bool mtt::FileTransfer::isFinished()
 {
-	return torrent->checking || torrent->selectionFinished();
+	return torrent.checking || torrent.selectionFinished();
 }
 
 bool mtt::FileTransfer::isWantedPiece(uint32_t idx)
 {
-	return !torrent->checking && torrent->files.progress.wantedPiece(idx);
+	return !torrent.checking && torrent.files.progress.wantedPiece(idx);
 }
 
 void mtt::FileTransfer::storePieceBlock(const PieceBlock& block)
@@ -343,7 +343,7 @@ void mtt::FileTransfer::storePieceBlock(const PieceBlock& block)
 	{
 		auto blocks = std::move(unsavedPieceBlocks);
 
-		torrent->service.io.post([this, blocks]()
+		torrent.service.io.post([this, blocks]()
 			{
 				mtt::Status status;
 				int retry = 0;
@@ -355,8 +355,8 @@ void mtt::FileTransfer::storePieceBlock(const PieceBlock& block)
 
 				if (status != Status::Success)
 				{
-					torrent->lastError = status;
-					torrent->stop(Torrent::StopReason::Internal);
+					torrent.lastError = status;
+					torrent.stop(Torrent::StopReason::Internal);
 				}
 			});
 	}
@@ -388,7 +388,7 @@ mtt::Status mtt::FileTransfer::saveUnsavedPieceBlocks(const std::vector<std::pai
 	for (auto& [info, buffer] : blocks)
 		blockRequests.push_back({ info.index, info.begin, buffer.get() });
 
-	Status status = torrent->files.storage.storePieceBlocks(std::move(blockRequests));
+	Status status = torrent.files.storage.storePieceBlocks(std::move(blockRequests));
 
 	{
 		std::lock_guard<std::mutex> guard(unsavedPieceBlocksMutex);
@@ -440,31 +440,31 @@ mtt::DownloadedPiece mtt::FileTransfer::loadUnfinishedPiece(uint32_t idx)
 
 void mtt::FileTransfer::pieceFinished(const mtt::DownloadedPiece& piece)
 {
-	torrent->files.progress.addPiece(piece.index);
+	torrent.files.progress.addPiece(piece.index);
 
 	{
 		std::lock_guard<std::mutex> guard(peersMutex);
 		freshPieces.push_back(piece.index);
 	}
 
-	if (torrent->selectionFinished())
+	if (torrent.selectionFinished())
 	{
 		finishUnsavedPieceBlocks();
 
-		torrent->checkFiles();
+		torrent.checkFiles();
 
-		AlertsManager::Get().metadataAlert(AlertId::TorrentFinished, torrent.get());
+		AlertsManager::Get().metadataAlert(AlertId::TorrentFinished, &torrent);
 	}
 }
 
 void mtt::FileTransfer::evaluateMorePeers()
 {
 	TRANSFER_LOG("evaluateMorePeers");
-	if (activePeers.size() < mtt::config::getExternal().connection.maxTorrentConnections && !torrent->selectionFinished() && !torrent->checking)
-		torrent->service.io.post([this]()
+	if (activePeers.size() < mtt::config::getExternal().connection.maxTorrentConnections && !torrent.selectionFinished() && !torrent.checking)
+		torrent.service.io.post([this]()
 			{
 				TRANSFER_LOG("connectNext");
-				torrent->peers->connectNext(10);
+				torrent.peers->connectNext(10);
 			});
 }
 
@@ -620,7 +620,7 @@ void mtt::FileTransfer::updateMeasures()
 		return;
 	updateMeasuresCounter = updateMeasuresExtraInterval;
 
-	if (!torrent->selectionFinished())
+	if (!torrent.selectionFinished())
 	{
 		downloader.sortPriority(piecesAvailability);
 	}

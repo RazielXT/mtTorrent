@@ -96,15 +96,15 @@ extern "C"
 				return mtt::Status::E_InvalidInput;
 			auto resp = (mtBI::TorrentStateInfo*) output;
 			resp->name = torrent->name();
-			resp->connectedPeers = torrent->getPeers()->connectedCount();
+			resp->connectedPeers = torrent->getPeers().connectedCount();
 			resp->checkingProgress = torrent->checkingProgress();
 			resp->checking = resp->checkingProgress < 1;
-			resp->foundPeers = torrent->getPeers()->receivedCount();
+			resp->foundPeers = torrent->getPeers().receivedCount();
 			resp->downloaded = torrent->downloaded();
 			resp->receivedBytes = torrent->receivedBytes();
 			resp->uploaded = torrent->uploaded();
-			resp->downloadSpeed = torrent->getFileTransfer() ? torrent->getFileTransfer()->getDownloadSpeed() : 0;
-			resp->uploadSpeed = torrent->getFileTransfer() ? torrent->getFileTransfer()->getUploadSpeed() : 0;
+			resp->downloadSpeed = torrent->getFileTransfer().getDownloadSpeed();
+			resp->uploadSpeed = torrent->getFileTransfer().getUploadSpeed();
 			resp->progress = torrent->progress();
 			resp->selectionProgress = torrent->selectionProgress();
 			resp->activeStatus = torrent->getLastError();
@@ -120,9 +120,8 @@ extern "C"
 				return mtt::Status::E_InvalidInput;
 			auto resp = (mtBI::TorrentPeersInfo*) output;
 
-			if (auto transfer = torrent->getFileTransfer())
 			{
-				auto peers = transfer->getPeersInfo();
+				auto peers = torrent->getFileTransfer().getPeersInfo();
 				resp->peers.resize(peers.size());
 
 				for (size_t i = 0; i < peers.size(); i++)
@@ -196,7 +195,7 @@ extern "C"
 			if (!torrent)
 				return mtt::Status::E_InvalidInput;
 			auto resp = (mtBI::SourcesInfo*) output;
-			auto sources = torrent->getPeers()->getSourcesInfo();
+			auto sources = torrent->getPeers().getSourcesInfo();
 			resp->sources.resize(sources.size());
 			uint32_t currentTime = (uint32_t)time(0);
 
@@ -245,11 +244,8 @@ extern "C"
 				torrent->getPiecesBitfield(resp->bitfield.data(), sz);
 			}
 
-			if (torrent->getFileTransfer())
-			{
-				auto requests = torrent->getFileTransfer()->getCurrentRequests();
-				resp->requests.assign(requests.data(), requests.size());
-			}
+			auto requests = torrent->getFileTransfer().getCurrentRequests();
+			resp->requests.assign(requests.data(), requests.size());
 		}
 		else if (id == mtBI::MessageId::GetMagnetLinkProgress)
 		{
@@ -375,7 +371,7 @@ extern "C"
 			if (!torrent)
 				return mtt::Status::E_InvalidInput;
 
-			torrent->getPeers()->refreshSource(info->name.data);
+			torrent->getPeers().refreshSource(info->name.data);
 		}
 		else if (id == mtBI::MessageId::AddPeer)
 		{
@@ -385,7 +381,7 @@ extern "C"
 			if (!torrent)
 				return mtt::Status::E_InvalidInput;
 
-			torrent->getPeers()->connect(info->addr.data);
+			torrent->getPeers().connect(info->addr.data);
 		}
 		else if (id == mtBI::MessageId::GetUpnpInfo)
 		{

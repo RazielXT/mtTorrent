@@ -2,10 +2,9 @@
 #include "Torrent.h"
 #include "PeerCommunication.h"
 
-mtt::Uploader::Uploader(TorrentPtr t)
+mtt::Uploader::Uploader(Torrent& t) : torrent(t)
 {
 	globalBw = BandwidthManager::Get().GetChannel("upload");
-	torrent = t;
 }
 
 void mtt::Uploader::stop()
@@ -42,7 +41,7 @@ void mtt::Uploader::pieceRequest(PeerCommunication* p, const PieceBlockInfo& inf
 	pendingRequests.push_back({ p, info });
 
 	if (!requestingBytes)
-		torrent->service.io.post([this]() { sendRequests(); });
+		torrent.service.io.post([this]() { sendRequests(); });
 }
 
 void mtt::Uploader::assignBandwidth(int amount)
@@ -90,7 +89,7 @@ void mtt::Uploader::sendRequests()
 			if (availableBytes >= r.block.length)
 			{
 				DataBuffer buffer;
-				torrent->files.storage.loadPieceBlock(r.block, buffer);
+				torrent.files.storage.loadPieceBlock(r.block, buffer);
 
 				PieceBlock block;
 				block.info = r.block;
@@ -142,5 +141,5 @@ std::map<mtt::PeerCommunication*, uint32_t> mtt::Uploader::popHandledRequests()
 
 std::string mtt::Uploader::name()
 {
-	return torrent->name() + "_upload";
+	return torrent.name() + "_upload";
 }

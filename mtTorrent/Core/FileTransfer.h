@@ -13,7 +13,7 @@ namespace mtt
 	{
 	public:
 
-		FileTransfer(TorrentPtr);
+		FileTransfer(Torrent&);
 
 		void start();
 		void stop();
@@ -83,7 +83,7 @@ namespace mtt
 		Downloader downloader;
 		std::shared_ptr<Uploader> uploader;
 
-		TorrentPtr torrent;
+		Torrent& torrent;
 
 		virtual void handshakeFinished(PeerCommunication*) override;
 		virtual void connectionClosed(PeerCommunication*, int code) override;

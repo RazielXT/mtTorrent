@@ -5,7 +5,7 @@
 #include "Torrent.h"
 #include "HttpsTrackerComm.h"
 
-mtt::TrackerManager::TrackerManager(TorrentPtr t) : torrent(t)
+mtt::TrackerManager::TrackerManager(Torrent& t) : torrent(t)
 {
 }
 
@@ -111,7 +111,7 @@ uint32_t mtt::TrackerManager::getTrackersCount()
 
 void mtt::TrackerManager::onAnnounce(AnnounceResponse& resp, Tracker* t)
 {
-	torrent->service.io.post([this, resp, t]()
+	torrent.service.io.post([this, resp, t]()
 		{
 			std::lock_guard<std::mutex> guard(trackersMutex);
 
@@ -140,7 +140,7 @@ void mtt::TrackerManager::onTrackerFail(Tracker* t)
 			trackerInfo->httpFallbackUsed = true;
 			trackerInfo->uri.protocol = "http";
 
-			torrent->service.io.post([this, trackerInfo]()
+			torrent.service.io.post([this, trackerInfo]()
 				{
 					trackerInfo->comm.reset();
 
@@ -187,8 +187,8 @@ bool mtt::TrackerManager::start(TrackerInfo* tracker)
 	tracker->comm->onFail = std::bind(&TrackerManager::onTrackerFail, this, tracker->comm.get());
 	tracker->comm->onAnnounceResult = std::bind(&TrackerManager::onAnnounce, this, std::placeholders::_1, tracker->comm.get());
 
-	tracker->comm->init(tracker->uri.host, tracker->uri.port, tracker->uri.path, torrent);
-	tracker->timer = ScheduledTimer::create(torrent->service.io, std::bind(&Tracker::announce, tracker->comm.get()));
+	tracker->comm->init(tracker->uri.host, tracker->uri.port, tracker->uri.path, torrent.shared_from_this());
+	tracker->timer = ScheduledTimer::create(torrent.service.io, std::bind(&Tracker::announce, tracker->comm.get()));
 	tracker->retryCount = 0;
 
 	tracker->comm->announce();
