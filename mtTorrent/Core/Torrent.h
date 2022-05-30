@@ -19,7 +19,7 @@ namespace mtt
 		Torrent();
 		~Torrent();
 
-		ActiveState state = ActiveState::Stopped;
+		bool started = false;
 		bool checking = false;
 		Status lastError = Status::Success;
 
@@ -27,8 +27,10 @@ namespace mtt
 		static TorrentPtr fromMagnetLink(std::string link);
 		static TorrentPtr fromSavedState(std::string name);
 		void downloadMetadata();
+
+		bool isActive() const;
 		State getState() const;
-		TimePoint getActiveTimestamp() const;
+		TimePoint getStateTimestamp() const;
 
 		mtt::Status start();
 		enum class StopReason { Deinit, Manual, Internal };

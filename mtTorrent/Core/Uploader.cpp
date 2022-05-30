@@ -51,7 +51,8 @@ void mtt::Uploader::assignBandwidth(int amount)
 	requestingBytes = false;
 	availableBytes += amount;
 
-	torrent->service.io.post([this]() { sendRequests(); });
+	if (isActive())
+		torrent.service.io.post([this]() { sendRequests(); });
 }
 
 void mtt::Uploader::requestBytes(uint32_t amount)

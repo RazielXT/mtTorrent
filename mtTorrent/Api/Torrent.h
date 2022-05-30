@@ -21,26 +21,19 @@ namespace mttApi
 		API_EXPORT mtt::Status start();
 		API_EXPORT void stop();
 
-		enum class ActiveState
-		{
-			Stopped,
-			Started
-		};
-
 		/*
-			Get active state, that is if torrent tries to connect to other peers
+			torrent is started and any stop action havent finished
 		*/
-		API_EXPORT ActiveState getActiveState() const;
+		API_EXPORT bool isStarted() const;
 
 		enum class State
 		{
-			Inactive,				//correctly stopped and not making any work
+			Active,					//connecting to peers to download/upload files
+			Stopping,				//in process of stopping
+			Stopped,				//correctly stopped and not making any work
 			Interrupted,			//stopped due to error, see getLastError
 			CheckingFiles,			//checking integrity of existing files, see checkingProgress
 			DownloadingMetadata,	//downloading metadata from magnet link, see getMagnetDownload
-			Downloading,			//active and connecting to peers to download selected files
-			Seeding,				//active and accepting incoming connection requests
-			Stopping,				//active and in process of stopping
 		};
 
 		API_EXPORT State getState() const;
@@ -49,9 +42,9 @@ namespace mttApi
 		using TimePoint = TimeClock::time_point;
 
 		/*
-			get last time when torrent entered active state (not Inactive/Interrupted)
+			get last time when torrent changed state
 		*/
-		API_EXPORT TimePoint getActiveTimestamp() const;
+		API_EXPORT TimePoint getStateTimestamp() const;
 		/*
 			get specific error which happened in Interrupted state
 		*/

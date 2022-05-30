@@ -160,7 +160,7 @@ void mtt::Peers::connect(const Addr& addr)
 
 size_t mtt::Peers::add(std::shared_ptr<PeerStream> stream, const BufferView& data)
 {
-	if (torrent->getState() == mttApi::Torrent::State::Inactive)
+	if (!torrent.isActive())
 		return 0;
 
 	ActivePeer peer;

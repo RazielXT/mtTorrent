@@ -85,8 +85,8 @@ extern "C"
 				auto t = torrents[i];
 				memcpy(resp->list[i].hash, t->hash(), 20);
 				auto state = t->getState();
-				resp->list[i].active = (state != mttApi::Torrent::State::Inactive && state != mttApi::Torrent::State::Interrupted);
-				resp->list[i].activeTimestamp = std::chrono::duration_cast<std::chrono::milliseconds>(t->getActiveTimestamp().time_since_epoch()).count();
+				resp->list[i].active = (state != mttApi::Torrent::State::Stopped && state != mttApi::Torrent::State::Interrupted);
+				resp->list[i].activeTimestamp = std::chrono::duration_cast<std::chrono::milliseconds>(t->getStateTimestamp().time_since_epoch()).count();
 			}
 		}
 		else if (id == mtBI::MessageId::GetTorrentStateInfo)
@@ -108,7 +108,7 @@ extern "C"
 			resp->progress = torrent->progress();
 			resp->selectionProgress = torrent->selectionProgress();
 			resp->activeStatus = torrent->getLastError();
-			resp->started = torrent->getActiveState() == mttApi::Torrent::ActiveState::Started;
+			resp->started = torrent->isStarted();
 			resp->stopping = torrent->getState() == mttApi::Torrent::State::Stopping;
 			resp->utmActive = torrent->getState() == mttApi::Torrent::State::DownloadingMetadata;
 			resp->timeAdded = torrent->getTimeAdded();

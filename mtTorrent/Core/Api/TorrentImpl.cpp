@@ -13,9 +13,9 @@ void mttApi::Torrent::stop()
 	static_cast<mtt::Torrent*>(this)->stop();
 }
 
-mttApi::Torrent::ActiveState mttApi::Torrent::getActiveState() const
+bool mttApi::Torrent::isStarted() const
 {
-	return static_cast<const mtt::Torrent*>(this)->state;
+	return static_cast<const mtt::Torrent*>(this)->started;
 }
 
 mttApi::Torrent::State mttApi::Torrent::getState() const
@@ -23,9 +23,9 @@ mttApi::Torrent::State mttApi::Torrent::getState() const
 	return static_cast<const mtt::Torrent*>(this)->getState();
 }
 
-mttApi::Torrent::TimePoint mttApi::Torrent::getActiveTimestamp() const
+mttApi::Torrent::TimePoint mttApi::Torrent::getStateTimestamp() const
 {
-	return static_cast<const mtt::Torrent*>(this)->getActiveTimestamp();
+	return static_cast<const mtt::Torrent*>(this)->getStateTimestamp();
 }
 
 mtt::Status mttApi::Torrent::getLastError() const
