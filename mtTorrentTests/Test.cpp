@@ -306,7 +306,7 @@ std::vector<Addr> getPeersFromTrackers(mtt::TorrentFileInfo& parsedTorrent)
 		}
 	};
 
-	mtt::TrackerManager trackers(torrent);
+	mtt::TrackerManager trackers(*torrent);
 	trackers.addTrackers(parsedTorrent.announceList);
 	trackers.start(trUpdate);
 

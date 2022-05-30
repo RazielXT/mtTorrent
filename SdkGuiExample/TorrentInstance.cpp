@@ -102,7 +102,7 @@ void TorrentInstance::drawInfoWindow()
 		return;
 	}
 
-	if (torrentPtr->getActiveState() == mttApi::Torrent::ActiveState::Started)
+	if (torrentPtr->isStarted())
 	{
 		if (ImGui::Button("Stop"))
 			torrentPtr->stop();
@@ -138,9 +138,9 @@ void TorrentInstance::drawInfoWindow()
 		{
 			mtt::MetadataDownloadState utmState = magnet->getState();
 			if (utmState.partsCount == 0)
-				ImGui::Text("Metadata download getting peers... Connected peers: %u, Received peers: %u\n", torrentPtr->getPeers()->connectedCount(), torrentPtr->getPeers()->receivedCount());
+				ImGui::Text("Metadata download getting peers... Connected peers: %u, Received peers: %u\n", torrentPtr->getPeers().connectedCount(), torrentPtr->getPeers().receivedCount());
 			else
-				ImGui::Text("Metadata download progress: %u / %u, Connected peers: %u, Received peers: %u\n", utmState.receivedParts, utmState.partsCount, torrentPtr->getPeers()->connectedCount(), torrentPtr->getPeers()->receivedCount());
+				ImGui::Text("Metadata download progress: %u / %u, Connected peers: %u, Received peers: %u\n", utmState.receivedParts, utmState.partsCount, torrentPtr->getPeers().connectedCount(), torrentPtr->getPeers().receivedCount());
 
 			std::vector<std::string> logs;
 			if (auto count = magnet->getDownloadLog(logs, 0))
@@ -151,16 +151,16 @@ void TorrentInstance::drawInfoWindow()
 		}
 		break;
 	}
-	case mttApi::Torrent::State::Downloading:
-		ImGui::Text("Downloading, Progress %f%%, Speed: %s, Connected peers: %u, Found peers: %u\n", torrentPtr->progress() * 100, formatBytesSpeed(torrentPtr->getFileTransfer()->getDownloadSpeed()).data(), torrentPtr->getPeers()->connectedCount(), torrentPtr->getPeers()->receivedCount());
-		break;
-	case mttApi::Torrent::State::Seeding:
-		ImGui::Text("Finished, upload speed: %s\n", formatBytesSpeed(torrentPtr->getFileTransfer()->getUploadSpeed()).data());
+	case mttApi::Torrent::State::Active:
+		if (!torrentPtr->finished())
+			ImGui::Text("Downloading, Progress %f%%, Speed: %s, Connected peers: %u, Found peers: %u\n", torrentPtr->progress() * 100, formatBytesSpeed(torrentPtr->getFileTransfer().getDownloadSpeed()).data(), torrentPtr->getPeers().connectedCount(), torrentPtr->getPeers().receivedCount());
+		else
+			ImGui::Text("Finished, upload speed: %s\n", formatBytesSpeed(torrentPtr->getFileTransfer().getUploadSpeed()).data());
 		break;
 	case mttApi::Torrent::State::Interrupted:
 		ImGui::Text("Interrupted, problem code: %d\n", (int)torrentPtr->getLastError());
 		break;
-	case mttApi::Torrent::State::Inactive:
+	case mttApi::Torrent::State::Stopped:
 	default:
 		ImGui::Text("Stopped");
 		break;
@@ -195,7 +195,7 @@ void TorrentInstance::drawPeersWindow()
 		ImGui::TableSetupColumn("Client Id", ImGuiTableColumnFlags_WidthStretch);
 		ImGui::TableHeadersRow();
 
-		auto peers = torrentPtr->getFileTransfer()->getPeersInfo();
+		auto peers = torrentPtr->getFileTransfer().getPeersInfo();
 		for (size_t row = 0; row < peers.size(); row++)
 		{
 			const auto& peer = peers[row];
@@ -276,7 +276,7 @@ void TorrentInstance::drawSourcesWindow()
 		ImGui::TableHeadersRow();
 
 		uint32_t currentTime = (uint32_t)time(0);
-		auto sources = torrentPtr->getPeers()->getSourcesInfo();
+		auto sources = torrentPtr->getPeers().getSourcesInfo();
 		for (size_t row = 0; row < sources.size(); row++)
 		{
 			const auto& source = sources[row];

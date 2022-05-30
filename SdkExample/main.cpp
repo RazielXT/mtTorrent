@@ -21,7 +21,7 @@ int main()
 	mttApi::TorrentPtr addedTorrent;
 
 	//magnet test
-	std::tie(addStatus, addedTorrent) = core->addMagnet("magnetLink");
+	std::tie(addStatus, addedTorrent) = core->addMagnet("bc8e4a520c4dfee5058129bd990bb8c7334f008e");
 	
 	//file test
 	//std::tie(addStatus, addedTorrent) = core->addFile("path.torrent");
@@ -53,7 +53,7 @@ int main()
 
 		auto torrents = core->getTorrents();
 
-		for (auto t : torrents)
+		for (const auto& t : torrents)
 		{
 			auto state = t->getState();
 
@@ -68,9 +68,9 @@ int main()
 				{
 					mtt::MetadataDownloadState utmState = magnet->getState();
 					if(utmState.partsCount == 0)
-						printf("Metadata download getting peers... Connected peers: %u, Found peers: %u\n", t->getPeers()->connectedCount(), t->getPeers()->receivedCount());
+						printf("Metadata download getting peers... Connected peers: %u, Found peers: %u\n", t->getPeers().connectedCount(), t->getPeers().receivedCount());
 					else
-						printf("Metadata download progress: %u / %u, Connected peers: %u, Found peers: %u\n", utmState.receivedParts, utmState.partsCount, t->getPeers()->connectedCount(), t->getPeers()->receivedCount());
+						printf("Metadata download progress: %u / %u, Connected peers: %u, Found peers: %u\n", utmState.receivedParts, utmState.partsCount, t->getPeers().connectedCount(), t->getPeers().receivedCount());
 
 					std::vector<std::string> logs;
 					static size_t magnetProgressLogPos = 0;
@@ -84,16 +84,16 @@ int main()
 				}
 				break;
 			}
-			case mttApi::Torrent::State::Downloading:
-				printf("Name: %s, Progress: %f%%, Speed: %u bps, Connected peers: %u, Found peers: %u\n", t->name().c_str(), t->progress()*100, t->getFileTransfer()->getDownloadSpeed(), t->getPeers()->connectedCount(), t->getPeers()->receivedCount());
-				break;
-			case mttApi::Torrent::State::Seeding:
-				printf("Name: %s finished, upload speed: %u\n", t->name().c_str(), t->getFileTransfer()->getUploadSpeed());
+			case mttApi::Torrent::State::Active:
+				if (!t->finished())
+					printf("Name: %s, Progress: %f%%, Speed: %u bps, Connected peers: %u, Found peers: %u\n", t->name().c_str(), t->progress()*100, t->getFileTransfer().getDownloadSpeed(), t->getPeers().connectedCount(), t->getPeers().receivedCount());
+				else
+					printf("Name: %s finished, upload speed: %u\n", t->name().c_str(), t->getFileTransfer().getUploadSpeed());
 				break;
 			case mttApi::Torrent::State::Interrupted:
 				printf("Name: %s interrupted, problem code: %d\n", t->name().c_str(), (int)t->getLastError());
 				break;
-			case mttApi::Torrent::State::Inactive:
+			case mttApi::Torrent::State::Stopped:
 			default:
 				break;
 			}
@@ -101,7 +101,7 @@ int main()
 	}
 
 	//optional, stopped automatically in core destructor
-	for (auto t : core->getTorrents())
+	for (const auto& t : core->getTorrents())
 	{
 		t->stop();
 	}
@@ -167,23 +167,23 @@ void example2()
 
 	torrent->selectFiles(newSelection);
 	torrent->setFilesPriority(newPriority);
-	torrent->setLocationPath("path\\to\\new\\download\\path", false);
+	torrent->setLocationPath(R"(path\to\new\download\path)", false);
 
 	if (!torrent->selectionFinished())
 		std::cout << "Selection progress: " << torrent->selectionProgress() * 100 << "%%\n";
 
-	auto transfer = torrent->getFileTransfer();
+	auto& transfer = torrent->getFileTransfer();
 
-	std::cout << "Current download speed: " << transfer->getDownloadSpeed() << " bytes per second" << std::endl;
+	std::cout << "Current download speed: " << transfer.getDownloadSpeed() << " bytes per second" << std::endl;
 
-	auto peers = transfer->getPeersInfo();
+	auto peers = transfer.getPeersInfo();
 
 	std::cout << "Currently connected to " << peers.size() << " peers" << std::endl;
 
 	for (auto& peer : peers)
 		std::cout << "Address: " << peer.address << ", speed " << peer.downloadSpeed << ", torrent client" << peer.client << std::endl;
 
-	std::cout << "Currently downloading " << transfer->getCurrentRequests().size() << " pieces" << std::endl;
+	std::cout << "Currently downloading " << transfer.getCurrentRequests().size() << " pieces" << std::endl;
 
 	if (auto magnet = torrent->getMagnetDownload())
 	{
@@ -201,22 +201,22 @@ void example2()
 	}
 
 	{
-		auto peers = torrent->getPeers();
+		auto& peers = torrent->getPeers();
 
-		std::cout << "Found peers " << peers->receivedCount() << std::endl;
-		std::cout << "Connected peers " << peers->connectedCount() << std::endl;
+		std::cout << "Found peers " << peers.receivedCount() << std::endl;
+		std::cout << "Connected peers " << peers.connectedCount() << std::endl;
 
-		auto sources = peers->getSourcesInfo();
-		for (auto source : sources)
+		auto sources = peers.getSourcesInfo();
+		for (const auto& source : sources)
 		{
 			if (source.state >= mtt::TrackerState::Connected)
 				std::cout << source.hostname << " has " << source.peers << " peers" << std::endl;
 		}
 
-		peers->refreshSource(sources.front().hostname);
+		peers.refreshSource(sources.front().hostname);
 
 		//connect locally running client
-		peers->connect("127.0.0.1:55555");
+		peers.connect("127.0.0.1:55555");
 	}
 
 	core->registerAlerts((int)mtt::AlertId::MetadataFinished | (int)mtt::AlertId::TorrentAdded);
