@@ -154,7 +154,12 @@ mtt::Status mtt::Storage::preallocateSelection(const DownloadSelection& selectio
 		else if (selected.isSelected(file))
 		{
 			if (!allocations.empty() && allocations.back().file.endPieceIndex == file.startPieceIndex)
+			{
 				sz = info.pieceSize - file.startPiecePos;
+
+				if (sz > file.size)
+					sz = file.size;
+			}
 			else
 				sz += file.endPiecePos;
 		}
