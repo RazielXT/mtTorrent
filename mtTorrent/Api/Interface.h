@@ -147,6 +147,8 @@ namespace mtt
 
 	struct AlertMessage
 	{
+		virtual ~AlertMessage() = default;
+
 		AlertId id;
 
 		template <class T> const T* getAs() const
