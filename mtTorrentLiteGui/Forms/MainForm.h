@@ -49,6 +49,19 @@ namespace GuiLite {
 				torrentsGrid->Sort(c, windowState->torrentSortColumnDesc ? System::ComponentModel::ListSortDirection::Descending : System::ComponentModel::ListSortDirection::Ascending);
 			}
 
+			if (windowState->torrentColumns)
+			{
+				for (int i = 0; i < torrentsGrid->ColumnCount; i++)
+				{
+					auto col = torrentsGrid->Columns[i];
+
+					if (windowState->torrentColumns->ContainsKey(col->Name))
+					{
+						col->Width = windowState->torrentColumns[col->Name];
+					}
+				}
+			}
+
 			try
 			{
 				this->Icon = gcnew System::Drawing::Icon("data/mttIcon.ico");// (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
@@ -78,98 +91,52 @@ namespace GuiLite {
 	public: System::Windows::Forms::Button^ buttonRemove;
 	public: System::Windows::Forms::TabPage^ progressTabPage;
 	public: System::Windows::Forms::DataVisualization::Charting::Chart^ pieceChart;
-
 	public: System::Windows::Forms::DataGridView^ filesProgressGridView;
-
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ Index;
-private: System::Windows::Forms::DataGridViewCheckBoxColumn^ Selected;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn5;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ Progress;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ TSize;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ SizeBytes;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ PiecesCount;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ PiecesRemaining;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ PiecesActive;
-
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentConnected;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentFoundPeers;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentDownloaded;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column3;
-
-
-
-
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Index;
+	private: System::Windows::Forms::DataGridViewCheckBoxColumn^ Selected;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn5;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Progress;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ TSize;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ SizeBytes;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ PiecesCount;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ PiecesRemaining;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ PiecesActive;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentConnected;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentFoundPeers;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentDownloaded;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column3;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ FProgress;
-
-
-
-
-
-
-
-
-
-
-
-
-
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn1;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn2;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn3;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column5;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column6;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column1;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn4;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ gridPeerAddress;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ DL2;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ DlBytes2;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ UP2;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ UpBytes2;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ gridPeerPercentage;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ peerSource;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ peerCountry;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ connection;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ Size;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ torrentId;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentName;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentProgress;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column4;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ DL;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ DlBytes;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ UP;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ UpBytes;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ Connections;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ Peers;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ Downloaded;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ Uploaded;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ Added;
-private: System::Windows::Forms::DataGridViewTextBoxColumn^ AddedDate;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn1;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn2;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn3;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column5;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column6;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Column1;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn4;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ gridPeerAddress;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ DL2;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ DlBytes2;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ UP2;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ UpBytes2;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ gridPeerPercentage;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ peerSource;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ peerCountry;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ connection;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Size;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ torrentId;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentName;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ TorrentProgress;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ State;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ DL;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ DlBytes;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ UP;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ UpBytes;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Connections;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Peers;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Downloaded;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Uploaded;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ Added;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ AddedDate;
 
 	public:
 
@@ -215,7 +182,7 @@ private: System::Windows::Forms::DataGridViewTextBoxColumn^ AddedDate;
 		}
 
 	private: System::Windows::Forms::SplitContainer^  splitContainer2;
-public: System::Windows::Forms::Button^  buttonAddTorrent;
+	public: System::Windows::Forms::Button^  buttonAddTorrent;
 	private: System::Windows::Forms::DataGridView^  torrentsGrid;
 
 	protected:
@@ -238,6 +205,15 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 					windowState->torrentSortColumn = nullptr;
 
 				windowState->torrentSortColumnDesc = torrentsGrid->SortOrder == System::Windows::Forms::SortOrder::Descending;
+
+				windowState->torrentColumns = gcnew System::Collections::Generic::Dictionary<System::String^, int>();
+				for (int i = 0; i < torrentsGrid->ColumnCount; i++)
+				{
+					auto col = torrentsGrid->Columns[i];
+
+					if (col->Visible)
+						windowState->torrentColumns[col->Name] = col->Width;
+				}
 
 				saveWindowState();
 
@@ -369,7 +345,7 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->torrentId = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->TorrentName = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->TorrentProgress = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
-			this->Column4 = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->State = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->DL = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->DlBytes = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->UP = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
@@ -566,8 +542,8 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->torrentsGrid->ColumnHeadersHeightSizeMode = System::Windows::Forms::DataGridViewColumnHeadersHeightSizeMode::AutoSize;
 			this->torrentsGrid->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(14) {
 				this->torrentId,
-					this->TorrentName, this->TorrentProgress, this->Column4, this->DL, this->DlBytes, this->UP, this->UpBytes, this->Connections,
-					this->Peers, this->Downloaded, this->Uploaded, this->Added, this->AddedDate
+					this->TorrentName, this->TorrentProgress, this->State, this->DL, this->DlBytes, this->UP, this->UpBytes, this->Connections, this->Peers,
+					this->Downloaded, this->Uploaded, this->Added, this->AddedDate
 			});
 			dataGridViewCellStyle11->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleLeft;
 			dataGridViewCellStyle11->BackColor = System::Drawing::SystemColors::Window;
@@ -1235,16 +1211,16 @@ public: System::Windows::Forms::Button^  buttonAddTorrent;
 			this->TorrentProgress->ReadOnly = true;
 			this->TorrentProgress->Width = 150;
 			// 
-			// Column4
+			// State
 			// 
 			dataGridViewCellStyle3->Alignment = System::Windows::Forms::DataGridViewContentAlignment::MiddleCenter;
-			this->Column4->DefaultCellStyle = dataGridViewCellStyle3;
-			this->Column4->FillWeight = 15;
-			this->Column4->HeaderText = L"State";
-			this->Column4->MinimumWidth = 50;
-			this->Column4->Name = L"Column4";
-			this->Column4->ReadOnly = true;
-			this->Column4->Width = 70;
+			this->State->DefaultCellStyle = dataGridViewCellStyle3;
+			this->State->FillWeight = 15;
+			this->State->HeaderText = L"State";
+			this->State->MinimumWidth = 50;
+			this->State->Name = L"State";
+			this->State->ReadOnly = true;
+			this->State->Width = 70;
 			// 
 			// DL
 			// 

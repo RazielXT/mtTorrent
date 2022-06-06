@@ -98,6 +98,29 @@ UserWindowState^ getWindowState()
 									state->torrentSortColumn = el->InnerText;
 								else if (el->Name == "sortDesc")
 									System::Boolean::TryParse(el->InnerText, state->torrentSortColumnDesc);
+								else if (el->Name == "columns")
+								{
+									state->torrentColumns = gcnew System::Collections::Generic::Dictionary<System::String^, int>();
+
+									for each (XmlNode ^ column in el->ChildNodes)
+									{
+										if (column->Name == "column")
+										{
+											System::String^ name;
+											System::String^ width;
+											for each (XmlNode ^ e in column->ChildNodes)
+											{
+												if (e->Name == "name")
+													name = e->InnerText;
+												else if (e->Name == "width")
+													width = e->InnerText;
+											}
+
+											if (name && width)
+												state->torrentColumns[name] = System::Convert::ToInt32(width);
+										}
+									}
+								}
 							}
 						}
 						else if (e->Name == "selectedTorrent")
@@ -156,17 +179,41 @@ void saveWindowState()
 			e->InnerText = state->splitterDistance.ToString();
 			root->AppendChild(e);
 
-			if (state->torrentSortColumn)
 			{
 				XmlElement^ torrents = doc->CreateElement("torrentsGrid");
 
-				e = doc->CreateElement("sortColumn");
-				e->InnerText = state->torrentSortColumn;
-				torrents->AppendChild(e);
+				if (state->torrentSortColumn)
+				{
+					e = doc->CreateElement("sortColumn");
+					e->InnerText = state->torrentSortColumn;
+					torrents->AppendChild(e);
 
-				e = doc->CreateElement("sortDesc");
-				e->InnerText = state->torrentSortColumnDesc.ToString();
-				torrents->AppendChild(e);
+					e = doc->CreateElement("sortDesc");
+					e->InnerText = state->torrentSortColumnDesc.ToString();
+					torrents->AppendChild(e);
+				}
+
+				if (state->torrentColumns)
+				{
+					XmlElement^ columns = doc->CreateElement("columns");
+
+					for each (System::Collections::Generic::KeyValuePair<System::String^, int>^ col in state->torrentColumns)
+					{
+						XmlElement^ ce = doc->CreateElement("column");
+						
+						XmlElement^ e = doc->CreateElement("name");
+						e->InnerText = col->Key;
+						ce->AppendChild(e);
+
+						e = doc->CreateElement("width");
+						e->InnerText = col->Value.ToString();
+						ce->AppendChild(e);
+
+						columns->AppendChild(ce);
+					}
+
+					torrents->AppendChild(columns);
+				}
 
 				root->AppendChild(torrents);
 			}

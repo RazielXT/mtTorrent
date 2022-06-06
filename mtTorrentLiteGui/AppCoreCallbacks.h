@@ -66,6 +66,7 @@ public:
 
 	System::String^ torrentSortColumn;
 	bool torrentSortColumnDesc;
+	System::Collections::Generic::Dictionary<System::String^, int>^ torrentColumns;
 
 	System::String^ addPeer;
 };
