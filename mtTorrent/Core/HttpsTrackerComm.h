@@ -15,10 +15,10 @@ namespace mtt
 		HttpsTrackerComm();
 		~HttpsTrackerComm();
 
-		virtual void init(std::string host, std::string port, std::string path, TorrentPtr core) override;
-		virtual void deinit() override;
+		void init(std::string host, std::string port, std::string path, TorrentPtr core) override;
+		void deinit() override;
 
-		virtual void announce() override;
+		void announce() override;
 
 	private:
 

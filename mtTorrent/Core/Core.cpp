@@ -7,6 +7,7 @@
 #include "utils/TcpAsyncServer.h"
 #include "IncomingPeersListener.h"
 #include "State.h"
+#include "AlertsManager.h"
 #include "utils/HexEncoding.h"
 #include "utils/TorrentFileParser.h"
 
@@ -147,6 +148,8 @@ void mtt::Core::deinit()
 	UdpAsyncComm::Deinit();
 
 	mtt::config::save();
+
+	mtt::AlertsManager::Get().popAlerts();
 }
 
 std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addFile(const char* filename)

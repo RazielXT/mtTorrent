@@ -131,45 +131,50 @@ void mtt::TrackerManager::onAnnounce(AnnounceResponse& resp, Tracker* t)
 
 void mtt::TrackerManager::onTrackerFail(Tracker* t)
 {
-	std::lock_guard<std::mutex> guard(trackersMutex);
-
-	if (auto trackerInfo = findTrackerInfo(t))
-	{
-		if (trackerInfo->httpFallback && !trackerInfo->httpFallbackUsed && trackerInfo->uri.protocol == "udp")
+	torrent.service.io.post([this, t]()
 		{
-			trackerInfo->httpFallbackUsed = true;
-			trackerInfo->uri.protocol = "http";
+			std::lock_guard<std::mutex> guard(trackersMutex);
 
-			torrent.service.io.post([this, trackerInfo]()
+			if (auto trackerInfo = findTrackerInfo(t))
+			{
+				if (trackerInfo->httpFallback && !trackerInfo->httpFallbackUsed && trackerInfo->uri.protocol == "udp")
 				{
-					trackerInfo->comm.reset();
+					trackerInfo->httpFallbackUsed = true;
+					trackerInfo->uri.protocol = "http";
 
-					std::lock_guard<std::mutex> guard(trackersMutex);
-					start(trackerInfo);
-				});
-		}
-		else
-		{
-			if (trackerInfo->httpFallback && trackerInfo->httpFallbackUsed && trackerInfo->uri.protocol == "http")
-			{
-				trackerInfo->uri.protocol = "udp";
-				start(trackerInfo);
+					torrent.service.io.post([this, trackerInfo]()
+						{
+							trackerInfo->comm.reset();
+
+							std::lock_guard<std::mutex> guard(trackersMutex);
+							start(trackerInfo);
+						});
+				}
+				else
+				{
+					if (trackerInfo->httpFallback && trackerInfo->httpFallbackUsed && trackerInfo->uri.protocol == "http")
+					{
+						trackerInfo->uri.protocol = "udp";
+						start(trackerInfo);
+					}
+					else
+					{
+						trackerInfo->retryCount++;
+						uint32_t nextRetry = 30 * trackerInfo->retryCount;
+						trackerInfo->timer->schedule(nextRetry);
+						trackerInfo->comm->info.nextAnnounce = (uint32_t)time(0) + nextRetry;
+					}
+
+					startNext();
+				}
+
+				if(announceCallback)
+					announceCallback(Status::E_Unknown, nullptr, t);
 			}
-			else
-			{
-				trackerInfo->retryCount++;
-				uint32_t nextRetry = 30 * trackerInfo->retryCount;
-				trackerInfo->timer->schedule(nextRetry);
-				trackerInfo->comm->info.nextAnnounce = (uint32_t)time(0) + nextRetry;
-			}
-
-			startNext();
-		}
-
-		if(announceCallback)
-			announceCallback(Status::E_Unknown, nullptr, t);
-	}
+		});
 }
+
+std::vector<mtt::Tracker*> trackerPtr;
 
 bool mtt::TrackerManager::start(TrackerInfo* tracker)
 {
@@ -192,6 +197,7 @@ bool mtt::TrackerManager::start(TrackerInfo* tracker)
 	tracker->retryCount = 0;
 
 	tracker->comm->announce();
+	trackerPtr.push_back(tracker->comm.get());
 
 	return true;
 }
