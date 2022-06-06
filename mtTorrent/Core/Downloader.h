@@ -20,7 +20,7 @@ namespace mtt
 		struct RequestedPiece
 		{
 			uint32_t idx;
-			std::vector<uint32_t> blocks;
+			std::vector<bool> blocks;
 		};
 		std::vector<RequestedPiece> requestedPieces;
 
@@ -54,8 +54,8 @@ namespace mtt
 	class DownloaderClient
 	{
 	public:
-		virtual bool isFinished() = 0;
-		virtual bool isWantedPiece(uint32_t idx) = 0;
+		virtual bool wantsToDownload() = 0;
+		virtual bool isMissingPiece(uint32_t idx) = 0;
 		virtual void storePieceBlock(const PieceBlock& block) = 0;
 		virtual mtt::DownloadedPiece loadUnfinishedPiece(uint32_t idx) = 0;
 		virtual void pieceFinished(const mtt::DownloadedPiece& piece) = 0;
@@ -79,9 +79,9 @@ namespace mtt
 		void messageReceived(PeerCommunication*, PeerMessage&);
 		void progressUpdated(PeerCommunication*, uint32_t idx);
 
-		void sortPriority(const std::vector<uint32_t>& availability);
+		void sortPieces(const std::vector<uint32_t>& availability);
 
-		void refreshSelection(const DownloadSelection& selectedPieces);
+		void refreshSelection(const DownloadSelection& selectedPieces, const std::vector<uint32_t>& availability);
 
 		uint64_t downloaded = 0;
 
@@ -95,24 +95,32 @@ namespace mtt
 		enum class PieceStatus { Ok, Invalid, Finished };
 		void refreshPeerBlockRequests(std::vector<ActivePeer>& peers, PieceBlock& block, PieceStatus status, PeerCommunication* source);
 
-		std::vector<uint32_t> selectedPieces;
-
-		std::mutex priorityMutex;
-		std::vector<Priority> piecesPriority;
+		std::vector<uint32_t> sortedSelectedPieces;
+		std::mutex sortedSelectedPiecesMutex;
 
 		struct RequestInfo
 		{
 			uint32_t pieceIdx = 0;
-			uint16_t nextBlockRequestIdx = 0;
+			uint16_t blockRequestsCount = 0;
 			uint16_t blocksCount = 0;
-			uint32_t lastActivityTime = 0;
 			DownloadedPiece piece;
 		};
-		std::vector<RequestInfo> requests;
+		std::vector<std::shared_ptr<RequestInfo>> requests;
+		RequestInfo* getRequest(uint32_t i);
+		RequestInfo* addRequest(uint32_t i);
 		mutable std::mutex requestsMutex;
 
-		std::vector<uint32_t> getBestNextPieces(ActivePeer*);
-		void sendPieceRequests(ActivePeer*);
+		struct PieceState
+		{
+			RequestInfo* request = nullptr;
+			Priority priority = Priority(0);
+			bool missing = false;
+		};
+		std::vector<PieceState> piecesState;
+
+		RequestInfo* getBestNextRequest(ActivePeer*);
+		bool fastCheck = true;
+
 		uint32_t sendPieceRequests(ActivePeer*,ActivePeer::RequestedPiece*, RequestInfo*, uint32_t max);
 		bool hasWantedPieces(ActivePeer*);
 

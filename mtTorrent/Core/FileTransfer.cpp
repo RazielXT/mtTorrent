@@ -103,7 +103,7 @@ void mtt::FileTransfer::clearUnfinishedPieces()
 
 void mtt::FileTransfer::refreshSelection()
 {
-	downloader.refreshSelection(torrent.files.selection);
+	downloader.refreshSelection(torrent.files.selection, piecesAvailability);
 	evaluateMorePeers();
 }
 
@@ -320,14 +320,14 @@ void mtt::FileTransfer::disconnectPeers(const std::vector<uint32_t>& positions)
 	}
 }
 
-bool mtt::FileTransfer::isFinished()
+bool mtt::FileTransfer::wantsToDownload()
 {
-	return torrent.checking || torrent.selectionFinished();
+	return !torrent.checking && !torrent.selectionFinished();
 }
 
-bool mtt::FileTransfer::isWantedPiece(uint32_t idx)
+bool mtt::FileTransfer::isMissingPiece(uint32_t idx)
 {
-	return !torrent.checking && torrent.files.progress.wantedPiece(idx);
+	return torrent.files.progress.wantedPiece(idx);
 }
 
 void mtt::FileTransfer::storePieceBlock(const PieceBlock& block)
@@ -339,7 +339,7 @@ void mtt::FileTransfer::storePieceBlock(const PieceBlock& block)
  
 	unsavedPieceBlocks.emplace_back(block.info, buffer);
 
-	if (unsavedPieceBlocks.size() >= unsavedPieceBlocksMaxSize)
+	if (unsavedPieceBlocks.size() >= unsavedPieceBlocksMaxSize && wantsToDownload())
 	{
 		auto blocks = std::move(unsavedPieceBlocks);
 
@@ -622,6 +622,6 @@ void mtt::FileTransfer::updateMeasures()
 
 	if (!torrent.selectionFinished())
 	{
-		downloader.sortPriority(piecesAvailability);
+		downloader.sortPieces(piecesAvailability);
 	}
 }
