@@ -186,6 +186,9 @@ void AppCore::checkAlerts()
 		{
 			if (alert.id == mtt::AlertId::TorrentAdded)
 			{
+				torrentsView.select(alert.hash);
+				selectionChanged = true;
+
 				torrentsView.updateList();
 				fileSelection.showFilesSelectionForm(alert.hash, true);
 			}
