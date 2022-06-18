@@ -139,6 +139,8 @@ void mtt::Downloader::pieceBlockReceived(PieceBlock& block, PeerCommunication* s
 
 					requests.erase(it);
 
+					std::lock_guard<std::mutex> guard(sortedSelectedPiecesMutex);
+
 					auto& state = piecesState[block.info.index];
 					state.missing = false;
 					state.request = nullptr;
@@ -304,7 +306,7 @@ void mtt::Downloader::evaluateNextRequests(ActivePeer* peer)
 		return;
 	}
 
-	static auto maxRequests = MinPendingPeerRequests;
+	auto maxRequests = MinPendingPeerRequests;
 	if (peer->receivedBlocks > 30)
 	{
 		if (maxRequests < (uint32_t)(peer->downloadSpeed / DlSpeedPerMoreRequest))
@@ -380,28 +382,6 @@ mtt::Downloader::RequestInfo* mtt::Downloader::addRequest(uint32_t idx)
 
 mtt::Downloader::RequestInfo* mtt::Downloader::getBestNextRequest(ActivePeer* peer)
 {
-	static std::vector<RequestInfo*> possibleShareRequests;
-	possibleShareRequests.clear();
-
-	auto getBestSharedRequest = [&]() -> RequestInfo*
-	{
-		RequestInfo* bestSharedRequest = nullptr;
-
-		for (auto r : possibleShareRequests)
-		{
-			if (!bestSharedRequest || bestSharedRequest->blockRequestsCount > r->blockRequestsCount)
-				bestSharedRequest = r;
-		}
-
-		if (bestSharedRequest)
-		{
-			DL_LOG("getBestSharedRequest idx " << bestSharedRequest->pieceIdx);
-			return bestSharedRequest;
-		}
-
-		return nullptr;
-	};
-
 	std::lock_guard<std::mutex> guard(sortedSelectedPiecesMutex);
 
 	auto firstPriority = sortedSelectedPieces.empty() ? Priority(0) : piecesState[sortedSelectedPieces.front()].priority;
@@ -426,6 +406,28 @@ mtt::Downloader::RequestInfo* mtt::Downloader::getBestNextRequest(ActivePeer* pe
 		DL_LOG("fail fast getBestNextPiece");
 		fastCheck = false;
 	}
+
+	std::vector<RequestInfo*> possibleShareRequests;
+	possibleShareRequests.reserve(10);
+
+	auto getBestSharedRequest = [&]() -> RequestInfo*
+	{
+		RequestInfo* bestSharedRequest = nullptr;
+
+		for (auto r : possibleShareRequests)
+		{
+			if (!bestSharedRequest || bestSharedRequest->blockRequestsCount > r->blockRequestsCount)
+				bestSharedRequest = r;
+		}
+
+		if (bestSharedRequest)
+		{
+			DL_LOG("getBestSharedRequest idx " << bestSharedRequest->pieceIdx);
+			return bestSharedRequest;
+		}
+
+		return nullptr;
+	};
 
 	for (auto idx : sortedSelectedPieces)
 	{
