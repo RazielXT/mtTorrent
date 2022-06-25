@@ -135,8 +135,8 @@ void mtt::Core::deinit()
 		t->stop(Torrent::StopReason::Deinit);
 	}
 
-	torrents.clear();
 	listener.reset();
+	torrents.clear();
 
 	if (dht)
 	{

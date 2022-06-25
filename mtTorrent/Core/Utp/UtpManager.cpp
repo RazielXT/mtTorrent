@@ -81,6 +81,12 @@ void mtt::utp::Manager::connectStream(StreamPtr s, const udp::endpoint& e)
 		});
 }
 
+void mtt::utp::Manager::setConnectionCallback(std::function<void(StreamPtr)> cb)
+{
+	std::lock_guard<std::mutex> guard(streamsMutex);
+	onConnection = cb;
+}
+
 bool mtt::utp::Manager::onUdpPacket(udp::endpoint& e, std::vector<DataBuffer*>& buffers)
 {
 	if (!active)
@@ -188,8 +194,12 @@ void mtt::utp::Manager::onNewConnection(const udp::endpoint& e, const MessageHea
 	auto stream = std::make_shared<utp::Stream>(service.io);
 	streams.insert({ header.connection_id + 1, stream });
 
-	if (onConnection)
-		onConnection(stream);
+	{
+		std::lock_guard<std::mutex> guard(callbackMutex);
+
+		if (onConnection)
+			onConnection(stream);
+	}
 
 	stream->connect(e, currentUdpPort, header);
 }

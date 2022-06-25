@@ -75,7 +75,15 @@ void mtt::IncomingPeersListener::stop()
 		tcpListener = nullptr;
 	}
 
+	utp::Manager::get().setConnectionCallback(nullptr);
+
 	std::lock_guard<std::mutex> guard(peersMutex);
+
+	for (auto [id,peer] : pendingPeers)
+	{
+		peer.s->onCloseCallback = [](int) {};
+		peer.s->onReceiveCallback = [](BufferSpan) { return 0; };
+	}
 	pendingPeers.clear();
 }
 
@@ -132,7 +140,7 @@ void mtt::IncomingPeersListener::createUtpListener()
 {
 	auto& utp = utp::Manager::get();
 
-	utp.onConnection = [this](utp::StreamPtr s)
+	utp.setConnectionCallback([this](utp::StreamPtr s)
 	{
 		auto stream = std::make_shared<PeerStream>(pool.io);
 		auto sPtr = stream.get();
@@ -152,7 +160,7 @@ void mtt::IncomingPeersListener::createUtpListener()
 		{
 			return readStreamData(data, sPtr);
 		};
-	};
+	});
 }
 
 size_t mtt::IncomingPeersListener::readStreamData(BufferSpan data, PeerStream* sPtr)

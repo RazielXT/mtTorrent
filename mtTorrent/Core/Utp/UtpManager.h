@@ -28,7 +28,7 @@ namespace mtt
 
 			void connectStream(StreamPtr s, const udp::endpoint& e);
 
-			std::function<void(StreamPtr)> onConnection;
+			void setConnectionCallback(std::function<void(StreamPtr)>);
 
 			bool onUdpPacket(udp::endpoint&, std::vector<DataBuffer*>&);
 
@@ -36,6 +36,9 @@ namespace mtt
 
 			void refresh();
 			void onNewConnection(const udp::endpoint& e, const MessageHeader&);
+
+			std::mutex callbackMutex;
+			std::function<void(StreamPtr)> onConnection;
 
 			std::mutex streamsMutex;
 			std::multimap<uint16_t, StreamPtr> streams;

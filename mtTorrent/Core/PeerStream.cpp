@@ -267,7 +267,8 @@ void mtt::PeerStream::connectionClosed(Type t, int code)
 
 	auto ptr = shared_from_this();
 
-	onCloseCallback(code);
+	if (onCloseCallback)
+		onCloseCallback(code);
 
 	//clean shared_from_this bind
 	if (utpStream)
