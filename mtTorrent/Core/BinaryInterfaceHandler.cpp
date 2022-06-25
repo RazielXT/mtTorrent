@@ -19,7 +19,10 @@ extern "C"
 	{
 		if (id == mtBI::MessageId::Init)
 			core = mttApi::Core::create();
-		else if (id == mtBI::MessageId::Deinit)
+		else if (!core)
+			return mtt::Status::E_InvalidInput;
+
+		if (id == mtBI::MessageId::Deinit)
 			core.reset();
 		else if (id == mtBI::MessageId::AddFromFile)
 		{
