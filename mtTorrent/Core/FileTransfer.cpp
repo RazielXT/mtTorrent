@@ -33,11 +33,11 @@ mtt::FileTransfer::FileTransfer(Torrent& t) : downloader(t.infoFile.info, *this)
 
 void mtt::FileTransfer::start()
 {
-	if (refreshTimer)
-		return;
-
 	piecesAvailability.resize(torrent.infoFile.info.pieces.size());
 	refreshSelection();
+
+	if (refreshTimer)
+		return;
 
 	torrent.peers->start([this](Status s, mtt::PeerSource)
 		{
