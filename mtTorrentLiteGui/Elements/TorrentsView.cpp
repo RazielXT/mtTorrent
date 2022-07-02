@@ -74,11 +74,6 @@ void TorrentsView::refreshSelection()
 	}
 }
 
-void TorrentsView::updateList()
-{
-	listChanged = true;
-}
-
 std::vector<TorrentsView::SelectedTorrent> TorrentsView::getAllSelectedTorrents()
 {
 	std::vector<SelectedTorrent> out;
@@ -141,11 +136,9 @@ System::String^ formatTime(uint64_t time)
 
 void TorrentsView::refreshTorrentInfo(uint8_t* hash)
 {
-	if (!core.IoctlFunc)
-		return;
-
 	mtBI::TorrentInfo info;
-	core.IoctlFunc(mtBI::MessageId::GetTorrentInfo, hash, &info);
+	if (core.IoctlFunc(mtBI::MessageId::GetTorrentInfo, hash, &info) != mtt::Status::Success)
+		return;
 
 	GuiLite::MainForm::instance->torrentInfoLabel->Clear();
 	auto infoLines = GuiLite::MainForm::instance->torrentInfoLabel;
@@ -240,7 +233,20 @@ void TorrentsView::refreshTorrentsGrid()
 		return i;
 	};
 
-	if (listChanged || torrentRows.size() != torrentGrid->Rows->Count)
+	bool listChanged = torrentRows.size() != torrentGrid->Rows->Count || torrentRows.size() != torrents.list.size();
+
+	for (int i = 0; i < torrentGrid->Rows->Count; i++)
+	{
+		auto rowHashId = hashToInt2(torrentGrid->Rows[i]->Cells[0]->Value->ToString());
+
+		if (torrentRows.find(rowHashId) == torrentRows.end() || torrentRows[rowHashId] != i)
+		{
+			listChanged = true;
+			break;
+		}
+	}
+
+	if (listChanged)
 	{
 		torrentRows.clear();
 

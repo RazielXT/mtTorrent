@@ -16,7 +16,6 @@ public:
 	//update selection info based on torrents grid state
 	void refreshSelection();
 
-	void updateList();
 	void update(const uint8_t* hash);
 
 	struct SelectedTorrent

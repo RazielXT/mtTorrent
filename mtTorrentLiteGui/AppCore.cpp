@@ -126,7 +126,6 @@ void AppCore::removeTorrent(uint8_t* hash, bool removeFiles)
 
 	IoctlFunc(mtBI::MessageId::Remove, &request, nullptr);
 	forceRefresh = true;
-	torrentsView.updateList();
 }
 
 void AppCore::processProgramArgument(System::String^ arg)
@@ -189,13 +188,11 @@ void AppCore::checkAlerts()
 				torrentsView.select(alert.hash);
 				selectionChanged = true;
 
-				torrentsView.updateList();
 				fileSelection.showFilesSelectionForm(alert.hash, true);
 			}
 			else if (alert.id == mtt::AlertId::TorrentFinished)
 			{
 				scheduler.torrentFinished(alert.hash);
-				torrentsView.updateList();
 			}
 			else if (alert.id == mtt::AlertId::MetadataFinished)
 			{
@@ -283,7 +280,6 @@ void AppCore::onButtonClick(ButtonId id, System::String^ param)
 	else if (id == ButtonId::CheckFiles)
 	{
 		IoctlFunc(mtBI::MessageId::CheckFiles, &firstSelectedHash, nullptr);
-		torrentsView.updateList();
 	}
 	else if (id == ButtonId::Schedule)
 	{
@@ -297,7 +293,6 @@ void AppCore::onButtonClick(ButtonId id, System::String^ param)
 		for (auto& s : selection)
 		{
 			scheduler.queueTorrent(s.hash, true);
-			torrentsView.updateList();
 		}
 	}
 	else if (id == ButtonId::QueueLast)
@@ -307,7 +302,6 @@ void AppCore::onButtonClick(ButtonId id, System::String^ param)
 		for (auto& s : selection)
 		{
 			scheduler.queueTorrent(s.hash, false);
-			torrentsView.updateList();
 		}
 	}
 	else if (id == ButtonId::StopAfterFinish)
@@ -353,8 +347,6 @@ void AppCore::onButtonClick(ButtonId id, System::String^ param)
 			memcpy(request.hash, s.hash, 20);
 			IoctlFunc(mtBI::MessageId::Remove, &request, nullptr);
 		}
-
-		torrentsView.updateList();
 	}
 	else if (id == ButtonId::AddTorrentFile)
 	{

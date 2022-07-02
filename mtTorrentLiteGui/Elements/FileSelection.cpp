@@ -229,8 +229,8 @@ void FileSelection::onButtonClick(ButtonId id)
 
 		if (form->checkBoxStart->Visible && form->checkBoxStart->Checked)
 			core.IoctlFunc(mtBI::MessageId::Start, state.hash, nullptr);
-		else
-			core.torrentsView.updateList();
+
+		core.torrentsView.update(core.firstSelectedHash);
 
 		form->Close();
 	}

@@ -53,7 +53,6 @@ extern void filePriorityChanged(const std::vector<int>& ids, System::String^ pri
 extern void fileProgressSelectionChanged(int row);
 extern void forceGuiRefresh();
 extern System::String^ fileSelectionValidatePath(System::String^ path);
-extern void torrentsGridSorted();
 
 public ref class UserWindowState
 {

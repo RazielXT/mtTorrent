@@ -54,10 +54,6 @@ System::String^ fileSelectionValidatePath(System::String^ path)
 {
 	return core.fileSelection.validatePath(path);
 }
-void torrentsGridSorted()
-{
-	core.torrentsView.updateList();
-}
 
 using namespace System::Xml;
 
