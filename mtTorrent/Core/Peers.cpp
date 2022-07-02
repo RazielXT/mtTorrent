@@ -102,6 +102,10 @@ void mtt::Peers::connectNext(uint32_t count)
 	PEERS_LOG("connectNext " << count);
 
 	std::lock_guard<std::mutex> guard(peersMutex);
+
+	if (mtt::config::getExternal().connection.maxTorrentConnections <= activeConnections.size())
+		return;
+
 	count = std::min(count, mtt::config::getExternal().connection.maxTorrentConnections - (uint32_t)activeConnections.size());
 
 	auto currentTime = (uint32_t)::time(0);
