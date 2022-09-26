@@ -7,7 +7,8 @@
 #include <map>
 #include <filesystem>
 
-clock_t startTime = clock();
+static clock_t startTime = clock();
+static std::string folder = "./logs/" + std::to_string(::time(0)) + "/";
 
 float GetLogTimeT()
 {
@@ -16,7 +17,8 @@ float GetLogTimeT()
 	return ((float)t) / CLOCKS_PER_SEC;
 }
 
-uint32_t EnabledLogsFlag = 0;// (uint32_t)LogType::TcpStream | (uint32_t)LogType::Peer | (uint32_t)LogType::Downloader;// (uint32_t)LogType::Tcp | (uint32_t)LogType::Bandwidth | (uint32_t)LogType::Peer;// (uint32_t)LogType::UtpStream | (uint32_t)LogType::Downloader; //(uint32_t)LogType::PeerCommunicationDiagnostics | (uint32_t)LogType::UtpStream | (uint32_t)LogType::Downloader;
+const uint32_t FullNetworkFlag = (uint32_t)LogType::Peer | (uint32_t)LogType::PeerStream | (uint32_t)LogType::PeersListener | (uint32_t)LogType::TcpStream | (uint32_t)LogType::TcpListener | (uint32_t)LogType::UdpWriter | (uint32_t)LogType::UdpListener | (uint32_t)LogType::Dht;
+uint32_t EnabledLogsFlag = 0;// (uint32_t)LogType::General | FullNetworkFlag;
 
 void EnableLog(LogType t, bool enable)
 {
@@ -67,6 +69,88 @@ LogWriter& LogWriter::operator<<(int64_t i)
 	return *this;
 }
 
+void LogWriter::flush()
+{
+	if (data.empty() || name.empty() || name.back() == '_')
+		return;
+
+	std::replace(name.begin(), name.end(), ':', '.');
+
+	std::error_code ec;
+	if (!std::filesystem::create_directories(folder, ec) && ec)
+	{
+		auto msg = ec.message();
+		return;
+	}
+
+	bool append = true;
+
+	std::ofstream file(folder + name + ".txt", append ? std::ios_base::app : std::ios_base::out);
+
+	size_t pos = 0;
+	uint8_t currentLineId = 0;
+	size_t currentLineParamPos = 0;
+
+	while (pos < data.size())
+	{
+		auto type = (LogWriter::DataType)data[pos];
+		pos++;
+
+		if (type == ENDL)
+		{
+			if (idx)
+				file << " i" << idx;
+
+			file << "\n";
+		}
+		else if (type == START)
+		{
+			currentLineId = data[pos++];
+			currentLineParamPos = 0;
+		}
+		else if (type == UINT16)
+		{
+			file << *(uint16_t*)&data[pos] << " ";
+			pos += sizeof(uint16_t);
+		}
+		else if (type == UINT)
+		{
+			file << *(uint32_t*)&data[pos] << " ";
+			pos += sizeof(uint32_t);
+		}
+		else if (type == INT64)
+		{
+			file << *(int64_t*)&data[pos] << " ";
+			pos += sizeof(int64_t);
+		}
+		else if (type == FLOAT)
+		{
+			file << *(float*)&data[pos] << " ";
+			pos += sizeof(float);
+		}
+		else if (type == ADDR)
+		{
+			file << Addr((uint8_t*)&data[pos], (uint16_t&)data[pos + 4], false).toString() << " ";
+			pos += 6;
+		}
+		else if (type == STR)
+		{
+			auto stringPtr = (const char*)&data[pos];
+			file << stringPtr << " ";
+			pos += strlen(stringPtr) + 1;
+		}
+		else if (type == PARAM && currentLineId != NoParamsLineId)
+		{
+			auto stringPtr = lineParams[currentLineId][currentLineParamPos++];
+			file << stringPtr;
+		}
+	}
+
+	data.clear();
+	lineParams.clear();
+	lineParams.emplace_back();
+}
+
 uint8_t LogWriter::CreateLogLineId()
 {
 	static std::mutex logMutex;
@@ -111,92 +195,34 @@ LogWriter& LogWriter::operator<<(LogWriter::DataType t)
 {
 	data.push_back((char)t);
 
+	if (t == LogWriter::ENDL)
+		flush();
+
 	return *this;
 }
 
 LogWriter& LogWriter::operator<<(int i) { return *this << (uint32_t)i; };
 LogWriter& LogWriter::operator<<(uint64_t i) { return *this << (uint32_t)i; };
 
+int logIdx = 0;
+void LogWriter::assignIndex()
+{
+	idx = logIdx++;
+}
+
 LogWriter::LogWriter(LogType t) : type(t)
 {
 	//NoParamsLineId 0
 	lineParams.emplace_back();
+
+	StartLogLine(NoParamsLineId);
+	*this << std::string("init");
+	*this << LogWriter::ENDL;
 }
 
 LogWriter::~LogWriter()
 {
-	if (data.empty() || name.empty() || name.back() == '_')
-		return;
-
-	std::replace(name.begin(), name.end(), ':', '.');
-
-	std::string folder = "./logs/";
-	std::error_code ec;
-	if (!std::filesystem::create_directories(folder, ec) && ec)
-	{
-		auto msg = ec.message();
-		return;
-	}
-
-	bool append = false;
-
-	std::ofstream file(folder + name + ".txt", append ? std::ios_base::app : std::ios_base::out);
-
-	size_t pos = 0;
-	uint8_t currentLineId = 0;
-	size_t currentLineParamPos = 0;
-
-	while (pos < data.size())
-	{
-		auto type = (LogWriter::DataType)data[pos];
-		pos++;
-
-		if (type == ENDL)
-		{
-			file << "\n";
-		}
-		else if (type == START)
-		{
-			currentLineId = data[pos++];
-			currentLineParamPos = 0;
-		}
-		else if (type == UINT16)
-		{
-			file << *(uint16_t*)&data[pos] << " ";
-			pos += sizeof(uint16_t);
-		}
-		else if (type == UINT)
-		{
-			file << *(uint32_t*)&data[pos] << " ";
-			pos += sizeof(uint32_t);
-		}
-		else if (type == INT64)
-		{
-			file << *(int64_t*)&data[pos] << " ";
-			pos += sizeof(int64_t);
-		}
-		else if (type == FLOAT)
-		{
-			file << *(float*)&data[pos] << " ";
-			pos += sizeof(float);
-		}
-		else if (type == ADDR)
-		{
-			file << Addr((uint8_t*)&data[pos], (uint16_t&)data[pos+4], false).toString() << " ";
-			pos += 6;
-		}
-		else if (type == STR)
-		{
-			auto stringPtr = (const char*)&data[pos];
-			file << stringPtr << " ";
-			pos += strlen(stringPtr) + 1;
-		}
-		else if (type == PARAM && currentLineId != NoParamsLineId)
-		{
-			auto stringPtr = lineParams[currentLineId][currentLineParamPos++];
-			file << stringPtr;
-		}
-	}
+	flush();
 }
 
 LogWriter* LogWriter::GetGlobalLog(LogType t, const char* name)

@@ -16,7 +16,7 @@ enum class LogType
 	HttpTracker = FIRST << 6,
 	UdpTracker = FIRST << 7,
 	Dht = FIRST << 8,
-	Tcp = FIRST << 9,
+	TcpListener = FIRST << 9,
 	SslTcp = FIRST << 10,
 	UdpWriter = FIRST << 11,
 	UdpListener = FIRST << 12,
@@ -27,6 +27,7 @@ enum class LogType
 	PeersListener = FIRST << 17,
 	TcpStream = FIRST << 18,
 	PeerStream = FIRST << 19,
+	General = FIRST << 20,
 
 	Test = FIRST << 30
 };
@@ -86,18 +87,21 @@ struct LogWriter
 
 	std::mutex mtx;
 
+	void assignIndex();
+	int idx = 0;
+
 private:
 
+	void flush();
 	uint8_t logLineIdFirstTime = NoParamsLineId;
-
 };
 
 //----------
 
 #define CREATE_LOG(type) log = LogEnabled(LogType::type) ? LogWriter::Create(LogType::type) : nullptr; if (log) log->name = #type "_";
 #define CREATE_NAMED_LOG(type, n) CREATE_LOG(type) if (log) log->name += n;
-#define NAME_LOG(n)if (log) log->name += n;
-
+#define NAME_LOG(n)if (log && log->name.back() == '_') log->name += n;
+#define INDEX_LOG()if (log) log->assignIndex();
 #define _WRITE_LOG(logdata, diagnostic)  if (log && log->Enabled()) { static auto LogId = diagnostic ? LogWriter::NoParamsLineId : log->CreateLogLineId(); std::lock_guard<std::mutex> guard(log->mtx); log->StartLogLine(LogId); *log << logdata << LogWriter::ENDL;}
 #define WRITE_LOG(logdata) _WRITE_LOG(logdata, false)
 #define WRITE_DIAGNOSTIC_LOG(logdata) _WRITE_LOG(logdata, true)
