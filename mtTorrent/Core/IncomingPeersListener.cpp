@@ -83,6 +83,7 @@ void mtt::IncomingPeersListener::stop()
 	{
 		peer.s->onCloseCallback = [](int) {};
 		peer.s->onReceiveCallback = [](BufferSpan) { return 0; };
+		peer.s->close();
 	}
 	pendingPeers.clear();
 }
