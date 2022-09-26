@@ -10,6 +10,7 @@
 #include "AlertsManager.h"
 #include "utils/HexEncoding.h"
 #include "utils/TorrentFileParser.h"
+#include "Logging.h"
 
 #ifdef WINAPI
 
@@ -61,6 +62,8 @@ void mtt::Core::init()
 	::SetUnhandledExceptionFilter(OurCrashHandler);
 #endif // WINAPI
 
+	WRITE_GLOBAL_LOG(General, "Init start");
+
 	mtt::config::load();
 
 	UdpAsyncComm::Init()->setBindPort(mtt::config::getExternal().connection.udpPort);
@@ -106,6 +109,8 @@ void mtt::Core::init()
 		torrents.push_back(tPtr);
 		listener->addTorrent(tPtr->hash());
 	}
+
+	WRITE_GLOBAL_LOG(General, "Init end");
 }
 
 static void saveTorrentList(const std::vector<mtt::TorrentPtr>& torrents)
@@ -121,6 +126,8 @@ static void saveTorrentList(const std::vector<mtt::TorrentPtr>& torrents)
 
 void mtt::Core::deinit()
 {
+	WRITE_GLOBAL_LOG(General, "Deinit start");
+
 	bandwidth.reset();
 
 	if (listener)
@@ -150,6 +157,8 @@ void mtt::Core::deinit()
 	mtt::config::save();
 
 	mtt::AlertsManager::Get().popAlerts();
+
+	WRITE_GLOBAL_LOG(General, "Deinit end");
 }
 
 std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addFile(const char* filename)

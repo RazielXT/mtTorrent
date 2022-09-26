@@ -46,7 +46,7 @@ bool mtt::dht::Responder::handlePacket(const udp::endpoint& endpoint, DataBuffer
 	response.add("1:rd2:id20:", 11);
 	response.add(mtt::config::getInternal().hashId, 20);
 
-	DHT_LOG("Request: " << std::string(requestType->data, requestType->data + requestType->size) << " from " << hexToString((const uint8_t*)sourceId->data, sourceId->size));
+	DHT_LOG("Request: " << std::string(requestType->data, requestType->data + requestType->size) << " from " << endpoint.address().to_string());// hexToString((const uint8_t*)sourceId->data, sourceId->size));
 
 	if (requestType->equals("find_node", 9))
 	{

@@ -74,11 +74,11 @@ mtt::utp::Stream::Stream(asio::io_service& io) : io_service(io)
 
 mtt::utp::Stream::~Stream()
 {
-	NAME_LOG(getHostname());
 }
 
 void mtt::utp::Stream::init(const udp::endpoint& e, uint16_t bindPort)
 {
+	//default as initializer
 	state.step = StateType::SYN_SEND;
 	state.id_recv = (uint16_t)Random::Number();
 	state.id_send = state.id_recv + 1;
@@ -87,6 +87,8 @@ void mtt::utp::Stream::init(const udp::endpoint& e, uint16_t bindPort)
 
 	writer->setAddress(e);
 	writer->setBindPort(bindPort);
+
+	NAME_LOG(getHostname());
 }
 
 void mtt::utp::Stream::connect()

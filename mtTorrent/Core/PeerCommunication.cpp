@@ -8,7 +8,7 @@ enum class PeerEventType : uint8_t
 {
 	Connect, Connected, RemoteConnected, Disconnect, ReceiveMessage, Interested, Choke, RequestPiece, Piece
 };
-#define DIAGNOSTICS(eventType, x) WRITE_DIAGNOSTIC_LOG(std::string(#eventType)/*(char)PeerEventType::##eventType*/ << x)
+#define DIAGNOSTICS(eventType, x) {}//WRITE_DIAGNOSTIC_LOG(std::string(#eventType)/*(char)PeerEventType::##eventType*/ << x)
 #define BT_LOG(x) WRITE_LOG(x)
 
 namespace mtt
@@ -121,11 +121,11 @@ mtt::PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, asio
 {
 	stream = std::make_shared<PeerStream>(io_service);
 	CREATE_LOG(Peer);
+	INDEX_LOG();
 }
 
 mtt::PeerCommunication::~PeerCommunication()
 {
-	NAME_LOG(stream->getAddressName());
 }
 
 size_t mtt::PeerCommunication::fromStream(std::shared_ptr<PeerStream> s, const BufferView& streamData)
@@ -134,7 +134,8 @@ size_t mtt::PeerCommunication::fromStream(std::shared_ptr<PeerStream> s, const B
 	initializeStream();
 	state.action = PeerCommunicationState::Connected;
 
-	DIAGNOSTICS(RemoteConnected, state.action);
+	NAME_LOG(stream->getAddressName());
+	BT_LOG("RemoteConnected");
 
 	return dataReceived(streamData);
 }
@@ -162,7 +163,7 @@ void mtt::PeerCommunication::initializeStream()
 
 void mtt::PeerCommunication::sendHandshake(const Addr& address)
 {
-	DIAGNOSTICS(Connect, state.action);
+	NAME_LOG(address.toString());
 
 	if (state.action != PeerCommunicationState::Disconnected)
 		resetState();
@@ -177,7 +178,7 @@ void mtt::PeerCommunication::sendHandshake()
 {
 	if (!state.finishedHandshake && state.action == PeerCommunicationState::Connected)
 	{
-		BT_LOG("Handshake");
+		BT_LOG("sendHandshake");
 
 		state.action = PeerCommunicationState::Handshake;
 		stream->write(mtt::bt::createHandshake(torrent.hash, mtt::config::getInternal().hashId));
@@ -215,7 +216,7 @@ size_t mtt::PeerCommunication::dataReceived(const BufferView& buffer)
 void mtt::PeerCommunication::connectionOpened()
 {
 	state.action = PeerCommunicationState::Connected;
-	DIAGNOSTICS(Connected, state.action);
+	BT_LOG("connected");
 
 	sendHandshake();
 }
@@ -236,7 +237,7 @@ const std::shared_ptr<mtt::PeerStream> mtt::PeerCommunication::getStream() const
 
 void mtt::PeerCommunication::connectionClosed(int code)
 {
-	DIAGNOSTICS(Disconnect, code);
+	BT_LOG("connectionClosed " << code);
 
 	if (state.action != PeerCommunicationState::Disconnected)
 	{
@@ -255,7 +256,7 @@ void mtt::PeerCommunication::setInterested(bool enabled)
 	if (state.amInterested == enabled)
 		return;
 
-	DIAGNOSTICS(Interested, enabled);
+	BT_LOG("setInterested " << enabled);
 
 	state.amInterested = enabled;
 	stream->write(mtt::bt::createStateMessage(enabled ? PeerMessage::Interested : PeerMessage::NotInterested));
@@ -269,7 +270,7 @@ void mtt::PeerCommunication::setChoke(bool enabled)
 	if (state.amChoking == enabled)
 		return;
 
-	DIAGNOSTICS(Choke, enabled);
+	BT_LOG("setChoke " << enabled);
 
 	state.amChoking = enabled;
 	stream->write(mtt::bt::createStateMessage(enabled ? PeerMessage::Choke : PeerMessage::Unchoke));
@@ -280,7 +281,7 @@ void mtt::PeerCommunication::requestPieceBlock(const PieceBlockInfo& pieceInfo)
 	if (!isEstablished())
 		return;
 
-	DIAGNOSTICS(RequestPiece, pieceInfo.index << pieceInfo.begin << pieceInfo.length);
+	BT_LOG("requestPieceBlock " << pieceInfo.index << pieceInfo.begin << pieceInfo.length);
 
 	stream->write(mtt::bt::createBlockRequest(pieceInfo));
 }
@@ -295,7 +296,7 @@ void mtt::PeerCommunication::sendKeepAlive()
 	if (!isEstablished())
 		return;
 
-	BT_LOG("KeepAlive");
+	BT_LOG("sendKeepAlive");
 	stream->write(DataBuffer(4, 0));
 }
 
@@ -304,7 +305,7 @@ void mtt::PeerCommunication::sendHave(uint32_t pieceIdx)
 	if (!isEstablished())
 		return;
 
-	BT_LOG("Have " << pieceIdx);
+	BT_LOG("sendHave " << pieceIdx);
 	stream->write(mtt::bt::createHave(pieceIdx));
 }
 
@@ -313,7 +314,7 @@ void mtt::PeerCommunication::sendPieceBlock(const PieceBlock& block)
 	if (!isEstablished())
 		return;
 
-	BT_LOG("Piece " << block.info.index);
+	BT_LOG("sendPieceBlock " << block.info.index);
 	stream->write(mtt::bt::createPiece(block));
 }
 
@@ -322,7 +323,7 @@ void mtt::PeerCommunication::sendBitfield(const DataBuffer& bitfield)
 	if (!isEstablished())
 		return;
 
-	BT_LOG("Bitfield");
+	BT_LOG("sendBitfield");
 	stream->write(mtt::bt::createBitfield(bitfield));
 }
 
@@ -337,55 +338,52 @@ void mtt::PeerCommunication::sendPort(uint16_t port)
 	if (!isEstablished())
 		return;
 
-	BT_LOG("Port " << port);
+	BT_LOG("sendPort " << port);
 	stream->write(mtt::bt::createPort(port));
 }
 
 void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 {
-	if(message.id == PeerMessage::Piece)
-		DIAGNOSTICS(Piece, message.piece.info.index << message.piece.info.begin << message.piece.info.length)
-	else
-		DIAGNOSTICS(ReceiveMessage, message.id);
-
 	if (message.id == PeerMessage::Bitfield)
 	{
 		info.pieces.fromBitfield(message.bitfield);
 
-		BT_LOG("Received progress: " << info.pieces.getPercentage());
+		BT_LOG("Bitfield progress: " << info.pieces.getPercentage());
 		listener.progressUpdated(this, -1);
 	}
 	else if (message.id == PeerMessage::Have)
 	{
 		info.pieces.addPiece(message.havePieceIndex);
 
-		BT_LOG("Received progress: " << info.pieces.getPercentage());
+		BT_LOG("Have " << message.havePieceIndex);
 		listener.progressUpdated(this, message.havePieceIndex);
 	}
 	else if (message.id == PeerMessage::Unchoke)
 	{
-		BT_LOG("Peer state Unchoke");
+		BT_LOG("Unchoke");
 		state.peerChoking = false;
 		stream->setMinBandwidthRequest(BlockRequestMaxSize + 20);
 	}
 	else if (message.id == PeerMessage::Choke)
 	{
-		BT_LOG("Peer state Choke");
+		BT_LOG("Choke");
 		state.peerChoking = true;
 		stream->setMinBandwidthRequest(100);
 	}
 	else if (message.id == PeerMessage::NotInterested)
 	{
+		BT_LOG("NotInterested");
 		state.peerInterested = true;
 	}
 	else if (message.id == PeerMessage::Interested)
 	{
+		BT_LOG("Interested");
 		state.peerInterested = false;
 	}
 	else if (message.id == PeerMessage::Extended)
 	{
 		auto type = ext.load(message.extended.id, message.extended.data);
-		BT_LOG("ext message handled " << (int)type);
+		BT_LOG("Extended message " << (int)type);
 
 		if (type == mtt::ext::HandshakeEx)
 		{
@@ -394,6 +392,8 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 	}
 	else if (message.id == PeerMessage::Handshake)
 	{
+		BT_LOG("Handshake");
+
 		if (state.action == PeerCommunicationState::Handshake || state.action == PeerCommunicationState::Connected)
 		{
 			if (!state.finishedHandshake)
@@ -420,6 +420,13 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 			else
 				state.action = PeerCommunicationState::Established;
 		}
+	}
+	else
+	{
+		if (message.id == PeerMessage::Piece)
+			BT_LOG("Piece " << message.piece.info.index << message.piece.info.begin << message.piece.info.length)
+		else
+			BT_LOG("ReceiveMessage " << message.id);
 	}
 
 	listener.messageReceived(this, message);

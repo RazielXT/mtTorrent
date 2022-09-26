@@ -1,6 +1,7 @@
 #include "TcpAsyncStream.h"
 
 #define TCP_LOG(x) WRITE_LOG(x)
+#define TCP_LOG_DETAILED(x) //WRITE_LOG(x)
 
 TcpAsyncStream::TcpAsyncStream(asio::io_service& io) : io_service(io), socket(io)
 {
@@ -12,7 +13,6 @@ TcpAsyncStream::TcpAsyncStream(asio::io_service& io) : io_service(io), socket(io
 
 TcpAsyncStream::~TcpAsyncStream()
 {
-	NAME_LOG(getHostname());
 }
 
 void TcpAsyncStream::connect(const uint8_t* ip, uint16_t port, bool ipv6)
@@ -152,6 +152,7 @@ void TcpAsyncStream::setAsConnected()
 	info.addressResolved = true;
 	info.host = endpoint.address().to_string();
 
+	NAME_LOG(getHostname());
 	TCP_LOG("connected");
 
 	socket.non_blocking(true, ec);
@@ -427,7 +428,7 @@ uint32_t TcpAsyncStream::wantedTransfer()
 
 	wanted_transfer = std::min(wanted_transfer, (uint32_t)1024*1024);
 
-	TCP_LOG("wantedTransfer: " << wanted_transfer << ", expecting " << expecting_size << ", lastReceiveSpeed " << lastReceiveSpeed);
+	TCP_LOG_DETAILED("wantedTransfer: " << wanted_transfer << ", expecting " << expecting_size << ", lastReceiveSpeed " << lastReceiveSpeed);
 
 	return wanted_transfer;
 }
@@ -437,17 +438,17 @@ void TcpAsyncStream::requestBandwidth(uint32_t bytes)
 	if (waiting_for_bw)
 		return;
 
-	TCP_LOG("wants quota " << bytes << " bytes, current quota " << bw_quota << " bytes");
+	TCP_LOG_DETAILED("wants quota " << bytes << " bytes, current quota " << bw_quota << " bytes");
 
 	if (bw_quota >= bytes)
 		return;
 
-	TCP_LOG("requesting " << bytes << " bytes");
+	TCP_LOG_DETAILED("requesting " << bytes << " bytes");
 
 	bytes -= bw_quota;
 
 	uint32_t ret = bwChannelsCount ? BandwidthManager::Get().requestBandwidth(shared_from_this(), bytes, priority, bwChannels, bwChannelsCount) : bytes;
-	TCP_LOG("request_bandwidth returned " << ret << " bytes");
+	TCP_LOG_DETAILED("request_bandwidth returned " << ret << " bytes");
 
 	if (ret == 0)
 		waiting_for_bw = true;
@@ -473,7 +474,7 @@ void TcpAsyncStream::startReceive()
 	timeoutTimer->expires_from_now(std::chrono::seconds(60));
 	timeoutTimer->async_wait(std::bind(&TcpAsyncStream::checkTimeout, shared_from_this(), std::placeholders::_1));
 
-	TCP_LOG("call async_receive for " << max_receive << " bytes");
+	TCP_LOG_DETAILED("call async_receive for " << max_receive << " bytes");
 
 	auto readData = readBuffer.reserve(max_receive);
 	socket.async_receive(asio::buffer(readData, max_receive), std::bind(&TcpAsyncStream::handle_receive, shared_from_this(), std::placeholders::_1, std::placeholders::_2, max_receive));
@@ -486,7 +487,7 @@ bool TcpAsyncStream::isActive()
 
 void TcpAsyncStream::assignBandwidth(int amount)
 {
-	TCP_LOG("assignBandwidth returned " << amount << " bytes");
+	TCP_LOG_DETAILED("assignBandwidth returned " << amount << " bytes");
 
 	std::lock_guard<std::mutex> guard(receive_mutex);
 
@@ -500,7 +501,7 @@ void TcpAsyncStream::ReadBuffer::advanceBuffer(size_t size)
 {
 	pos += size;
 	receivedCounter += size;
-	TCP_LOG("Buffer advance " << size << " - Buffer pos " << pos << ", reserved " << reserved() << ", fullsize " << data.size());
+	TCP_LOG_DETAILED("Buffer advance " << size << " - Buffer pos " << pos << ", reserved " << reserved() << ", fullsize " << data.size());
 }
 
 void TcpAsyncStream::ReadBuffer::consume(size_t size)
@@ -513,7 +514,7 @@ void TcpAsyncStream::ReadBuffer::consume(size_t size)
 		data.resize(pos);
 	}
 
-	TCP_LOG("Buffer consume " << size << " - Buffer pos " << pos << ", reserved " << reserved() << ", fullsize " << data.size());
+	TCP_LOG_DETAILED("Buffer consume " << size << " - Buffer pos " << pos << ", reserved " << reserved() << ", fullsize " << data.size());
 }
 
 uint8_t* TcpAsyncStream::ReadBuffer::reserve(size_t size)
@@ -527,7 +528,7 @@ uint8_t* TcpAsyncStream::ReadBuffer::reserve(size_t size)
 	else
 		data.resize(pos + size);
 
-	TCP_LOG("Buffer reserve " << size << " - Buffer pos " << pos << ", reserved " << reserved() << ", fullsize " << data.size());
+	TCP_LOG_DETAILED("Buffer reserve " << size << " - Buffer pos " << pos << ", reserved " << reserved() << ", fullsize " << data.size());
 
 	return data.data() + pos;
 }

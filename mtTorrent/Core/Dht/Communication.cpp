@@ -7,6 +7,7 @@
 mtt::dht::Communication* comm;
 
 #define DHT_LOG(x) WRITE_GLOBAL_LOG(Dht, x)
+#define DHT_DETAIL_LOG(x) //WRITE_GLOBAL_LOG(Dht, x)
 
 mtt::dht::Communication::Communication() : responder(*this)
 {
@@ -36,7 +37,7 @@ mtt::dht::Communication& mtt::dht::Communication::get()
 
 void mtt::dht::Communication::start()
 {
-	DHT_LOG("Start, my ID " << hexToString(mtt::config::getInternal().hashId, 20));
+	DHT_DETAIL_LOG("Start, my ID " << hexToString(mtt::config::getInternal().hashId, 20));
 
 	service.start(2);
 
@@ -95,7 +96,7 @@ bool operator== (std::shared_ptr<mtt::dht::Query::DhtQuery> query, const uint8_t
 
 void mtt::dht::Communication::findPeers(const uint8_t* hash, ResultsListener* listener)
 {
-	DHT_LOG("Start findPeers ID " << hexToString(hash, 20));
+	DHT_DETAIL_LOG("Start findPeers ID " << hexToString(hash, 20));
 
 	{
 		std::lock_guard<std::mutex> guard(peersQueriesMutex);
@@ -130,7 +131,7 @@ void mtt::dht::Communication::stopFindingPeers(const uint8_t* hash)
 
 void mtt::dht::Communication::findNode(const uint8_t* hash)
 {
-	DHT_LOG("Start findNode ID " << hexToString(hash, 20));
+	DHT_DETAIL_LOG("Start findNode ID " << hexToString(hash, 20));
 
 	auto q = std::make_shared<Query::FindNode>();
 	q->start(hash, table, this);
@@ -138,7 +139,7 @@ void mtt::dht::Communication::findNode(const uint8_t* hash)
 
 void mtt::dht::Communication::pingNode(const Addr& addr)
 {
-	DHT_LOG("Start pingNode addr " << addr.toString());
+	DHT_DETAIL_LOG("Start pingNode addr " << addr);
 
 	auto q = std::make_shared<Query::PingNodes>();
 	q->start(addr, table, this);
@@ -162,7 +163,7 @@ uint32_t mtt::dht::Communication::onFoundPeers(const uint8_t* hash, const std::v
 
 void mtt::dht::Communication::findingPeersFinished(const uint8_t* hash, uint32_t count)
 {
-	DHT_LOG("FindingPeersFinished ID " << hexToString(hash, 20));
+	DHT_DETAIL_LOG("FindingPeersFinished ID " << hexToString(hash, 20));
 
 	std::lock_guard<std::mutex> guard(peersQueriesMutex);
 
@@ -220,7 +221,7 @@ void mtt::dht::Communication::loadDefaultRoots()
 
 void mtt::dht::Communication::refreshTable()
 {
-	DHT_LOG("Start refreshTable");
+	DHT_DETAIL_LOG("Start refreshTable");
 
 	responder.refresh();
 

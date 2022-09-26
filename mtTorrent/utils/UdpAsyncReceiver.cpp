@@ -63,6 +63,8 @@ void UdpAsyncReceiver::readSocket()
 
 		if (transferred)
 		{
+			UDP_LOG("transferred " << transferred);
+
 			tmp.data[buffer].resize(transferred);
 			tmp.dataVec.push_back(&tmp.data[buffer]);
 
@@ -83,5 +85,5 @@ void UdpAsyncReceiver::readSocket()
 	if (buffer && receiveCallback)
 		receiveCallback(tmp.endpoint, tmp.dataVec);
 
-	UDP_LOG("readSocket completed " << buffer << " receive_from calls");
+	UDP_LOG(tmp.endpoint.address().to_string() << " sent " << buffer << " buffers");
 }

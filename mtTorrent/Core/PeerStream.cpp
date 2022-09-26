@@ -6,11 +6,11 @@
 mtt::PeerStream::PeerStream(asio::io_service& io) : io_service(io)
 {
 	CREATE_LOG(PeerStream);
+	INDEX_LOG();
 }
 
 mtt::PeerStream::~PeerStream()
 {
-	NAME_LOG(getAddressName());
 }
 
 void mtt::PeerStream::fromStream(std::shared_ptr<TcpAsyncStream> stream)
@@ -226,6 +226,7 @@ void mtt::PeerStream::closeStream()
 
 void mtt::PeerStream::connectionOpened(Type t)
 {
+	NAME_LOG(getAddressName());
 	WRITE_LOG("connectionOpened " << (int)t);
 
 	state.connected = true;
@@ -279,7 +280,7 @@ void mtt::PeerStream::connectionClosed(Type t, int code)
 
 size_t mtt::PeerStream::dataReceived(Type t, BufferSpan buffer)
 {
-	WRITE_LOG("dataReceived " << (int)t);
+	WRITE_LOG("dataReceived " << buffer.size);
 
 	if (peHandshake)
 		return dataReceivedPeHandshake(t, buffer);
@@ -298,7 +299,7 @@ size_t mtt::PeerStream::dataReceived(Type t, BufferSpan buffer)
 
 size_t mtt::PeerStream::dataReceivedPeHandshake(Type t, BufferSpan buffer)
 {
-	WRITE_LOG("dataReceivedPeHandshake " << (int)t);
+	WRITE_LOG("dataReceivedPeHandshake " << buffer.size);
 
 	DataBuffer response;
 	auto sz = peHandshake->readRemoteDataAsInitiator(buffer, response);

@@ -9,13 +9,13 @@ UdpAsyncWriter::UdpAsyncWriter(asio::io_service& io) : io_service(io), socket(io
 
 UdpAsyncWriter::~UdpAsyncWriter()
 {
-	NAME_LOG(getName());
 }
 
 void UdpAsyncWriter::setAddress(const Addr& addr)
 {
 	target_endpoint = addr.toUdpEndpoint();
 	hostname = target_endpoint.address().to_string();
+	NAME_LOG(getName());
 
 	state = Initialized;
 }
@@ -24,26 +24,29 @@ void UdpAsyncWriter::setAddress(const udp::endpoint& addr)
 {
 	target_endpoint = addr;
 	hostname = target_endpoint.address().to_string();
+	NAME_LOG(getName());
 
 	state = Initialized;
 }
 
 void UdpAsyncWriter::setAddress(const std::string& host, const std::string& p)
 {
-	UDP_LOG(host << " setAddress");
-
 	hostname = host;
 	port = p;
+
+	NAME_LOG(getName())
+	UDP_LOG(host << " host");
 
 	resolveHostname();
 }
 
 void UdpAsyncWriter::setAddress(const std::string& host, const std::string& p, bool ipv6)
 {
-	UDP_LOG(host << " setAddress");
-
 	hostname = host;
 	port = p;
+
+	NAME_LOG(getName())
+	UDP_LOG(host << " host");
 
 	resolveHostname();
 }
