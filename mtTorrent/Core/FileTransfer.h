@@ -78,6 +78,8 @@ namespace mtt
 		void returnDataBuffer(std::shared_ptr<DataBuffer>);
 
 		std::vector<uint32_t> freshPieces;
+
+		std::mutex unFinishedPiecesMutex;
 		std::vector<mtt::DownloadedPiece> unFinishedPieces;
 
 		Downloader downloader;

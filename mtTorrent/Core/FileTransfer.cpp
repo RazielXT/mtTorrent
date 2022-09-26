@@ -74,7 +74,10 @@ void mtt::FileTransfer::stop()
 	torrent.peers->stop();
 
 	auto unfinishedActive = downloader.stop();
-	unFinishedPieces.insert(unFinishedPieces.end(), unfinishedActive.begin(), unfinishedActive.end());
+	{
+		std::lock_guard<std::mutex> guard(unFinishedPiecesMutex);
+		unFinishedPieces.insert(unFinishedPieces.end(), unfinishedActive.begin(), unfinishedActive.end());
+	}
 
 	finishUnsavedPieceBlocks();
 
@@ -87,6 +90,8 @@ void mtt::FileTransfer::stop()
 
 void mtt::FileTransfer::addUnfinishedPieces(std::vector<mtt::DownloadedPiece>& pieces)
 {
+	std::lock_guard<std::mutex> guard(unFinishedPiecesMutex);
+
 	unFinishedPieces.reserve(pieces.size());
 
 	for (auto& p : pieces)
@@ -98,6 +103,7 @@ void mtt::FileTransfer::addUnfinishedPieces(std::vector<mtt::DownloadedPiece>& p
 
 void mtt::FileTransfer::clearUnfinishedPieces()
 {
+	std::lock_guard<std::mutex> guard(unFinishedPiecesMutex);
 	unFinishedPieces.clear();
 }
 
@@ -204,12 +210,15 @@ uint32_t mtt::FileTransfer::getUploadSpeed() const
 
 std::vector<mtt::DownloadedPiece> mtt::FileTransfer::getUnfinishedPiecesState()
 {
+	std::lock_guard<std::mutex> guard(unFinishedPiecesMutex);
 	return unFinishedPieces;
 }
 
 size_t mtt::FileTransfer::getUnfinishedPiecesDownloadSize()
 {
 	size_t sz = downloader.getUnfinishedPiecesDownloadSize();
+
+	std::lock_guard<std::mutex> guard(unFinishedPiecesMutex);
 
 	for (const auto& u : unFinishedPieces)
 		sz += u.downloadedSize;
@@ -220,6 +229,8 @@ size_t mtt::FileTransfer::getUnfinishedPiecesDownloadSize()
 std::map<uint32_t, uint32_t> mtt::FileTransfer::getUnfinishedPiecesDownloadSizeMap()
 {
 	auto map = downloader.getUnfinishedPiecesDownloadSizeMap();
+
+	std::lock_guard<std::mutex> guard(unFinishedPiecesMutex);
 
 	for (const auto& u : unFinishedPieces)
 		map[u.index] += u.downloadedSize;
@@ -424,6 +435,8 @@ mtt::LockedPeers mtt::FileTransfer::getPeers()
 
 mtt::DownloadedPiece mtt::FileTransfer::loadUnfinishedPiece(uint32_t idx)
 {
+	std::lock_guard<std::mutex> guard(unFinishedPiecesMutex);
+
 	for (auto& u : unFinishedPieces)
 	{
 		if (u.index == idx && u.downloadedSize)
