@@ -25,10 +25,9 @@ namespace mtt
 			~Stream();
 
 			void init(const udp::endpoint&, uint16_t bindPort);
-			void connect();
 
-			//from remote request
-			void connect(const udp::endpoint&, uint16_t bindPort, const MessageHeader& header);
+			void connect();
+			void connectRemote(const MessageHeader& header);
 
 			std::function<void()> onConnectCallback;
 			std::function<size_t(BufferSpan)> onReceiveCallback;

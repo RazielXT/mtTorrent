@@ -98,17 +98,13 @@ void mtt::utp::Stream::connect()
 	connection.nextTimeout = connection.lastReceive + std::chrono::milliseconds(packetTimeout());
 }
 
-void mtt::utp::Stream::connect(const udp::endpoint& e, uint16_t bindPort, const MessageHeader& header)
+void mtt::utp::Stream::connectRemote(const MessageHeader& header)
 {
 	state.step = StateType::SYN_RECV;
 	state.id_send = header.connection_id;
 	state.id_recv = state.id_send + 1;
-	
-	state.sequence = (uint16_t)Random::Number();
-	state.ack = header.seq_nr;
 
-	writer->setAddress(e);
-	writer->setBindPort(bindPort);
+	state.ack = header.seq_nr;
 
 	sendState();
 	connection.lastReceive = TimeClock::now();

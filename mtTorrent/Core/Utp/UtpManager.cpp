@@ -164,7 +164,7 @@ bool mtt::utp::Manager::onUdpPacket(udp::endpoint& e, std::vector<DataBuffer*>& 
 		}
 	}
 
-	for (auto s : affected)
+	for (auto& s : affected)
 	{
 		s->readFinish();
 	}
@@ -192,6 +192,7 @@ void mtt::utp::Manager::onNewConnection(const udp::endpoint& e, const MessageHea
 		return;
 
 	auto stream = std::make_shared<utp::Stream>(service.io);
+	stream->init(e, currentUdpPort);
 	streams.insert({ header.connection_id + 1, stream });
 
 	{
@@ -201,5 +202,5 @@ void mtt::utp::Manager::onNewConnection(const udp::endpoint& e, const MessageHea
 			onConnection(stream);
 	}
 
-	stream->connect(e, currentUdpPort, header);
+	stream->connectRemote(header);
 }

@@ -20,8 +20,6 @@ void mtt::PeerStream::fromStream(std::shared_ptr<TcpAsyncStream> stream)
 	tcpStream = stream;
 	state.remoteConnection = true;
 	initializeTcpStream();
-
-	connectionOpened(Type::Tcp);
 }
 
 void mtt::PeerStream::fromStream(utp::StreamPtr stream)
@@ -31,8 +29,6 @@ void mtt::PeerStream::fromStream(utp::StreamPtr stream)
 	utpStream = stream;
 	state.remoteConnection = true;
 	initializeUtpStream();
-
-	connectionOpened(Type::Utp);
 }
 
 void mtt::PeerStream::addEncryption(std::unique_ptr<ProtocolEncryption> encryption)

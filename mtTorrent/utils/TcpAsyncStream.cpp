@@ -136,10 +136,12 @@ void TcpAsyncStream::connectByAddress()
 	socket.async_connect(info.address.toTcpEndpoint(), std::bind(&TcpAsyncStream::handle_connect, shared_from_this(), std::placeholders::_1));
 }
 
-void TcpAsyncStream::setAsConnected()
+void TcpAsyncStream::initializeInfo()
 {
+	TCP_LOG("initializeInfo");
+
 	std::error_code ec;
-	auto endpoint = socket.remote_endpoint();
+	auto endpoint = socket.remote_endpoint(ec);
 	if (ec)
 	{
 		postFail("remote_endpoint", ec);
@@ -153,8 +155,13 @@ void TcpAsyncStream::setAsConnected()
 	info.host = endpoint.address().to_string();
 
 	NAME_LOG(getHostname());
+}
+
+void TcpAsyncStream::setAsConnected()
+{
 	TCP_LOG("connected");
 
+	std::error_code ec;
 	socket.non_blocking(true, ec);
 	if (ec)
 	{
@@ -230,6 +237,7 @@ void TcpAsyncStream::handle_connect(const std::error_code& error)
 {
 	if (!error)
 	{
+		initializeInfo();
 		setAsConnected();
 	}
 	else

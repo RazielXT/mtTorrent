@@ -1,6 +1,6 @@
 #include "TcpAsyncStream.h"
 
-class TcpAsyncServer
+class TcpAsyncServer : public std::enable_shared_from_this<TcpAsyncServer>
 {
 public:
 
@@ -21,4 +21,6 @@ private:
 
 	asio::ip::tcp::acceptor acceptor_;
 	asio::io_service& service;
+
+	std::mutex mtx;
 };

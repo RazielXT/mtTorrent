@@ -50,6 +50,7 @@ protected:
 	void connectByHostname();
 	void connectByAddress();
 	void setAsConnected();
+	void initializeInfo();
 
 	void postFail(const char* place, const std::error_code& error);
 

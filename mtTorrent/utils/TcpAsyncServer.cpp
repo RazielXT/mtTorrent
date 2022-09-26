@@ -14,6 +14,7 @@ void TcpAsyncServer::listen()
 
 void TcpAsyncServer::stop()
 {
+	std::lock_guard<std::mutex> guard(mtx);
 	acceptor_.close();
 }
 
@@ -21,19 +22,22 @@ void TcpAsyncServer::startListening()
 {
 	auto connection = std::make_shared<TcpAsyncStream>(service);
 
-	acceptor_.async_accept(connection->socket, endpoint, std::bind(&TcpAsyncServer::handle_accept, this, connection, std::placeholders::_1));
+	acceptor_.async_accept(connection->socket, endpoint, std::bind(&TcpAsyncServer::handle_accept, shared_from_this(), connection, std::placeholders::_1));
 }
 
 void TcpAsyncServer::handle_accept(std::shared_ptr<TcpAsyncStream> connection, const std::error_code& error)
 {
+	std::lock_guard<std::mutex> guard(mtx);
+
 	if (!error && acceptor_.is_open())
 	{
-		connection->setAsConnected();
+		connection->initializeInfo();
 		TCP_LOG("accept: " << connection->getAddress())
 
 		if (acceptCallback)
 			acceptCallback(connection);
 
+		connection->setAsConnected();
 		startListening();
 	}
 	else
