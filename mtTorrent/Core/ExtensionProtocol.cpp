@@ -42,7 +42,7 @@ void PeerExchange::load(BencodeParser::Object* data)
 	onPexMessage(msg);
 }
 
-void UtMetadata::load(BencodeParser::Object* data, const char* remainingData, size_t remainingSize)
+void UtMetadata::load(BencodeParser::Object* data, const char* remainingData, std::size_t remainingSize)
 {
 	if (data && data->isMap())
 	{

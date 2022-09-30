@@ -140,7 +140,7 @@ DataBuffer mtt::HttpTracker::createAnnounceRequest(std::string path, std::string
 	return builder.getBuffer();
 }
 
-uint32_t mtt::HttpTracker::readAnnounceResponse(const char* buffer, size_t bufferSize, AnnounceResponse& response)
+uint32_t mtt::HttpTracker::readAnnounceResponse(const char* buffer, std::size_t bufferSize, AnnounceResponse& response)
 {
 	auto info = HttpHeaderInfo::read(buffer, bufferSize);
 

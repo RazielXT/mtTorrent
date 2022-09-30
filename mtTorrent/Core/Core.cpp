@@ -163,7 +163,7 @@ void mtt::Core::deinit()
 
 std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addFile(const char* filename)
 {
-	const size_t maxSize = 50 * 1024 * 1024;
+	const std::size_t maxSize = 50 * 1024 * 1024;
 	std::filesystem::path dir = std::filesystem::u8path(filename);
 
 	if (!std::filesystem::exists(dir) || std::filesystem::file_size(dir) > maxSize)
@@ -181,7 +181,7 @@ std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addFile(const char* filename)
 	return addFile(buffer.data(), buffer.size());
 }
 
-std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addFile(const uint8_t* data, size_t size)
+std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addFile(const uint8_t* data, std::size_t size)
 {
 	auto infoFile = mtt::TorrentFileParser::parse(data, size);
 

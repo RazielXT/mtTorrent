@@ -231,7 +231,7 @@ namespace mtt
 			be_uint16 ack_nr;
 		};
 
-		uint32_t parseHeaderSize(const MessageHeader* header, size_t dataSize);
+		uint32_t parseHeaderSize(const MessageHeader* header, std::size_t dataSize);
 
 		struct ExtensionMessage
 		{

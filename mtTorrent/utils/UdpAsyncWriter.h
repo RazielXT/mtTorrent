@@ -62,7 +62,7 @@ protected:
 	void send_message(const BufferView&);
 	void send_message(const BufferView&, WriteOption opt);
 
-	void handle_write(const std::error_code& error, size_t sz, WriteOption opt);
+	void handle_write(const std::error_code& error, std::size_t sz, WriteOption opt);
 
 	void handle_receive(const std::error_code& error);
 	void readSocket();

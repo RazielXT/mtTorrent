@@ -14,7 +14,7 @@ static uint8_t fromHexa(char h)
 	return h;
 }
 
-bool decodeHexa(const std::string& from, uint8_t* to, size_t size)
+bool decodeHexa(const std::string& from, uint8_t* to, std::size_t size)
 {
 	for (auto c : from)
 	{
@@ -37,7 +37,7 @@ bool decodeHexa(const std::string& from, uint8_t* to, size_t size)
 
 char const hex_chars[] = "0123456789ABCDEF";
 
-std::string hexToString(const uint8_t* in, size_t size)
+std::string hexToString(const uint8_t* in, std::size_t size)
 {
 	std::string out;
 	out.resize(size*2);

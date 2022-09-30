@@ -137,7 +137,7 @@ void UpnpDiscovery::queryNext()
 	info.clientIp = upnpLocation.adapter.clientIp;
 	info.port = upnpLocation.port;
 
-	stream->onReceiveCallback = [streamPtr, this, info](const BufferView& data) -> size_t
+	stream->onReceiveCallback = [streamPtr, this, info](const BufferView& data) -> std::size_t
 	{
 		auto header = HttpHeaderInfo::read((const char*)data.data, data.size);
 

@@ -8,7 +8,7 @@ bool generateInfoHash(BencodeParser& parsed, TorrentFileInfo&, TorrentFileParser
 void loadTorrentFileInfo(BencodeParser& parsed, TorrentFileInfo&);
 TorrentInfo parseTorrentInfo(const BencodeParser::Object* info);
 
-TorrentFileInfo TorrentFileParser::parse(const uint8_t* data, size_t length, ParsedInfo* info)
+TorrentFileInfo TorrentFileParser::parse(const uint8_t* data, std::size_t length, ParsedInfo* info)
 {
 	TorrentFileInfo out;
 	BencodeParser parser;
@@ -142,7 +142,7 @@ bool generateInfoHash(BencodeParser& parser, TorrentFileInfo& fileInfo, TorrentF
 		return false;
 }
 
-mtt::TorrentInfo mtt::TorrentFileParser::parseTorrentInfo(const uint8_t* data, size_t length)
+mtt::TorrentInfo mtt::TorrentFileParser::parseTorrentInfo(const uint8_t* data, std::size_t length)
 {
 	BencodeParser parser;
 

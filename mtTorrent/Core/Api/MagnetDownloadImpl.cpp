@@ -5,7 +5,7 @@ mtt::MetadataDownloadState mttApi::MagnetDownload::getState() const
 	return static_cast<const mtt::MetadataDownload*>(this)->state;
 }
 
-size_t mttApi::MagnetDownload::getDownloadLog(std::vector<std::string>& logs, size_t logStart) const
+size_t mttApi::MagnetDownload::getDownloadLog(std::vector<std::string>& logs, std::size_t logStart) const
 {
 	auto utm = static_cast<const mtt::MetadataDownload*>(this);
 

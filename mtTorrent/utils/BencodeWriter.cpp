@@ -57,7 +57,7 @@ void mtt::BencodeWriter::addItem(const char* name, const char* text)
 	addText(text);
 }
 
-void mtt::BencodeWriter::addItemFromBuffer(const char* name, const char* buffer, size_t size)
+void mtt::BencodeWriter::addItemFromBuffer(const char* name, const char* buffer, std::size_t size)
 {
 	addText(name);
 	data += std::to_string(size);
@@ -83,7 +83,7 @@ void mtt::BencodeWriter::addRawItem(const char* name, const char* text)
 	addText(text);
 }
 
-void mtt::BencodeWriter::addRawItemFromBuffer(const char* name, const char* buffer, size_t size)
+void mtt::BencodeWriter::addRawItemFromBuffer(const char* name, const char* buffer, std::size_t size)
 {
 	data.append(name);
 	data += std::to_string(size);

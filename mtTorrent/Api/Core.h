@@ -20,7 +20,7 @@ namespace mttApi
 			If torrent already exists returns ptr and status I_AlreadyExists
 		*/
 		API_EXPORT std::pair<mtt::Status, TorrentPtr> addFile(const char* filename);
-		API_EXPORT std::pair<mtt::Status, TorrentPtr> addFile(const uint8_t* data, size_t size);
+		API_EXPORT std::pair<mtt::Status, TorrentPtr> addFile(const uint8_t* data, std::size_t size);
 
 		/*
 			Add torrent file from magnet link

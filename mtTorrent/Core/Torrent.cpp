@@ -153,7 +153,7 @@ void mtt::Torrent::save()
 	stateChanged = saveState.started;
 }
 
-void mtt::Torrent::saveTorrentFile(const char* data, size_t size)
+void mtt::Torrent::saveTorrentFile(const char* data, std::size_t size)
 {
 	auto folderPath = mtt::config::getInternal().stateFolder + pathSeparator + hashString() + ".torrent";
 

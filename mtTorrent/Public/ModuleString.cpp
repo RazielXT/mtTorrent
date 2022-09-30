@@ -12,7 +12,7 @@ mtt::string::~string()
 		allocatorPtr->deallocate(data);
 }
 
-void mtt::string::assign(const char* str, size_t l)
+void mtt::string::assign(const char* str, std::size_t l)
 {
 	if (data)
 		allocatorPtr->deallocate(data);

@@ -24,7 +24,7 @@ private:
 
 	void readSocket();
 
-	static constexpr size_t MaxReadIterations = 30;
+	static constexpr std::size_t MaxReadIterations = 30;
 	struct
 	{
 		udp::endpoint endpoint;
@@ -33,5 +33,5 @@ private:
 	}
 	tmp;
 
-	static constexpr size_t ListenBufferSize = 2048;
+	static constexpr std::size_t ListenBufferSize = 2048;
 };

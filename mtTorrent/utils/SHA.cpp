@@ -13,7 +13,7 @@ class SHA1_
 public:
 	SHA1_();
 
-	void update(const char* data, size_t size);
+	void update(const char* data, std::size_t size);
 	void final();
 	uint32_t digest[5];
 
@@ -24,8 +24,8 @@ private:
 };
 
 
-static const size_t BLOCK_INTS = 16;  /* number of 32bit integers per SHA1 block */
-static const size_t BLOCK_BYTES = BLOCK_INTS * 4;
+static const std::size_t BLOCK_INTS = 16;  /* number of 32bit integers per SHA1 block */
+static const std::size_t BLOCK_BYTES = BLOCK_INTS * 4;
 
 
 static void reset(uint32_t digest[], std::string& buffer, uint64_t& transforms)
@@ -43,13 +43,13 @@ static void reset(uint32_t digest[], std::string& buffer, uint64_t& transforms)
 }
 
 
-static uint32_t rol(const uint32_t value, const size_t bits)
+static uint32_t rol(const uint32_t value, const std::size_t bits)
 {
 	return (value << bits) | (value >> (32 - bits));
 }
 
 
-static uint32_t blk(const uint32_t block[BLOCK_INTS], const size_t i)
+static uint32_t blk(const uint32_t block[BLOCK_INTS], const std::size_t i)
 {
 	return rol(block[(i + 13) & 15] ^ block[(i + 8) & 15] ^ block[(i + 2) & 15] ^ block[i], 1);
 }
@@ -59,14 +59,14 @@ static uint32_t blk(const uint32_t block[BLOCK_INTS], const size_t i)
  * (R0+R1), R2, R3, R4 are the different operations used in SHA1
  */
 
-static void R0(const uint32_t block[BLOCK_INTS], const uint32_t v, uint32_t & w, const uint32_t x, const uint32_t y, uint32_t & z, const size_t i)
+static void R0(const uint32_t block[BLOCK_INTS], const uint32_t v, uint32_t & w, const uint32_t x, const uint32_t y, uint32_t & z, const std::size_t i)
 {
 	z += ((w & (x ^ y)) ^ y) + block[i] + 0x5a827999 + rol(v, 5);
 	w = rol(w, 30);
 }
 
 
-static void R1(uint32_t block[BLOCK_INTS], const uint32_t v, uint32_t & w, const uint32_t x, const uint32_t y, uint32_t & z, const size_t i)
+static void R1(uint32_t block[BLOCK_INTS], const uint32_t v, uint32_t & w, const uint32_t x, const uint32_t y, uint32_t & z, const std::size_t i)
 {
 	block[i] = blk(block, i);
 	z += ((w & (x ^ y)) ^ y) + block[i] + 0x5a827999 + rol(v, 5);
@@ -74,7 +74,7 @@ static void R1(uint32_t block[BLOCK_INTS], const uint32_t v, uint32_t & w, const
 }
 
 
-static void R2(uint32_t block[BLOCK_INTS], const uint32_t v, uint32_t & w, const uint32_t x, const uint32_t y, uint32_t & z, const size_t i)
+static void R2(uint32_t block[BLOCK_INTS], const uint32_t v, uint32_t & w, const uint32_t x, const uint32_t y, uint32_t & z, const std::size_t i)
 {
 	block[i] = blk(block, i);
 	z += (w ^ x ^ y) + block[i] + 0x6ed9eba1 + rol(v, 5);
@@ -82,7 +82,7 @@ static void R2(uint32_t block[BLOCK_INTS], const uint32_t v, uint32_t & w, const
 }
 
 
-static void R3(uint32_t block[BLOCK_INTS], const uint32_t v, uint32_t & w, const uint32_t x, const uint32_t y, uint32_t & z, const size_t i)
+static void R3(uint32_t block[BLOCK_INTS], const uint32_t v, uint32_t & w, const uint32_t x, const uint32_t y, uint32_t & z, const std::size_t i)
 {
 	block[i] = blk(block, i);
 	z += (((w | x) & y) | (w & x)) + block[i] + 0x8f1bbcdc + rol(v, 5);
@@ -90,7 +90,7 @@ static void R3(uint32_t block[BLOCK_INTS], const uint32_t v, uint32_t & w, const
 }
 
 
-static void R4(uint32_t block[BLOCK_INTS], const uint32_t v, uint32_t & w, const uint32_t x, const uint32_t y, uint32_t & z, const size_t i)
+static void R4(uint32_t block[BLOCK_INTS], const uint32_t v, uint32_t & w, const uint32_t x, const uint32_t y, uint32_t & z, const std::size_t i)
 {
 	block[i] = blk(block, i);
 	z += (w ^ x ^ y) + block[i] + 0xca62c1d6 + rol(v, 5);
@@ -223,7 +223,7 @@ SHA1_::SHA1_()
 	reset(digest, buffer, transforms);
 }
 
-void SHA1_::update(const char* data, size_t size)
+void SHA1_::update(const char* data, std::size_t size)
 {
 	const char* sbuf = data;
 
@@ -285,7 +285,7 @@ void SHA1_::final()
 	transform(digest, block, transforms);
 }
 
-void _SHA1(const unsigned char* d, size_t n, unsigned char* md)
+void _SHA1(const unsigned char* d, std::size_t n, unsigned char* md)
 {
 	SHA1_ sha;
 	sha.update((const char*)d, n);

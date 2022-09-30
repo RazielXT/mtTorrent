@@ -16,7 +16,7 @@ namespace mttApi
 		/*
 			Get readable info about metadata download, return all logs or start from specific index
 		*/
-		API_EXPORT size_t getDownloadLog(std::vector<std::string>& logs, size_t logStart = 0) const;
-		API_EXPORT size_t getDownloadLogSize() const;
+		API_EXPORT std::size_t getDownloadLog(std::vector<std::string>& logs, std::size_t logStart = 0) const;
+		API_EXPORT std::size_t getDownloadLogSize() const;
 	};
 }

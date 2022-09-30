@@ -263,7 +263,7 @@ DataBuffer mtt::PiecesProgress::toBitfield() const
 	return buffer;
 }
 
-bool mtt::PiecesProgress::toBitfield(uint8_t* dataBitfield, size_t dataSize) const
+bool mtt::PiecesProgress::toBitfield(uint8_t* dataBitfield, std::size_t dataSize) const
 {
 	if (dataSize < getBitfieldSize())
 		return false;

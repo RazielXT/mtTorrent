@@ -87,9 +87,9 @@ void LogWriter::flush()
 
 	std::ofstream file(folder + name + ".txt", append ? std::ios_base::app : std::ios_base::out);
 
-	size_t pos = 0;
+	std::size_t pos = 0;
 	uint8_t currentLineId = 0;
-	size_t currentLineParamPos = 0;
+	std::size_t currentLineParamPos = 0;
 
 	while (pos < data.size())
 	{

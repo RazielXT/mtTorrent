@@ -10,7 +10,7 @@ namespace mtt
 	{
 	public:
 
-		bool parse(const uint8_t* data, size_t length);
+		bool parse(const uint8_t* data, std::size_t length);
 		
 		struct Object
 		{
@@ -22,7 +22,7 @@ namespace mtt
 				uint16_t nextSiblingOffset = 0;
 				enum Type : uint16_t { None, Number, Text, List, Dictionary } type = None;
 
-				bool equals(const char*, size_t) const;
+				bool equals(const char*, std::size_t) const;
 			}
 			info;
 
@@ -66,7 +66,7 @@ namespace mtt
 			bool isList() const;
 			bool isInt() const;
 			bool isText() const;
-			bool isText(const char*, size_t) const;
+			bool isText(const char*, std::size_t) const;
 		};
 
 		Object* getRoot();

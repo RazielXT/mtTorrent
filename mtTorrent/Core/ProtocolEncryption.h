@@ -3,6 +3,7 @@
 #include "utils/DiffieHellman.h"
 #include "utils/SHA.h"
 #include "utils/RC4.h"
+
 #include <memory>
 #include <mutex>
 #include <map>
@@ -12,10 +13,10 @@ class ProtocolEncryption
 {
 public:
 
-	void encrypt(uint8_t* out, size_t len);
+	void encrypt(uint8_t* out, std::size_t len);
 
-	void decrypt(const uint8_t* data, size_t len, DataBuffer& out);
-	void decrypt(uint8_t* data, size_t len);
+	void decrypt(const uint8_t* data, std::size_t len, DataBuffer& out);
+	void decrypt(uint8_t* data, std::size_t len);
 	void decrypt(BufferSpan span);
 
 	RC4 rcIn;
@@ -76,7 +77,7 @@ private:
 	//sent or received in pe3
 	DataBuffer pe3BtMessage;
 
-	static constexpr size_t Pe3DataSizePrePadding = 2 * SHA_DIGEST_LENGTH + 8 + 4 + 2;
+	static constexpr std::size_t Pe3DataSizePrePadding = 2 * SHA_DIGEST_LENGTH + 8 + 4 + 2;
 
 	void createPe3Handshake(DataBuffer& buffer);
 	size_t readPe3Handshake(const BufferView& data, ProtocolEncryptionListener& l);

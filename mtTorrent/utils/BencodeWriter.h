@@ -26,12 +26,12 @@ namespace mtt
 		void addItem(const char* name, uint64_t number);
 		void addItem(const char* name, const char* text);
 		void addItem(const char* name, const std::string& text);
-		void addItemFromBuffer(const char* name, const char* buffer, size_t size);
+		void addItemFromBuffer(const char* name, const char* buffer, std::size_t size);
 
 		void addRawItem(const char* name, uint64_t number);
 		void addRawItem(const char* name, const char* text);
 		void addRawItem(const char* name, const std::string& text);
-		void addRawItemFromBuffer(const char* name, const char* buffer, size_t size);
+		void addRawItemFromBuffer(const char* name, const char* buffer, std::size_t size);
 
 		std::string data;
 	};

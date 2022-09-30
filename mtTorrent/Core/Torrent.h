@@ -69,7 +69,7 @@ namespace mtt
 		std::unique_ptr<MetadataDownload> utmDl;
 
 		void save();
-		void saveTorrentFile(const char* data, size_t size);
+		void saveTorrentFile(const char* data, std::size_t size);
 		void removeMetaFiles();
 		bool loadFileInfo();
 

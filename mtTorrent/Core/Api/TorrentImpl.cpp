@@ -151,7 +151,7 @@ size_t mttApi::Torrent::getPiecesCount() const
 	return static_cast<const mtt::Torrent*>(this)->files.progress.pieces.size();
 }
 
-bool mttApi::Torrent::getPiecesBitfield(uint8_t* dataBitfield, size_t& dataSize) const
+bool mttApi::Torrent::getPiecesBitfield(uint8_t* dataBitfield, std::size_t& dataSize) const
 {
 	const auto& progress = static_cast<const mtt::Torrent*>(this)->files.progress;
 
@@ -164,7 +164,7 @@ bool mttApi::Torrent::getPiecesBitfield(uint8_t* dataBitfield, size_t& dataSize)
 	return progress.toBitfield(dataBitfield, dataSize);
 }
 
-bool mttApi::Torrent::getReceivedPieces(uint32_t* dataPieces, size_t& dataSize) const
+bool mttApi::Torrent::getReceivedPieces(uint32_t* dataPieces, std::size_t& dataSize) const
 {
 	auto& progress = static_cast<const mtt::Torrent*>(this)->files.progress;
 

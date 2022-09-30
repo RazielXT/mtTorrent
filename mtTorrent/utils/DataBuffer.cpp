@@ -6,7 +6,7 @@ BufferView::BufferView()
 {
 }
 
-BufferView::BufferView(const uint8_t* d, size_t s)
+BufferView::BufferView(const uint8_t* d, std::size_t s)
 {
 	data = d;
 	size = s;
@@ -31,7 +31,7 @@ BufferView::BufferView(const BufferSpan& s)
 	size = s.size;
 }
 
-void BufferView::store(const uint8_t* d, size_t s)
+void BufferView::store(const uint8_t* d, std::size_t s)
 {
 	localbuffer.resize(s);
 	memcpy(localbuffer.data(), d, s);
@@ -62,12 +62,12 @@ uint64_t Random::Number64()
 	return RandomNumber64Gen()();
 }
 
-void Random::Data(DataBuffer& data, size_t offset /*= 0*/)
+void Random::Data(DataBuffer& data, std::size_t offset /*= 0*/)
 {
 	return Random::Data(data.data() + offset, data.size() - offset);
 }
 
-void Random::Data(uint8_t* data, size_t size)
+void Random::Data(uint8_t* data, std::size_t size)
 {
 	auto ptr = (uint64_t*)data;
 	auto bytesTail = size % sizeof(uint64_t);
@@ -90,7 +90,7 @@ BufferSpan::BufferSpan(DataBuffer& buffer)
 	size = buffer.size();
 }
 
-BufferSpan::BufferSpan(uint8_t* d, size_t sz)
+BufferSpan::BufferSpan(uint8_t* d, std::size_t sz)
 {
 	data = d;
 	size = sz;

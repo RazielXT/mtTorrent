@@ -1,9 +1,9 @@
 #include "RC4.h"
 #include <cstring>
 
-void RC4::init(const unsigned char* in, size_t len)
+void RC4::init(const unsigned char* in, std::size_t len)
 {
-	const size_t key_size = sizeof(buf);
+	const std::size_t key_size = sizeof(buf);
 	uint8_t key[key_size];
 
 	if (len > key_size) len = key_size;
@@ -34,7 +34,7 @@ void RC4::init(const unsigned char* in, size_t len)
 	ys = 0;
 }
 
-void RC4::decode(unsigned char* out, size_t outlen)
+void RC4::decode(unsigned char* out, std::size_t outlen)
 {
 	uint8_t x, y, tmp;
 	uint8_t* s = buf;
@@ -53,7 +53,7 @@ void RC4::decode(unsigned char* out, size_t outlen)
 	ys = y;
 }
 
-void RC4::encode(unsigned char* out, size_t outlen)
+void RC4::encode(unsigned char* out, std::size_t outlen)
 {
 	decode(out, outlen);
 }

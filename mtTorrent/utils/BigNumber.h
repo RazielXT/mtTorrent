@@ -12,16 +12,16 @@ class BigNumber
 public:
 
 	BigNumber() = default;
-	BigNumber(const uint8_t* src, const size_t size);
-	BigNumber(const uint32_t value, const size_t size);
+	BigNumber(const uint8_t* src, const std::size_t size);
+	BigNumber(const uint32_t value, const std::size_t size);
 
-	void Set(const uint8_t* data, size_t size);
-	void Export(uint8_t* out, size_t size);
+	void Set(const uint8_t* data, std::size_t size);
+	void Export(uint8_t* out, std::size_t size);
 
 	uint8_t* GetDataBuffer();
 
-	void SetByteSize(const size_t newLength);
-	size_t GetByteSize() const;
+	void SetByteSize(const std::size_t newLength);
+	std::size_t GetByteSize() const;
 
 	void Set(const uint32_t a);
 	void SetZero();
@@ -50,18 +50,18 @@ public:
 
 private:
 
-	void AllocateData(const size_t lengthToAllocate);
-	size_t BytesToAllocationUnit(size_t aNumberOfBytes) const;
-	size_t Length() const;
-	void SetLength(const size_t newLength);
+	void AllocateData(const std::size_t lengthToAllocate);
+	std::size_t BytesToAllocationUnit(std::size_t aNumberOfBytes) const;
+	std::size_t Length() const;
+	void SetLength(const std::size_t newLength);
 
 	const digit_t* GetData() const;
 	digit_t* GetData();
 
-	static digit_t Add_h(digit_t* a, const digit_t* b, size_t len);
-	static digit_t Sub_h(digit_t* a, const digit_t* b, size_t len);
-	static void Square_h(const digit_t* a, size_t len, digit_t* dst);
-	static void Mul_h(const digit_t* a, size_t len1, const digit_t* b, size_t len2, digit_t* dst);
+	static digit_t Add_h(digit_t* a, const digit_t* b, std::size_t len);
+	static digit_t Sub_h(digit_t* a, const digit_t* b, std::size_t len);
+	static void Square_h(const digit_t* a, std::size_t len, digit_t* dst);
+	static void Mul_h(const digit_t* a, std::size_t len1, const digit_t* b, std::size_t len2, digit_t* dst);
 
 	//calculates the most significant bit(MSB) position of unsigned integer
 	static uint32_t MsbPos(uint32_t v);

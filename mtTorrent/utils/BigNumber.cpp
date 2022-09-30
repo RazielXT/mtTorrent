@@ -3,18 +3,18 @@
 #include <algorithm>
 #include <cstring>
 
-BigNumber::BigNumber(const uint8_t* src, const size_t size)
+BigNumber::BigNumber(const uint8_t* src, const std::size_t size)
 {
 	Set(src, size);
 }
 
-BigNumber::BigNumber(const uint32_t value, const size_t size)
+BigNumber::BigNumber(const uint32_t value, const std::size_t size)
 {
 	SetByteSize(size);
 	Set(value);
 }
 
-void BigNumber::Export(uint8_t* out, size_t size)
+void BigNumber::Export(uint8_t* out, std::size_t size)
 {
 	int i = ((int)std::min(GetByteSize(), size)) - 1;
 	auto dataPtr = (const uint8_t*)GetData();
@@ -50,22 +50,22 @@ void BigNumber::SetZero()
 	}
 }
 
-size_t BigNumber::GetByteSize() const
+std::size_t BigNumber::GetByteSize() const
 {
 	return Length() * sizeof(digit_t);
 }
 
-size_t BigNumber::BytesToAllocationUnit(size_t aNumberOfBytes) const
+std::size_t BigNumber::BytesToAllocationUnit(std::size_t aNumberOfBytes) const
 {
 	return (aNumberOfBytes + sizeof(digit_t) - 1) / sizeof(digit_t);
 }
 
-void BigNumber::AllocateData(const size_t lengthToAllocate)
+void BigNumber::AllocateData(const std::size_t lengthToAllocate)
 {
 	m_data.resize(lengthToAllocate);
 }
 
-void BigNumber::SetLength(const size_t newLength)
+void BigNumber::SetLength(const std::size_t newLength)
 {
 	if (Length() != newLength)
 	{
@@ -73,17 +73,17 @@ void BigNumber::SetLength(const size_t newLength)
 	}
 }
 
-size_t BigNumber::Length() const
+std::size_t BigNumber::Length() const
 {
 	return m_data.size();
 }
 
-void BigNumber::SetByteSize(const size_t newLength)
+void BigNumber::SetByteSize(const std::size_t newLength)
 {
 	SetLength(BytesToAllocationUnit(newLength));
 }
 
-void BigNumber::Set(const uint8_t* data, size_t size)
+void BigNumber::Set(const uint8_t* data, std::size_t size)
 {
 	size_t currentSize = GetByteSize();
 	if (currentSize < size)
@@ -291,7 +291,7 @@ void BigNumber::dbi_mul(BigNumber& dblResult, const BigNumber& a1, const BigNumb
 	}
 }
 
-void BigNumber::Square_h(const digit_t* a, size_t len, digit_t* dst)
+void BigNumber::Square_h(const digit_t* a, std::size_t len, digit_t* dst)
 {
 	while (len > 0 && !a[len - 1])
 		len--;
@@ -338,7 +338,7 @@ void BigNumber::Square_h(const digit_t* a, size_t len, digit_t* dst)
 	}
 }
 
-void BigNumber::Mul_h(const digit_t* a, size_t len1, const digit_t* b, size_t len2, digit_t* dst)
+void BigNumber::Mul_h(const digit_t* a, std::size_t len1, const digit_t* b, std::size_t len2, digit_t* dst)
 {
 	while (len1 > 0 && !a[len1 - 1])
 		len1--;
@@ -363,7 +363,7 @@ void BigNumber::Mul_h(const digit_t* a, size_t len1, const digit_t* b, size_t le
 
 //simple left shift, dst_len = src_len + 1
 template<typename T>
-void shift_left(T* dst, const T* src, const size_t src_len, const uint32_t shift)
+void shift_left(T* dst, const T* src, const std::size_t src_len, const uint32_t shift)
 {
 	constexpr uint32_t shiftMax = 8 * sizeof(T);
 
@@ -384,7 +384,7 @@ void shift_left(T* dst, const T* src, const size_t src_len, const uint32_t shift
 
 //simple shift right
 template<typename T>
-void shift_right(T* dst, const T* src, const size_t len, const uint32_t shift)
+void shift_right(T* dst, const T* src, const std::size_t len, const uint32_t shift)
 {
 	constexpr uint32_t shiftMax = 8 * sizeof(T);
 
@@ -536,7 +536,7 @@ bool BigNumber::dbi_div(BigNumber& result, BigNumber& remainder, const BigNumber
 	return true;
 }
 
-BigNumber::digit_t BigNumber::Add_h(digit_t* a, const digit_t* b, size_t len)
+BigNumber::digit_t BigNumber::Add_h(digit_t* a, const digit_t* b, std::size_t len)
 {
 	double_digit_t buff = 0;
 	for (size_t i = 0; i < len; i++)
@@ -549,7 +549,7 @@ BigNumber::digit_t BigNumber::Add_h(digit_t* a, const digit_t* b, size_t len)
 	return lo_word(buff);
 }
 
-BigNumber::digit_t BigNumber::Sub_h(digit_t* a, const digit_t* b, size_t len)
+BigNumber::digit_t BigNumber::Sub_h(digit_t* a, const digit_t* b, std::size_t len)
 {
 	s_double_digit_t buff = 0;
 	for (size_t i = 0; i < len; i++)

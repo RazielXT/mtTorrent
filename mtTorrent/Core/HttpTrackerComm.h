@@ -13,7 +13,7 @@ namespace mtt
 		virtual ~HttpTracker() = default;
 
 		DataBuffer createAnnounceRequest(std::string path, std::string host, std::string port);
-		uint32_t readAnnounceResponse(const char* buffer, size_t bufferSize, AnnounceResponse& out);
+		uint32_t readAnnounceResponse(const char* buffer, std::size_t bufferSize, AnnounceResponse& out);
 
 	};
 

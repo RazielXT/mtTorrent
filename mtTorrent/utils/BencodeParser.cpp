@@ -12,7 +12,7 @@ std::string mtt::BencodeParser::Object::getValueOr(const char* name, std::string
 	return item ? std::string(item->data, item->size) : def;
 }
 
-bool mtt::BencodeParser::parse(const uint8_t* data, size_t length)
+bool mtt::BencodeParser::parse(const uint8_t* data, std::size_t length)
 {
 	deep = 0;
 	objects.clear();
@@ -325,7 +325,7 @@ const mtt::BencodeParser::Object& mtt::BencodeParser::Object::operator[](int ind
 	return *ptr;
 }
 
-bool mtt::BencodeParser::Object::Item::equals(const char* txt, size_t l) const
+bool mtt::BencodeParser::Object::Item::equals(const char* txt, std::size_t l) const
 {
 	return l != size ? false : strncmp(txt, data, size) == 0;
 }
@@ -350,7 +350,7 @@ bool mtt::BencodeParser::Object::isText() const
 	return info.type == Item::Text;
 }
 
-bool mtt::BencodeParser::Object::isText(const char* str, size_t l) const
+bool mtt::BencodeParser::Object::isText(const char* str, std::size_t l) const
 {
 	return isText() && info.equals(str, l);
 }

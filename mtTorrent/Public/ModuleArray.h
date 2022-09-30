@@ -49,7 +49,7 @@ namespace mtt
 			this->currentSize = size;
 		}
 
-		void assign(const T* items, size_t size)
+		void assign(const T* items, std::size_t size)
 		{
 			resize(size);
 
@@ -57,7 +57,7 @@ namespace mtt
 				memcpy(buffer, items, size * sizeof(T));
 		}
 
-		void assign(const T& value, size_t count)
+		void assign(const T& value, std::size_t count)
 		{
 			resize(count);
 

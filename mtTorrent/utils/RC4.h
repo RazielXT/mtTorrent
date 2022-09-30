@@ -5,10 +5,10 @@
 
 struct RC4
 {
-	void init(const unsigned char* in, size_t len);
+	void init(const unsigned char* in, std::size_t len);
 
-	void decode(unsigned char* out, size_t outlen);
-	void encode(unsigned char* out, size_t outlen);
+	void decode(unsigned char* out, std::size_t outlen);
+	void encode(unsigned char* out, std::size_t outlen);
 
 	void skip(size_t sz);
 

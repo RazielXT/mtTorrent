@@ -1,18 +1,18 @@
 #include "ProtocolEncryption.h"
 #include "utils/PacketHelper.h"
 
-void ProtocolEncryption::encrypt(uint8_t* out, size_t len)
+void ProtocolEncryption::encrypt(uint8_t* out, std::size_t len)
 {
 	rcOut.encode(out, len);
 }
 
-void ProtocolEncryption::decrypt(const uint8_t* data, size_t len, DataBuffer& out)
+void ProtocolEncryption::decrypt(const uint8_t* data, std::size_t len, DataBuffer& out)
 {
 	out.assign(data, data + len);
 	decrypt(out.data(), len);
 }
 
-void ProtocolEncryption::decrypt(uint8_t* data, size_t len)
+void ProtocolEncryption::decrypt(uint8_t* data, std::size_t len)
 {
 	rcIn.decode(data, len);
 }
@@ -159,7 +159,7 @@ const uint8_t* ProtocolEncryptionHandshake::getTorrentHash() const
 	return infoHash;
 }
 
-constexpr size_t Pe3DataSizePrePadding = 2 * SHA_DIGEST_LENGTH + 8 + 4 + 2;
+constexpr std::size_t Pe3DataSizePrePadding = 2 * SHA_DIGEST_LENGTH + 8 + 4 + 2;
 
 void ProtocolEncryptionHandshake::createPe3Handshake(DataBuffer& buffer)
 {
@@ -307,7 +307,7 @@ size_t ProtocolEncryptionHandshake::readPe3Handshake(const BufferView& data, Pro
 	return data.size;
 }
 
-constexpr size_t Pe4DataSizePrePadding = 8 + 4 + 2;
+constexpr std::size_t Pe4DataSizePrePadding = 8 + 4 + 2;
 
 void ProtocolEncryptionHandshake::createPe4Handshake(DataBuffer& buffer)
 {

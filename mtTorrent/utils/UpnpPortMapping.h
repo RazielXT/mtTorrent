@@ -30,7 +30,7 @@ private:
 
 	void waitForRequests();
 
-	std::string createUpnpHttpHeader(const std::string& hostAddress, const std::string& port, size_t contentLength, const std::string& soapAction);
+	std::string createUpnpHttpHeader(const std::string& hostAddress, const std::string& port, std::size_t contentLength, const std::string& soapAction);
 
 	asio::io_service& io;
 

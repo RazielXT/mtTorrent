@@ -37,7 +37,7 @@ std::pair<mtt::Status, mttApi::TorrentPtr> mttApi::Core::addFile(const char* fil
 	return static_cast<mtt::Core*>(this)->addFile(filename);
 }
 
-std::pair<mtt::Status, mttApi::TorrentPtr> mttApi::Core::addFile(const uint8_t* data, size_t size)
+std::pair<mtt::Status, mttApi::TorrentPtr> mttApi::Core::addFile(const uint8_t* data, std::size_t size)
 {
 	return static_cast<mtt::Core*>(this)->addFile(data, size);
 }

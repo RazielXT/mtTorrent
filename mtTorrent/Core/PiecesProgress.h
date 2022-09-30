@@ -17,7 +17,7 @@ namespace mtt
 		void fromList(const std::vector<uint8_t>& pieces);
 		DataBuffer toBitfield() const;
 		void toBitfield(DataBuffer&) const;
-		bool toBitfield(uint8_t* dataBitfield, size_t dataSize) const;
+		bool toBitfield(uint8_t* dataBitfield, std::size_t dataSize) const;
 		size_t getBitfieldSize() const;
 
 		bool empty() const;

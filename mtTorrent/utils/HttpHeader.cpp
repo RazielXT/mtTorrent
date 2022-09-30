@@ -7,7 +7,7 @@ struct DataChunk
 };
 std::vector<DataChunk> chunks;
 
-std::vector<DataChunk> readChunkedData(const char* buffer, size_t bufferSize, size_t bufferDataStart)
+std::vector<DataChunk> readChunkedData(const char* buffer, std::size_t bufferSize, std::size_t bufferDataStart)
 {
 	std::vector<DataChunk> chunks;
 	uint32_t chunkSize = 0;
@@ -53,7 +53,7 @@ HttpHeaderInfo HttpHeaderInfo::readFromBuffer(DataBuffer& buffer)
 	return HttpHeaderInfo::read((const char*)buffer.data(), buffer.size());
 }
 
-HttpHeaderInfo HttpHeaderInfo::read(const char* buffer, size_t bufferSize)
+HttpHeaderInfo HttpHeaderInfo::read(const char* buffer, std::size_t bufferSize)
 {
 	HttpHeaderInfo info;
 

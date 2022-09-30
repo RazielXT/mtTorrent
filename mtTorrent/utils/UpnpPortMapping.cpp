@@ -144,7 +144,7 @@ void UpnpPortMapping::mapPort(const std::string& gateway, uint16_t gatewayPort, 
 		streamPtr->write(buffer);
 	};
 
-	stream->onReceiveCallback = [streamPtr, upnpState, gateway, gatewayPort, port, type](const BufferView& data) -> size_t
+	stream->onReceiveCallback = [streamPtr, upnpState, gateway, gatewayPort, port, type](const BufferView& data) -> std::size_t
 	{
 		auto header = HttpHeaderInfo::read((const char*)data.data, data.size);
 
@@ -234,7 +234,7 @@ void UpnpPortMapping::unmapPort(const std::string& gateway, uint16_t gatewayPort
 		streamPtr->write(buffer);
 	};
 
-	stream->onReceiveCallback = [streamPtr, upnpState, gateway, port, type](const BufferView& data) -> size_t
+	stream->onReceiveCallback = [streamPtr, upnpState, gateway, port, type](const BufferView& data) -> std::size_t
 	{
 		auto header = HttpHeaderInfo::read((const char*)data.data, data.size);
 
@@ -371,7 +371,7 @@ void UpnpPortMapping::waitForRequests()
 	}
 }
 
-std::string UpnpPortMapping::createUpnpHttpHeader(const std::string& hostAddress, const std::string& port, size_t contentLength, const std::string& soapAction)
+std::string UpnpPortMapping::createUpnpHttpHeader(const std::string& hostAddress, const std::string& port, std::size_t contentLength, const std::string& soapAction)
 {
 	std::string controlUrl = getMappingServiceControlUrl(hostAddress);
 	if (controlUrl.empty())

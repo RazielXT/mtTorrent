@@ -48,7 +48,7 @@ namespace mtt
 
 			uint32_t size = 0;
 
-			void load(BencodeParser::Object* data, const char* remainingData, size_t remainingSize);
+			void load(BencodeParser::Object* data, const char* remainingData, std::size_t remainingSize);
 			DataBuffer createMetadataRequest(uint32_t index);
 
 			std::function<void(UtMetadata::Message&)> onUtMetadataMessage;

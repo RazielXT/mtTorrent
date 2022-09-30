@@ -128,7 +128,7 @@ void mtt::IncomingPeersListener::createTcpListener()
 		{
 			removePeer(sPtr);
 		};
-		stream->onReceiveCallback = [sPtr, this](BufferSpan data) -> size_t
+		stream->onReceiveCallback = [sPtr, this](BufferSpan data) -> std::size_t
 		{
 			return readStreamData(data, sPtr);
 		};
@@ -157,7 +157,7 @@ void mtt::IncomingPeersListener::createUtpListener()
 			PEER_LOG("utp close " << sPtr->getAddress());
 			removePeer(sPtr);
 		};
-		stream->onReceiveCallback = [sPtr, this](BufferSpan data) -> size_t
+		stream->onReceiveCallback = [sPtr, this](BufferSpan data) -> std::size_t
 		{
 			return readStreamData(data, sPtr);
 		};

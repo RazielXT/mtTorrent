@@ -335,7 +335,7 @@ void mtt::utp::Stream::sendFin()
 
 void mtt::utp::Stream::prepareStateHeader(MessageType type)
 {
-	const size_t headerSize = sizeof(utp::MessageHeader);
+	const std::size_t headerSize = sizeof(utp::MessageHeader);
 	uint8_t extSize = getSelectiveAckDataSize();
 
 	sending.stateBuffer.resize(headerSize + extSize);
@@ -429,7 +429,7 @@ void mtt::utp::Stream::flushSendData()
 	}
 
 	uint32_t preparedBufferPos = sending.prepared.bufferPos;
-	const size_t maxSentData = sending.sentDataWithoutAckSize + connection.peer_wnd_size;
+	const std::size_t maxSentData = sending.sentDataWithoutAckSize + connection.peer_wnd_size;
 	while (preparedBufferPos < sending.prepared.buffer.size() && sending.sentDataWithoutAckSize < maxSentData)
 	{
 		preparedBufferPos += sendData(sending.prepared.buffer.data() + preparedBufferPos, uint32_t(sending.prepared.buffer.size()) - preparedBufferPos);
@@ -888,7 +888,7 @@ uint32_t mtt::utp::Stream::getReceiveWindow()
 	return receiving.wnd_size;// (receiving.wnd_size < receiving.receiveBuffer.size()) ? 0u : std::uint32_t(receiving.wnd_size - receiving.receiveBuffer.size());
 }
 
-uint32_t mtt::utp::parseHeaderSize(const MessageHeader* header, size_t dataSize)
+uint32_t mtt::utp::parseHeaderSize(const MessageHeader* header, std::size_t dataSize)
 {
 	uint8_t extensionType = header->extension;
 	auto ext = (ExtensionMessage*)(header + 1);

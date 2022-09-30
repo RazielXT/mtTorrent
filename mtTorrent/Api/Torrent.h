@@ -155,16 +155,16 @@ namespace mttApi
 		/*
 			get count of all pieces
 		*/
-		API_EXPORT size_t getPiecesCount() const;
+		API_EXPORT std::size_t getPiecesCount() const;
 		/*
 			get pieces progress as bitfield
 			in/out dataSize is returned as current bitfield size
 		*/
-		API_EXPORT bool getPiecesBitfield(uint8_t* dataBitfield, size_t& dataSize) const;
+		API_EXPORT bool getPiecesBitfield(uint8_t* dataBitfield, std::size_t& dataSize) const;
 		/*
 			get indices of all received pieces
 			in/out dataSize is returned as count of received pieces
 		*/
-		API_EXPORT bool getReceivedPieces(uint32_t* dataPieces, size_t& dataSize) const;
+		API_EXPORT bool getReceivedPieces(uint32_t* dataPieces, std::size_t& dataSize) const;
 	};
 }
