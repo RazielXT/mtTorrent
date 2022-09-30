@@ -122,8 +122,8 @@ void TorrentInstance::drawInfoWindow()
 		return;
 	}
 
-	ImGui::Text(torrentPtr->name().data());
-	ImGui::Text("Total size %s", formatBytes(torrentPtr->getFileInfo().info.fullSize).data());
+	ImGui::Text("%s", torrentPtr->name().c_str());
+	ImGui::Text("Total size %s", formatBytes(torrentPtr->getFileInfo().info.fullSize).c_str());
 
 	auto state = torrentPtr->getState();
 
@@ -202,16 +202,16 @@ void TorrentInstance::drawPeersWindow()
 
 			ImGui::TableNextRow();
 			ImGui::TableSetColumnIndex(0);
-			ImGui::Text(peer.address.data());
+			ImGui::Text("%s", peer.address.c_str());
 
 			ImGui::TableSetColumnIndex(1);
-			ImGui::Text(peerStateToString(peer).data());
+			ImGui::Text("%s", peerStateToString(peer).c_str());
 
 			ImGui::TableSetColumnIndex(2);
-			ImGui::Text(formatBytesSpeed(peer.downloadSpeed).data());
+			ImGui::Text("%s", formatBytesSpeed(peer.downloadSpeed).c_str());
 
 			ImGui::TableSetColumnIndex(3);
-			ImGui::Text(peer.client.data());
+			ImGui::Text("%s", peer.client.c_str());
 		}
 		ImGui::EndTable();
 	}
@@ -283,20 +283,20 @@ void TorrentInstance::drawSourcesWindow()
 
 			ImGui::TableNextRow();
 			ImGui::TableSetColumnIndex(0);
-			ImGui::Text(source.hostname.data());
+			ImGui::Text("%s", source.hostname.c_str());
 
 			ImGui::TableSetColumnIndex(1);
-			ImGui::Text(sourceStateToString(source.state).data());
+			ImGui::Text("%s", sourceStateToString(source.state).c_str());
 
 			ImGui::TableSetColumnIndex(2);
-			ImGui::Text(std::to_string(source.peers).data());
+			ImGui::Text("%s", std::to_string(source.peers).c_str());
 
 			ImGui::TableSetColumnIndex(3);
-			ImGui::Text(std::to_string(source.seeds).data());
+			ImGui::Text("%s", std::to_string(source.seeds).c_str());
 
 			auto nextCheck = source.nextAnnounce < currentTime ? 0 : source.nextAnnounce - currentTime;
 			ImGui::TableSetColumnIndex(4);
-			ImGui::Text(formatSeconds(nextCheck).data());
+			ImGui::Text("%s", formatSeconds(nextCheck).c_str());
 		}
 		ImGui::EndTable();
 	}

@@ -2,7 +2,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl2.h"
 #include "TorrentInstance.h"
-#include <stdio.h>
+#include <cstdio>
 
 #ifdef __APPLE__
 #define GL_SILENCE_DEPRECATION
