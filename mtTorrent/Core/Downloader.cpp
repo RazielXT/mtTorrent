@@ -29,6 +29,7 @@ std::vector<mtt::DownloadedPiece> mtt::Downloader::stop()
 		{
 			if (r->piece.downloadedSize)
 			{
+				piecesState[r->pieceIdx].request = nullptr;
 				out.emplace_back(std::move(r->piece));
 			}
 		}
@@ -57,6 +58,8 @@ std::vector<uint32_t> mtt::Downloader::getCurrentRequests() const
 	std::vector<uint32_t> out;
 
 	std::lock_guard<std::mutex> guard(requestsMutex);
+	out.reserve(requests.size());
+
 	for (const auto& r : requests)
 	{
 		out.push_back(r->pieceIdx);
@@ -137,13 +140,13 @@ void mtt::Downloader::pieceBlockReceived(PieceBlock& block, PeerCommunication* s
 					DL_LOG("Request finished, piece " << block.info.index);
 					client.pieceFinished(std::move(r->piece));
 
-					requests.erase(it);
-
 					std::lock_guard<std::mutex> guard(sortedSelectedPiecesMutex);
 
 					auto& state = piecesState[block.info.index];
 					state.missing = false;
 					state.request = nullptr;
+
+					requests.erase(it);
 				}
 
 				break;
@@ -240,7 +243,8 @@ void mtt::Downloader::refreshSelection(const DownloadSelection& s, const std::ve
 		std::lock_guard<std::mutex> guard(requestsMutex);
 		std::lock_guard<std::mutex> guard2(sortedSelectedPiecesMutex);
 
-		piecesState.resize(torrentInfo.pieces.size(), {});
+		piecesState.clear();
+		piecesState.resize(torrentInfo.pieces.size());
 
 		sortedSelectedPieces.clear();
 
