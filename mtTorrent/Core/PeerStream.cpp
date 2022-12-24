@@ -117,6 +117,21 @@ std::string mtt::PeerStream::getAddressName() const
 	return {};
 }
 
+std::string mtt::PeerStream::getIpString() const
+{
+	if (tcpStream)
+		return tcpStream->getAddress().toTcpEndpoint().address().to_string();
+	if (utpStream)
+		return utpStream->getEndpoint().address().to_string();
+
+	return {};
+}
+
+bool mtt::PeerStream::wasConnected() const
+{
+	return state.connected;
+}
+
 uint64_t mtt::PeerStream::getReceivedDataCount() const
 {
 	if (tcpStream)
@@ -147,6 +162,16 @@ uint32_t mtt::PeerStream::getFlags() const
 		f |= PeerFlags::Encrypted;
 
 	return f;
+}
+
+bool mtt::PeerStream::isEncrypted() const
+{
+	return pe != nullptr;
+}
+
+bool mtt::PeerStream::isUtp() const
+{
+	return utpStream != nullptr;
 }
 
 void mtt::PeerStream::initializeTcpStream()

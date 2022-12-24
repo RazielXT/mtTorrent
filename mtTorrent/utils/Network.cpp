@@ -124,9 +124,10 @@ static void iToString(int i, std::string& s)
 	s += '0' + i;
 }
 
-static std::string toIpv4String(const uint8_t* buffer)
+static std::string toIpv4String(const uint8_t* buffer, uint16_t port)
 {
 	std::string out;
+	out.reserve(21);
 	iToString(buffer[0], out);
 	out += '.';
 	iToString(buffer[1], out);
@@ -134,20 +135,48 @@ static std::string toIpv4String(const uint8_t* buffer)
 	iToString(buffer[2], out);
 	out += '.';
 	iToString(buffer[3], out);
+	out += ':';
+
+	char buff[5] = {};
+	char* ptr = &buff[5];
+	do
+	{
+		*--ptr = '0' + port % 10;
+		port /= 10;
+	}
+	while (port != 0);
+	out.append(ptr, &buff[5]);
+
 	return out;
 }
 
 std::string Addr::toString() const
 {
-	return (ipv6 ? toUdpEndpoint().address().to_string() : toIpv4String(addrBytes)) + ":" + std::to_string(port);
+	return ipv6 ? toUdpEndpoint().address().to_string() : toIpv4String(addrBytes, port);
 }
 
-uint32_t Addr::toUint()
+uint32_t Addr::toUint() const
 {
-	return *reinterpret_cast<uint32_t*>(addrBytes);
+	return *(uint32_t*)(addrBytes);
 }
 
-bool Addr::operator==(const Addr& r)
+std::string Addr::toData() const
+{
+	std::string data;
+	int addrSize = ipv6 ? 16 : 4;
+	data.resize(addrSize + 2);
+	memcpy(data.data(), addrBytes, addrSize);
+	*reinterpret_cast<uint16_t*>(data.data() + addrSize) = swap16(port);
+
+	return data;
+}
+
+bool Addr::operator<(const Addr& r) const
+{
+	return port < r.port || (port == r.port && memcmp(addrBytes, r.addrBytes, ipv6 ? 16 : 4) < 0);
+}
+
+bool Addr::operator==(const Addr& r) const
 {
 	return port == r.port && memcmp(addrBytes, r.addrBytes, ipv6 ? 16 : 4) == 0;
 }

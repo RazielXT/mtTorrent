@@ -315,6 +315,7 @@
     <ClCompile Include="Core\Interface.cpp" />
     <ClCompile Include="Core\MetadataExtension.cpp" />
     <ClCompile Include="Core\PeerStream.cpp" />
+    <ClCompile Include="Core\PexExtension.cpp" />
     <ClCompile Include="Core\ProtocolEncryption.cpp" />
     <ClCompile Include="Core\Torrent.cpp" />
     <ClCompile Include="Core\MetadataDownload.cpp" />
@@ -391,6 +392,7 @@
     <ClInclude Include="Core\MetadataExtension.h" />
     <ClInclude Include="Core\Peers.h" />
     <ClInclude Include="Core\PeerStream.h" />
+    <ClInclude Include="Core\PexExtension.h" />
     <ClInclude Include="Core\ProtocolEncryption.h" />
     <ClInclude Include="Core\Torrent.h" />
     <ClInclude Include="Core\MetadataDownload.h" />

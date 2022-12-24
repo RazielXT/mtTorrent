@@ -28,12 +28,16 @@ namespace mtt
 
 		Addr getAddress() const;
 		std::string getAddressName() const;
+		std::string getIpString() const;
 
+		bool wasConnected() const;
 		uint64_t getReceivedDataCount() const;
 
 		void setMinBandwidthRequest(uint32_t size);
 
 		uint32_t getFlags() const;
+		bool isEncrypted() const;
+		bool isUtp() const;
 
 	protected:
 

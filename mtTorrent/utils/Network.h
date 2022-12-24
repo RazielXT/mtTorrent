@@ -36,7 +36,9 @@ struct Addr
 	asio::ip::udp::endpoint toUdpEndpoint() const;
 	asio::ip::tcp::endpoint toTcpEndpoint() const;
 	std::string toString() const;
-	uint32_t toUint();
+	uint32_t toUint() const;
+	std::string toData() const;
 
-	bool operator==(const Addr& r);
+	bool operator==(const Addr& r) const;
+	bool operator<(const Addr& r) const;
 };

@@ -14,10 +14,9 @@ enum class LogEvent : uint8_t { Connect, RemoteConnect, Remove, ConnectPeers };
 
 mtt::Peers::Peers(Torrent& t) : torrent(t), trackers(t), dht(*this, t)
 {
-	pexInfo.hostname = "PEX";
+	pex.info.hostname = "PEX";
 	remoteInfo.hostname = "Remote";
 	trackers.addTrackers(torrent.infoFile.announceList);
-	peersListener = std::make_shared<PeersListener>(this);
 
 	CREATE_NAMED_LOG(Peers, torrent.name() + "_peers");
 }
@@ -25,8 +24,8 @@ mtt::Peers::Peers(Torrent& t) : torrent(t), trackers(t), dht(*this, t)
 void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listener)
 {
 	updateCallback = onPeersUpdated;
-	peersListener->setTarget(listener);
-	peersListener->setParent(this);
+	setTargetListener(listener);
+
 	trackers.start([this](Status s, const AnnounceResponse* r, Tracker* t)
 	{
 		if (r)
@@ -41,6 +40,9 @@ void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listen
 	}
 	);
 
+	refreshTimer = ScheduledTimer::create(torrent.service.io, [this] { update(); });
+	refreshTimer->schedule(1);
+
 	dht.start();
 
 	std::lock_guard<std::mutex> guard(peersMutex);
@@ -50,14 +52,14 @@ void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listen
 		{
 			listener->handshakeFinished(c.comm.get());
 
-			if(c.comm->ext.state.enabled)
-				listener->extHandshakeFinished(c.comm.get());
+			if (c.comm->ext.enabled())
+				listener->extendedHandshakeFinished(c.comm.get(), {});
 		}
 
 		c.comm->sendKeepAlive();
 	}
 
-	pexInfo.state = TrackerState::Connected;
+	pex.info.state = TrackerState::Connected;
 	remoteInfo.state = TrackerState::Connected;
 }
 
@@ -67,8 +69,7 @@ void mtt::Peers::stop()
 	dht.stop();
 
 	{
-		peersListener->setTarget(nullptr);
-		peersListener->setParent(nullptr);
+		setTargetListener(nullptr);
 
 		std::lock_guard<std::mutex> guard(peersMutex);
 
@@ -91,8 +92,12 @@ void mtt::Peers::stop()
 		activeConnections.clear();
 	}
 
+	if (refreshTimer)
+		refreshTimer->disable();
+	refreshTimer = nullptr;
+
 	updateCallback = nullptr;
-	pexInfo.state = TrackerState::Clear;
+	pex.info.state = TrackerState::Clear;
 	remoteInfo.state = TrackerState::Clear;
 	remoteInfo.peers = 0;
 }
@@ -151,9 +156,13 @@ void mtt::Peers::connectNext(uint32_t count)
 
 void mtt::Peers::connect(const Addr& addr)
 {
-	auto peer = getActivePeer(addr);
+	{
+		std::lock_guard<std::mutex> guard(peersMutex);
+		if (getActivePeer(addr))
+			return;
+	}
 
-	if (!peer && addr.port != 0)
+	if (addr.port != 0)
 	{
 		auto idx = updateKnownPeers(addr, PeerSource::Manual);
 
@@ -168,7 +177,7 @@ size_t mtt::Peers::add(std::shared_ptr<PeerStream> stream, const BufferView& dat
 		return 0;
 
 	ActivePeer peer;
-	peer.comm = std::make_shared<PeerCommunication>(torrent.infoFile.info, *peersListener, torrent.service.io);
+	peer.comm = std::make_shared<PeerCommunication>(torrent.infoFile.info, *this, torrent.service.io);
 
 	{
 		std::lock_guard<std::mutex> guard(peersMutex);
@@ -231,7 +240,7 @@ std::vector<mtt::TrackerInfo> mtt::Peers::getSourcesInfo()
 		out.back().hostname = t.first;
 	}
 
-	out.push_back(pexInfo);
+	out.push_back(pex.info);
 
 	if (mtt::config::getExternal().dht.enabled)
 		out.push_back(dht.info);
@@ -281,49 +290,64 @@ void mtt::Peers::reloadTorrentInfo()
 
 	for (auto& peer : activeConnections)
 	{
-		if (peer.comm->state.finishedHandshake)
+		if (peer.comm->isEstablished())
 			peer.comm->info.pieces.resize(torrent.infoFile.info.pieces.size());
 	}
 }
 
-uint32_t mtt::Peers::updateKnownPeers(const std::vector<Addr>& peers, PeerSource source)
+uint32_t mtt::Peers::updateKnownPeers(const std::vector<Addr>& peers, PeerSource source, const uint8_t* flags)
 {
-	std::vector<uint32_t> accepted;
+	if (peers.empty())
+		return 0;
+
+	std::vector<uint32_t> newPeers;
+	uint32_t updatedPeers = 0;
 	{
 		std::lock_guard<std::mutex> guard(peersMutex);
 
 		for (uint32_t i = 0; i < peers.size(); i++)
 		{
-			if (std::find(knownPeers.begin(), knownPeers.end(), peers[i]) == knownPeers.end())
-				accepted.push_back(i);
+			auto it = std::find(knownPeers.begin(), knownPeers.end(), peers[i]);
+
+			if (it == knownPeers.end())
+				newPeers.push_back(i);
+			else if (flags)
+			{
+				if (it->pexFlags == 0)
+					updatedPeers++;
+
+				it->pexFlags |= flags[i];
+			}
 		}
 
-		if (accepted.empty())
+		if (newPeers.empty())
 			return 0;
 
 		KnownPeer* addedPeersPtr;
 
 		if (source == PeerSource::Pex || source == PeerSource::Dht)
 		{
-			knownPeers.insert(knownPeers.begin(), accepted.size(), KnownPeer());
+			knownPeers.insert(knownPeers.begin(), newPeers.size(), KnownPeer());
 			addedPeersPtr = &knownPeers[0];
 
 			for (auto& conn : activeConnections)
 			{
-				conn.idx += (uint32_t)accepted.size();
+				conn.idx += (uint32_t)newPeers.size();
 			}
 		}
 		else
 		{
-			knownPeers.resize(knownPeers.size() + accepted.size());
-			addedPeersPtr = &knownPeers[knownPeers.size() - accepted.size()];
+			knownPeers.resize(knownPeers.size() + newPeers.size());
+			addedPeersPtr = &knownPeers[knownPeers.size() - newPeers.size()];
 		}
 
-		for (uint32_t i : accepted)
+		for (uint32_t i : newPeers)
 		{
 			addedPeersPtr->address = peers[i];
 			PEERS_LOG("New peer " << addedPeersPtr->address.toString() << " source " << (int)source);
 			addedPeersPtr->source = source;
+			if (flags)
+				addedPeersPtr->pexFlags = flags[i];
 			addedPeersPtr++;
 		}
 	}
@@ -331,7 +355,15 @@ uint32_t mtt::Peers::updateKnownPeers(const std::vector<Addr>& peers, PeerSource
 	if (updateCallback)
 		updateCallback(mtt::Status::Success, source);
 
-	return (uint32_t)accepted.size();
+	return (uint32_t)newPeers.size() + updatedPeers;
+}
+
+uint32_t mtt::Peers::updateKnownPeers(const ext::PeerExchange::Message& pex)
+{
+	auto accepted = updateKnownPeers(pex.addedPeers, PeerSource::Pex, pex.addedFlags.data);
+	accepted += updateKnownPeers(pex.added6Peers, PeerSource::Pex, pex.added6Flags.data);
+
+	return accepted;
 }
 
 uint32_t mtt::Peers::updateKnownPeers(const Addr& addr, PeerSource source)
@@ -368,23 +400,45 @@ void mtt::Peers::connect(uint32_t idx)
 	PEERS_LOG("connect " << knownPeer.address.toString());
 
 	ActivePeer peer;
-	peer.comm = std::make_shared<PeerCommunication>(torrent.infoFile.info, *peersListener, torrent.service.io);
-	peer.comm->sendHandshake(knownPeer.address);
+	peer.comm = std::make_shared<PeerCommunication>(torrent.infoFile.info, *this, torrent.service.io);
+	peer.comm->connect(knownPeer.address);
 	peer.idx = idx;
 	activeConnections.emplace_back(std::move(peer));
 
 	DIAGNOSTICS(Connect, knownPeer.address);
 }
 
-std::shared_ptr<mtt::PeerCommunication> mtt::Peers::getActivePeer(const Addr& addr)
+void mtt::Peers::update()
 {
-	std::lock_guard<std::mutex> guard(peersMutex);
+	dht.update();
 
+	{
+		std::lock_guard<std::mutex> guard(peersMutex);
+
+		std::vector<PeerCommunication*> peers;
+		peers.reserve(activeConnections.size());
+		for (const auto& c : activeConnections)
+		{
+			peers.push_back(c.comm.get());
+		}
+
+		pex.local.update(peers);
+
+		for (const auto& c : activeConnections)
+		{
+			c.comm->ext.pex.update(pex.local);
+		}
+	}
+
+	refreshTimer->schedule(1);
+}
+
+mtt::Peers::ActivePeer* mtt::Peers::getActivePeer(const Addr& addr)
+{
 	for (auto& connection : activeConnections)
 	{
-		auto& peer = knownPeers[connection.idx];
-		if (peer.address == addr)
-			return connection.comm;
+		if (connection.comm->getStream()->getAddress() == addr)
+			return &connection;
 	}
 
 	return nullptr;
@@ -423,56 +477,34 @@ mtt::Peers::DhtSource::DhtSource(Peers& p, Torrent& t) : peers(p), torrent(t)
 
 void mtt::Peers::DhtSource::start()
 {
-	std::lock_guard<std::mutex> guard(timerMtx);
-
-	if (dhtRefreshTimer)
+	if (info.state != TrackerState::Clear)
 		return;
-
-	auto refreshFunc = [this]
-	{
-		std::lock_guard<std::mutex> guard(timerMtx);
-
-		uint32_t currentTime = (uint32_t)time(0);
-		uint32_t nextUpdate = info.announceInterval;
-
-		if (info.nextAnnounce <= currentTime)
-		{
-			if (torrent.selectionFinished())
-				info.nextAnnounce = currentTime + info.announceInterval;
-			else
-				findPeers();
-		}
-		else
-			nextUpdate = info.nextAnnounce - currentTime;
-
-		if (dhtRefreshTimer)
-			dhtRefreshTimer->schedule(nextUpdate);
-	};
 
 	info.state = TrackerState::Connected;
 
-	cfgCallbackId = mtt::config::registerOnChangeCallback(config::ValueType::Dht, refreshFunc);
-
-	dhtRefreshTimer = ScheduledTimer::create(torrent.service.io, refreshFunc);
-
-	dhtRefreshTimer->schedule(1);
+	cfgCallbackId = mtt::config::registerOnChangeCallback(config::ValueType::Dht, [this]() { update(); });
 }
 
 void mtt::Peers::DhtSource::stop()
 {
-	{
-		std::lock_guard<std::mutex> guard(timerMtx);
-
-		if (dhtRefreshTimer)
-			dhtRefreshTimer->disable();
-		dhtRefreshTimer = nullptr;
-
-		dht::Communication::get().stopFindingPeers(torrent.hash());
-	}
+	dht::Communication::get().stopFindingPeers(torrent.hash());
 
 	mtt::config::unregisterOnChangeCallback(cfgCallbackId);
 	info.nextAnnounce = 0;
 	info.state = TrackerState::Clear;
+}
+
+void mtt::Peers::DhtSource::update()
+{
+	const auto currentTime = mtt::CurrentTimestamp();
+
+	if (info.nextAnnounce <= currentTime && info.state == TrackerState::Connected)
+	{
+		if (torrent.selectionFinished())
+			info.nextAnnounce = currentTime + info.announceInterval;
+		else
+			findPeers();
+	}
 }
 
 void mtt::Peers::DhtSource::findPeers()
@@ -498,39 +530,31 @@ void mtt::Peers::DhtSource::dhtFindingPeersFinished(const uint8_t* hash, uint32_
 	info.state = TrackerState::Connected;
 }
 
-mtt::Peers::PeersListener::PeersListener(Peers* p) : peers(p)
+void mtt::Peers::handshakeFinished(mtt::PeerCommunication* p)
 {
-}
-
-void mtt::Peers::PeersListener::handshakeFinished(mtt::PeerCommunication* p)
-{
-	std::lock_guard<std::mutex> guard(mtx);
-
-	if(peers)
 	{
-		std::lock_guard<std::mutex> guard(peers->peersMutex);
-		if (auto peer = peers->getKnownPeer(p))
+		std::lock_guard<std::mutex> guard(peersMutex);
+		if (auto peer = getKnownPeer(p))
 			peer->lastQuality = Peers::PeerQuality::Normal;
 	}
 
-	if (target)
-		target->handshakeFinished(p);
+	std::lock_guard<std::mutex> guard(listenerMtx);
+	if (listener)
+		listener->handshakeFinished(p);
 }
 
-void mtt::Peers::PeersListener::connectionClosed(mtt::PeerCommunication* p, int code)
+void mtt::Peers::connectionClosed(mtt::PeerCommunication* p, int code)
 {
-	std::lock_guard<std::mutex> guard(mtx);
+	KnownPeer info;
+	auto ptr = disconnect(p, &info);
 
-	if (peers)
-	{
-		auto ptr = peers->disconnect(p);
 
-		if (target)
-			target->connectionClosed(p, code);
-	}
+	std::lock_guard<std::mutex> guard(listenerMtx);
+	if (listener)
+		listener->connectionClosed(p, code);
 }
 
-void mtt::Peers::PeersListener::messageReceived(mtt::PeerCommunication* p, mtt::PeerMessage& m)
+void mtt::Peers::messageReceived(mtt::PeerCommunication* p, mtt::PeerMessage& m)
 {
 	if (m.id == PeerMessage::Port && m.port)
 	{
@@ -542,16 +566,15 @@ void mtt::Peers::PeersListener::messageReceived(mtt::PeerCommunication* p, mtt::
 		}
 	}
 
-	std::lock_guard<std::mutex> guard(mtx);
-	if (target)
-		target->messageReceived(p, m);
+	std::lock_guard<std::mutex> guard(listenerMtx);
+	if (listener)
+		listener->messageReceived(p, m);
 }
 
-void mtt::Peers::PeersListener::extHandshakeFinished(mtt::PeerCommunication* p)
+void mtt::Peers::setTargetListener(mtt::IPeerListener* t)
 {
-	std::lock_guard<std::mutex> guard(mtx);
-	if (target)
-		target->extHandshakeFinished(p);
+	std::lock_guard<std::mutex> guard(listenerMtx);
+	listener = t;
 }
 
 void mtt::Peers::PeersListener::metadataPieceReceived(mtt::PeerCommunication* p, mtt::ext::UtMetadata::Message& m)

@@ -297,3 +297,14 @@ void _SHA1(const unsigned char* d, std::size_t n, unsigned char* md)
 		memcpy(md + i*4, &bd, 4);
 	}
 }
+
+size_t BufferHash(const unsigned char* d, std::size_t n)
+{
+	if (n == 0)
+		return 0;
+
+	unsigned char md[SHA_DIGEST_LENGTH];
+	_SHA1(d, n, md);
+
+	return *(size_t*)md;
+}

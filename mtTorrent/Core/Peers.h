@@ -4,10 +4,11 @@
 #include "TrackerManager.h"
 #include "Dht/Listener.h"
 #include "Api/Peers.h"
+#include "PexExtension.h"
 
 namespace mtt
 {
-	class Peers : public mttApi::Peers
+	class Peers : public mttApi::Peers, public mtt::IPeerListener
 	{
 	public:
 
@@ -38,48 +39,26 @@ namespace mtt
 
 		FileLog log;
 
-		class PeersListener : public mtt::IPeerListener, public std::enable_shared_from_this<PeersListener>
-		{
-		public:
-			PeersListener(Peers*);
-			void handshakeFinished(mtt::PeerCommunication*) override;
-			void connectionClosed(mtt::PeerCommunication*, int) override;
-			void messageReceived(mtt::PeerCommunication*, mtt::PeerMessage&) override;
-			void extHandshakeFinished(mtt::PeerCommunication*) override;
-			void metadataPieceReceived(mtt::PeerCommunication*, mtt::ext::UtMetadata::Message&) override;
-			void pexReceived(mtt::PeerCommunication*, mtt::ext::PeerExchange::Message&) override;
-			void progressUpdated(mtt::PeerCommunication*, uint32_t) override;
-			void setTarget(mtt::IPeerListener*);
-			void setParent(Peers*);
-
-			std::mutex mtx;
-			mtt::IPeerListener* target = nullptr;
-			Peers* peers;
-		};
-
-		std::shared_ptr<PeersListener> peersListener;
-
-		PeersUpdateCallback updateCallback;
-
 		enum class PeerQuality { Unknown, Closed, Offline, Connecting, Bad, Normal, Good };
 		struct KnownPeer
 		{
 			bool operator==(const Addr& r);
 
 			Addr address;
+			uint8_t pexFlags = {};
 			PeerSource source;
 			PeerQuality lastQuality = PeerQuality::Unknown;
 			Timestamp lastConnectionTime = 0;
 			uint32_t connectionAttempts = 0;
 		};
 
-		uint32_t updateKnownPeers(const std::vector<Addr>& peers, PeerSource source);
+		uint32_t updateKnownPeers(const ext::PeerExchange::Message& pex);
+		uint32_t updateKnownPeers(const std::vector<Addr>& peers, PeerSource source, const uint8_t* flags = nullptr);
 		uint32_t updateKnownPeers(const Addr& addr, PeerSource source);
 		std::vector<KnownPeer> knownPeers;
 		mutable std::mutex peersMutex;
 
 		void connect(uint32_t idx);
-		std::shared_ptr<PeerCommunication> getActivePeer(const Addr&);
 		struct ActivePeer
 		{
 			std::shared_ptr<PeerCommunication> comm;
@@ -88,8 +67,18 @@ namespace mtt
 		std::vector<ActivePeer> activeConnections;
 		KnownPeer* getKnownPeer(PeerCommunication* p);
 		ActivePeer* getActivePeer(PeerCommunication* p);
+		ActivePeer* getActivePeer(const Addr&);
 
-		TrackerInfo pexInfo;
+		std::shared_ptr<ScheduledTimer> refreshTimer;
+		void update();
+
+		struct
+		{
+			TrackerInfo info;
+			ext::PeerExchange::LocalData local;
+		}
+		pex;
+
 		TrackerInfo remoteInfo;
 
 		class DhtSource : public dht::ResultsListener
@@ -101,6 +90,7 @@ namespace mtt
 			void start();
 			void stop();
 
+			void update();
 			void findPeers();
 
 			TrackerInfo info;
@@ -109,14 +99,23 @@ namespace mtt
 			uint32_t dhtFoundPeers(const uint8_t* hash, const std::vector<Addr>& values) override;
 			void dhtFindingPeersFinished(const uint8_t* hash, uint32_t count) override;
 
-			std::shared_ptr<ScheduledTimer> dhtRefreshTimer;
-			std::mutex timerMtx;
-
 			Peers& peers;
 			Torrent& torrent;
 
 			int cfgCallbackId = -1;
 		}
 		dht;
+
+		void handshakeFinished(mtt::PeerCommunication*) override;
+		void connectionClosed(mtt::PeerCommunication*, int) override;
+		void messageReceived(mtt::PeerCommunication*, mtt::PeerMessage&) override;
+		void extendedHandshakeFinished(PeerCommunication*, const ext::Handshake&) override;
+		void extendedMessageReceived(PeerCommunication*, ext::Type, const BufferView&) override;
+
+		std::mutex listenerMtx;
+		mtt::IPeerListener* listener = nullptr;
+		void setTargetListener(mtt::IPeerListener*);
+
+		PeersUpdateCallback updateCallback;
 	};
 }
