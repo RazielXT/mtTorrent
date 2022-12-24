@@ -2,6 +2,7 @@
 #include "Torrent.h"
 #include "Files.h"
 #include "PeerCommunication.h"
+#include "MetadataExtension.h"
 #include "Peers.h"
 #include "Configuration.h"
 #include "AlertsManager.h"
@@ -160,23 +161,26 @@ void mtt::FileTransfer::extendedHandshakeFinished(PeerCommunication*, const ext:
 {
 }
 
-void mtt::FileTransfer::progressUpdated(PeerCommunication* p, uint32_t idx)
+void mtt::FileTransfer::extendedMessageReceived(PeerCommunication* p, ext::Type type, const BufferView& data)
 {
-	if (idx < piecesAvailability.size())
-		piecesAvailability[idx]++;
-	else
+	if (type == ext::Type::UtMetadata)
 	{
-		auto& peerPieces = p->info.pieces.pieces;
+		ext::UtMetadata::Message msg;
 
-		for (size_t i = 0; i < piecesAvailability.size(); i++)
+		if (ext::UtMetadata::Load(data, msg))
 		{
-			piecesAvailability[i] += peerPieces[i] ? 1 : 0;
-		}
-	}
+			if (msg.type == ext::UtMetadata::Type::Request)
+			{
+				const uint32_t offset = msg.piece * ext::UtMetadata::PieceSize;
+				auto& data = torrent.infoFile.info.data;
 
-	if (!torrent.selectionFinished())
-	{
-		downloader.progressUpdated(p, idx);
+				if (offset < data.size())
+				{
+					size_t pieceSize = std::min<size_t>(ext::UtMetadata::PieceSize, torrent.infoFile.info.data.size() - offset);
+					p->ext.utm.sendPieceResponse(msg.piece, { data.data() + offset, pieceSize }, data.size());
+				}
+			}
+		}
 	}
 }
 

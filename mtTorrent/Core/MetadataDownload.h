@@ -25,7 +25,7 @@ namespace mtt
 		struct EventInfo
 		{
 			uint8_t sourceId[20];
-			enum Action { Connected, Disconnected, Request, Receive, Searching, End } action;
+			enum Action { Connected, Disconnected, Request, Receive, Reject, Searching, End } action;
 			uint32_t index;
 
 			std::string toString();
@@ -46,18 +46,16 @@ namespace mtt
 
 		Peers& peers;
 
-		virtual void handshakeFinished(PeerCommunication*) override;
-		virtual void connectionClosed(PeerCommunication*, int) override;
-		virtual void messageReceived(PeerCommunication*, PeerMessage&) override;
-		virtual void extHandshakeFinished(PeerCommunication*) override;
-		virtual void metadataPieceReceived(PeerCommunication*, ext::UtMetadata::Message&) override;
-		virtual void pexReceived(PeerCommunication*, ext::PeerExchange::Message&) override;
-		virtual void progressUpdated(PeerCommunication*, uint32_t) override;
+		void handshakeFinished(PeerCommunication*) override;
+		void connectionClosed(PeerCommunication*, int) override;
+		void messageReceived(PeerCommunication*, PeerMessage&) override;
+		void extendedHandshakeFinished(PeerCommunication*, ext::Handshake&) override;
+		void extendedMessageReceived(PeerCommunication*, ext::Type, const BufferView& data) override;
 
 		void requestPiece(std::shared_ptr<PeerCommunication> peer);
 
 		std::vector<EventInfo> eventLog;
-		void addEventLog(uint8_t* id, EventInfo::Action action, uint32_t index);
+		void addEventLog(const uint8_t* id, EventInfo::Action action, uint32_t index);
 
 		std::shared_ptr<ScheduledTimer> retryTimer;
 		Timestamp lastActivityTime = 0;

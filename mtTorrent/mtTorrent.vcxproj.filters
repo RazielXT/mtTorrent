@@ -265,6 +265,9 @@
     <ClCompile Include="utils\BigNumber.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="Core\MetadataExtension.cpp">
+      <Filter>Source Files\Core\Torrent\Peer\Protocol</Filter>
+    </ClCompile>
     <ClCompile Include="utils\BitUtils.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
@@ -506,6 +509,9 @@
     </ClInclude>
     <ClInclude Include="utils\BigNumber.h">
       <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\MetadataExtension.h">
+      <Filter>Source Files\Core\Torrent\Peer\Protocol</Filter>
     </ClInclude>
     <ClInclude Include="utils\int128.h">
       <Filter>Source Files\Utils</Filter>

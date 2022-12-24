@@ -313,6 +313,7 @@
     <ClCompile Include="Core\HttpsTrackerComm.cpp" />
     <ClCompile Include="Core\IncomingPeersListener.cpp" />
     <ClCompile Include="Core\Interface.cpp" />
+    <ClCompile Include="Core\MetadataExtension.cpp" />
     <ClCompile Include="Core\PeerStream.cpp" />
     <ClCompile Include="Core\ProtocolEncryption.cpp" />
     <ClCompile Include="Core\Torrent.cpp" />
@@ -387,6 +388,7 @@
     <ClInclude Include="Core\FileTransfer.h" />
     <ClInclude Include="Core\HttpsTrackerComm.h" />
     <ClInclude Include="Core\IncomingPeersListener.h" />
+    <ClInclude Include="Core\MetadataExtension.h" />
     <ClInclude Include="Core\Peers.h" />
     <ClInclude Include="Core\PeerStream.h" />
     <ClInclude Include="Core\ProtocolEncryption.h" />

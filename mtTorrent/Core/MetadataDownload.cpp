@@ -3,6 +3,7 @@
 #include "Torrent.h"
 #include "Configuration.h"
 #include "utils/HexEncoding.h"
+#include "MetadataExtension.h"
 
 #define BT_UTM_LOG(x) WRITE_GLOBAL_LOG(MetadataDownload, x)
 
@@ -91,7 +92,6 @@ void mtt::MetadataDownload::evalComms()
 	{
 		addEventLog(nullptr, EventInfo::Searching, (uint32_t)activeComms.size());
 		peers.connectNext(mtt::config::getExternal().connection.maxTorrentConnections);
-		BT_UTM_LOG("searching for more peers");
 	}
 }
 
@@ -114,23 +114,15 @@ void mtt::MetadataDownload::addToBackup(std::shared_ptr<PeerCommunication> peer)
 {
 	std::lock_guard<std::mutex> guard(commsMutex);
 
-	if (peer->ext.utm.size)
-	{
-		if (metadata.pieces == 0)
-			metadata.init(peer->ext.utm.size);
-	
-		addEventLog(peer->info.id, EventInfo::Connected, 0);
-		activeComms.push_back(peer);
-		requestPiece(peer);
-	}
+	addEventLog(peer->info.id, EventInfo::Connected, 0);
+	activeComms.push_back(peer);
+	requestPiece(peer);
 }
 
 void mtt::MetadataDownload::handshakeFinished(PeerCommunication* p)
 {
 	if (!p->info.supportsExtensions())
 	{
-		BT_UTM_LOG("not supportsExtensions");
-
 		peers.disconnect(p);
 	}
 }
@@ -148,38 +140,71 @@ void mtt::MetadataDownload::messageReceived(PeerCommunication* p, PeerMessage& m
 {
 }
 
-void mtt::MetadataDownload::metadataPieceReceived(PeerCommunication* p, ext::UtMetadata::Message& msg)
+void mtt::MetadataDownload::extendedMessageReceived(PeerCommunication* p, ext::Type t, const BufferView& data)
 {
+	if (!state.active)
+		return;
+
+	if (t == ext::Type::UtMetadata)
 	{
-		std::lock_guard<std::mutex> guard(commsMutex);
-		addEventLog(p->info.id, EventInfo::Receive, msg.piece);
-		BT_UTM_LOG("received piece idx " << msg.piece);
-		metadata.addPiece(msg.metadata, msg.piece);
-		state.partsCount = metadata.pieces;
-		state.receivedParts++;
+		ext::UtMetadata::Message msg;
+		if (!ext::UtMetadata::Load(data, msg))
+			return;
 
-		if (metadata.finished() && state.active)
+		if (msg.type == ext::UtMetadata::Type::Data)
 		{
-			state.finished = true;
+			std::lock_guard<std::mutex> guard(commsMutex);
+			addEventLog(p->info.id, EventInfo::Receive, msg.piece);
+
+			if (metadata.buffer.size() != msg.totalSize)
+			{
+				BT_UTM_LOG("different total size " << msg.totalSize);
+				return;
+			}
+
+			if (metadata.addPiece(msg.metadata, msg.piece))
+			{
+				state.partsCount = metadata.pieces;
+				state.receivedParts++;
+			}
+
+			if (metadata.finished())
+			{
+				state.finished = true;
+			}
+			else
+			{
+				requestPiece(p->shared_from_this());
+			}
 		}
-		else
+		else if (msg.type == ext::UtMetadata::Type::Reject)
 		{
-			requestPiece(p->shared_from_this());
+			addEventLog(p->info.id, EventInfo::Reject, msg.piece);
+			peers.disconnect(p);
+			return;
 		}
-	}
 
-	if (state.finished)
-	{
-		service.io.post([this]() { stop(); });
-	}
+		if (state.finished)
+		{
+			service.io.post([this]() { stop(); });
+		}
 
-	onUpdate(Status::Success, state);
+		onUpdate(Status::Success, state);
+	}
 }
 
-void mtt::MetadataDownload::extHandshakeFinished(PeerCommunication* peer)
+void mtt::MetadataDownload::extendedHandshakeFinished(PeerCommunication* peer, ext::Handshake& handshake)
 {
-	if (peer->ext.isSupported(ext::MessageType::UtMetadataEx))
+	if (handshake.metadataSize && peer->ext.utm.enabled())
+	{
+		{
+			std::lock_guard<std::mutex> guard(commsMutex);
+			if (metadata.pieces == 0)
+				metadata.init(handshake.metadataSize);
+		}
+
 		addToBackup(peer->shared_from_this());
+	}
 	else
 	{
 		BT_UTM_LOG("no UtMetadataEx support " << peer->getStream()->getAddress());
@@ -187,28 +212,19 @@ void mtt::MetadataDownload::extHandshakeFinished(PeerCommunication* peer)
 	}
 }
 
-void mtt::MetadataDownload::pexReceived(PeerCommunication*, ext::PeerExchange::Message&)
-{
-}
-
-void mtt::MetadataDownload::progressUpdated(PeerCommunication*, uint32_t)
-{
-}
-
 void mtt::MetadataDownload::requestPiece(std::shared_ptr<PeerCommunication> peer)
 {
 	if (state.active && !state.finished)
 	{
 		uint32_t mdPiece = metadata.getMissingPieceIndex();
-		peer->ext.requestMetadataPiece(mdPiece);
-		BT_UTM_LOG("requesting piece idx " << mdPiece);
+		peer->ext.utm.sendPieceRequest(mdPiece);
 		addEventLog(peer->info.id, EventInfo::Request, mdPiece);
 		onUpdate(Status::I_Requesting, state);
-		lastActivityTime = (uint32_t)time(0);
+		lastActivityTime = mtt::CurrentTimestamp();
 	}
 }
 
-void mtt::MetadataDownload::addEventLog(uint8_t* id, EventInfo::Action action, uint32_t index)
+void mtt::MetadataDownload::addEventLog(const uint8_t* id, EventInfo::Action action, uint32_t index)
 {
 	if (!eventLog.empty() && action == EventInfo::Searching && eventLog.back().action == action && eventLog.back().index == index)
 		return;
@@ -220,6 +236,7 @@ void mtt::MetadataDownload::addEventLog(uint8_t* id, EventInfo::Action action, u
 		memcpy(info.sourceId, id, 20);
 
 	eventLog.emplace_back(info);
+	BT_UTM_LOG(info.toString());
 }
 
 std::string mtt::MetadataDownload::EventInfo::toString()
@@ -236,6 +253,8 @@ std::string mtt::MetadataDownload::EventInfo::toString()
 		return hexToString(sourceId, 20) + " requesting " + std::to_string(index);
 	if (action == mtt::MetadataDownload::EventInfo::Receive)
 		return hexToString(sourceId, 20) + " sent " + std::to_string(index);
-	else
-		return "";
+	if (action == mtt::MetadataDownload::EventInfo::Reject)
+		return hexToString(sourceId, 20) + " rejected index " + std::to_string(index);
+
+	return "";
 }
