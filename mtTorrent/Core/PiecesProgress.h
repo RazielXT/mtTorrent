@@ -13,7 +13,7 @@ namespace mtt
 
 		void select(const File& info, bool selected);
 		void select(const TorrentInfo& info, const DownloadSelection& selection);
-		void fromBitfield(const DataBuffer& bitfield);
+		void fromBitfield(const BufferView& bitfield);
 		void fromList(const std::vector<uint8_t>& pieces);
 		DataBuffer toBitfield() const;
 		void toBitfield(DataBuffer&) const;

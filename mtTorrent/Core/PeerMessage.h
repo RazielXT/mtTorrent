@@ -27,7 +27,7 @@ namespace mtt
 		Id id = Invalid;
 
 		uint32_t havePieceIndex;
-		DataBuffer bitfield;
+		BufferView bitfield;
 
 		struct  
 		{
@@ -50,7 +50,7 @@ namespace mtt
 		struct
 		{
 			uint8_t id;
-			DataBuffer data;
+			BufferView data;
 		}
 		extended;	
 	};

@@ -46,7 +46,7 @@ PeerMessage::PeerMessage(const BufferView& buffer)
 		}
 		else if (id == Bitfield)
 		{
-			bitfield = reader.popBuffer(size - 1);
+			bitfield = reader.popBufferView(size - 1);
 		}
 		else if (id == Request && size == 13)
 		{
@@ -74,7 +74,7 @@ PeerMessage::PeerMessage(const BufferView& buffer)
 		else if (id == Extended && size > 2)
 		{
 			extended.id = reader.pop();
-			extended.data = reader.popBuffer(size - 2);
+			extended.data = reader.popBufferView(size - 2);
 		}
 	}
 

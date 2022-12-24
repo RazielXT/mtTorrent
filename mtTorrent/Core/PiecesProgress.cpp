@@ -22,12 +22,12 @@ float mtt::PiecesProgress::getSelectedPercentage() const
 
 bool mtt::PiecesProgress::finished() const
 {
-	return receivedPiecesCount == pieces.size();
+	return !pieces.empty() && receivedPiecesCount == pieces.size();
 }
 
 bool mtt::PiecesProgress::selectedFinished() const
 {
-	return selectedReceivedPiecesCount == selectedPieces;
+	return !pieces.empty() && selectedReceivedPiecesCount == selectedPieces;
 }
 
 uint64_t mtt::PiecesProgress::getReceivedBytes(uint32_t pieceSize, uint64_t fullSize) const
@@ -219,18 +219,18 @@ size_t mtt::PiecesProgress::getReceivedPiecesCount() const
 	return receivedPiecesCount;
 }
 
-void mtt::PiecesProgress::fromBitfield(const DataBuffer& bitfield)
+void mtt::PiecesProgress::fromBitfield(const BufferView& bitfield)
 {
-	size_t maxPiecesCount = pieces.empty() ? bitfield.size() * 8 : pieces.size();
+	size_t maxPiecesCount = pieces.empty() ? bitfield.size * 8 : pieces.size();
 
 	init(maxPiecesCount);
 
 	for (size_t i = 0; i < maxPiecesCount; i++)
 	{
-		size_t idx = static_cast<size_t>(i / 8.0f);
+		auto idx = static_cast<size_t>(i / 8.0f);
 		unsigned char bitmask = 128 >> i % 8;
 
-		bool value = (bitfield[idx] & bitmask) != 0;
+		bool value = (bitfield.data[idx] & bitmask) != 0;
 
 		pieces[i] = value ? HasFlag : ReadyValue;
 		receivedPiecesCount += value;
