@@ -11,13 +11,7 @@ namespace mtt
 {
 	namespace TorrentFileParser
 	{
-		struct ParsedInfo
-		{
-			const char* infoStart = nullptr;
-			size_t infoSize = 0;
-		};
-
-		TorrentFileInfo parse(const uint8_t* data, std::size_t length, ParsedInfo* info = nullptr);
+		TorrentFileInfo parse(const uint8_t* data, std::size_t length);
 
 		TorrentInfo parseTorrentInfo(const uint8_t* data, std::size_t length);
 	}

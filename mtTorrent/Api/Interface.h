@@ -2,6 +2,7 @@
 
 #include "../Public/Status.h"
 #include "../Public/Alerts.h"
+#include "../utils/DataBuffer.h"
 #include "Configuration.h"
 #include <string>
 #include <vector>
@@ -61,6 +62,8 @@ namespace mtt
 		uint32_t lastPieceLastBlockSize = 0;
 
 		bool isPrivate = false;
+
+		DataBuffer data;
 	};
 
 	struct TorrentFileInfo
@@ -78,7 +81,7 @@ namespace mtt
 		about;
 
 		API_EXPORT Status parseMagnetLink(std::string link);
-		API_EXPORT std::string createTorrentFileData(const uint8_t* info = nullptr, std::size_t infoSize = 0);
+		API_EXPORT DataBuffer createTorrentFileData(const uint8_t* info = nullptr, std::size_t infoSize = 0);
 	};
 
 	enum class Priority : uint8_t

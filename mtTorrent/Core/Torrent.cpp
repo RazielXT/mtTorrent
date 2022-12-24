@@ -153,7 +153,7 @@ void mtt::Torrent::save()
 	stateChanged = saveState.started;
 }
 
-void mtt::Torrent::saveTorrentFile(const char* data, std::size_t size)
+void mtt::Torrent::saveTorrentFile(const uint8_t* data, std::size_t size)
 {
 	auto folderPath = mtt::config::getInternal().stateFolder + pathSeparator + hashString() + ".torrent";
 
@@ -162,7 +162,7 @@ void mtt::Torrent::saveTorrentFile(const char* data, std::size_t size)
 	if (!file)
 		return;
 
-	file.write(data, size);
+	file.write((const char*)data, size);
 }
 
 void mtt::Torrent::removeMetaFiles()
@@ -174,39 +174,27 @@ void mtt::Torrent::removeMetaFiles()
 
 bool mtt::Torrent::importTrackers(const mtt::TorrentFileInfo& otherFileInfo)
 {
-	std::vector<std::string> added;
+	bool added = false;
 
 	for (auto& t : otherFileInfo.announceList)
 	{
 		if (std::find(infoFile.announceList.begin(), infoFile.announceList.end(), t) == infoFile.announceList.end())
 		{
-			added.push_back(t);
 			infoFile.announceList.push_back(t);
+			peers->trackers.addTracker(t);
 		}
 	}
 
-	if (!added.empty())
+	if (added)
 	{
-		if(infoFile.announce.empty())
+		if (infoFile.announce.empty())
 			infoFile.announce = infoFile.announceList.front();
 
-		DataBuffer buffer;
-		if (loadSavedTorrentFile(hashString(), buffer))
-		{
-			TorrentFileParser::ParsedInfo parseInfo;
-			auto loadedFile = mtt::TorrentFileParser::parse(buffer.data(), buffer.size(), &parseInfo);
-			
-			if (!loadedFile.info.name.empty())
-			{
-				auto newFile = infoFile.createTorrentFileData((const uint8_t*)parseInfo.infoStart, parseInfo.infoSize);
-				saveTorrentFile(newFile.data(), newFile.size());
-			}
-		}
-
-		peers->trackers.addTrackers(added);
+		auto newFile = infoFile.createTorrentFileData();
+		saveTorrentFile(newFile.data(), newFile.size());
 	}
 
-	return !added.empty();
+	return added;
 }
 
 bool mtt::Torrent::loadSavedTorrentFile(const std::string& hash, DataBuffer& out)
@@ -269,6 +257,8 @@ void mtt::Torrent::downloadMetadata()
 
 			auto fileData = infoFile.createTorrentFileData(utmDl->metadata.buffer.data(), utmDl->metadata.buffer.size());
 			saveTorrentFile(fileData.data(), fileData.size());
+
+			infoFile.info.data = std::move(utmDl->metadata.buffer);
 
 			initialize();
 			peers->reloadTorrentInfo();

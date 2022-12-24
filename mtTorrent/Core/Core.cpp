@@ -198,7 +198,7 @@ std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addFile(const uint8_t* data, 
 	if (!torrent)
 		return { mtt::Status::E_InvalidInput, nullptr };
 
-	torrent->saveTorrentFile((const char*)data, size);
+	torrent->saveTorrentFile(data, size);
 	torrents.push_back(torrent);
 	listener->addTorrent(torrent->hash());
 	saveTorrentList(torrents);

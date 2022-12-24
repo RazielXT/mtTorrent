@@ -4,11 +4,11 @@
 
 using namespace mtt;
 
-bool generateInfoHash(BencodeParser& parsed, TorrentFileInfo&, TorrentFileParser::ParsedInfo*);
+bool generateInfoHash(BencodeParser& parsed, TorrentFileInfo&);
 void loadTorrentFileInfo(BencodeParser& parsed, TorrentFileInfo&);
 TorrentInfo parseTorrentInfo(const BencodeParser::Object* info);
 
-TorrentFileInfo TorrentFileParser::parse(const uint8_t* data, std::size_t length, ParsedInfo* info)
+TorrentFileInfo TorrentFileParser::parse(const uint8_t* data, std::size_t length)
 {
 	TorrentFileInfo out;
 	BencodeParser parser;
@@ -17,7 +17,7 @@ TorrentFileInfo TorrentFileParser::parse(const uint8_t* data, std::size_t length
 		return out;
 	
 	loadTorrentFileInfo(parser, out);
-	generateInfoHash(parser, out, info);
+	generateInfoHash(parser, out);
 
 	return out;
 }
@@ -54,7 +54,7 @@ void loadTorrentFileInfo(BencodeParser& parser, TorrentFileInfo& fileInfo)
 					while (a)
 					{
 						if (a->isText())
-							fileInfo.announceList.push_back(std::string(a->info.data, a->info.size));
+							fileInfo.announceList.emplace_back(a->info.data, a->info.size);
 
 						a = a->getNextSibling();
 					}
@@ -76,7 +76,7 @@ void loadTorrentFileInfo(BencodeParser& parser, TorrentFileInfo& fileInfo)
 	}
 }
 
-bool generateInfoHash(BencodeParser& parser, TorrentFileInfo& fileInfo, TorrentFileParser::ParsedInfo* info)
+bool generateInfoHash(BencodeParser& parser, TorrentFileInfo& fileInfo)
 {
 	const char* infoStart = nullptr;
 	const char* infoEnd = nullptr;
@@ -128,18 +128,13 @@ bool generateInfoHash(BencodeParser& parser, TorrentFileInfo& fileInfo, TorrentF
 
 	if (infoStart && infoEnd)
 	{
-		if (info)
-		{
-			info->infoStart = infoStart;
-			info->infoSize = infoEnd - infoStart;
-		}
-
+		fileInfo.info.data.assign(infoStart, infoEnd);
 		_SHA1((const unsigned char*)infoStart, infoEnd - infoStart, (unsigned char*)&fileInfo.info.hash[0]);
 
 		return true;
 	}
-	else
-		return false;
+
+	return false;
 }
 
 mtt::TorrentInfo mtt::TorrentFileParser::parseTorrentInfo(const uint8_t* data, std::size_t length)

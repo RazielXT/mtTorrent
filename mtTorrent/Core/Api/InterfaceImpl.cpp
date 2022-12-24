@@ -127,7 +127,7 @@ mtt::Status mtt::TorrentFileInfo::parseMagnetLink(std::string link)
 	return correct ? Status::Success : Status::E_InvalidInput;
 }
 
-std::string mtt::TorrentFileInfo::createTorrentFileData(const uint8_t* infoData, std::size_t infoDataSize)
+DataBuffer mtt::TorrentFileInfo::createTorrentFileData(const uint8_t* infoData, std::size_t infoDataSize)
 {
 	BencodeWriter writer;
 
@@ -156,6 +156,12 @@ std::string mtt::TorrentFileInfo::createTorrentFileData(const uint8_t* infoData,
 		writer.addRawItem("10:created by", about.createdBy);
 	if (about.creationDate != 0)
 		writer.addRawItem("13:creation date", about.creationDate);
+
+	if (!infoData && !info.data.empty())
+	{
+		infoData = info.data.data();
+		infoDataSize = info.data.size();
+	}
 
 	if (!infoData)
 	{
