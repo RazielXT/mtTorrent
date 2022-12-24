@@ -172,7 +172,7 @@ mtt::Status AppCore::addTorrentFromFile(const char* filepath)
 
 void AppCore::registerAlerts()
 {
-	mtBI::RegisterAlertsRequest alertsRequest{ (uint32_t)mtt::AlertCategory::Torrent | (uint32_t)mtt::AlertCategory::Metadata };
+	mtBI::RegisterAlertsRequest alertsRequest{ mtt::Alerts::Category::Torrent | mtt::Alerts::Category::Metadata };
 	IoctlFunc(mtBI::MessageId::RegisterAlerts, &alertsRequest, nullptr);
 }
 
@@ -183,18 +183,18 @@ void AppCore::checkAlerts()
 	{
 		for (auto& alert : alertsRequest.alerts)
 		{
-			if (alert.id == mtt::AlertId::TorrentAdded)
+			if (alert.id == mtt::Alerts::Id::TorrentAdded)
 			{
 				torrentsView.select(alert.hash);
 				selectionChanged = true;
 
 				fileSelection.showFilesSelectionForm(alert.hash, true);
 			}
-			else if (alert.id == mtt::AlertId::TorrentFinished)
+			else if (alert.id == mtt::Alerts::Id::TorrentFinished)
 			{
 				scheduler.torrentFinished(alert.hash);
 			}
-			else if (alert.id == mtt::AlertId::MetadataFinished)
+			else if (alert.id == mtt::Alerts::Id::MetadataFinished)
 			{
 				if (memcmp(firstSelectedHash, alert.hash, 20) == 0)
 				{

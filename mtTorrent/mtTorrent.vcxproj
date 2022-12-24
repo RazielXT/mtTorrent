@@ -345,6 +345,7 @@
     <ClCompile Include="utils\Base32.cpp" />
     <ClCompile Include="utils\BencodeWriter.cpp" />
     <ClCompile Include="utils\BigNumber.cpp" />
+    <ClCompile Include="utils\BitUtils.cpp" />
     <ClCompile Include="utils\DataBuffer.cpp" />
     <ClCompile Include="utils\DiffieHellman.cpp" />
     <ClCompile Include="utils\FastIpToCountry.cpp" />
@@ -426,6 +427,7 @@
     <ClInclude Include="utils\Base32.h" />
     <ClInclude Include="utils\BencodeWriter.h" />
     <ClInclude Include="utils\BigNumber.h" />
+    <ClInclude Include="utils\BitUtils.h" />
     <ClInclude Include="utils\DataBuffer.h" />
     <ClInclude Include="utils\DiffieHellman.h" />
     <ClInclude Include="utils\FastIpToCountry.h" />

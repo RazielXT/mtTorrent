@@ -1,21 +1,26 @@
 #pragma once
 
+#include "../utils/BitUtils.h"
+
 namespace mtt
 {
-	enum class AlertCategory
+	namespace Alerts
 	{
-		Torrent = 0x10000,
-		Metadata = 0x20000,
-		Config = 0x40000,
-	};
+		enum Category
+		{
+			Torrent =	0x00FFFF,
+			Metadata =	0x0F0000,
+			Config =	0xF00000,
+		};
 
-	enum class AlertId
-	{
-		TorrentAdded = (int)AlertCategory::Torrent,
-		TorrentFinished,
+		enum Id
+		{
+			TorrentAdded = utils::firstBit(Category::Torrent),
+			TorrentFinished = TorrentAdded << 1,
 
-		MetadataFinished = (int)AlertCategory::Metadata,
+			MetadataFinished = utils::firstBit(Category::Metadata),
 
-		ConfigChanged = (int)AlertCategory::Config,
-	};
+			ConfigChanged = utils::firstBit(Category::Config),
+		};
+	}
 }

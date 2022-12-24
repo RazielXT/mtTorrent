@@ -55,9 +55,9 @@ namespace mttApi
 
 		/*
 			Register to alerts about specific events
-			See mtt::AlertId for list of available alerts
+			See mtt::Alerts::Id for list of available alerts
 		*/
-		API_EXPORT void registerAlerts(uint32_t alertMask);
+		API_EXPORT void registerAlerts(uint64_t alertMask);
 		/*
 			Get all alerts happening since last popAlerts call
 		*/

@@ -61,7 +61,7 @@ namespace mtt
 		{
 			dirty = true;
 			save();
-			AlertsManager::Get().configAlert(AlertId::ConfigChanged, type);
+			AlertsManager::Get().configAlert(Alerts::Id::ConfigChanged, type);
 
 			std::lock_guard<std::mutex> guard(cbMutex);
 

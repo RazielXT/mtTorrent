@@ -3,7 +3,7 @@
 
 mtt::AlertsManager instance;
 
-void mtt::AlertsManager::torrentAlert(AlertId id, Torrent* torrent)
+void mtt::AlertsManager::torrentAlert(Alerts::Id id, Torrent* torrent)
 {
 	if (!isAlertRegistered(id))
 		return;
@@ -16,7 +16,7 @@ void mtt::AlertsManager::torrentAlert(AlertId id, Torrent* torrent)
 	alerts.push_back(std::move(alert));
 }
 
-void mtt::AlertsManager::metadataAlert(AlertId id, Torrent* torrent)
+void mtt::AlertsManager::metadataAlert(Alerts::Id id, Torrent* torrent)
 {
 	if (!isAlertRegistered(id))
 		return;
@@ -29,7 +29,7 @@ void mtt::AlertsManager::metadataAlert(AlertId id, Torrent* torrent)
 	alerts.push_back(std::move(alert));
 }
 
-void mtt::AlertsManager::configAlert(AlertId id, config::ValueType type)
+void mtt::AlertsManager::configAlert(Alerts::Id id, config::ValueType type)
 {
 	if (!isAlertRegistered(id))
 		return;
@@ -47,7 +47,7 @@ mtt::AlertsManager& mtt::AlertsManager::Get()
 	return instance;
 }
 
-void mtt::AlertsManager::registerAlerts(uint32_t m)
+void mtt::AlertsManager::registerAlerts(uint64_t m)
 {
 	alertsMask = m;
 }
@@ -61,8 +61,8 @@ std::vector<std::unique_ptr<mtt::AlertMessage>> mtt::AlertsManager::popAlerts()
 	return v;
 }
 
-bool mtt::AlertsManager::isAlertRegistered(AlertId id)
+bool mtt::AlertsManager::isAlertRegistered(Alerts::Id id)
 {
-	return (alertsMask & (int)id);
+	return (alertsMask & id);
 }
 

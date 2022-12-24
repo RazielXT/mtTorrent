@@ -154,32 +154,32 @@ namespace mtt
 	{
 		virtual ~AlertMessage() = default;
 
-		AlertId id;
+		Alerts::Id id;
 
 		template <class T> const T* getAs() const
 		{
-			if ((int)id & (int)T::category) return static_cast<const T*>(this);
+			if (id & T::category) return static_cast<const T*>(this);
 			return nullptr;
 		}
 	};
 
 	struct TorrentAlert : public AlertMessage
 	{
-		static const mtt::AlertCategory category = mtt::AlertCategory::Torrent;
+		static const mtt::Alerts::Category category = mtt::Alerts::Category::Torrent;
 
 		mttApi::TorrentPtr torrent;
 	};
 
 	struct MetadataAlert : public AlertMessage
 	{
-		static const mtt::AlertCategory category = mtt::AlertCategory::Metadata;
+		static const mtt::Alerts::Category category = mtt::Alerts::Category::Metadata;
 
 		mttApi::TorrentPtr torrent;
 	};
 
 	struct ConfigAlert : public AlertMessage
 	{
-		static const mtt::AlertCategory category = mtt::AlertCategory::Config;
+		static const mtt::Alerts::Category category = mtt::Alerts::Category::Config;
 
 		mtt::config::ValueType configType;
 	};

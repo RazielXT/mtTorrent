@@ -15,16 +15,13 @@ int main()
 
 	auto core = mttApi::Core::create();
 
-	core->registerAlerts((int) mtt::AlertId::MetadataFinished);
-
-	mtt::Status addStatus;
-	mttApi::TorrentPtr addedTorrent;
+	core->registerAlerts(mtt::Alerts::Id::MetadataFinished);
 
 	//magnet test
-	std::tie(addStatus, addedTorrent) = core->addMagnet("bc8e4a520c4dfee5058129bd990bb8c7334f008e");
-	
+	auto [addStatus, addedTorrent] = core->addMagnet("bc8e4a520c4dfee5058129bd990bb8c7334f008e");
+
 	//file test
-	//std::tie(addStatus, addedTorrent) = core->addFile("path.torrent");
+	//auto [addStatus, addedTorrent] = core->addFile("path.torrent");
 
 	if (addedTorrent)
 	{
@@ -36,7 +33,7 @@ int main()
 		return 0;
 	}
 
-	while(!addedTorrent->finished())
+	while (!addedTorrent->finished())
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
@@ -44,7 +41,7 @@ int main()
 
 		for (auto& a : alerts)
 		{
-			if (a->id == mtt::AlertId::MetadataFinished)
+			if (a->id == mtt::Alerts::Id::MetadataFinished)
 			{
 				auto mdAlert = a->getAs<mtt::MetadataAlert>();
 				printf("Name: %s, Metadata download finished\n", mdAlert->torrent->name().c_str());
@@ -219,18 +216,18 @@ void example2()
 		peers.connect("127.0.0.1:55555");
 	}
 
-	core->registerAlerts((int)mtt::AlertId::MetadataFinished | (int)mtt::AlertId::TorrentAdded);
+	core->registerAlerts(mtt::Alerts::Id::MetadataFinished | mtt::Alerts::Id::TorrentAdded);
 
 	//...
 
 	auto alerts = core->popAlerts();
 	for (const auto& alert : alerts)
 	{
-		if (alert->id == mtt::AlertId::MetadataFinished)
+		if (alert->id == mtt::Alerts::Id::MetadataFinished)
 		{
 			std::cout << alert->getAs<mtt::MetadataAlert>()->torrent->name() << " finished" << std::endl;
 		}
-		else if (alert->id == mtt::AlertId::TorrentAdded)
+		else if (alert->id == mtt::Alerts::Id::TorrentAdded)
 		{
 			std::cout << alert->getAs<mtt::TorrentAlert>()->torrent->name() << " added" << std::endl;
 		}

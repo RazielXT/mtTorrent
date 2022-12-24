@@ -263,7 +263,7 @@ void mtt::Torrent::downloadMetadata()
 			initialize();
 			peers->reloadTorrentInfo();
 
-			AlertsManager::Get().metadataAlert(AlertId::MetadataFinished, this);
+			AlertsManager::Get().metadataAlert(Alerts::Id::MetadataFinished, this);
 
 			if (isActive())
 				service.io.post([this]() { start(); });
@@ -304,7 +304,7 @@ void mtt::Torrent::initialize()
 {
 	stateChanged = true;
 	files.setDefaults(infoFile.info);
-	AlertsManager::Get().torrentAlert(AlertId::TorrentAdded, this);
+	AlertsManager::Get().torrentAlert(Alerts::Id::TorrentAdded, this);
 }
 
 mtt::Status mtt::Torrent::start()

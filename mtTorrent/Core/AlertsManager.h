@@ -8,20 +8,20 @@ namespace mtt
 	public:
 
 		static AlertsManager& Get();
-		void torrentAlert(AlertId id, Torrent* torrent);
-		void metadataAlert(AlertId id, Torrent* torrent);
-		void configAlert(AlertId id, config::ValueType type);
+		void torrentAlert(Alerts::Id id, Torrent* torrent);
+		void metadataAlert(Alerts::Id id, Torrent* torrent);
+		void configAlert(Alerts::Id id, config::ValueType type);
 
-		void registerAlerts(uint32_t alertMask);
+		void registerAlerts(uint64_t alertMask);
 		std::vector<std::unique_ptr<mtt::AlertMessage>> popAlerts();
 
 	private:
 
-		bool isAlertRegistered(AlertId);
+		bool isAlertRegistered(Alerts::Id);
 
 		std::mutex alertsMutex;
 		std::vector<std::unique_ptr<mtt::AlertMessage>> alerts;
 
-		uint32_t alertsMask = 0;
+		uint64_t alertsMask = 0;
 	};
 }

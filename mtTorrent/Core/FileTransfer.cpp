@@ -466,7 +466,7 @@ void mtt::FileTransfer::pieceFinished(const mtt::DownloadedPiece& piece)
 
 		torrent.checkFiles();
 
-		AlertsManager::Get().metadataAlert(AlertId::TorrentFinished, &torrent);
+		AlertsManager::Get().metadataAlert(Alerts::Id::TorrentFinished, &torrent);
 	}
 }
 

@@ -225,12 +225,12 @@ namespace mtBI
 
 	struct RegisterAlertsRequest
 	{
-		uint32_t categoryMask;
+		uint64_t categoryMask;
 	};
 
 	struct Alert
 	{
-		mtt::AlertId id;
+		mtt::Alerts::Id id;
 		uint8_t hash[20];
 		int type = 0;
 	};
