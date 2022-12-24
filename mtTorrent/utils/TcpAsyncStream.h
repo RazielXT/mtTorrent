@@ -108,7 +108,7 @@ protected:
 	void requestBandwidth(uint32_t size);
 
 	void startReceive();
-	bool readAvailableData();
+	std::error_code readAvailableData();
 
 	void assignBandwidth(int amount) override;
 	bool isActive() override;

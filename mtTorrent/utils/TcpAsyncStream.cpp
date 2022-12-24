@@ -18,7 +18,7 @@ TcpAsyncStream::~TcpAsyncStream()
 void TcpAsyncStream::connect(const uint8_t* ip, uint16_t port, bool ipv6)
 {
 	if (state != Clear)
-		return;
+		return; startReceive();
 
 	info.address.set(ip, port, ipv6); 
 	info.addressResolved = true;
@@ -340,15 +340,12 @@ void TcpAsyncStream::handle_write(const std::error_code& error)
 	}
 }
 
-bool TcpAsyncStream::readAvailableData()
+std::error_code TcpAsyncStream::readAvailableData()
 {
 	std::error_code ec;
 	uint32_t availableSize = uint32_t(socket.available(ec));
 	if (ec)
-	{
-		postFail("Available", ec);
-		return false;
-	}
+		return ec;
 
 	TCP_LOG("Socket available " << availableSize << " bytes");
 	requestBandwidth(availableSize);
@@ -362,10 +359,7 @@ bool TcpAsyncStream::readAvailableData()
 		if (ec || bytes_transferred == 0)
 		{
 			if (ec != asio::error::would_block && ec != asio::error::try_again)
-			{
-				postFail("Read", ec);
-				return false;
-			}
+				return ec;
 		}
 		else
 		{
@@ -374,7 +368,7 @@ bool TcpAsyncStream::readAvailableData()
 		}
 	}
 
-	return true;
+	return {};
 }
 
 void TcpAsyncStream::handle_receive(const std::error_code& error, std::size_t bytes_transferred, std::size_t bytes_requested)
@@ -387,24 +381,34 @@ void TcpAsyncStream::handle_receive(const std::error_code& error, std::size_t by
 
 	if (!error)
 	{
-		std::lock_guard<std::mutex> guard(receive_mutex);
-
-		appendData(bytes_transferred);
-
-		if (bytes_transferred == bytes_requested && !readAvailableData())
-			return;
+		std::error_code ec;
 
 		{
-			std::lock_guard<std::mutex> guard(callbackMutex);
+			std::lock_guard<std::mutex> guard(receive_mutex);
 
-			if (onReceiveCallback)
+			appendData(bytes_transferred);
+
+			if (bytes_transferred == bytes_requested)
+				ec = readAvailableData();
+
+			if (!ec)
 			{
-				size_t consumed = onReceiveCallback({ readBuffer.data.data(), readBuffer.pos });
-				readBuffer.consume(consumed);
+				{
+					std::lock_guard<std::mutex> guard(callbackMutex);
+
+					if (onReceiveCallback)
+					{
+						size_t consumed = onReceiveCallback({ readBuffer.data.data(), readBuffer.pos });
+						readBuffer.consume(consumed);
+					}
+				}
+
+				startReceive();
 			}
 		}
 
-		startReceive();
+		if (ec)
+			postFail("Read", ec);
 	}
 	else
 	{
