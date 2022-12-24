@@ -328,7 +328,7 @@ namespace mtt
 			memcpy(hashId, MT_HASH_NAME, std::size(MT_HASH_NAME));
 
 			static char const printable[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-				"abcdefghijklmnopqrstuvwxyz-_.!~*()";
+				"abcdefghijklmnopqrstuvwxyz";
 
 			for (size_t i = std::size(MT_HASH_NAME) - 1; i < 20; i++)
 			{

@@ -80,7 +80,7 @@ bool mtt::dht::Responder::handlePacket(const udp::endpoint& endpoint, DataBuffer
 		int port = requestData->getInt("port");
 		bool impliedPort = requestData->getInt("implied_port") == 1;
 
-		announcedPeer(infoHash->data, Addr(endpoint.address(), impliedPort ? endpoint.port() : (uint16_t)port));
+		announcedPeer(infoHash->data, Addr(endpoint.address(), (impliedPort || !port) ? endpoint.port() : (uint16_t)port));
 	}
 
 	response.add("ee", 2);

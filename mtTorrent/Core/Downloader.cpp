@@ -138,7 +138,7 @@ void mtt::Downloader::pieceBlockReceived(PieceBlock& block, PeerCommunication* s
 					}
 
 					DL_LOG("Request finished, piece " << block.info.index);
-					client.pieceFinished(std::move(r->piece));
+					client.pieceFinished(r->piece);
 
 					std::lock_guard<std::mutex> guard(sortedSelectedPiecesMutex);
 
