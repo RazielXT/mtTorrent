@@ -91,7 +91,7 @@ bool mtt::TorrentState::load(const std::string& name)
 
 		downloadPath = root->getTxt("downloadPath");
 		lastStateTime = (int64_t)root->getBigInt("lastStateTime");
-		addedTime = (int64_t)root->getBigInt("addedTime");
+		addedTime = (Timestamp)root->getBigInt("addedTime");
 		started = root->getInt("started");
 		uploaded = root->getBigInt("uploaded");
 		downloaded = root->getBigInt("downloaded");

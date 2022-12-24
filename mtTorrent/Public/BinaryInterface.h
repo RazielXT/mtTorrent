@@ -148,8 +148,8 @@ namespace mtBI
 		mtt::string name;
 		mtt::string downloadLocation;
 		mtt::string createdBy;
-		uint64_t creationDate;
-		uint64_t timeAdded;
+		uint32_t creationDate;
+		uint32_t timeAdded;
 	};
 
 	struct TorrentStateInfo
@@ -170,7 +170,7 @@ namespace mtBI
 		bool checking;
 		float checkingProgress;
 		mtt::Status activeStatus;
-		uint64_t timeAdded;
+		uint32_t timeAdded;
 	};
 
 	struct PeerInfo

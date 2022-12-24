@@ -129,9 +129,9 @@ namespace mttApi
 		*/
 		API_EXPORT bool selectionFinished() const;
 		/*
-			get unit timestamp of date when torrent was added
+			get unix timestamp when torrent was added
 		*/
-		API_EXPORT uint64_t getTimeAdded() const;
+		API_EXPORT mtt::Timestamp getTimeAdded() const;
 
 		/*
 			get loaded torrent file

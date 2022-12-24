@@ -108,7 +108,7 @@ void mtt::Peers::connectNext(uint32_t count)
 
 	count = std::min(count, mtt::config::getExternal().connection.maxTorrentConnections - (uint32_t)activeConnections.size());
 
-	auto currentTime = (uint32_t)::time(0);
+	const auto currentTime = mtt::CurrentTimestamp();
 	uint32_t leastConnectionAttempts = 0;
 
 	uint32_t origCount = count;
@@ -362,7 +362,7 @@ void mtt::Peers::connect(uint32_t idx)
 	if (knownPeer.lastQuality == PeerQuality::Unknown)
 		knownPeer.lastQuality = PeerQuality::Connecting;
 
-	knownPeer.lastConnectionTime = (uint32_t)::time(0);
+	knownPeer.lastConnectionTime = mtt::CurrentTimestamp();
 	knownPeer.connectionAttempts++;
 
 	PEERS_LOG("connect " << knownPeer.address.toString());
@@ -491,7 +491,7 @@ uint32_t mtt::Peers::DhtSource::dhtFoundPeers(const uint8_t* hash, const std::ve
 
 void mtt::Peers::DhtSource::dhtFindingPeersFinished(const uint8_t* hash, uint32_t count)
 {
-	uint32_t currentTime = (uint32_t)::time(0);
+	const auto currentTime = mtt::CurrentTimestamp();
 	info.lastAnnounce = currentTime;
 	info.nextAnnounce = currentTime + info.announceInterval;
 	info.state = TrackerState::Connected;

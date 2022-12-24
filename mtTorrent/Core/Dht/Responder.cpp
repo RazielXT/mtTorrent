@@ -192,7 +192,7 @@ void mtt::dht::Responder::announcedPeer(const char* infoHash, const Addr& peer)
 	id.copy(infoHash);
 
 	StoredValue v;
-	v.timestamp = (uint32_t)::time(0);
+	v.timestamp = mtt::CurrentTimestamp();
 	v.addr = peer;
 
 	std::lock_guard<std::mutex> guard(valuesMutex);
@@ -214,7 +214,7 @@ void mtt::dht::Responder::refreshStoredValues()
 {
 	std::lock_guard<std::mutex> guard(valuesMutex);
 
-	auto oldestTime = (uint32_t)::time(0) - 30*60;
+	const auto oldestTime = mtt::CurrentTimestamp() - 30*60;
 	for (auto it = values.begin(); it != values.end();)
 	{
 		auto& vals = it->second;

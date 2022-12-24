@@ -69,7 +69,7 @@ namespace mtt
 			Addr address;
 			PeerSource source;
 			PeerQuality lastQuality = PeerQuality::Unknown;
-			uint32_t lastConnectionTime = 0;
+			Timestamp lastConnectionTime = 0;
 			uint32_t connectionAttempts = 0;
 		};
 

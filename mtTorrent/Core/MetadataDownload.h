@@ -60,7 +60,7 @@ namespace mtt
 		void addEventLog(uint8_t* id, EventInfo::Action action, uint32_t index);
 
 		std::shared_ptr<ScheduledTimer> retryTimer;
-		uint32_t lastActivityTime = 0;
+		Timestamp lastActivityTime = 0;
 
 		ServiceThreadpool& service;
 	};

@@ -154,7 +154,7 @@ bool mtt::UdpTrackerComm::onAnnounceUdpResponse(UdpRequest comm, DataBuffer* dat
 		info.seeds = announceMsg.seedCount;
 		info.peers = (uint32_t)announceMsg.peers.size();
 		info.announceInterval = announceMsg.interval;
-		info.lastAnnounce = (uint32_t)::time(0);
+		info.lastAnnounce = mtt::CurrentTimestamp();
 
 		if (onAnnounceResult)
 			onAnnounceResult(announceMsg);

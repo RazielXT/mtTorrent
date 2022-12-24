@@ -3,7 +3,7 @@
 #include "Public/BinaryInterface.h"
 #include "utils/HexEncoding.h"
 #include <algorithm>
-#include <time.h>
+#include <ctime>
 
 #ifdef _WIN32
 #	define ABI_EXPORT __declspec(dllexport)

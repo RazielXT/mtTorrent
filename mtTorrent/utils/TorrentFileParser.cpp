@@ -72,7 +72,7 @@ void loadTorrentFileInfo(BencodeParser& parser, TorrentFileInfo& fileInfo)
 		}
 
 		fileInfo.about.createdBy = root->getTxt("created by");
-		fileInfo.about.creationDate = root->getBigInt("creation date");
+		fileInfo.about.creationDate = (Timestamp)root->getBigInt("creation date");
 	}
 }
 

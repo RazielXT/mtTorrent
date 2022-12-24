@@ -17,6 +17,8 @@ namespace mttApi
 
 namespace mtt
 {
+	using Timestamp = uint32_t;
+
 	struct File
 	{
 		std::vector<std::string> path;
@@ -76,7 +78,7 @@ namespace mtt
 		struct
 		{
 			std::string createdBy;
-			uint64_t creationDate = 0;
+			Timestamp creationDate = 0;
 		}
 		about;
 
@@ -109,8 +111,8 @@ namespace mtt
 		uint32_t seeds = 0;
 		uint32_t leechers = 0;
 		uint32_t announceInterval = 0;
-		uint32_t lastAnnounce = 0;
-		uint32_t nextAnnounce = 0;
+		Timestamp lastAnnounce = 0;
+		Timestamp nextAnnounce = 0;
 
 		TrackerState state = TrackerState::Clear;
 	};

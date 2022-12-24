@@ -82,4 +82,6 @@ namespace mtt
 
 		std::vector<Addr> peers;
 	};
+
+	Timestamp CurrentTimestamp();
 }

@@ -191,7 +191,7 @@ void mtt::Downloader::refreshPeerBlockRequests(std::vector<mtt::ActivePeer>& pee
 			else
 				peer.receivedBlocks++;
 
-			peer.lastActivityTime = (uint32_t)time(0);
+			peer.lastActivityTime = mtt::CurrentTimestamp();
 
 			evaluateNextRequests(&peer);
 		}
@@ -200,7 +200,7 @@ void mtt::Downloader::refreshPeerBlockRequests(std::vector<mtt::ActivePeer>& pee
 
 void mtt::Downloader::unchokePeer(ActivePeer* peer)
 {
-	auto currentTime = (uint32_t)time(0);
+	const auto currentTime = mtt::CurrentTimestamp();
 	if (currentTime - peer->lastActivityTime > 5)
 	{
 		for (auto& p : peer->requestedPieces)
@@ -266,7 +266,7 @@ void mtt::Downloader::refreshSelection(const DownloadSelection& s, const std::ve
 			}
 		}
 
-		std::shuffle(sortedSelectedPieces.begin(), sortedSelectedPieces.end(), std::minstd_rand{ (uint32_t)time(0) });
+		std::shuffle(sortedSelectedPieces.begin(), sortedSelectedPieces.end(), std::minstd_rand{ mtt::CurrentTimestamp() });
 
 		for (auto it = requests.begin(); it != requests.end();)
 		{

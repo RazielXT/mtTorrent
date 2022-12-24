@@ -8,8 +8,8 @@ namespace mtt
 	{
 		PeerCommunication* comm;
 
-		uint32_t connectionTime = 0;
-		uint32_t lastActivityTime = 0;
+		Timestamp connectionTime = 0;
+		Timestamp lastActivityTime = 0;
 
 		uint32_t downloadSpeed = 0;
 		uint32_t uploadSpeed = 0;

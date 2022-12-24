@@ -297,7 +297,7 @@ void mtt::FileTransfer::addPeer(PeerCommunication* p)
 	if (std::find_if(activePeers.begin(), activePeers.end(), [p](const mtt::ActivePeer& peer) { return peer.comm == p; }) == activePeers.end())
 	{
 		activePeers.push_back({ p,{} });
-		activePeers.back().connectionTime = activePeers.back().lastActivityTime = (uint32_t)time(0);
+		activePeers.back().connectionTime = activePeers.back().lastActivityTime = mtt::CurrentTimestamp();
 		downloader.peerAdded(&activePeers.back());
 	}
 }
@@ -497,7 +497,7 @@ void mtt::FileTransfer::evalCurrentPeers()
 
 		TRANSFER_LOG("evalCurrentPeers" << activePeers.size());
 
-		uint32_t currentTime = (uint32_t)::time(0);
+		const auto currentTime = mtt::CurrentTimestamp();
 
 		const uint32_t minPeersTimeChance = 10;
 		auto minTimeToEval = currentTime - minPeersTimeChance;

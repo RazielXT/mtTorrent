@@ -323,7 +323,7 @@ namespace mtt
 			programFolderPath = std::string(".") + pathSeparator + "data" + pathSeparator;
 			stateFolder = programFolderPath + "state";
 
-			srand((int)::time(0));
+			srand(mtt::CurrentTimestamp());
 			
 			memcpy(hashId, MT_HASH_NAME, std::size(MT_HASH_NAME));
 

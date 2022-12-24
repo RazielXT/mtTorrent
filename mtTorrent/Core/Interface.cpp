@@ -63,3 +63,8 @@ bool mtt::DownloadedPiece::isValid(const DataBuffer& data, const uint8_t* expect
 
 	return memcmp(hash, expectedHash, SHA_DIGEST_LENGTH) == 0;
 }
+
+mtt::Timestamp mtt::CurrentTimestamp()
+{
+	return (Timestamp)::time(nullptr);
+}

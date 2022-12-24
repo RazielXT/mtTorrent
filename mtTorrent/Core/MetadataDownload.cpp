@@ -32,7 +32,7 @@ void mtt::MetadataDownload::start(std::function<void(Status, MetadataDownloadSta
 	std::lock_guard<std::mutex> guard(commsMutex);
 	retryTimer = ScheduledTimer::create(service.io, [this]()
 		{
-			auto currentTime = (uint32_t) time(0);
+			const auto currentTime = mtt::CurrentTimestamp();
 			if (state.active && !state.finished && lastActivityTime + 5 < currentTime)
 			{
 				std::lock_guard<std::mutex> guard(commsMutex);

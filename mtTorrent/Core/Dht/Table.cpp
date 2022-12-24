@@ -69,7 +69,7 @@ void mtt::dht::Table::nodeResponded(uint8_t bucketId, const NodeInfo& node)
 	std::lock_guard<std::mutex> guard(tableMutex);
 
 	auto& bucket = buckets[bucketId];
-	uint32_t time = (uint32_t)::time(0);
+	auto time = mtt::CurrentTimestamp();
 
 	auto n = bucket.find(node);
 	if (!n)
@@ -129,7 +129,7 @@ void mtt::dht::Table::nodeNotResponded(uint8_t bucketId, NodeInfo& node)
 			if (it->active)
 			{
 				it->active = false;
-				it->lastupdate = (uint32_t)::time(0);
+				it->lastupdate = mtt::CurrentTimestamp();
 			}
 
 			//last 2 nodes kept fresh
@@ -284,7 +284,7 @@ std::vector<NodeInfo> mtt::dht::Table::getInactiveNodes()
 
 	std::lock_guard<std::mutex> guard(tableMutex);
 
-	uint32_t now = (uint32_t)::time(0);
+	const auto now = mtt::CurrentTimestamp();
 	uint8_t id = 0;
 	for (auto&b : buckets)
 	{

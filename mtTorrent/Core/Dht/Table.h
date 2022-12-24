@@ -40,7 +40,7 @@ namespace mtt
 				struct Node
 				{
 					NodeInfo info;
-					uint32_t lastupdate = 0;
+					Timestamp lastupdate = 0;
 					bool active = true;
 				};
 

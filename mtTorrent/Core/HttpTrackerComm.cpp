@@ -100,7 +100,7 @@ size_t mtt::HttpTrackerComm::onTcpReceived(const BufferView& respData)
 			info.seeds = announceResp.seedCount;
 			info.peers = (uint32_t)announceResp.peers.size();
 			info.announceInterval = announceResp.interval;
-			info.lastAnnounce = (uint32_t)::time(0);
+			info.lastAnnounce = mtt::CurrentTimestamp();
 
 			HTTP_TRACKER_LOG("received peers:" << announceResp.peers.size() << ", p: " << announceResp.seedCount << ", l: " << announceResp.leechCount);
 

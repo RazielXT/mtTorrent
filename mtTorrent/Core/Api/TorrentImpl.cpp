@@ -118,7 +118,7 @@ bool mttApi::Torrent::selectionFinished() const
 	return static_cast<const mtt::Torrent*>(this)->selectionFinished();
 }
 
-uint64_t mttApi::Torrent::getTimeAdded() const
+mtt::Timestamp mttApi::Torrent::getTimeAdded() const
 {
 	return static_cast<const mtt::Torrent*>(this)->getTimeAdded();
 }

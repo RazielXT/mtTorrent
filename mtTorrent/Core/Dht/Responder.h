@@ -31,7 +31,7 @@ namespace mtt
 			struct StoredValue
 			{
 				Addr addr;
-				uint32_t timestamp;
+				Timestamp timestamp;
 			};
 
 			std::mutex valuesMutex;

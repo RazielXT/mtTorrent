@@ -31,7 +31,7 @@ mtt::TorrentPtr mtt::Torrent::fromFile(mtt::TorrentFileInfo fileInfo)
 
 	torrent->peers = std::make_unique<Peers>(*torrent);
 	torrent->fileTransfer = std::make_unique<FileTransfer>(*torrent);
-	torrent->addedTime = (uint64_t)time(0);
+	torrent->addedTime = mtt::CurrentTimestamp();
 
 	return torrent;
 }
@@ -45,7 +45,7 @@ mtt::TorrentPtr mtt::Torrent::fromMagnetLink(std::string link)
 
 	torrent->peers = std::make_unique<Peers>(*torrent);
 	torrent->fileTransfer = std::make_unique<FileTransfer>(*torrent);
-	torrent->addedTime = (uint64_t)time(0);
+	torrent->addedTime = mtt::CurrentTimestamp();
 
 	return torrent;
 }
@@ -76,7 +76,7 @@ mtt::TorrentPtr mtt::Torrent::fromSavedState(std::string name)
 	torrent->addedTime = state.addedTime;
 
 	if (torrent->addedTime == 0)
-		torrent->addedTime = (int64_t)time(0);
+		torrent->addedTime = mtt::CurrentTimestamp();
 
 	torrent->peers = std::make_unique<Peers>(*torrent);
 	torrent->fileTransfer = std::make_unique<FileTransfer>(*torrent);
@@ -574,7 +574,7 @@ bool mtt::Torrent::selectionFinished() const
 	return files.progress.selectedFinished();
 }
 
-uint64_t mtt::Torrent::getTimeAdded() const
+mtt::Timestamp mtt::Torrent::getTimeAdded() const
 {
 	return addedTime;
 }
