@@ -253,11 +253,22 @@ void FileSelection::onButtonClick(ButtonId id)
 
 System::String^ FileSelection::validatePath(System::String^ path)
 {
-	if (!path->Contains(":"))
-		return "Invalid path";
+	if (!path->Contains(":") && !path->StartsWith("."))
+		return "Incomplete path";
 
-	System::IO::DriveInfo^ drive = nullptr;
-	System::IO::FileInfo^ file = gcnew System::IO::FileInfo(path);
+	System::IO::FileInfo^ file;
+
+	try
+	{
+		file = gcnew System::IO::FileInfo(path);
+	}
+	catch (System::ArgumentException^ ex)
+	{
+		return ex->Message;
+	}
+
+	System::IO::DriveInfo^ drive;
+
 	if (!file->Directory)
 		drive = gcnew System::IO::DriveInfo(path);
 	else
