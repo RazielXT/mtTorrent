@@ -58,6 +58,9 @@
     <ClCompile Include="Core\ExtensionProtocol.cpp">
       <Filter>Source Files\Core\Torrent\Peer\Protocol</Filter>
     </ClCompile>
+    <ClCompile Include="Core\HolepunchExtension.cpp">
+      <Filter>Source Files\Core\Torrent\Peer\Protocol</Filter>
+    </ClCompile>
     <ClCompile Include="Core\PeerMessage.cpp">
       <Filter>Source Files\Core\Torrent\Peer\Protocol</Filter>
     </ClCompile>
@@ -283,6 +286,9 @@
       <Filter>Source Files\Core\Torrent\Peer\Protocol</Filter>
     </ClInclude>
     <ClInclude Include="Core\ExtensionProtocol.h">
+      <Filter>Source Files\Core\Torrent\Peer\Protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\HolepunchExtension.h">
       <Filter>Source Files\Core\Torrent\Peer\Protocol</Filter>
     </ClInclude>
     <ClInclude Include="Core\IPeerListener.h">

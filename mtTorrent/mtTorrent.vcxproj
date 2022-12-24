@@ -326,6 +326,7 @@
     <ClCompile Include="Core\Dht\Responder.cpp" />
     <ClCompile Include="Core\Dht\Table.cpp" />
     <ClCompile Include="Core\ExtensionProtocol.cpp" />
+    <ClCompile Include="Core\HolepunchExtension.cpp" />
     <ClCompile Include="Core\HttpTrackerComm.cpp" />
     <ClCompile Include="Core\Logging.cpp" />
     <ClCompile Include="Core\PeerCommunication.cpp" />
@@ -404,6 +405,7 @@
     <ClInclude Include="Core\Dht\Responder.h" />
     <ClInclude Include="Core\Dht\Table.h" />
     <ClInclude Include="Core\ExtensionProtocol.h" />
+    <ClInclude Include="Core\HolepunchExtension.h" />
     <ClInclude Include="Core\Interface.h" />
     <ClInclude Include="Core\IPeerListener.h" />
     <ClInclude Include="Core\ITracker.h" />

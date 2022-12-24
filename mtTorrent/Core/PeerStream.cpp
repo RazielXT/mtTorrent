@@ -46,9 +46,9 @@ void mtt::PeerStream::open(const Addr& address, const uint8_t* t)
 
 	auto& c = mtt::config::getExternal().connection;
 
-	if (c.enableUtpOut && (c.preferUtp || !c.enableTcpOut))
+	if (c.enableUtpOut && (state.holepunchMode || c.preferUtp || !c.enableTcpOut))
 		openUtpStream(address);
-	else if (c.enableTcpOut)
+	else if (c.enableTcpOut && !state.holepunchMode)
 		openTcpStream(address);
 	else
 	{
@@ -160,6 +160,8 @@ uint32_t mtt::PeerStream::getFlags() const
 		f |= PeerFlags::RemoteConnection;
 	if (pe)
 		f |= PeerFlags::Encrypted;
+	if (state.holepunchMode)
+		f |= PeerFlags::Holepunch;
 
 	return f;
 }
@@ -172,6 +174,16 @@ bool mtt::PeerStream::isEncrypted() const
 bool mtt::PeerStream::isUtp() const
 {
 	return utpStream != nullptr;
+}
+
+bool mtt::PeerStream::usedHolepunch() const
+{
+	return state.holepunchMode;
+}
+
+void mtt::PeerStream::enableHolepunch()
+{
+	state.holepunchMode = true;
 }
 
 void mtt::PeerStream::initializeTcpStream()

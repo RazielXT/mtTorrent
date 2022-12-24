@@ -58,6 +58,7 @@ namespace mtt
 		std::vector<KnownPeer> knownPeers;
 		mutable std::mutex peersMutex;
 
+		std::shared_ptr<PeerCommunication> disconnect(PeerCommunication*, KnownPeer* info);
 		void connect(uint32_t idx);
 		struct ActivePeer
 		{
@@ -117,5 +118,17 @@ namespace mtt
 		void setTargetListener(mtt::IPeerListener*);
 
 		PeersUpdateCallback updateCallback;
+
+		struct HolepunchState
+		{
+			Addr target;
+			PeerCommunication* negotiator = {};
+			Timestamp time{};
+		};
+		std::vector<HolepunchState> holepunchStates;
+		std::mutex holepunchMutex;
+
+		void evaluatePossibleHolepunch(PeerCommunication*, const KnownPeer&);
+		void handleHolepunchMessage(PeerCommunication*, const ext::UtHolepunch::Message&);
 	};
 }

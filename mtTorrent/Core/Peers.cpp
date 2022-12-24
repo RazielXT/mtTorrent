@@ -154,6 +154,37 @@ void mtt::Peers::connectNext(uint32_t count)
 	PEERS_LOG("connected " << (origCount - count));
 }
 
+std::shared_ptr<mtt::PeerCommunication> mtt::Peers::disconnect(PeerCommunication* p, KnownPeer* info)
+{
+	std::lock_guard<std::mutex> guard(peersMutex);
+
+	for (auto it = activeConnections.begin(); it != activeConnections.end(); it++)
+	{
+		if (it->comm.get() == p)
+		{
+			auto ptr = it->comm;
+			auto& peer = knownPeers[it->idx];
+
+			if (!p->isEstablished())
+				peer.lastQuality = Peers::PeerQuality::Offline;
+			else
+			{
+				p->close();
+				peer.lastQuality = Peers::PeerQuality::Closed;
+			}
+
+			activeConnections.erase(it);
+			DIAGNOSTICS(Remove, peer.address << (char)peer.lastQuality);
+			if (info)
+				*info = peer;
+
+			return ptr;
+		}
+	}
+
+	return nullptr;
+}
+
 void mtt::Peers::connect(const Addr& addr)
 {
 	{
@@ -199,31 +230,7 @@ size_t mtt::Peers::add(std::shared_ptr<PeerStream> stream, const BufferView& dat
 
 std::shared_ptr<mtt::PeerCommunication> mtt::Peers::disconnect(PeerCommunication* p)
 {
-	std::lock_guard<std::mutex> guard(peersMutex);
-
-	for (auto it = activeConnections.begin(); it != activeConnections.end(); it++)
-	{
-		if (it->comm.get() == p)
-		{
-			auto ptr = it->comm;
-			auto& peer = knownPeers[it->idx];
-
-			if (!p->state.finishedHandshake)
-				peer.lastQuality = Peers::PeerQuality::Offline;
-			else
-			{
-				p->close();
-				peer.lastQuality = Peers::PeerQuality::Closed;
-			}
-
-			activeConnections.erase(it);
-			DIAGNOSTICS(Remove, peer.address << (char)peer.lastQuality);
-
-			return ptr;
-		}
-	}
-
-	return nullptr;
+	return disconnect(p, nullptr);
 }
 
 std::vector<mtt::TrackerInfo> mtt::Peers::getSourcesInfo()
@@ -548,6 +555,7 @@ void mtt::Peers::connectionClosed(mtt::PeerCommunication* p, int code)
 	KnownPeer info;
 	auto ptr = disconnect(p, &info);
 
+	evaluatePossibleHolepunch(p, info);
 
 	std::lock_guard<std::mutex> guard(listenerMtx);
 	if (listener)
@@ -577,40 +585,126 @@ void mtt::Peers::setTargetListener(mtt::IPeerListener* t)
 	listener = t;
 }
 
-void mtt::Peers::PeersListener::metadataPieceReceived(mtt::PeerCommunication* p, mtt::ext::UtMetadata::Message& m)
+void mtt::Peers::evaluatePossibleHolepunch(PeerCommunication* p, const KnownPeer& info)
 {
-	std::lock_guard<std::mutex> guard(mtx);
+	if (!p->getStream()->wasConnected() && !p->getStream()->usedHolepunch() && (info.pexFlags & (ext::PeerExchange::SupportsUth | ext::PeerExchange::SupportsUtp)))
+	{
+		std::shared_ptr<PeerCommunication> negotiator;
+		{
+			std::lock_guard<std::mutex> guard(peersMutex);
+			for (const auto& p : activeConnections)
+			{
+				if (p.comm->ext.holepunch.enabled() && p.comm->ext.pex.wasConnected(info.address))
+				{
+					negotiator = p.comm;
+					break;
+				}
+			}
+		}
 
-	if (target)
-		target->metadataPieceReceived(p, m);
+		if (negotiator)
+		{
+			std::lock_guard<std::mutex> guard(holepunchMutex);
+
+			HolepunchState s;
+			s.target = info.address;
+			s.negotiator = negotiator.get();
+			s.time = mtt::CurrentTimestamp();
+			holepunchStates.push_back(s);
+
+			PEERS_LOG("HolepunchMessage sendRendezvous " << info.address << negotiator->getStream()->getAddress());
+			negotiator->ext.holepunch.sendRendezvous(info.address);
+		}
+	}
 }
 
-void mtt::Peers::PeersListener::pexReceived(mtt::PeerCommunication* p, mtt::ext::PeerExchange::Message& msg)
+void mtt::Peers::handleHolepunchMessage(PeerCommunication* p, const ext::UtHolepunch::Message& msg)
 {
-	std::lock_guard<std::mutex> guard(mtx);
+	PEERS_LOG("HolepunchMessage " << msg.id);
 
-	if(peers)
-		peers->pexInfo.peers += peers->updateKnownPeers(msg.addedPeers, PeerSource::Pex);
+	if (msg.id == ext::UtHolepunch::Rendezvous)
+	{
+		std::shared_ptr<PeerCommunication> target;
+		{
+			std::lock_guard<std::mutex> guard(peersMutex);
+			if (auto active = getActivePeer(msg.addr))
+				target = active->comm;
+		}
 
-	if (target)
-		target->pexReceived(p, msg);
+		if (target)
+		{
+			if (target->getStream()->isUtp() && target->ext.holepunch.enabled())
+			{
+				target->ext.holepunch.sendConnect(p->getStream()->getAddress());
+				p->ext.holepunch.sendConnect(msg.addr);
+			}
+		}
+		else
+			p->ext.holepunch.sendError(msg.addr, ext::UtHolepunch::E_NotConnected);
+	}
+	else if (msg.id == ext::UtHolepunch::Connect)
+	{
+		bool wanted = false;
+		{
+			std::lock_guard<std::mutex> guard(holepunchMutex);
+			for (auto it = holepunchStates.begin(); it != holepunchStates.end(); it++)
+			{
+				if (it->negotiator == p && it->target == msg.addr)
+				{
+					wanted = true;
+					holepunchStates.erase(it);
+					break;
+				}
+			}
+		}
+		if (wanted)
+			connect(msg.addr);
+	}
+	else if (msg.id == ext::UtHolepunch::Error)
+	{
+		PEERS_LOG("HolepunchMessageErr " << msg.e);
+
+		std::lock_guard<std::mutex> guard(holepunchMutex);
+		for (auto it = holepunchStates.begin(); it != holepunchStates.end(); it++)
+		{
+			if (it->negotiator == p && it->target == msg.addr)
+			{
+				holepunchStates.erase(it);
+				break;
+			}
+		}
+	}
 }
 
-void mtt::Peers::PeersListener::progressUpdated(mtt::PeerCommunication* p, uint32_t idx)
+void mtt::Peers::extendedHandshakeFinished(PeerCommunication* p, const ext::Handshake& h)
 {
-	std::lock_guard<std::mutex> guard(mtx);
-	if (target)
-		target->progressUpdated(p, idx);
+	std::lock_guard<std::mutex> guard(listenerMtx);
+	if (listener)
+		listener->extendedHandshakeFinished(p, h);
 }
 
-void mtt::Peers::PeersListener::setTarget(mtt::IPeerListener* t)
+void mtt::Peers::extendedMessageReceived(PeerCommunication* p, ext::Type t, const BufferView& data)
 {
-	std::lock_guard<std::mutex> guard(mtx);
-	target = t;
-}
+	if (t == ext::Type::UtHolepunch)
+	{
+		ext::UtHolepunch::Message msg;
 
-void mtt::Peers::PeersListener::setParent(Peers* p)
-{
-	std::lock_guard<std::mutex> guard(mtx);
-	peers = p;
+		if (ext::UtHolepunch::Load(data, msg))
+		{
+			handleHolepunchMessage(p, msg);
+		}
+	}
+	else if (t == ext::Type::Pex)
+	{
+		ext::PeerExchange::Message msg;
+
+		if (p->ext.pex.load(data, msg))
+		{
+			updateKnownPeers(msg);
+		}
+	}
+
+	std::lock_guard<std::mutex> guard(listenerMtx);
+	if (listener)
+		listener->extendedMessageReceived(p, t, data);
 }

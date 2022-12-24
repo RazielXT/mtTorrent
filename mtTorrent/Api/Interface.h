@@ -132,7 +132,8 @@ namespace mtt
 			Tcp = 1,
 			Utp = 2,
 			RemoteConnection = 4,
-			Encrypted = 8
+			Encrypted = 8,
+			Holepunch = 16
 		};
 	}
 

@@ -5,6 +5,7 @@
 #include "PiecesProgress.h"
 #include "PeerStream.h"
 #include "PexExtension.h"
+#include "HolepunchExtension.h"
 #include "MetadataExtension.h"
 
 namespace mtt
@@ -57,6 +58,7 @@ namespace mtt
 
 		ext::PeerExchange::Remote pex;
 		ext::UtMetadata utm;
+		ext::UtHolepunch holepunch;
 	};
 
 	class PeerCommunication : public std::enable_shared_from_this<PeerCommunication>

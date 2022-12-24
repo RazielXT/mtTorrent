@@ -117,6 +117,7 @@ namespace mtt
 
 				writer.addRawItem("11:ut_metadata", (uint8_t)ext::Type::UtMetadata);
 				writer.addRawItem("6:ut_pex", (uint8_t)ext::Type::Pex);
+				writer.addRawItem("12:ut_holepunch", (uint8_t)ext::Type::UtHolepunch);
 
 				writer.endMap();
 			}
@@ -481,6 +482,7 @@ void mtt::PeerCommunication::handleExtendedMessage(char id, const BufferView& da
 		ext.state = PeerExtensions::Enabled;
 		ext.pex.init("ut_pex", handshake, this);
 		ext.utm.init("ut_metadata", handshake, this);
+		ext.holepunch.init("ut_holepunch", handshake, this);
 
 		listener.extendedHandshakeFinished(this, handshake);
 	}

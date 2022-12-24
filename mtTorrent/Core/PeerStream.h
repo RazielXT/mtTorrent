@@ -39,6 +39,9 @@ namespace mtt
 		bool isEncrypted() const;
 		bool isUtp() const;
 
+		void enableHolepunch();
+		bool usedHolepunch() const;
+
 	protected:
 
 		asio::io_service& io_service;
@@ -85,6 +88,7 @@ namespace mtt
 			bool utpTried = false;
 			bool reconnect = false;
 			bool firstWrite = true;
+			bool holepunchMode = false;
 		}
 		state;
 

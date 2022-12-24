@@ -15,6 +15,7 @@ namespace mtt
 			Handshake = 0,
 			Pex,
 			UtMetadata,
+			UtHolepunch
 		};
 
 		struct Handshake
