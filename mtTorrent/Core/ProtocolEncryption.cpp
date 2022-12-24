@@ -17,11 +17,6 @@ void ProtocolEncryption::decrypt(uint8_t* data, std::size_t len)
 	rcIn.decode(data, len);
 }
 
-void ProtocolEncryption::decrypt(BufferSpan span)
-{
-	return decrypt(span.data, span.size);
-}
-
 void ProtocolEncryptionListener::addTorrent(const uint8_t* torrent)
 {
 	// HASH('req2', SKEY)
@@ -105,7 +100,7 @@ size_t ProtocolEncryptionHandshake::readRemoteDataAsInitiator(const BufferView& 
 	return 0;
 }
 
-size_t ProtocolEncryptionHandshake::readRemoteDataAsListener(BufferSpan data, DataBuffer& response, ProtocolEncryptionListener& l)
+size_t ProtocolEncryptionHandshake::readRemoteDataAsListener(BufferView data, DataBuffer& response, ProtocolEncryptionListener& l)
 {
 	if (nextStep == Step::Pe1)
 	{

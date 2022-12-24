@@ -30,7 +30,7 @@ namespace mtt
 			void connectRemote(const MessageHeader& header);
 
 			std::function<void()> onConnectCallback;
-			std::function<size_t(BufferSpan)> onReceiveCallback;
+			std::function<size_t(BufferView)> onReceiveCallback;
 			std::function<void(int)> onCloseCallback;
 
 			void write(const DataBuffer&);

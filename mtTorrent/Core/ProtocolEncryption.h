@@ -17,7 +17,6 @@ public:
 
 	void decrypt(const uint8_t* data, std::size_t len, DataBuffer& out);
 	void decrypt(uint8_t* data, std::size_t len);
-	void decrypt(BufferSpan span);
 
 	RC4 rcIn;
 	RC4 rcOut;
@@ -52,7 +51,7 @@ public:
 	DataBuffer initiate();
 	size_t readRemoteDataAsInitiator(const BufferView& data, DataBuffer& response);
 
-	size_t readRemoteDataAsListener(BufferSpan data, DataBuffer& response, ProtocolEncryptionListener& l);
+	size_t readRemoteDataAsListener(BufferView data, DataBuffer& response, ProtocolEncryptionListener& l);
 
 	bool started() const;
 	bool established() const;

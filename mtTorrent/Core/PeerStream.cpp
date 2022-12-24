@@ -158,7 +158,7 @@ void mtt::PeerStream::initializeTcpStream()
 
 	tcpStream->onConnectCallback = std::bind(&PeerStream::connectionOpened, shared_from_this(), Type::Tcp);
 	tcpStream->onCloseCallback = [this](int code) { connectionClosed(Type::Tcp, code); };
-	tcpStream->onReceiveCallback = [this](BufferSpan buffer) { return dataReceived(Type::Tcp, buffer); };
+	tcpStream->onReceiveCallback = [this](BufferView buffer) { return dataReceived(Type::Tcp, buffer); };
 
 	BandwidthChannel* channels[2];
 	channels[0] = BandwidthManager::Get().GetChannel("");
@@ -185,7 +185,7 @@ void mtt::PeerStream::initializeUtpStream()
 
 	utpStream->onConnectCallback = std::bind(&PeerStream::connectionOpened, shared_from_this(), Type::Utp);
 	utpStream->onCloseCallback = [this](int code) { connectionClosed(Type::Utp, code); };
-	utpStream->onReceiveCallback = [this](BufferSpan buffer) { return dataReceived(Type::Utp, buffer); };
+	utpStream->onReceiveCallback = [this](BufferView buffer) { return dataReceived(Type::Utp, buffer); };
 
 	state.utpTried = true;
 }
@@ -274,7 +274,7 @@ void mtt::PeerStream::connectionClosed(Type t, int code)
 		tcpStream->onConnectCallback = nullptr;
 }
 
-size_t mtt::PeerStream::dataReceived(Type t, BufferSpan buffer)
+size_t mtt::PeerStream::dataReceived(Type t, BufferView buffer)
 {
 	WRITE_LOG("dataReceived " << buffer.size);
 
@@ -282,7 +282,10 @@ size_t mtt::PeerStream::dataReceived(Type t, BufferSpan buffer)
 		return dataReceivedPeHandshake(t, buffer);
 
 	if (pe)
-		pe->decrypt(buffer.getOffset(lastUnhandledDataSize));
+	{
+		auto offset = buffer.getOffset(lastUnhandledDataSize);
+		pe->decrypt(const_cast<uint8_t*>(offset.data), offset.size);
+	}
 
 	initialMessage.clear();
 
@@ -293,7 +296,7 @@ size_t mtt::PeerStream::dataReceived(Type t, BufferSpan buffer)
 	return sz;
 }
 
-size_t mtt::PeerStream::dataReceivedPeHandshake(Type t, BufferSpan buffer)
+size_t mtt::PeerStream::dataReceivedPeHandshake(Type t, BufferView buffer)
 {
 	WRITE_LOG("dataReceivedPeHandshake " << buffer.size);
 

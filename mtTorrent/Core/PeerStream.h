@@ -20,7 +20,7 @@ namespace mtt
 
 		std::function<void()> onOpenCallback;
 		std::function<void(int)> onCloseCallback;
-		std::function<size_t(BufferSpan)> onReceiveCallback;
+		std::function<size_t(BufferView)> onReceiveCallback;
 
 		void open(const Addr& address, const uint8_t* infoHash);
 		void write(DataBuffer);
@@ -64,8 +64,8 @@ namespace mtt
 
 		void connectionOpened(Type);
 		void connectionClosed(Type, int);
-		size_t dataReceived(Type, BufferSpan);
-		size_t dataReceivedPeHandshake(Type, BufferSpan);
+		size_t dataReceived(Type, BufferView);
+		size_t dataReceivedPeHandshake(Type, BufferView);
 
 		std::unique_ptr<ProtocolEncryptionHandshake> peHandshake;
 

@@ -82,7 +82,7 @@ void mtt::IncomingPeersListener::stop()
 	for (auto [id,peer] : pendingPeers)
 	{
 		peer.s->onCloseCallback = [](int) {};
-		peer.s->onReceiveCallback = [](BufferSpan) { return 0; };
+		peer.s->onReceiveCallback = [](BufferView) { return 0; };
 		peer.s->close();
 	}
 	pendingPeers.clear();
@@ -128,7 +128,7 @@ void mtt::IncomingPeersListener::createTcpListener()
 		{
 			removePeer(sPtr);
 		};
-		stream->onReceiveCallback = [sPtr, this](BufferSpan data) -> std::size_t
+		stream->onReceiveCallback = [sPtr, this](BufferView data) -> std::size_t
 		{
 			return readStreamData(data, sPtr);
 		};
@@ -157,14 +157,14 @@ void mtt::IncomingPeersListener::createUtpListener()
 			PEER_LOG("utp close " << sPtr->getAddress());
 			removePeer(sPtr);
 		};
-		stream->onReceiveCallback = [sPtr, this](BufferSpan data) -> std::size_t
+		stream->onReceiveCallback = [sPtr, this](BufferView data) -> std::size_t
 		{
 			return readStreamData(data, sPtr);
 		};
 	});
 }
 
-size_t mtt::IncomingPeersListener::readStreamData(BufferSpan data, PeerStream* sPtr)
+size_t mtt::IncomingPeersListener::readStreamData(BufferView data, PeerStream* sPtr)
 {
 	PEER_LOG("Received " << data.size << " bytes from " << sPtr->getAddress());
 

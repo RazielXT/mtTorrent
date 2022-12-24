@@ -25,7 +25,7 @@ namespace mtt
 		void createTcpListener();
 		void createUtpListener();
 
-		size_t readStreamData(BufferSpan data, PeerStream*);
+		size_t readStreamData(BufferView data, PeerStream*);
 
 		std::function<size_t(std::shared_ptr<PeerStream>, const BufferView& data, const uint8_t* hash)> onNewPeer;
 

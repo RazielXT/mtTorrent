@@ -31,7 +31,7 @@ public:
 	void write(const DataBuffer& data);
 
 	std::function<void()> onConnectCallback;
-	std::function<size_t(BufferSpan)> onReceiveCallback;
+	std::function<size_t(BufferView)> onReceiveCallback;
 	std::function<void(int)> onCloseCallback;
 
 	const std::string& getHostname() const;

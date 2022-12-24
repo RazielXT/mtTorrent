@@ -2,13 +2,9 @@
 #include <random>
 #include <cstring>
 
-BufferView::BufferView()
+BufferView::BufferView(const void* d, std::size_t s)
 {
-}
-
-BufferView::BufferView(const uint8_t* d, std::size_t s)
-{
-	data = d;
+	data = (const uint8_t*)d;
 	size = s;
 }
 
@@ -16,33 +12,6 @@ BufferView::BufferView(const DataBuffer& d)
 {
 	data = d.data();
 	size = d.size();
-}
-
-BufferView::BufferView(DataBuffer&& d)
-{
-	localbuffer = std::move(d);
-	data = localbuffer.data();
-	size = localbuffer.size();
-}
-
-BufferView::BufferView(const BufferSpan& s)
-{
-	data = s.data;
-	size = s.size;
-}
-
-void BufferView::store(const uint8_t* d, std::size_t s)
-{
-	localbuffer.resize(s);
-	memcpy(localbuffer.data(), d, s);
-	data = localbuffer.data();
-	size = localbuffer.size();
-}
-
-void BufferView::store()
-{
-	if (localbuffer.empty() && data && size)
-		store(data, size);
 }
 
 uint32_t Random::Number()
@@ -82,16 +51,4 @@ void Random::Data(uint8_t* data, std::size_t size)
 		auto rndData = rnd();
 		memcpy(ptr, &rndData, bytesTail);
 	}
-}
-
-BufferSpan::BufferSpan(DataBuffer& buffer)
-{
-	data = buffer.data();
-	size = buffer.size();
-}
-
-BufferSpan::BufferSpan(uint8_t* d, std::size_t sz)
-{
-	data = d;
-	size = sz;
 }
