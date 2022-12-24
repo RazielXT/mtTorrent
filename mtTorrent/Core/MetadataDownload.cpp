@@ -41,7 +41,7 @@ void mtt::MetadataDownload::start(std::function<void(Status, MetadataDownloadSta
 					requestPiece(a);
 				}
 
-				if(retryTimer)
+				if (retryTimer)
 					retryTimer->schedule(5);
 			}
 		}
@@ -58,7 +58,7 @@ void mtt::MetadataDownload::stop()
 
 	addEventLog(nullptr, EventInfo::End, 0);
 
-	if(!state.finished && state.active)
+	if (!state.finished && state.active)
 		onUpdate(Status::I_Stopped, state);
 
 	state.active = false;
@@ -74,7 +74,7 @@ std::vector<mtt::MetadataDownload::EventInfo> mtt::MetadataDownload::getEvents(s
 {
 	std::lock_guard<std::mutex> guard(commsMutex);
 
-	if(startIndex >= eventLog.size())
+	if (startIndex >= eventLog.size())
 		return {};
 
 	return { eventLog.begin() + startIndex, eventLog.end() };
@@ -226,15 +226,15 @@ std::string mtt::MetadataDownload::EventInfo::toString()
 {
 	if (action == mtt::MetadataDownload::EventInfo::Connected)
 		return hexToString(sourceId, 20) + " connected";
-	else if (action == mtt::MetadataDownload::EventInfo::Disconnected)
+	if (action == mtt::MetadataDownload::EventInfo::Disconnected)
 		return hexToString(sourceId, 20) + " disconnected";
-	else if (action == mtt::MetadataDownload::EventInfo::End)
+	if (action == mtt::MetadataDownload::EventInfo::End)
 		return "Finished";
-	else if (action == mtt::MetadataDownload::EventInfo::Searching)
+	if (action == mtt::MetadataDownload::EventInfo::Searching)
 		return "Searching for peers, current count " + std::to_string(index);
-	else if (action == mtt::MetadataDownload::EventInfo::Request)
+	if (action == mtt::MetadataDownload::EventInfo::Request)
 		return hexToString(sourceId, 20) + " requesting " + std::to_string(index);
-	else if (action == mtt::MetadataDownload::EventInfo::Receive)
+	if (action == mtt::MetadataDownload::EventInfo::Receive)
 		return hexToString(sourceId, 20) + " sent " + std::to_string(index);
 	else
 		return "";

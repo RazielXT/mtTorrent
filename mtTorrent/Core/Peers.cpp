@@ -115,7 +115,7 @@ void mtt::Peers::connectNext(uint32_t count)
 
 	for (size_t i = 0; i < knownPeers.size(); i++)
 	{
-		if(count == 0)
+		if (count == 0)
 			break;
 
 		auto&p = knownPeers[i];
@@ -124,7 +124,7 @@ void mtt::Peers::connectNext(uint32_t count)
 			connect((uint32_t)i);
 			count--;
 		}
-		else if(p.lastQuality < PeerQuality::Connecting)
+		else if (p.lastQuality < PeerQuality::Connecting)
 			leastConnectionAttempts = p.connectionAttempts;
 	}
 
@@ -233,7 +233,7 @@ std::vector<mtt::TrackerInfo> mtt::Peers::getSourcesInfo()
 
 	out.push_back(pexInfo);
 
-	if(mtt::config::getExternal().dht.enabled)
+	if (mtt::config::getExternal().dht.enabled)
 		out.push_back(dht.info);
 
 	out.push_back(remoteInfo);
@@ -328,7 +328,7 @@ uint32_t mtt::Peers::updateKnownPeers(const std::vector<Addr>& peers, PeerSource
 		}
 	}
 
-	if(updateCallback)
+	if (updateCallback)
 		updateCallback(mtt::Status::Success, source);
 
 	return (uint32_t)accepted.size();
@@ -350,8 +350,8 @@ uint32_t mtt::Peers::updateKnownPeers(const Addr& addr, PeerSource source)
 
 		return (uint32_t)knownPeers.size() - 1;
 	}
-	else
-		it->lastQuality = PeerQuality::Unknown;
+
+	it->lastQuality = PeerQuality::Unknown;
 		
 	return (uint32_t)std::distance(knownPeers.begin(), it);
 }
@@ -405,9 +405,10 @@ mtt::Peers::KnownPeer* mtt::Peers::getKnownPeer(PeerCommunication* p)
 {
 	if (auto peer = getActivePeer(p))
 		return &knownPeers[peer->idx];
-	else
-		return nullptr;
+
+	return nullptr;
 }
+
 
 bool mtt::Peers::KnownPeer::operator==(const Addr& r)
 {

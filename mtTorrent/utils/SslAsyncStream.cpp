@@ -165,7 +165,7 @@ void SslAsyncStream::handle_receive(asio::error_code ec, std::size_t received, s
 		postFail("Receive", ec);
 	else
 	{
-		if(received)
+		if (received)
 			readBuffer.insert(readBuffer.end(), readBufferTmp.begin(), readBufferTmp.begin() + received);
 
 		SSL_TCP_LOG("Received " << received << " bytes");
@@ -174,7 +174,7 @@ void SslAsyncStream::handle_receive(asio::error_code ec, std::size_t received, s
 		{
 			socket.async_read_some(asio::buffer(readBufferTmp.data(), readBufferTmp.size()), std::bind(&SslAsyncStream::handle_receive, shared_from_this(), std::placeholders::_1, std::placeholders::_2, readBufferTmp.size()));
 		}
-		else if(!readBuffer.empty() && onReceiveCallback)
+		else if (!readBuffer.empty() && onReceiveCallback)
 		{
 			SSL_TCP_LOG("Returning in total " << readBuffer.size() << " bytes");
 			auto tmp = std::move(readBuffer);

@@ -478,7 +478,7 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 							fileIn.seekg(startPieceSize, std::ios_base::cur);
 
 						//end piece starting
-						if(existingSize == tempFileSize)
+						if (existingSize == tempFileSize)
 							if (currentFile->endPieceIndex % workersCount == workerIdx && wantedChecks[currentFile->endPieceIndex])
 								fileIn.read((char*)readBuffer.data(), endPieceSize);
 					}
@@ -499,7 +499,7 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 		if (checkState.rejected)
 			return;
 
-		if(++currentFile > lastFile)
+		if (++currentFile > lastFile)
 			break;
 
 		currentPieceIdx = currentFile->startPieceIndex;
@@ -539,7 +539,7 @@ mtt::Status mtt::Storage::preallocate(const File& file, uint64_t size)
 			return Status::E_NotEnoughSpace;
 
 		std::fstream fileOut(fullpath, std::ios_base::openmode(std::ios_base::binary | std::ios_base::out | (exists ? std::ios_base::in : 0)));
-		if(!fileOut.good())
+		if (!fileOut.good())
 			return Status::E_InvalidPath;
 
 		auto startPieceSize = info.pieceSize - file.startPiecePos;

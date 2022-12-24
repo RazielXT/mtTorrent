@@ -119,10 +119,10 @@ void UdpAsyncWriter::handle_resolve(const std::error_code& error, udp::resolver:
 
 void UdpAsyncWriter::postFail(std::string place, const std::error_code& error)
 {
-	if(error)
+	if (error)
 		UDP_LOG(place << "-" << error.message())
 
-	if(state == Connected)
+	if (state == Connected)
 		state = Initialized;
 
 	if (onCloseCallback)

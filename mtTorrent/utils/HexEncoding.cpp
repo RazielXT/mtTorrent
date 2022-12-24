@@ -8,7 +8,7 @@ static uint8_t fromHexa(char h)
 		h = h - '0';
 	else if (h <= 'F')
 		h = h - 'A' + 10;
-	else if(h <= 'f')
+	else if (h <= 'f')
 		h = h - 'a' + 10;
 
 	return h;

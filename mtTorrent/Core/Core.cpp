@@ -100,7 +100,7 @@ void mtt::Core::init()
 	{
 		auto tPtr = Torrent::fromSavedState(t.name);
 
-		if(!tPtr)
+		if (!tPtr)
 			continue;
 
 		if (auto t = getTorrent(tPtr->hash()))
@@ -215,7 +215,7 @@ std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addMagnet(const char* magnet)
 
 	if (auto t = getTorrent(torrent->hash()))
 	{
-		if(t->importTrackers(torrent->infoFile))
+		if (t->importTrackers(torrent->infoFile))
 			return { mtt::Status::I_Merged, t };
 		else
 			return { mtt::Status::I_AlreadyExists, t };
@@ -248,7 +248,6 @@ mtt::Status mtt::Core::removeTorrent(const uint8_t* hash, bool deleteFiles)
 		{
 			auto t = *it;
 			t->stop();
-
 			t->removeMetaFiles();
 
 			listener->removeTorrent((*it)->hash());

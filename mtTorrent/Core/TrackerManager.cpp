@@ -59,7 +59,7 @@ void mtt::TrackerManager::addTracker(std::string addr)
 		else
 			trackers.push_back(info);
 	}
-	else if(info.uri.protocol == "https")
+	else if (info.uri.protocol == "https")
 		trackers.push_back(info);
 }
 
@@ -168,7 +168,7 @@ void mtt::TrackerManager::onTrackerFail(Tracker* t)
 					startNext();
 				}
 
-				if(announceCallback)
+				if (announceCallback)
 					announceCallback(Status::E_Unknown, nullptr, t);
 			}
 		});
@@ -215,10 +215,10 @@ void mtt::TrackerManager::stopAll()
 {
 	for (auto& tracker : trackers)
 	{
-		if(tracker.comm)
+		if (tracker.comm)
 			tracker.comm->deinit();
 		tracker.comm = nullptr;
-		if(tracker.timer)
+		if (tracker.timer)
 			tracker.timer->disable();
 		tracker.timer = nullptr;
 		tracker.retryCount = 0;

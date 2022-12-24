@@ -90,7 +90,7 @@ void mtt::dht::Table::nodeResponded(uint8_t bucketId, const NodeInfo& node)
 			{
 				bnode.active = false;
 
-				if(bucket.cache.size() < MaxBucketCacheSize)
+				if (bucket.cache.size() < MaxBucketCacheSize)
 					bucket.cache.emplace_back(bnode);
 				else
 					bucket.cache.back() = bnode;

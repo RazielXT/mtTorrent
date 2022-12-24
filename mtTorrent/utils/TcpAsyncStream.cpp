@@ -216,7 +216,7 @@ void TcpAsyncStream::postFail(const char* place, const std::error_code& error)
 	{
 	}
 
-	if(error)
+	if (error)
 		TCP_LOG("error on " << place << ": " << error.message())
 	else
 		TCP_LOG("end on " << place);

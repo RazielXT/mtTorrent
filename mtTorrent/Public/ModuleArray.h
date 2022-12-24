@@ -53,7 +53,7 @@ namespace mtt
 		{
 			resize(size);
 
-			if(size > 0)
+			if (size > 0)
 				memcpy(buffer, items, size * sizeof(T));
 		}
 

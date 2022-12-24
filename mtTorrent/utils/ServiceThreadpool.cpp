@@ -6,7 +6,7 @@ ServiceThreadpool::ServiceThreadpool()
 
 ServiceThreadpool::ServiceThreadpool(uint32_t startWorkers)
 {
-	if(startWorkers)
+	if (startWorkers)
 		start(startWorkers);
 }
 
@@ -17,7 +17,7 @@ ServiceThreadpool::~ServiceThreadpool()
 
 void ServiceThreadpool::start(uint32_t startWorkers)
 {
-	if(!work)
+	if (!work)
 		work = std::make_shared<workType>(io.get_executor());
 
 	if (workers >= startWorkers)

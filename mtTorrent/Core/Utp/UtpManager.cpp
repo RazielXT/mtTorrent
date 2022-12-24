@@ -113,7 +113,7 @@ bool mtt::utp::Manager::onUdpPacket(udp::endpoint& e, std::vector<DataBuffer*>& 
 	{
 		headerSizes.push_back(getUtpPacketHeaderSize(data));
 
-		if(headerSizes.back() == 0)
+		if (headerSizes.back() == 0)
 			buffers.push_back(data);
 	}
 

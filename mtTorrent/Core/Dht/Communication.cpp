@@ -51,8 +51,6 @@ void mtt::dht::Communication::start()
 
 	refreshTimer = ScheduledTimer::create(service.io, std::bind(&Communication::refreshTable, this));
 	refreshTimer->schedule(5 * 60 + 5);
-
-	//std::make_shared<Query::PingNodes>()->start(Addr({ 83,26,144,62 }, 44035) , &table, this);
 }
 
 void mtt::dht::Communication::stop()
@@ -66,7 +64,7 @@ void mtt::dht::Communication::stop()
 		peersQueries.clear();
 	}
 
-	if(refreshTimer)
+	if (refreshTimer)
 		refreshTimer->disable();
 	refreshTimer = nullptr;
 
@@ -170,7 +168,7 @@ void mtt::dht::Communication::findingPeersFinished(const uint8_t* hash, uint32_t
 	for (auto it = peersQueries.begin(); it != peersQueries.end(); it++)
 		if (it->q == hash)
 		{
-			if(it->listener)
+			if (it->listener)
 				it->listener->dhtFindingPeersFinished(hash, count);
 
 			peersQueries.erase(it);

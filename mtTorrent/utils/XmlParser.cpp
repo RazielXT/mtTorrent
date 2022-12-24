@@ -216,7 +216,7 @@ const mtt::xml::Element* mtt::xml::Element::firstNode(std::string_view name) con
 
 	while (node)
 	{
-		if(node->name == name)
+		if (node->name == name)
 			break;
 
 		node = node->nextSibling();

@@ -176,7 +176,7 @@ bool mtt::dht::Responder::writeValues(const char* infoHash, const udp::endpoint&
 		}
 	}
 
-	if(count > 0)
+	if (count > 0)
 		out.add('e');
 	else
 		out.out.resize(out.out.size() - 9);

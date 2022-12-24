@@ -194,7 +194,7 @@ GetPeersResponse mtt::dht::Query::GetPeers::parseGetPeersResponse(DataBuffer& me
 					auto value = values->getFirstItem();
 					while(value)
 					{
-						if(value->isText())
+						if (value->isText())
 							response.values.emplace_back(Addr((uint8_t*)value->info.data, value->info.size >= 18));
 
 						value = value->getNextSibling();
@@ -312,7 +312,7 @@ bool mtt::dht::Query::GetPeers::onResponse(UdpRequest comm, DataBuffer* data, Re
 			finished = requests.empty();
 		}
 
-		if(finished)
+		if (finished)
 			listener->findingPeersFinished(targetId.data, foundCount);
 	}
 
@@ -523,7 +523,7 @@ mtt::dht::FindNodeResponse mtt::dht::Query::FindNode::parseFindNodeResponse(Data
 
 				if (auto id = resp->getTxtItem("id"))
 				{
-					if(id->size == 20)
+					if (id->size == 20)
 						memcpy(response.id, id->data, 20);
 				}
 			}
@@ -627,7 +627,7 @@ bool mtt::dht::Query::PingNodes::onResponse(UdpRequest comm, DataBuffer* data, P
 		}
 	}
 
-	if(!nodesLeft.empty())
+	if (!nodesLeft.empty())
 	{
 		sendRequest(nodesLeft.back(), false);
 		nodesLeft.pop_back();
@@ -698,7 +698,7 @@ void mtt::dht::Query::AnnouncePeer(const uint8_t* infohash, const std::string& t
 	packet.add("d1:ad2:id20:", 12);
 	packet.add(mtt::config::getInternal().hashId, 20);
 
-	if(mtt::config::getExternal().connection.tcpPort == mtt::config::getExternal().connection.udpPort)
+	if (mtt::config::getExternal().connection.tcpPort == mtt::config::getExternal().connection.udpPort)
 		packet.add("12:implied_porti1e", 18);
 	packet.add("4:porti", 7);
 	packet << std::to_string(mtt::config::getExternal().connection.udpPort);

@@ -89,7 +89,7 @@ void mtt::PiecesProgress::resize(size_t size)
 		pieces.clear();
 		pieces.resize(size);
 
-		if(!previous.empty())
+		if (!previous.empty())
 			memcpy(pieces.data(), previous.data(), std::min(size, previous.size()));
 
 		calculatePieces();

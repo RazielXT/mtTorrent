@@ -45,7 +45,7 @@ void UpnpPortMapping::mapActiveAdapters(uint16_t port, PortType type)
 					}
 				}
 
-				if(!found)
+				if (!found)
 					foundDevices.push_back(device);
 
 				discoveryFinished = true;
@@ -69,18 +69,18 @@ void UpnpPortMapping::unmapMappedAdapters(uint16_t port, PortType type, bool wai
 {
 	discovery.stop();
 
-	if(waitForFinish)
+	if (waitForFinish)
 		waitForRequests();
 
 	{
 		for (auto& map : state->mappedPorts)
 		{
-			if((port == 0 || map.port == port) && map.type == type)
+			if ((port == 0 || map.port == port) && map.type == type)
 				unmapPort(map.gateway, map.gatewayPort, map.port, map.type);
 		}
 	}
 
-	if(waitForFinish)
+	if (waitForFinish)
 		waitForRequests();
 }
 

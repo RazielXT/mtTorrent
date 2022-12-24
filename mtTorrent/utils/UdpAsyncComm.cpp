@@ -97,7 +97,7 @@ UdpRequest UdpAsyncComm::sendMessage(const DataBuffer& data, const Addr& addr, U
 {
 	UdpRequest c = std::make_shared<UdpAsyncWriter>(pool.io);
 
-	if(response)
+	if (response)
 		addPendingResponse(c, response);
 
 	c->setAddress(addr);

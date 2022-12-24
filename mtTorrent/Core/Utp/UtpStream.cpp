@@ -415,7 +415,7 @@ void mtt::utp::Stream::flushSendData()
 		uint16_t resendCount = 0;
 		for (auto& s : sending.sentData)
 		{
-			if(!s.needResend)
+			if (!s.needResend)
 				break;
 			resendCount++;
 		}
@@ -669,7 +669,7 @@ void mtt::utp::Stream::ackSentDataBuffer(const MessageHeader& header)
 	size_t acked = 0;
 	for (const auto& sent : sending.sentData)
 	{
-		if(idHigherThan(sent.sequence, header.ack_nr))
+		if (idHigherThan(sent.sequence, header.ack_nr))
 			break;
 
 		ackSentPacket(header, sent);
@@ -770,10 +770,10 @@ void mtt::utp::Stream::resendPackets(uint16_t lastIdx)
 
 	for (auto& packet : sending.sentData)
 	{
-		if(idHigherThan(packet.sequence, lastIdx))
+		if (idHigherThan(packet.sequence, lastIdx))
 			break;
 
-		if(packet.resent && !packet.needResend)
+		if (packet.resent && !packet.needResend)
 			continue;
 
 		packet.resent = true;
@@ -875,7 +875,7 @@ void mtt::utp::Stream::storeReceivedData(uint16_t sequenceId, const BufferView& 
 	{
 		if (receiving.receivedData[idx].sequence == sequenceId)
 			return;
-		if(idHigherThan(receiving.receivedData[idx].sequence, sequenceId))
+		if (idHigherThan(receiving.receivedData[idx].sequence, sequenceId))
 			break;
 	}
 	receiving.receivedData.insert(receiving.receivedData.begin() + idx, { bufferIdx, sequenceId });
@@ -901,7 +901,7 @@ uint32_t mtt::utp::parseHeaderSize(const MessageHeader* header, std::size_t data
 
 		dataLeft -= sizeof(ExtensionMessage);
 
-		if(dataLeft < ext->len)
+		if (dataLeft < ext->len)
 			return 0;
 
 		dataLeft -= ext->len;

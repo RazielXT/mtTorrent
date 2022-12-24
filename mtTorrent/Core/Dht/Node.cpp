@@ -22,7 +22,7 @@ bool mtt::dht::NodeId::closerToNodeThan(NodeId& maxDistance, NodeId& target)
 	auto dist = distance(target);
 	auto nl = dist.length();
 
-	if(nl != 0)
+	if (nl != 0)
 		for (int i = 0; i < 20; i++)
 		{
 			if (dist.data[i] != maxDistance.data[i])

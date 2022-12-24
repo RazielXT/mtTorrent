@@ -67,7 +67,7 @@ namespace mtt
 
 			for (const auto& cb : callbacks)
 			{
-				if(cb.second.first == type)
+				if (cb.second.first == type)
 					cb.second.second();
 			}
 		}

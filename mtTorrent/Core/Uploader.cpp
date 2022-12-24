@@ -126,7 +126,7 @@ void mtt::Uploader::refreshRequest()
 
 	for (auto it = pendingRequests.begin(); it != pendingRequests.end();)
 	{
-		if(!it->peer->isEstablished())
+		if (!it->peer->isEstablished())
 			it = pendingRequests.erase(it);
 		else
 			it++;

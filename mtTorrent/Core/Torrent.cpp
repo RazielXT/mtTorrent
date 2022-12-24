@@ -65,7 +65,7 @@ mtt::TorrentPtr mtt::Torrent::fromSavedState(std::string name)
 
 	if (state.info.name.empty())
 	{
-		if(!torrent->loadFileInfo())
+		if (!torrent->loadFileInfo())
 			return nullptr;
 
 		torrent->stateChanged = true;
@@ -245,7 +245,7 @@ void mtt::Torrent::downloadMetadata()
 {
 	service.start(4);
 
-	if(!utmDl)
+	if (!utmDl)
 		utmDl = std::make_unique<MetadataDownload>(*peers, service);
 
 	utmDl->start([this](Status s, MetadataDownloadState& state)
@@ -407,7 +407,7 @@ void mtt::Torrent::stop(StopReason reason)
 	save();
 
 	started = false;
-	if(reason != StopReason::Internal)
+	if (reason != StopReason::Internal)
 		lastError = Status::Success;
 	stateChanged = true;
 	stopping = false;

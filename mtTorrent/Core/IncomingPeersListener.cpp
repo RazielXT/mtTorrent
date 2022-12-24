@@ -39,7 +39,7 @@ mtt::IncomingPeersListener::IncomingPeersListener(std::function<size_t(std::shar
 				else
 					upnp->unmapAllMappedAdapters(false);
 			}
-			else if(upnpEnabled)
+			else if (upnpEnabled)
 			{
 				if (usedPorts.udp != settings.udpPort)
 				{

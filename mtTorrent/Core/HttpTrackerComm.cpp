@@ -71,7 +71,7 @@ void mtt::HttpTrackerComm::fail()
 
 void mtt::HttpTrackerComm::onTcpClosed(int)
 {
-	if(info.state != TrackerState::Announced)
+	if (info.state != TrackerState::Announced)
 		fail();
 }
 
@@ -92,7 +92,7 @@ size_t mtt::HttpTrackerComm::onTcpReceived(const BufferView& respData)
 			fail();
 			return respData.size;
 		}
-		else if(msgSize != 0)
+		else if (msgSize != 0)
 		{
 			info.state = TrackerState::Announced;
 
