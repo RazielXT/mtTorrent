@@ -49,7 +49,7 @@ namespace mtt
 		void handshakeFinished(PeerCommunication*) override;
 		void connectionClosed(PeerCommunication*, int) override;
 		void messageReceived(PeerCommunication*, PeerMessage&) override;
-		void extendedHandshakeFinished(PeerCommunication*, ext::Handshake&) override;
+		void extendedHandshakeFinished(PeerCommunication*, const ext::Handshake&) override;
 		void extendedMessageReceived(PeerCommunication*, ext::Type, const BufferView& data) override;
 
 		void requestPiece(std::shared_ptr<PeerCommunication> peer);

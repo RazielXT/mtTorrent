@@ -193,7 +193,7 @@ void mtt::MetadataDownload::extendedMessageReceived(PeerCommunication* p, ext::T
 	}
 }
 
-void mtt::MetadataDownload::extendedHandshakeFinished(PeerCommunication* peer, ext::Handshake& handshake)
+void mtt::MetadataDownload::extendedHandshakeFinished(PeerCommunication* peer, const ext::Handshake& handshake)
 {
 	if (handshake.metadataSize && peer->ext.utm.enabled())
 	{

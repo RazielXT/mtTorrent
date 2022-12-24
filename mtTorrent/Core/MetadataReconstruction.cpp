@@ -1,56 +1,53 @@
 #include "MetadataReconstruction.h"
+#include "MetadataExtension.h"
 #include "utils/TorrentFileParser.h"
-
-const uint32_t MetadataPieceSize = 16 * 1024;
 
 void mtt::MetadataReconstruction::init(uint32_t sz)
 {
 	buffer.resize(sz);
 
-	remainingPiecesFlag = pieces = 0;
-	uint64_t flagPos = 1;
+	pieces = nextRequestedIndex = 0;
 	while (sz > 0)
 	{
-		remainingPiecesFlag |= flagPos;
+		remainingPieces.insert(pieces);
 		pieces++;
 
-		flagPos <<= 1;
-		sz = sz > MetadataPieceSize ? sz - MetadataPieceSize : 0;
+		sz = sz > ext::UtMetadata::PieceSize ? sz - ext::UtMetadata::PieceSize : 0;
 	}
 }
 
-void mtt::MetadataReconstruction::addPiece(DataBuffer& data, uint32_t index)
+bool mtt::MetadataReconstruction::addPiece(const BufferView& data, uint32_t index)
 {
-	uint64_t flagPos = (uint64_t)1 << index;
-	if (remainingPiecesFlag & flagPos)
+	auto it = remainingPieces.find(index);
+	if (it != remainingPieces.end())
 	{
-		remainingPiecesFlag ^= flagPos;
-		size_t offset = index * MetadataPieceSize;
-		memcpy(&buffer[0] + offset, data.data(), data.size());
+		remainingPieces.erase(it);
+		size_t offset = index * ext::UtMetadata::PieceSize;
+		memcpy(&buffer[0] + offset, data.data, data.size);
+		return true;
 	}
+
+	return false;
 }
 
 bool mtt::MetadataReconstruction::finished()
 {
-	return remainingPiecesFlag == 0 && pieces != 0;
+	return remainingPieces.empty() && pieces != 0;
 }
 
 uint32_t mtt::MetadataReconstruction::getMissingPieceIndex()
 {
-	if ((remainingPiecesFlag >> nextRequestedIndex) == 0)
+	if (remainingPieces.empty())
+		return -1;
+
+	if (nextRequestedIndex > *remainingPieces.rbegin())
 		nextRequestedIndex = 0;
 
-	uint64_t flag = (uint64_t)1 << nextRequestedIndex;
-	for(uint32_t i = nextRequestedIndex; i < pieces; i++)
-	{
-		if (remainingPiecesFlag & flag)
-		{
-			nextRequestedIndex = i + 1;
-			return i;
-		}
+	auto it = remainingPieces.lower_bound(nextRequestedIndex);
+	nextRequestedIndex++;
 
-		flag <<= 1;
-	}
+	if (it != remainingPieces.end())
+		return *it;
 
 	return -1;
 }
