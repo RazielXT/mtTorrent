@@ -106,7 +106,7 @@ void UdpAsyncWriter::handle_resolve(const std::error_code& error, udp::resolver:
 		target_endpoint = *iterator;
 		state = Initialized;
 
-		if (messageBuffer.size)
+		if (!messageBuffer.empty())
 			send_message();
 	}
 	else
@@ -183,7 +183,7 @@ void UdpAsyncWriter::do_write(DataBuffer data)
 {
 	std::lock_guard<std::mutex> guard(stateMutex);
 
-	messageBuffer.store(data.data(), data.size());
+	messageBuffer = std::move(data);
 
 	if (state != Clear)
 	{
@@ -221,7 +221,7 @@ void UdpAsyncWriter::send_message()
 	}
 	else if (state == Connected)
 	{
-		if (messageBuffer.size)
+		if (!messageBuffer.empty())
 		{
 			send_message(messageBuffer);
 		}

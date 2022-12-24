@@ -56,7 +56,7 @@ protected:
 	void do_rewrite();
 	void do_close();
 
-	BufferView messageBuffer;
+	DataBuffer messageBuffer;
 
 	void send_message();
 	void send_message(const BufferView&);
