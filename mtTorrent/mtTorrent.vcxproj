@@ -432,6 +432,7 @@
     <ClInclude Include="utils\DiffieHellman.h" />
     <ClInclude Include="utils\FastIpToCountry.h" />
     <ClInclude Include="utils\HttpHeader.h" />
+    <ClInclude Include="utils\int128.h" />
     <ClInclude Include="utils\NetAdaptersList.h" />
     <ClInclude Include="utils\RC4.h" />
     <ClInclude Include="utils\SHA.h" />

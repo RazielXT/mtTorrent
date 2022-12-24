@@ -130,7 +130,7 @@ bool BigNumber::Powm(BigNumber& result, const BigNumber& a, const BigNumber& e, 
 
 	if (cnt < 0)
 	{
-		return true;	// Todo: test this case
+		return true;
 	}
 
 
@@ -139,7 +139,7 @@ bool BigNumber::Powm(BigNumber& result, const BigNumber& a, const BigNumber& e, 
 		return true; //0
 	}
 
-	for (size_t i = 0; i <= cnt; i++)
+	for (int i = 0; i <= cnt; i++)
 	{
 		auto digit = e.m_data[i];
 		for (uint32_t j = 0; j < digit_bits; j++)
@@ -212,50 +212,6 @@ int BigNumber::Compare(const BigNumber& right) const
 		}
 	}
 	return 0;
-}
-
-namespace
-{
-	constexpr uint64_t div_rem(const uint64_t dividend, const uint32_t divisor, uint64_t& remainder) noexcept
-	{
-		remainder = dividend % divisor;
-		return dividend / divisor;
-	}
-
-	constexpr uint64_t mul_words(const uint32_t a, const uint32_t b) noexcept
-	{
-		return(uint64_t)a * (uint64_t)b;
-	}
-
-	constexpr uint32_t lo_word(const uint64_t val) noexcept
-	{
-		return static_cast<uint32_t>(val);
-	}
-
-	constexpr uint32_t hi_word(const uint64_t val) noexcept
-	{
-		return static_cast<uint32_t>(val >> 32);
-	}
-
-	constexpr uint64_t make_dword(const uint32_t lo, const uint32_t hi) noexcept
-	{
-		return (uint64_t)lo | ((uint64_t)hi << 32);
-	}
-
-	constexpr uint64_t shiftl_half_word(const uint64_t val) noexcept
-	{
-		return val << 32;
-	}
-
-	inline void shiftr_half_word(uint64_t& val) noexcept
-	{
-		val >>= 32;
-	}
-
-	inline void shiftr_half_word(int64_t& val) noexcept
-	{
-		val >>= 32;
-	}
 }
 
 bool BigNumber::Mulm(BigNumber& result, const BigNumber& a1, const BigNumber& a2, const BigNumber& m)

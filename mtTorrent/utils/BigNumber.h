@@ -2,12 +2,23 @@
 
 #include <cstdint>
 #include <vector>
+#include "int128.h"
 
 class BigNumber
 {
+#ifdef HAS_INT128
+	using double_digit_t = uint128_t;
+	using s_double_digit_t = int128_t;
+	using digit_t = uint64_t;
+	constexpr static uint32_t digit_bits = static_cast<uint32_t>(sizeof(digit_t) * 8);
+	constexpr static double_digit_t digit_base = make_dword(0ULL, 1ULL);
+#else
 	using double_digit_t = uint64_t;
 	using s_double_digit_t = int64_t;
 	using digit_t = uint32_t;
+	constexpr static uint32_t digit_bits = static_cast<uint32_t>(sizeof(digit_t) * 8);
+	constexpr static double_digit_t digit_base = static_cast<double_digit_t>(1) << (digit_bits);
+#endif
 
 public:
 
@@ -79,9 +90,6 @@ private:
 
 	static void dbi2bi(BigNumber& dest, const BigNumber& src);
 	static void bi2dbi(BigNumber& dest, const BigNumber& src);
-
-	constexpr static uint32_t digit_bits = static_cast<uint32_t>(sizeof(digit_t) * 8);
-	constexpr static double_digit_t digit_base = static_cast<double_digit_t>(1) << (digit_bits);
 
 	/** Represents an arbitrarily large signed integer.
 	 *  Integer is stored in memory in a little format.
