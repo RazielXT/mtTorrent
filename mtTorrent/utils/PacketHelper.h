@@ -2,6 +2,7 @@
 
 #include "ByteSwap.h"
 #include <cstdint>
+#include <cstring>
 #include <vector>
 #include <sstream>
 #include <algorithm>
@@ -84,50 +85,58 @@ private:
 
 struct PacketBuilder
 {
-	PacketBuilder()
-	{
-	}
+	PacketBuilder() = default;
 
 	PacketBuilder(size_t size)
 	{
-		out.reserve(size);
+		data.reserve(size);
 	}
 
 	void add(char c)
 	{
-		out.push_back(c);
+		data.push_back(c);
 	}
 
 	void add16(uint16_t i)
 	{
 		i = swap16(i);
 		auto ci = reinterpret_cast<char*>(&i);
-		out.insert(out.end(), ci, ci + sizeof i);
+		data.insert(data.end(), ci, ci + sizeof i);
+	}
+
+	static void Assign32(uint8_t* data, uint32_t i)
+	{
+		*reinterpret_cast<uint32_t*>(data) = swap32(i);
+	}
+
+	static void Append32(DataBuffer& data, uint32_t i)
+	{
+		i = swap32(i);
+		auto ci = reinterpret_cast<char*>(&i);
+		data.insert(data.end(), ci, ci + sizeof i);
 	}
 
 	void add32(uint32_t i)
 	{
-		i = swap32(i);
-		auto ci = reinterpret_cast<char*>(&i);
-		out.insert(out.end(), ci, ci + sizeof i);
+		Append32(data, i);
 	}
 
 	void add64(uint64_t i)
 	{
 		i = swap64(i);
 		auto ci = reinterpret_cast<char*>(&i);
-		out.insert(out.end(), ci, ci + sizeof i);
+		data.insert(data.end(), ci, ci + sizeof i);
 	}
 
 	void addString(const char* b)
 	{
 		size_t length = strlen(b);
-		out.insert(out.end(), b, b + length);
+		data.insert(data.end(), b, b + length);
 	}
 
 	void add(const char* b, size_t length)
 	{
-		out.insert(out.end(), b, b + length);
+		data.insert(data.end(), b, b + length);
 	}
 
 	PacketBuilder& operator<<(const char* rhs)
@@ -145,29 +154,29 @@ struct PacketBuilder
 	template<typename T>
 	void add(const T* b, size_t length)
 	{
-		out.insert(out.end(), b, b + length);
+		data.insert(data.end(), b, b + length);
 	}
 
 	void addAfter(const char* find, const char* b, size_t length)
 	{
 		auto findLen = strlen(find);
-		auto f = std::find_if(out.begin(), out.end() - length, [=](uint8_t& idx) { return memcmp(&idx, find, findLen) == 0; });
+		auto f = std::find_if(data.begin(), data.end() - length, [=](uint8_t& idx) { return memcmp(&idx, find, findLen) == 0; });
 
-		if (f != out.end())
+		if (f != data.end())
 			f += findLen;
 
-		out.insert(f, b, b + length);
+		data.insert(f, b, b + length);
 	}
 
 	void insert(size_t pos, const char* b, size_t length)
 	{
-		out.insert(out.begin() + pos, b, b + length);
+		data.insert(data.begin() + pos, b, b + length);
 	}
 
 	DataBuffer& getBuffer()
 	{
-		return out;
+		return data;
 	}
 
-	DataBuffer out;
+	DataBuffer data;
 };

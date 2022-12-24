@@ -1,7 +1,7 @@
 #pragma once
 
-#include "PeerMessage.h"
 #include "ExtensionProtocol.h"
+#include "PeerMessage.h"
 
 namespace mtt
 {
@@ -16,9 +16,7 @@ namespace mtt
 
 		virtual void messageReceived(PeerCommunication*, PeerMessage&) = 0;
 
-		virtual void extHandshakeFinished(PeerCommunication*) = 0;
-		virtual void metadataPieceReceived(PeerCommunication*, ext::UtMetadata::Message&) = 0;
-		virtual void pexReceived(PeerCommunication*, ext::PeerExchange::Message&) = 0;
-		virtual void progressUpdated(PeerCommunication*, uint32_t) = 0;
+		virtual void extendedHandshakeFinished(PeerCommunication*, const ext::Handshake&) = 0;
+		virtual void extendedMessageReceived(PeerCommunication*, ext::Type, const BufferView& data) = 0;
 	};
 }

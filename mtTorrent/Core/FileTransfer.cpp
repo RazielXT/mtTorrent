@@ -140,19 +140,23 @@ void mtt::FileTransfer::messageReceived(PeerCommunication* p, PeerMessage& msg)
 	{
 		uploader->pieceRequest(p, msg.request);
 	}
-	else
-		downloader.messageReceived(p, msg);
+	else if (msg.id == PeerMessage::Have)
+	{
+		if (msg.havePieceIndex < piecesAvailability.size())
+			piecesAvailability[msg.havePieceIndex]++;
+	}
+	else if (msg.id == PeerMessage::Bitfield)
+	{
+		const auto& peerPieces = p->info.pieces.pieces;
+
+		for (size_t i = 0; i < piecesAvailability.size(); i++)
+			piecesAvailability[i] += peerPieces[i] ? 1 : 0;
+	}
+
+	downloader.messageReceived(p, msg);
 }
 
-void mtt::FileTransfer::extHandshakeFinished(PeerCommunication*)
-{
-}
-
-void mtt::FileTransfer::metadataPieceReceived(PeerCommunication*, ext::UtMetadata::Message&)
-{
-}
-
-void mtt::FileTransfer::pexReceived(PeerCommunication*, ext::PeerExchange::Message&)
+void mtt::FileTransfer::extendedHandshakeFinished(PeerCommunication*, const ext::Handshake&)
 {
 }
 
@@ -254,7 +258,7 @@ std::vector<mtt::ActivePeerInfo> mtt::FileTransfer::getPeersInfo() const
 		out[i].address = addr.toString();
 		out[i].country = addr.ipv6 ? "" : ipToCountry.GetCountry(swap32(*reinterpret_cast<const uint32_t*>(addr.addrBytes)));
 		out[i].percentage = comm->info.pieces.getPercentage();
-		out[i].client = comm->ext.state.client;
+		out[i].client = comm->info.client;
 		out[i].connected = comm->isEstablished();
 		out[i].choking = comm->state.peerChoking;
 		out[i].flags = comm->getStream()->getFlags();

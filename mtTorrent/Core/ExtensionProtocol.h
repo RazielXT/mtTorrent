@@ -1,86 +1,39 @@
 #pragma once
 
-#include "utils/BencodeParser.h"
-#include "utils/TcpAsyncStream.h"
-#include "Utp/UtpManager.h"
 #include <map>
+#include <string>
+#include "utils/DataBuffer.h"
 
 namespace mtt
 {
+	class PeerCommunication;
+
 	namespace ext
 	{
-		enum MessageType
+		enum class Type
 		{
-			HandshakeEx = 0,
-			PexEx,
-			UtMetadataEx,
-			InvalidEx
+			Handshake = 0,
+			Pex,
+			UtMetadata,
 		};
 
-		struct PeerExchange
+		struct Handshake
 		{
-			struct Message
-			{
-				std::string addedFlags;
-				std::vector<Addr> addedPeers;
-			};
+			std::map<std::string, int> messageIds;
 
-			void load(BencodeParser::Object* data);
-			std::function<void(PeerExchange::Message&)> onPexMessage;
+			uint8_t yourIp[4]{};
+			std::string client;
+			uint32_t metadataSize = 0;
 		};
 
-		struct UtMetadata
+		struct RemoteExtension
 		{
-			enum MessageId
-			{
-				Request = 0,
-				Data,
-				Reject
-			};
+			void init(const char* name, const Handshake&, PeerCommunication*);
+			bool enabled() const;
 
-			struct Message
-			{
-				MessageId id;
-				uint32_t piece;
-				DataBuffer metadata;
-				uint32_t size;
-			};
-
-			uint32_t size = 0;
-
-			void load(BencodeParser::Object* data, const char* remainingData, std::size_t remainingSize);
-			DataBuffer createMetadataRequest(uint32_t index);
-
-			std::function<void(UtMetadata::Message&)> onUtMetadataMessage;
+		protected:
+			uint8_t messageId = 0;
+			PeerCommunication* peer = nullptr;
 		};
-
-		struct ExtensionProtocol
-		{
-			struct
-			{
-				bool sentHandshake = false;
-				bool enabled = false;
-				std::string yourIp;
-				std::string client;
-			}
-			state;
-
-			bool isSupported(MessageType type);
-
-			bool requestMetadataPiece(uint32_t index);
-
-			PeerExchange pex;
-
-			UtMetadata utm;
-
-			void sendHandshake();
-
-			MessageType load(char id, const DataBuffer& data);
-			DataBuffer createExtendedHandshakeMessage(bool enablePex = true, uint16_t metadataSize = 0);
-
-			std::function<void(const DataBuffer&)> write;
-
-			std::map<int, MessageType> messageIds;
-		};
-	}
+	};
 }

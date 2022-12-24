@@ -214,6 +214,9 @@ void mtt::Downloader::unchokePeer(ActivePeer* peer)
 
 void mtt::Downloader::messageReceived(PeerCommunication* comm, PeerMessage& msg)
 {
+	if (!client.wantsToDownload())
+		return;
+
 	if (msg.id == PeerMessage::Piece)
 	{
 		pieceBlockReceived(msg.piece, comm);
@@ -225,14 +228,13 @@ void mtt::Downloader::messageReceived(PeerCommunication* comm, PeerMessage& msg)
 		if (auto peer = peers.get(comm))
 			unchokePeer(peer);
 	}
-}
+	else if (msg.id == PeerMessage::Have || msg.id == PeerMessage::Bitfield)
+	{
+		auto peers = client.getPeers();
 
-void mtt::Downloader::progressUpdated(PeerCommunication* p, uint32_t idx)
-{
-	auto peers = client.getPeers();
-
-	if (auto peer = peers.get(p))
-		evaluateNextRequests(peer);
+		if (auto peer = peers.get(comm))
+			evaluateNextRequests(peer);
+	}
 }
 
 void mtt::Downloader::refreshSelection(const DownloadSelection& s, const std::vector<uint32_t>& availability)

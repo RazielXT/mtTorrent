@@ -90,9 +90,7 @@ namespace mtt
 		void handshakeFinished(PeerCommunication*) override;
 		void connectionClosed(PeerCommunication*, int code) override;
 		void messageReceived(PeerCommunication*, PeerMessage&) override;
-		void extHandshakeFinished(PeerCommunication*) override;
-		void metadataPieceReceived(PeerCommunication*, ext::UtMetadata::Message&) override;
-		void pexReceived(PeerCommunication*, ext::PeerExchange::Message&) override;
-		void progressUpdated(PeerCommunication*, uint32_t) override;
+		void extendedHandshakeFinished(PeerCommunication*, const ext::Handshake&) override;
+		void extendedMessageReceived(PeerCommunication*, ext::Type, const BufferView& data) override;
 	};
 }

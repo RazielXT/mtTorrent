@@ -77,7 +77,6 @@ namespace mtt
 
 		void peerAdded(ActivePeer*);
 		void messageReceived(PeerCommunication*, PeerMessage&);
-		void progressUpdated(PeerCommunication*, uint32_t idx);
 
 		void sortPieces(const std::vector<uint32_t>& availability);
 
