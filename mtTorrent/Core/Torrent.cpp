@@ -312,7 +312,7 @@ mtt::Status mtt::Torrent::start()
 	std::unique_lock<std::mutex> guard(stateMutex);
 
 #ifdef PEER_DIAGNOSTICS
-	std::filesystem::path logDir = std::filesystem::u8path(".\\logs\\" + name());
+	std::filesystem::path logDir = Storage::utf8Path(".\\logs\\" + name());
 	if (!std::filesystem::exists(logDir))
 	{
 		std::error_code ec;

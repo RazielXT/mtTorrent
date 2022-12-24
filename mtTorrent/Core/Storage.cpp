@@ -10,6 +10,15 @@
 #include <windows.h>
 #endif // _WIN32
 
+std::filesystem::path mtt::Storage::utf8Path(const std::string& p)
+{
+#if __cpp_char8_t
+	return std::filesystem::path(reinterpret_cast<const char8_t*>(p.c_str()));
+#else
+	return std::filesystem::u8path(p);
+#endif
+}
+
 mtt::Storage::Storage(const TorrentInfo& i) : info(i)
 {
 	init(std::string(".") + pathSeparator);
@@ -37,12 +46,12 @@ mtt::Status mtt::Storage::setPath(std::string p, bool moveFiles)
 		std::lock_guard<std::mutex> guard(storageMutex);
 
 		std::error_code ec;
-		if (!std::filesystem::exists(std::filesystem::u8path(p), ec))
+		if (!std::filesystem::exists(utf8Path(p), ec))
 			return mtt::Status::E_InvalidPath;
 
 		if (moveFiles && !info.files.empty())
 		{
-			auto newPath = std::filesystem::u8path(p + info.files.back().path.front());
+			auto newPath = std::filesystem::path(p + info.files.back().path.front());
 
 			if (info.files.size() == 1)
 			{
@@ -55,7 +64,7 @@ mtt::Status mtt::Storage::setPath(std::string p, bool moveFiles)
 					return mtt::Status::E_NotEmpty;
 			}
 
-			auto originalPath = std::filesystem::u8path(path + info.files.back().path.front());
+			auto originalPath = std::filesystem::path(path + info.files.back().path.front());
 
 			if (std::filesystem::exists(originalPath, ec))
 			{
@@ -210,7 +219,7 @@ mtt::Status mtt::Storage::deleteAll()
 	}
 
 	if (info.files.size() > 1)
-		std::filesystem::remove_all(std::filesystem::u8path(path + info.files.front().path.front()), ec);
+		std::filesystem::remove_all(utf8Path(path + info.files.front().path.front()), ec);
 
 	return Status::Success;
 }
@@ -531,7 +540,7 @@ mtt::Status mtt::Storage::preallocate(const File& file, uint64_t size)
 				return Status::Success;
 		}
 
-		auto spaceInfo = std::filesystem::space(std::filesystem::u8path(path), ec);
+		auto spaceInfo = std::filesystem::space(utf8Path(path), ec);
 		if (ec)
 			return Status::E_InvalidPath;
 
@@ -580,7 +589,7 @@ std::filesystem::path mtt::Storage::getFullpath(const File& file) const
 		filePath += p;
 	}
 
-	return std::filesystem::u8path(path + filePath);
+	return utf8Path(path + filePath);
 }
 
 void mtt::Storage::createPath(const std::filesystem::path& path)
@@ -597,7 +606,7 @@ void mtt::Storage::createPath(const std::filesystem::path& path)
 
 mtt::Status mtt::Storage::validatePath(const DownloadSelection& selection)
 {
-	std::filesystem::path dlPath = std::filesystem::u8path(path);
+	std::filesystem::path dlPath = utf8Path(path);
 	std::error_code ec;
 
 	if (!dlPath.has_root_path())

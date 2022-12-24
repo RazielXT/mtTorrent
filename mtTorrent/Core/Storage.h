@@ -36,6 +36,8 @@ namespace mtt
 		uint64_t getLastModifiedTime();
 		uint64_t getLastModifiedTime(size_t fileIdx);
 
+		static std::filesystem::path utf8Path(const std::string& p);
+
 	private:
 
 		std::filesystem::path getFullpath(const File& file) const;
