@@ -183,25 +183,25 @@ namespace mtt
 				dirty = false;
 				auto root = parser.getRoot();
 
-				if (auto internalSettings = root->getDictItem("internal"))
+				if (auto internalSettings = root->getDictObject("internal"))
 				{
 					auto id = internalSettings->getTxt("hashId");
 					if (id.length() == 40)
 						decodeHexa(id, internal_.hashId);
 
-					if (auto i = internalSettings->getIntItem("maxPeersPerTrackerRequest"))
+					if (auto i = internalSettings->getIntObject("maxPeersPerTrackerRequest"))
 						internal_.maxPeersPerTrackerRequest = (uint32_t)i->getBigInt();
 
-					if (auto dhtSettings = internalSettings->getDictItem("dht"))
+					if (auto dhtSettings = internalSettings->getDictObject("dht"))
 					{
-						if (auto i = dhtSettings->getIntItem("peersCheckInterval"))
+						if (auto i = dhtSettings->getIntObject("peersCheckInterval"))
 							internal_.dht.peersCheckInterval = (uint32_t)i->getBigInt();
-						if (auto i = dhtSettings->getIntItem("maxStoredAnnouncedPeers"))
+						if (auto i = dhtSettings->getIntObject("maxStoredAnnouncedPeers"))
 							internal_.dht.maxStoredAnnouncedPeers = (uint32_t)i->getBigInt();
-						if (auto i = dhtSettings->getIntItem("maxPeerValuesResponse"))
+						if (auto i = dhtSettings->getIntObject("maxPeerValuesResponse"))
 							internal_.dht.maxPeerValuesResponse = (uint32_t)i->getBigInt();
 
-						if (auto rootHosts = dhtSettings->getListItem("defaultRootHosts"))
+						if (auto rootHosts = dhtSettings->getListObject("defaultRootHosts"))
 						{
 							internal_.dht.defaultRootHosts.clear();
 							for (auto& host : *rootHosts)
@@ -215,40 +215,40 @@ namespace mtt
 					}
 				}
 
-				if (auto externalSettings = root->getDictItem("external"))
+				if (auto externalSettings = root->getDictObject("external"))
 				{
-					if (auto cSettings = externalSettings->getDictItem("connection"))
+					if (auto cSettings = externalSettings->getDictObject("connection"))
 					{
-						if (auto i = cSettings->getIntItem("tcpPort"))
+						if (auto i = cSettings->getIntObject("tcpPort"))
 							external.connection.tcpPort = (uint16_t)i->getBigInt();
-						if (auto i = cSettings->getIntItem("udpPort"))
+						if (auto i = cSettings->getIntObject("udpPort"))
 							external.connection.udpPort = (uint16_t)i->getBigInt();
-						if (auto i = cSettings->getIntItem("maxTorrentConnections"))
+						if (auto i = cSettings->getIntObject("maxTorrentConnections"))
 							external.connection.maxTorrentConnections = (uint32_t)i->getBigInt();
-						if (auto i = cSettings->getIntItem("upnpPortMapping"))
+						if (auto i = cSettings->getIntObject("upnpPortMapping"))
 							external.connection.upnpPortMapping = (bool)i->getBigInt();
-						if (auto i = cSettings->getIntItem("enableTcpIn"))
+						if (auto i = cSettings->getIntObject("enableTcpIn"))
 							external.connection.enableTcpIn = (bool)i->getInt();
-						if (auto i = cSettings->getIntItem("enableTcpOut"))
+						if (auto i = cSettings->getIntObject("enableTcpOut"))
 							external.connection.enableTcpOut = (bool)i->getInt();
-						if (auto i = cSettings->getIntItem("enableUtpIn"))
+						if (auto i = cSettings->getIntObject("enableUtpIn"))
 							external.connection.enableUtpIn = (bool)i->getInt();
-						if (auto i = cSettings->getIntItem("enableUtpOut"))
+						if (auto i = cSettings->getIntObject("enableUtpOut"))
 							external.connection.enableUtpOut = (bool)i->getInt();
 					}
-					if (auto dhtSettings = externalSettings->getDictItem("dht"))
+					if (auto dhtSettings = externalSettings->getDictObject("dht"))
 					{
-						if (auto i = dhtSettings->getIntItem("enabled"))
+						if (auto i = dhtSettings->getIntObject("enabled"))
 							external.dht.enabled = (bool)i->getBigInt();
 					}
-					if (auto tSettings = externalSettings->getDictItem("transfer"))
+					if (auto tSettings = externalSettings->getDictObject("transfer"))
 					{
-						if (auto i = tSettings->getIntItem("maxDownloadSpeed"))
+						if (auto i = tSettings->getIntObject("maxDownloadSpeed"))
 							external.transfer.maxDownloadSpeed = (uint32_t)i->getBigInt();
-						if (auto i = tSettings->getIntItem("maxUploadSpeed"))
+						if (auto i = tSettings->getIntObject("maxUploadSpeed"))
 							external.transfer.maxUploadSpeed = (uint32_t)i->getBigInt();
 					}
-					if (auto fSettings = externalSettings->getDictItem("files"))
+					if (auto fSettings = externalSettings->getDictObject("files"))
 					{
 						if (auto i = fSettings->getTxtItem("directory"))
 							external.files.defaultDirectory = std::string(i->data, i->size);
@@ -273,15 +273,15 @@ namespace mtt
 				writer.startMap();
 
 				{
-					writer.startMap("internal");
+					writer.startMapItem("internal");
 					writer.addItem("hashId", hexToString(internal_.hashId, 20));
 					writer.endMap();
 				}
 
 				{
-					writer.startMap("external");
+					writer.startMapItem("external");
 
-					writer.startMap("connection");
+					writer.startMapItem("connection");
 					writer.addItem("tcpPort", external.connection.tcpPort);
 					writer.addItem("udpPort", external.connection.udpPort);
 					writer.addItem("maxTorrentConnections", external.connection.maxTorrentConnections);
@@ -292,16 +292,16 @@ namespace mtt
 					writer.addItem("enableUtpOut", external.connection.enableUtpOut);
 					writer.endMap();
 
-					writer.startMap("dht");
-					writer.addItem("enabled", (uint32_t)external.dht.enabled);
+					writer.startMapItem("dht");
+					writer.addItem("enabled", external.dht.enabled);
 					writer.endMap();
 
-					writer.startMap("transfer");
+					writer.startMapItem("transfer");
 					writer.addItem("maxDownloadSpeed", external.transfer.maxDownloadSpeed);
 					writer.addItem("maxUploadSpeed", external.transfer.maxUploadSpeed);
 					writer.endMap();
 
-					writer.startMap("files");
+					writer.startMapItem("files");
 					writer.addItem("directory", external.files.defaultDirectory);
 					writer.endMap();
 
@@ -310,7 +310,7 @@ namespace mtt
 
 				writer.endMap();
 
-				file << writer.data;
+				file.write((const char*)writer.data.data(), writer.data.size());
 			}
 		}
 

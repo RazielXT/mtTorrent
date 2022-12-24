@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+#include "DataBuffer.h"
 
 namespace mtt
 {
@@ -10,9 +11,12 @@ namespace mtt
 	{
 	public:
 
+		BencodeWriter() = default;
+		BencodeWriter(DataBuffer&&);
+
 		void startMap();
-		void startMap(const char* name);
-		void startRawMap(const char* text);
+		void startMapItem(const char* name);
+		void startRawMapItem(const char* text);
 		void endMap();
 
 		void startArray();
@@ -33,7 +37,10 @@ namespace mtt
 		void addRawItem(const char* name, const std::string& text);
 		void addRawItemFromBuffer(const char* name, const char* buffer, std::size_t size);
 
-		std::string data;
+		void addRawData(const uint8_t* data, std::size_t size);
+		void addRawData(const char* text);
+
+		DataBuffer data;
 	};
 
 }

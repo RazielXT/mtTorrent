@@ -41,7 +41,7 @@ void loadTorrentFileInfo(BencodeParser& parser, TorrentFileInfo& fileInfo)
 		if (auto announce = root->getTxtItem("announce"))
 			fileInfo.announce = std::string(announce->data, announce->size);
 
-		if (auto list = root->getListItem("announce-list"))
+		if (auto list = root->getListObject("announce-list"))
 		{
 			auto announce = list->getFirstItem();
 
@@ -66,7 +66,7 @@ void loadTorrentFileInfo(BencodeParser& parser, TorrentFileInfo& fileInfo)
 		else if (!fileInfo.announce.empty())
 			fileInfo.announceList.push_back(fileInfo.announce);
 
-		if (auto info = root->getDictItem("info"))
+		if (auto info = root->getDictObject("info"))
 		{
 			fileInfo.info = parseTorrentInfo(info);
 		}
@@ -176,12 +176,9 @@ mtt::TorrentInfo parseTorrentInfo(const BencodeParser::Object* infoDictionary)
 		}
 	}
 
-	if (auto privateItem = infoDictionary->getIntItem("private"))
-	{
-		info.isPrivate = privateItem->getInt() != 0;
-	}
+	info.isPrivate = infoDictionary->getInt("private") != 0;
 
-	if (auto files = infoDictionary->getListItem("files"))
+	if (auto files = infoDictionary->getListObject("files"))
 	{
 		info.name = infoDictionary->getTxt("name");
 
@@ -193,12 +190,12 @@ mtt::TorrentInfo parseTorrentInfo(const BencodeParser::Object* infoDictionary)
 			std::vector<std::string> path;
 			path.push_back(info.name);
 
-			auto pathList = file->getListItem("path");
-			auto pathItem = pathList->getFirstItem();
-			while (pathItem)
+			if (auto pathList = file->getListObject("path"))
 			{
-				path.push_back(pathItem->getTxt());
-				pathItem = pathItem->getNextSibling();
+				for (auto& p : *pathList)
+				{
+					path.push_back(p.getTxt());
+				}
 			}
 
 			uint64_t size = file->getBigInt("length");

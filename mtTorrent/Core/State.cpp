@@ -23,7 +23,7 @@ void mtt::TorrentState::save(const std::string& name)
 
 	writer.startMap();
 
-	writer.startMap("info");
+	writer.startMapItem("info");
 	writer.addRawItem("4:name", info.name);
 	writer.addRawItem("9:pieceSize", info.pieceSize);
 	writer.addRawItem("8:fullSize", info.fullSize);
@@ -62,7 +62,7 @@ void mtt::TorrentState::save(const std::string& name)
 
 	writer.endMap();
 
-	file << writer.data;
+	file.write((const char*)writer.data.data(), writer.data.size());
 }
 
 bool mtt::TorrentState::load(const std::string& name)
@@ -82,7 +82,7 @@ bool mtt::TorrentState::load(const std::string& name)
 
 	if (auto root = parser.getRoot())
 	{
-		if (auto pInfo = root->getDictItem("info"))
+		if (auto pInfo = root->getDictObject("info"))
 		{
 			info.name = pInfo->getTxt("name");
 			info.pieceSize = (uint32_t)pInfo->getInt("pieceSize");
@@ -101,7 +101,7 @@ bool mtt::TorrentState::load(const std::string& name)
 		{
 			pieces.assign(pItem->data, pItem->data + pItem->size);
 		}
-		if (auto uList = root->getListItem("unfinished"))
+		if (auto uList = root->getListObject("unfinished"))
 		{
 			unfinishedPieces.clear();
 			for (auto& u : *uList)
@@ -123,7 +123,7 @@ bool mtt::TorrentState::load(const std::string& name)
 				}
 			}
 		}
-		if (auto sList = root->getListItem("selection"))
+		if (auto sList = root->getListObject("selection"))
 		{
 			selection.clear();
 			for (const auto& s : *sList)
@@ -168,7 +168,7 @@ void mtt::TorrentsList::save()
 	}
 	writer.endArray();
 
-	file << writer.data;
+	file.write((const char*)writer.data.data(), writer.data.size());
 }
 
 bool mtt::TorrentsList::load()

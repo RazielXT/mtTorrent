@@ -27,7 +27,7 @@ bool mtt::dht::Responder::handlePacket(const udp::endpoint& endpoint, DataBuffer
 
 	auto transactionId = root->getTxtItem("t");
 	auto requestType = root->getTxtItem("q");
-	auto requestData = root->getDictItem("a");
+	auto requestData = root->getDictObject("a");
 
 	if (!transactionId || !requestType || !requestData)
 		return false;
@@ -97,7 +97,7 @@ bool mtt::dht::Responder::writeNodes(const char* hash, const udp::endpoint& endp
 	bool wantV4 = endpoint.address().is_v4();
 	bool wantV6 = endpoint.address().is_v6();
 
-	if (auto want = requestData->getListItem("want"))
+	if (auto want = requestData->getListObject("want"))
 	{
 		auto wantWhat = want->getFirstItem();
 		while (wantWhat && wantWhat->isText())
@@ -136,13 +136,13 @@ bool mtt::dht::Responder::writeNodes(const char* hash, const udp::endpoint& endp
 	}
 
 	out.add("5:nodes", 7);
-	out << std::to_string(nodes.out.size() + nodesV6.out.size());
+	out << std::to_string(nodes.data.size() + nodesV6.data.size());
 	out.add(':');
 
-	if (!nodes.out.empty())
-		out.add(nodes.out.data(), nodes.out.size());
-	if (!nodesV6.out.empty())
-		out.add(nodesV6.out.data(), nodesV6.out.size());
+	if (!nodes.data.empty())
+		out.add(nodes.data.data(), nodes.data.size());
+	if (!nodesV6.data.empty())
+		out.add(nodesV6.data.data(), nodesV6.data.size());
 	
 	return false;
 }
@@ -179,7 +179,7 @@ bool mtt::dht::Responder::writeValues(const char* infoHash, const udp::endpoint&
 	if (count > 0)
 		out.add('e');
 	else
-		out.out.resize(out.out.size() - 9);
+		out.data.resize(out.data.size() - 9);
 
 	return count > 0;
 }

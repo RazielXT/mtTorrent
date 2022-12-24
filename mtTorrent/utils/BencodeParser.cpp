@@ -9,7 +9,7 @@ template <>
 std::string mtt::BencodeParser::Object::getValueOr(const char* name, std::string def) const
 {
 	auto item = getTxtItem(name);
-	return item ? std::string(item->data, item->size) : def;
+	return item ? item->toString() : def;
 }
 
 bool mtt::BencodeParser::parse(const uint8_t* data, std::size_t length)
@@ -166,7 +166,7 @@ mtt::BencodeParser::Object* mtt::BencodeParser::parseString(const char** body)
 	obj.info.data = *body;
 	(*body) += obj.info.size;
 
-	PARSER_LOG("String " << std::string(obj.info.data));
+	PARSER_LOG("String " << obj.info.toString());
 
 	objects.push_back(obj);
 	return &objects.back();
@@ -194,7 +194,7 @@ mtt::BencodeParser::Object* mtt::BencodeParser::parseInt(const char** body)
 	(*body)++;
 
 	obj.info.type = Object::Item::Number;
-	PARSER_LOG("Number " << std::string(obj.info.data, obj.info.size));
+	PARSER_LOG("Number " << obj.info.toString());
 
 	objects.push_back(obj);
 	return &objects.back();
@@ -205,7 +205,7 @@ mtt::BencodeParser::Object* mtt::BencodeParser::getRoot()
 	return objects.empty() ? nullptr : &objects[0];
 }
 
-const mtt::BencodeParser::Object* mtt::BencodeParser::Object::getDictItem(const char* name) const
+const mtt::BencodeParser::Object* mtt::BencodeParser::Object::getDictObject(const char* name) const
 {
 	auto obj = getFirstItem();
 	auto len = strlen(name);
@@ -221,7 +221,7 @@ const mtt::BencodeParser::Object* mtt::BencodeParser::Object::getDictItem(const 
 	return nullptr;
 }
 
-const mtt::BencodeParser::Object* mtt::BencodeParser::Object::getListItem(const char* name) const
+const mtt::BencodeParser::Object* mtt::BencodeParser::Object::getListObject(const char* name) const
 {
 	auto obj = getFirstItem();
 	auto len = strlen(name);
@@ -253,19 +253,38 @@ const mtt::BencodeParser::Object::Item* mtt::BencodeParser::Object::getTxtItem(c
 	return nullptr;
 }
 
+const mtt::BencodeParser::Object::Item* mtt::BencodeParser::Object::popTxtItem(const char* name)
+{
+	auto obj = getFirstItem();
+	auto len = strlen(name);
+
+	while (obj)
+	{
+		if (obj->info.size && obj->info.equals(name, len) && (obj + 1)->isText())
+		{
+			const_cast<mtt::BencodeParser::Object*>(obj)->info.size = 0;
+			return &(obj + 1)->info;
+		}
+
+		obj = (obj + 1)->getNextSibling();
+	}
+
+	return nullptr;
+}
+
 std::string mtt::BencodeParser::Object::getTxt(const char* name) const
 {
 	auto item = getTxtItem(name);
 
-	return item ? std::string(item->data, item->size) : std::string();
+	return item ? item->toString() : std::string();
 }
 
 std::string mtt::BencodeParser::Object::getTxt() const
 {
-	return isText() ? std::string(info.data, info.size) : std::string();
+	return isText() ? info.toString() : std::string();
 }
 
-const mtt::BencodeParser::Object* mtt::BencodeParser::Object::getIntItem(const char* name) const
+const mtt::BencodeParser::Object* mtt::BencodeParser::Object::getIntObject(const char* name) const
 {
 	auto obj = getFirstItem();
 	auto len = strlen(name);
@@ -283,7 +302,7 @@ const mtt::BencodeParser::Object* mtt::BencodeParser::Object::getIntItem(const c
 
 int mtt::BencodeParser::Object::getInt(const char* name) const
 {
-	auto o = getIntItem(name);
+	auto o = getIntObject(name);
 	return o ? o->getInt() : 0;
 }
 
@@ -294,7 +313,7 @@ int mtt::BencodeParser::Object::getInt() const
 
 uint64_t mtt::BencodeParser::Object::getBigInt(const char* name) const
 {
-	auto o = getIntItem(name);
+	auto o = getIntObject(name);
 	return o ? o->getBigInt() : 0;
 }
 
@@ -313,21 +332,14 @@ const mtt::BencodeParser::Object* mtt::BencodeParser::Object::getNextSibling() c
 	return info.nextSiblingOffset ? this + info.nextSiblingOffset : nullptr;
 }
 
-const mtt::BencodeParser::Object& mtt::BencodeParser::Object::operator[](int index)
-{
-	auto ptr = getFirstItem();
-
-	for (int i = 0; i < index; i++)
-	{
-		ptr = ptr->getNextSibling();
-	}
-
-	return *ptr;
-}
-
 bool mtt::BencodeParser::Object::Item::equals(const char* txt, std::size_t l) const
 {
-	return l != size ? false : strncmp(txt, data, size) == 0;
+	return l == size && strncmp(txt, data, size) == 0;
+}
+
+std::string mtt::BencodeParser::Object::Item::toString() const
+{
+	return std::string(data, size);
 }
 
 bool mtt::BencodeParser::Object::isMap() const
@@ -348,6 +360,11 @@ bool mtt::BencodeParser::Object::isInt() const
 bool mtt::BencodeParser::Object::isText() const
 {
 	return info.type == Item::Text;
+}
+
+const mtt::BencodeParser::Object& mtt::BencodeParser::Object::getDictItemValue() const
+{
+	return *getNextSibling();
 }
 
 bool mtt::BencodeParser::Object::isText(const char* str, std::size_t l) const

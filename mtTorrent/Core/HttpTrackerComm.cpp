@@ -157,17 +157,14 @@ uint32_t mtt::HttpTracker::readAnnounceResponse(const char* buffer, std::size_t 
 
 			if (root && root->isMap())
 			{
-				auto interval = root->getIntItem("min interval");
-				if (!interval)
-					interval = root->getIntItem("interval");
+				response.interval = root->getInt("min interval");
+				if (!response.interval)
+					response.interval = root->getInt("interval");
+				if (!response.interval)
+					response.interval = 5 * 60;
 
-				response.interval = interval ? interval->getInt() : 5 * 60;
-
-				auto seeds = root->getIntItem("complete");
-				response.seedCount = seeds ? seeds->getInt() : 0;
-
-				auto leechs = root->getIntItem("incomplete");
-				response.leechCount = leechs ? leechs->getInt() : 0;
+				response.seedCount = root->getInt("complete");
+				response.leechCount = root->getInt("incomplete");
 
 				auto peers = root->getTxtItem("peers");
 				if (peers && peers->size % 6 == 0)
@@ -178,7 +175,7 @@ uint32_t mtt::HttpTracker::readAnnounceResponse(const char* buffer, std::size_t 
 					for (int i = 0; i < count; i++)
 					{
 						uint32_t addr = swap32(reader.pop32());
-						response.peers.push_back(Addr(addr, reader.pop16()));
+						response.peers.emplace_back(addr, reader.pop16());
 					}
 				}
 			}

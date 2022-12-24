@@ -23,15 +23,17 @@ namespace mtt
 				enum Type : uint16_t { None, Number, Text, List, Dictionary } type = None;
 
 				bool equals(const char*, std::size_t) const;
+				std::string toString() const;
 			}
 			info;
 
-			const Object* getDictItem(const char* name) const;
-			const Object* getListItem(const char* name) const;
+			const Object* getDictObject(const char* name) const;
+			const Object* getListObject(const char* name) const;
 			const Item* getTxtItem(const char* name) const;
+			const Item* popTxtItem(const char* name);
 			std::string getTxt(const char* name) const;
 			std::string getTxt() const;
-			const Object* getIntItem(const char* name) const;
+			const Object* getIntObject(const char* name) const;
 			int getInt(const char* name) const;
 			int getInt() const;
 			uint64_t getBigInt(const char* name) const;
@@ -40,33 +42,34 @@ namespace mtt
 			template <typename T>
 			T getValueOr(const char* name, T def) const
 			{
-				auto o = getIntItem(name);
+				auto o = getIntObject(name);
 				return o ? (T)o->getInt() : def;
 			}
 
 			const Object* getFirstItem() const;
 			const Object* getNextSibling() const;
 
-			const Object& operator[](int index);
-
 			struct iterator {
 			public:
-				iterator(const Object* ptr) : ptr(ptr) {}
-				iterator operator++() { ptr = ptr->getNextSibling(); return *this; }
+				iterator(const Object* ptr, bool map) : ptr(ptr), isMap(map){}
+				iterator operator++() { ptr = ptr->getNextSibling(); if (isMap) ptr = ptr->getNextSibling(); return *this; }
 				bool operator!=(const iterator& other) const { return ptr != other.ptr; }
 				const Object& operator*() const { return *ptr; }
 			private:
 				const Object* ptr;
+				bool isMap;
 			};
 
-			iterator begin() const { return iterator(getFirstItem()); };
-			iterator end() const { return iterator(nullptr); };
+			iterator begin() const { return { getFirstItem(), isMap()}; };
+			iterator end() const { return { nullptr, false }; };
 
 			bool isMap() const;
 			bool isList() const;
 			bool isInt() const;
 			bool isText() const;
 			bool isText(const char*, std::size_t) const;
+
+			const Object& getDictItemValue() const;
 		};
 
 		Object* getRoot();

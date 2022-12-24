@@ -159,7 +159,7 @@ GetPeersResponse mtt::dht::Query::GetPeers::parseGetPeersResponse(DataBuffer& me
 					response.transaction = *reinterpret_cast<const uint16_t*>(tr->data);
 			}
 
-			if (auto resp = root->getDictItem("r"))
+			if (auto resp = root->getDictObject("r"))
 			{
 				if (auto nodes = resp->getTxtItem("nodes"))
 				{
@@ -189,7 +189,7 @@ GetPeersResponse mtt::dht::Query::GetPeers::parseGetPeersResponse(DataBuffer& me
 					}
 				}
 
-				if (auto values = resp->getListItem("values"))
+				if (auto values = resp->getListObject("values"))
 				{
 					auto value = values->getFirstItem();
 					while(value)
@@ -215,7 +215,7 @@ GetPeersResponse mtt::dht::Query::GetPeers::parseGetPeersResponse(DataBuffer& me
 				}
 			}
 
-			if (auto eresp = root->getListItem("e"))
+			if (auto eresp = root->getListObject("e"))
 			{
 				if (auto ecode = eresp->getFirstItem())
 					response.result = ecode->getInt();
@@ -492,7 +492,7 @@ mtt::dht::FindNodeResponse mtt::dht::Query::FindNode::parseFindNodeResponse(Data
 					response.transaction = *reinterpret_cast<const uint16_t*>(tr->data);
 			}
 
-			if (auto resp = root->getDictItem("r"))
+			if (auto resp = root->getDictObject("r"))
 			{
 				if (auto nodes = resp->getTxtItem("nodes"))
 				{
@@ -528,7 +528,7 @@ mtt::dht::FindNodeResponse mtt::dht::Query::FindNode::parseFindNodeResponse(Data
 				}
 			}
 
-			if (auto eresp = root->getListItem("e"))
+			if (auto eresp = root->getListObject("e"))
 			{
 				if (auto ecode = eresp->getFirstItem())
 					response.result = ecode->getInt();
@@ -661,7 +661,7 @@ mtt::dht::PingMessage mtt::dht::Query::PingNodes::parseResponse(DataBuffer& mess
 					response.transaction = *reinterpret_cast<const uint16_t*>(tr->data);
 			}
 
-			if (auto resp = root->getDictItem("r"))
+			if (auto resp = root->getDictObject("r"))
 			{
 				auto idNode = resp->getTxtItem("id");
 				if (idNode && idNode->size == 20)
@@ -670,7 +670,7 @@ mtt::dht::PingMessage mtt::dht::Query::PingNodes::parseResponse(DataBuffer& mess
 				}
 			}
 
-			if (auto eresp = root->getListItem("e"))
+			if (auto eresp = root->getListObject("e"))
 			{
 				if (auto ecode = eresp->getFirstItem())
 					response.result = ecode->getInt();

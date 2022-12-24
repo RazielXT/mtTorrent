@@ -165,7 +165,7 @@ DataBuffer mtt::TorrentFileInfo::createTorrentFileData(const uint8_t* infoData, 
 
 	if (!infoData)
 	{
-		writer.startRawMap("4:info");
+		writer.startRawMapItem("4:info");
 
 		if (info.files.size() > 1)
 		{
@@ -203,8 +203,8 @@ DataBuffer mtt::TorrentFileInfo::createTorrentFileData(const uint8_t* infoData, 
 	}
 	else
 	{
-		writer.data.append("4:info");
-		writer.data.append((const char*)infoData, infoDataSize);
+		writer.addRawData("4:info");
+		writer.addRawData(infoData, infoDataSize);
 	}
 
 	writer.endMap();
