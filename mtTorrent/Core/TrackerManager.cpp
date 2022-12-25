@@ -115,6 +115,9 @@ void mtt::TrackerManager::onAnnounce(AnnounceResponse& resp, Tracker* t)
 		{
 			std::lock_guard<std::mutex> guard(trackersMutex);
 
+			if (!announceCallback)
+				return;
+
 			if (auto trackerInfo = findTrackerInfo(t))
 			{
 				trackerInfo->retryCount = 0;
@@ -122,9 +125,7 @@ void mtt::TrackerManager::onAnnounce(AnnounceResponse& resp, Tracker* t)
 				trackerInfo->comm->info.nextAnnounce = mtt::CurrentTimestamp() + resp.interval;
 			}
 
-			if (announceCallback)
-				announceCallback(Status::Success, &resp, *t);
-
+			announceCallback(Status::Success, &resp, *t);
 			startNext();
 		});
 }
@@ -134,6 +135,9 @@ void mtt::TrackerManager::onTrackerFail(Tracker* t)
 	torrent.service.io.post([this, t]()
 		{
 			std::lock_guard<std::mutex> guard(trackersMutex);
+
+			if (!announceCallback)
+				return;
 
 			if (auto trackerInfo = findTrackerInfo(t))
 			{
@@ -168,8 +172,7 @@ void mtt::TrackerManager::onTrackerFail(Tracker* t)
 					startNext();
 				}
 
-				if (announceCallback)
-					announceCallback(Status::E_Unknown, nullptr, *t);
+				announceCallback(Status::E_Unknown, nullptr, *t);
 			}
 		});
 }
@@ -215,12 +218,12 @@ void mtt::TrackerManager::stopAll()
 {
 	for (auto& tracker : trackers)
 	{
-		if (tracker.comm)
-			tracker.comm->deinit();
-		tracker.comm = nullptr;
 		if (tracker.timer)
 			tracker.timer->disable();
 		tracker.timer = nullptr;
+		if (tracker.comm)
+			tracker.comm->deinit();
+		tracker.comm = nullptr;
 		tracker.retryCount = 0;
 	}
 }
