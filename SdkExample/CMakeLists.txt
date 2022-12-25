@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.8)
 
 add_executable (mtTorrentSdkExample
-	main
+	main.cpp
 )
 
 target_compile_features (mtTorrentSdkExample

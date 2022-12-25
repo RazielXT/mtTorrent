@@ -5,36 +5,27 @@ if (WIN32 AND MSVC)
 endif ()
 
 set (imgui_sources
-	imgui
-	imgui_demo
-	imgui_draw
-	imgui_tables
-	imgui_widgets
+	imgui.cpp
+	imgui_demo.cpp
+	imgui_draw.cpp
+	imgui_tables.cpp
+	imgui_widgets.cpp
 )
 
 list (TRANSFORM imgui_sources PREPEND "imgui/")
 
 set (imgui_backends
-	imgui_impl_opengl2
-	imgui_impl_glfw
+	imgui_impl_opengl2.cpp
+	imgui_impl_glfw.cpp
 )
 
 list (TRANSFORM imgui_backends PREPEND "imgui/backends/")
 
-if (GLFW_LOCAL)
-	set (gl3w_sources
-		gl3w
-	)
-
-	list (TRANSFORM gl3w_sources PREPEND "imgui/examples/libs/gl3w/GL/")
-endif ()
-
 add_executable (mtTorrentSdkGuiExample
-	main
-	TorrentInstance
+	main.cpp
+	TorrentInstance.cpp
 	${imgui_sources}
 	${imgui_backends}
-	${gl3w_sources}
 )
 
 target_include_directories (mtTorrentSdkGuiExample PUBLIC ../ imgui imgui/backends)
@@ -52,7 +43,7 @@ target_link_libraries (mtTorrentSdkGuiExample OpenGL::GL ${CMAKE_DL_LIBS})
 if (GLFW_LOCAL)
 	message (STATUS "Linking GLFW3 from ImGui")
 
-	target_include_directories (mtTorrentSdkGuiExample PUBLIC imgui/examples/libs/gl3w imgui/examples/libs/glfw/include)
+	target_include_directories (mtTorrentSdkGuiExample PUBLIC imgui/examples/libs/glfw/include)
 	target_link_libraries (mtTorrentSdkGuiExample ${CMAKE_SOURCE_DIR}/SdkGuiExample/imgui/examples/libs/glfw/lib-vc2010-64/glfw3.lib)
 else ()
 	find_package (glfw3 3.3 REQUIRED)

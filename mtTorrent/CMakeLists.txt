@@ -1,103 +1,106 @@
 cmake_minimum_required (VERSION 3.8)
 
 set (core_sources
-	AlertsManager
-	BinaryInterfaceHandler
-	Configuration
-	Core
-	Downloader
-	ExtensionProtocol
-	Files
-	FileTransfer
-	HttpsTrackerComm
-	HttpTrackerComm
-	IncomingPeersListener
-	Interface
-	Logging
-	main
-	MetadataDownload
-	MetadataReconstruction
-	PeerCommunication
-	PeerMessage
-	Peers
-	PiecesProgress
-	State
-	Storage
-	Torrent
-	TrackerManager
-	UdpTrackerComm
-	Uploader
-	PeerStream
-	ProtocolEncryption
+	AlertsManager.cpp
+	BinaryInterfaceHandler.cpp
+	Configuration.cpp
+	Core.cpp
+	Downloader.cpp
+	ExtensionProtocol.cpp
+	Files.cpp
+	FileTransfer.cpp
+	HolepunchExtension.cpp
+	HttpsTrackerComm.cpp
+	HttpTrackerComm.cpp
+	IncomingPeersListener.cpp
+	Interface.cpp
+	Logging.cpp
+	main.cpp
+	MetadataDownload.cpp
+	MetadataExtension.cpp
+	MetadataReconstruction.cpp
+	PeerCommunication.cpp
+	PeerMessage.cpp
+	Peers.cpp
+	PexExtension.cpp
+	PiecesProgress.cpp
+	State.cpp
+	Storage.cpp
+	Torrent.cpp
+	TrackerManager.cpp
+	UdpTrackerComm.cpp
+	Uploader.cpp
+	PeerStream.cpp
+	ProtocolEncryption.cpp
 )
 
 list(TRANSFORM core_sources PREPEND "Core/")
 
 set (core_api_sources
-	CoreImpl
-	FileTransferImpl
-	InterfaceImpl
-	ListenerImpl
-	MagnetDownloadImpl
-	PeersImpl
-	TorrentImpl
+	CoreImpl.cpp
+	FileTransferImpl.cpp
+	InterfaceImpl.cpp
+	ListenerImpl.cpp
+	MagnetDownloadImpl.cpp
+	PeersImpl.cpp
+	TorrentImpl.cpp
 )
 
 list(TRANSFORM core_api_sources PREPEND "Core/Api/")
 
 set (core_dht_sources
-	Communication
-	Node
-	Query
-	Responder
-	Table
+	Communication.cpp
+	Node.cpp
+	Query.cpp
+	Responder.cpp
+	Table.cpp
 )
 
 list(TRANSFORM core_dht_sources PREPEND "Core/Dht/")
 
 set (core_utp_sources
-	UtpManager
-	UtpStream
+	UtpManager.cpp
+	UtpStream.cpp
 )
 
 list(TRANSFORM core_utp_sources PREPEND "Core/Utp/")
 
 set (public_sources
-	ModuleString
+	ModuleString.cpp
 )
 
 list(TRANSFORM public_sources PREPEND "Public/")
 
 set (utils_sources
-	Bandwidth
-	Base32
-	BencodeParser
-	BencodeWriter
-	ByteSwap
-	FastIpToCountry
-	HexEncoding
-	HttpHeader
-	NetAdaptersList
-	Network
-	ScheduledTimer
-	ServiceThreadpool
-	SHA
-	SslAsyncStream
-	TcpAsyncServer
-	TcpAsyncStream
-	TorrentFileParser
-	UdpAsyncComm
-	UdpAsyncReceiver
-	UdpAsyncWriter
-	UpnpDiscovery
-	UpnpPortMapping
-	Uri
-	UrlEncoding
-	XmlParser
-	BigNumber
-	DataBuffer
-	DiffieHellman
-	RC4
+	Bandwidth.cpp
+	Base32.cpp
+	BencodeParser.cpp
+	BencodeWriter.cpp
+	BitUtils.cpp
+	FastIpToCountry.cpp
+	HexEncoding.cpp
+	HttpHeader.cpp
+	NetAdaptersList.cpp
+	Network.cpp
+	ScheduledTimer.cpp
+	ServiceThreadpool.cpp
+	SHA.cpp
+	SslAsyncStream.cpp
+	TcpAsyncServer.cpp
+	TcpAsyncStream.cpp
+	TorrentFileParser.cpp
+	UdpAsyncComm.cpp
+	UdpAsyncReceiver.cpp
+	UdpAsyncWriter.cpp
+	UpnpDiscovery.cpp
+	UpnpPortMapping.cpp
+	Uri.cpp
+	UrlEncoding.cpp
+	XmlParser.cpp
+	BigNumber.cpp
+	DataBuffer.cpp
+	DiffieHellman.cpp
+	RC4.cpp
 )
 
 list(TRANSFORM utils_sources PREPEND "utils/")
