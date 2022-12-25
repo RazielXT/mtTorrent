@@ -120,7 +120,7 @@ void mtt::dht::Query::DhtQuery::stop()
 {
 	std::lock_guard<std::mutex> guard(requestsMutex);
 
-	for (auto r : requests)
+	for (const auto& r : requests)
 	{
 		listener->stopMessage(r);
 	}

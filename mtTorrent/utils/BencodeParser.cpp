@@ -150,7 +150,7 @@ mtt::BencodeParser::Object* mtt::BencodeParser::parseDictionary(const char** bod
 mtt::BencodeParser::Object* mtt::BencodeParser::parseString(const char** body)
 {
 	mtt::BencodeParser::Object obj;
-	char* endPtr = 0;
+	char* endPtr = nullptr;
 	obj.info.size = strtol(*body, &endPtr, 10);
 	*body = endPtr;
 
@@ -308,7 +308,7 @@ int mtt::BencodeParser::Object::getInt(const char* name) const
 
 int mtt::BencodeParser::Object::getInt() const
 {
-	return strtol(info.data, 0, 10);
+	return strtol(info.data, nullptr, 10);
 }
 
 uint64_t mtt::BencodeParser::Object::getBigInt(const char* name) const
@@ -319,7 +319,7 @@ uint64_t mtt::BencodeParser::Object::getBigInt(const char* name) const
 
 uint64_t mtt::BencodeParser::Object::getBigInt() const
 {
-	return strtoull(info.data, 0, 10);
+	return strtoull(info.data, nullptr, 10);
 }
 
 const mtt::BencodeParser::Object* mtt::BencodeParser::Object::getFirstItem() const

@@ -1,6 +1,7 @@
 #pragma once
+
 #include <string>
-#include <stdint.h>
+#include <cstdint>
 #include <windows.h>
 
 std::string getUtf8String(System::String^ str);

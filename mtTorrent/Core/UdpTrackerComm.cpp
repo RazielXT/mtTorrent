@@ -35,7 +35,7 @@ void mtt::UdpTrackerComm::deinit()
 DataBuffer UdpTrackerComm::createConnectRequest()
 {
 	auto transaction = Random::Number();
-	uint64_t connectId = 0x41727101980;
+	const uint64_t connectId = 0x41727101980;
 
 	lastMessage = { Connnect, transaction };
 
@@ -82,7 +82,7 @@ bool mtt::UdpTrackerComm::onConnectUdpResponse(UdpRequest comm, DataBuffer* data
 
 		return true;
 	}
-	else if (response.transaction == lastMessage.transaction)
+	if (response.transaction == lastMessage.transaction)
 	{
 		fail();
 
@@ -161,7 +161,7 @@ bool mtt::UdpTrackerComm::onAnnounceUdpResponse(UdpRequest comm, DataBuffer* dat
 
 		return true;
 	}
-	else if (announceMsg.udp.transaction == lastMessage.transaction)
+	if (announceMsg.udp.transaction == lastMessage.transaction)
 	{
 		fail();
 
@@ -233,12 +233,12 @@ UdpTrackerComm::UdpAnnounceResponse UdpTrackerComm::getAnnounceResponse(DataBuff
 	resp.leechCount = packet.pop32();
 	resp.seedCount = packet.pop32();
 
-	size_t count = static_cast<size_t>(packet.getRemainingSize() / 6.0f);
+	auto count = static_cast<size_t>(packet.getRemainingSize() / 6.0f);
 
 	for (size_t i = 0; i < count; i++)
 	{
 		uint32_t ip = *reinterpret_cast<const uint32_t*>(packet.popRaw(sizeof(uint32_t)));
-		resp.peers.push_back(Addr(ip, packet.pop16()));
+		resp.peers.emplace_back(ip, packet.pop16());
 	}
 
 	return resp;

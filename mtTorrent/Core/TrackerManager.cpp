@@ -98,7 +98,7 @@ std::vector<std::pair<std::string, std::shared_ptr<mtt::Tracker>>> mtt::TrackerM
 
 	for (auto& t : trackers)
 	{
-		out.push_back({ t.fullAddress, t.comm });
+		out.emplace_back(t.fullAddress, t.comm);
 	}
 
 	return out;
@@ -123,7 +123,7 @@ void mtt::TrackerManager::onAnnounce(AnnounceResponse& resp, Tracker* t)
 			}
 
 			if (announceCallback)
-				announceCallback(Status::Success, &resp, t);
+				announceCallback(Status::Success, &resp, *t);
 
 			startNext();
 		});
@@ -169,7 +169,7 @@ void mtt::TrackerManager::onTrackerFail(Tracker* t)
 				}
 
 				if (announceCallback)
-					announceCallback(Status::E_Unknown, nullptr, t);
+					announceCallback(Status::E_Unknown, nullptr, *t);
 			}
 		});
 }

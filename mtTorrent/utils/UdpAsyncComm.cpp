@@ -26,8 +26,13 @@ void UdpAsyncComm::Deinit()
 	if (ptr)
 	{
 		ptr->removeListeners();
-		ptr->listener->stop();
-		ptr->listener.reset();
+
+		if (ptr->listener)
+		{
+			ptr->listener->stop();
+			ptr->listener.reset();
+		}
+
 		ptr->pool.stop();
 		ptr.reset();
 	}

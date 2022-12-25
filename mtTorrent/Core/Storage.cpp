@@ -536,8 +536,8 @@ mtt::Status mtt::Storage::preallocate(const File& file, uint64_t size)
 				std::filesystem::resize_file(fullpath, file.size, ec);
 				return ec ? Status::E_FileWriteError : Status::Success;
 			}
-			else
-				return Status::Success;
+
+			return Status::Success;
 		}
 
 		auto spaceInfo = std::filesystem::space(utf8Path(path), ec);

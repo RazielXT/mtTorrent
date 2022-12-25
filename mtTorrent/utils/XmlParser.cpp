@@ -122,7 +122,7 @@ bool mtt::xml::Document::parse(const char* input, uint32_t size)
 			start = i;
 			// find end of attribute name
 			while (i != tag_end && *i != '=' && !isspace(*i)) ++i;
-			std::size_t const name_len = std::size_t(i - start);
+			auto const name_len = std::size_t(i - start);
 
 			// look for equality sign
 			for (; i != tag_end && *i != '='; ++i);
@@ -175,8 +175,8 @@ std::string_view mtt::xml::Element::value(std::string_view name) const
 {
 	if (auto node = firstNode(name))
 		return node->value();
-	else
-		return "";
+
+	return "";
 }
 
 const mtt::xml::Element* mtt::xml::Element::attributes() const

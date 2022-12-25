@@ -21,7 +21,7 @@ void UpnpPortMapping::mapActiveAdapters(uint16_t port, PortType type)
 	std::lock_guard<std::mutex> guard(discoveryMutex);
 
 	if (!discoveryFinished)
-		activeMappingPending.push_back({ port, type });
+		activeMappingPending.emplace_back(port, type);
 	else
 	{
 		for (auto& device : foundDevices)

@@ -37,8 +37,8 @@ namespace mtt
 				const Element* ptr;
 			};
 
-			iterator begin() const { return iterator(firstNode()); };
-			iterator end() const { return iterator(nullptr); };
+			iterator begin() const { return {firstNode()}; };
+			iterator end() const { return {nullptr}; };
 		};
 
 		struct Document

@@ -1,6 +1,6 @@
 #include "mtTorrent/Api/Core.h"
 #include "mtTorrent/Api/Configuration.h"
-#include <thread>         // std::this_thread::sleep_for
+#include <thread>
 #include <chrono>
 #include <iostream>
 #include <tuple>

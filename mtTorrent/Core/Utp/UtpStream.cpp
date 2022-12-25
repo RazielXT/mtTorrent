@@ -304,7 +304,7 @@ void mtt::utp::Stream::sendSyn()
 {
 	sending.stateBuffer.resize(20);
 
-	utp::MessageHeader& header = (utp::MessageHeader&) * sending.stateBuffer.data();
+	auto& header = (utp::MessageHeader&) *sending.stateBuffer.data();
 	header.setType(ST_SYN);
 	header.seq_nr = state.sequence++;
 	header.ack_nr = state.ack;
@@ -341,7 +341,7 @@ void mtt::utp::Stream::prepareStateHeader(MessageType type)
 	sending.stateBuffer.resize(headerSize + extSize);
 	memset(sending.stateBuffer.data(), 0, sending.stateBuffer.size());
 
-	utp::MessageHeader& header = (utp::MessageHeader&) * sending.stateBuffer.data();
+	auto& header = (utp::MessageHeader&) *sending.stateBuffer.data();
 	header.setType(type);
 	header.seq_nr = state.sequence;
 	header.ack_nr = state.ack;
@@ -600,7 +600,7 @@ std::pair<DataBuffer&, uint16_t> mtt::utp::Stream::createDataBuffer(size_t size)
 		}
 	}
 
-	dataBuffers.push_back(DataBuffer(size));
+	dataBuffers.emplace_back(DataBuffer(size));
 
 	return { dataBuffers.back(), uint16_t(dataBuffers.size() - 1) };
 }
@@ -639,7 +639,7 @@ uint32_t mtt::utp::Stream::sendData(const uint8_t* data, uint32_t dataSize)
 
 	auto [buffer, bufferIdx] = createDataBuffer(dataSize + sizeof(utp::MessageHeader));
 
-	utp::MessageHeader& header = (utp::MessageHeader&) * buffer.data();
+	auto& header = (utp::MessageHeader&) *buffer.data();
 	memset(buffer.data(), 0, 20);
 	header.setType(ST_DATA);
 	header.connection_id = state.id_send;

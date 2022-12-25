@@ -200,7 +200,7 @@
     <ClCompile Include="..\mtTorrent\utils\BencodeParser.cpp" />
     <ClCompile Include="..\mtTorrent\utils\BencodeWriter.cpp" />
     <ClCompile Include="..\mtTorrent\utils\BigNumber.cpp" />
-    <ClCompile Include="..\mtTorrent\utils\ByteSwap.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\BitUtils.cpp" />
     <ClCompile Include="..\mtTorrent\utils\DataBuffer.cpp" />
     <ClCompile Include="..\mtTorrent\utils\DiffieHellman.cpp" />
     <ClCompile Include="..\mtTorrent\utils\FastIpToCountry.cpp" />
@@ -274,7 +274,7 @@
     <ClInclude Include="..\mtTorrent\utils\BencodeParser.h" />
     <ClInclude Include="..\mtTorrent\utils\BencodeWriter.h" />
     <ClInclude Include="..\mtTorrent\utils\BigNumber.h" />
-    <ClInclude Include="..\mtTorrent\utils\ByteSwap.h" />
+    <ClInclude Include="..\mtTorrent\utils\BitUtils.h" />
     <ClInclude Include="..\mtTorrent\utils\DataBuffer.h" />
     <ClInclude Include="..\mtTorrent\utils\DiffieHellman.h" />
     <ClInclude Include="..\mtTorrent\utils\FastIpToCountry.h" />

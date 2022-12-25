@@ -11,7 +11,7 @@ std::vector<NetAdapters::NetAdapter> NetAdapters::getActiveNetAdapters()
 	std::vector<NetAdapters::NetAdapter> out;
 
 	ULONG ulOutBufLen = sizeof(IP_ADAPTER_INFO);
-	PIP_ADAPTER_INFO pAdapterInfo = (IP_ADAPTER_INFO*)malloc(sizeof(IP_ADAPTER_INFO));
+	auto pAdapterInfo = (IP_ADAPTER_INFO*)malloc(sizeof(IP_ADAPTER_INFO));
 
 	// Make an initial call to GetAdaptersInfo to get
 	// the necessary size into the ulOutBufLen variable

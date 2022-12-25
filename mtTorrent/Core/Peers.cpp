@@ -26,14 +26,14 @@ void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listen
 	updateCallback = onPeersUpdated;
 	setTargetListener(listener);
 
-	trackers.start([this](Status s, const AnnounceResponse* r, Tracker* t)
+	trackers.start([this](Status s, const AnnounceResponse* r, const Tracker& t)
 	{
 		if (r)
 		{
-			PEERS_LOG(t->info.hostname << " returned " << r->peers.size());
+			PEERS_LOG(t.info.hostname << " returned " << r->peers.size());
 			for (auto& a : r->peers)
 			{
-				PEERS_LOG(t->info.hostname << " " << a.toString());
+				PEERS_LOG(t.info.hostname << " " << a.toString());
 			}
 			updateKnownPeers(r->peers, PeerSource::Tracker);
 		}

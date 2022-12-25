@@ -46,7 +46,7 @@ void FastIpToCountry::fromFile(const std::string& folder)
 			}
 			else
 			{
-				buckets[bucket].push_back({ ip, country });
+				buckets[bucket].emplace_back(ip, country);
 			}
 		}
 		else

@@ -152,8 +152,8 @@ mtt::TorrentInfo mtt::TorrentFileParser::parseTorrentInfo(const uint8_t* data, s
 
 		return info;
 	}
-	else
-		return mtt::TorrentInfo();
+
+	return mtt::TorrentInfo();
 }
 
 mtt::TorrentInfo parseTorrentInfo(const BencodeParser::Object* infoDictionary)

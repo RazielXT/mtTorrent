@@ -27,8 +27,8 @@ struct UrlParser
 			protocol = url.substr(0, protocolEnd);
 		}
 
-		auto portStart = url.find_first_of(":", addrStart);
-		auto pathStart = url.find_first_of("/", addrStart);
+		auto portStart = url.find_first_of(':', addrStart);
+		auto pathStart = url.find_first_of('/', addrStart);
 
 		if (portStart != std::string::npos || pathStart != std::string::npos)
 			address = url.substr(addrStart, std::min(portStart, pathStart) - addrStart);
@@ -45,7 +45,7 @@ struct UrlParser
 			else
 				portStr = url.substr(portStart);
 
-			port = (uint16_t)strtoul(portStr.data(), 0, 10);
+			port = (uint16_t)strtoul(portStr.data(), nullptr, 10);
 		}
 
 		if (pathStart != std::string::npos)

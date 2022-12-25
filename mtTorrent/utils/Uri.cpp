@@ -4,7 +4,7 @@
 Uri Uri::Parse(const std::string& uri)
 {
 	Uri result;
-	typedef std::string::const_iterator iterator_t;
+	using iterator_t = std::string::const_iterator;
 
 	if (uri.length() == 0)
 		return result;

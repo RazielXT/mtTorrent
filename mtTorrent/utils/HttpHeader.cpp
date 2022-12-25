@@ -86,10 +86,10 @@ HttpHeaderInfo HttpHeaderInfo::read(const char* buffer, std::size_t bufferSize)
 		auto vpos = line.find_first_of(':');
 		if (vpos != std::string::npos && line.length() > vpos + 1)
 		{
-			info.headerParameters.push_back({ line.substr(0, vpos),line.substr(vpos + 2) });
+			info.headerParameters.emplace_back(line.substr(0, vpos),line.substr(vpos + 2));
 		}
 		else
-			info.headerParameters.push_back({ line,"" });
+			info.headerParameters.emplace_back(line,"");
 	}
 
 	for (auto& p : info.headerParameters)

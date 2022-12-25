@@ -2,7 +2,7 @@
 
 #include "Logging.h"
 #include "utils/UdpAsyncWriter.h"
-#include "utils/ByteSwap.h"
+#include "utils/BitUtils.h"
 #include <mutex>
 #include <chrono>
 

@@ -1,5 +1,5 @@
 #include "Network.h"
-#include "ByteSwap.h"
+#include "BitUtils.h"
 
 Addr::Addr()
 {
@@ -42,7 +42,7 @@ Addr Addr::fromString(const char* str)
 		else
 			portStart--;
 
-	return Addr(a, (uint16_t)strtoul(str + portStart + 1, 0, 10));
+	return Addr(a, (uint16_t)strtoul(str + portStart + 1, nullptr, 10));
 }
 
 void Addr::set(const uint8_t* ip, uint16_t p, bool isIpv6)

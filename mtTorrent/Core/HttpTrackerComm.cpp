@@ -92,7 +92,8 @@ size_t mtt::HttpTrackerComm::onTcpReceived(const BufferView& respData)
 			fail();
 			return respData.size;
 		}
-		else if (msgSize != 0)
+
+		if (msgSize != 0)
 		{
 			info.state = TrackerState::Announced;
 

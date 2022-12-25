@@ -385,12 +385,10 @@ std::shared_ptr<DataBuffer> mtt::FileTransfer::getDataBuffer()
 {
 	if (freeDataBuffers.empty())
 		return std::make_shared<DataBuffer>();
-	else
-	{
-		auto buffer = freeDataBuffers.back();
-		freeDataBuffers.pop_back();
-		return buffer;
-	}
+
+	auto buffer = freeDataBuffers.back();
+	freeDataBuffers.pop_back();
+	return buffer;
 }
 
 void mtt::FileTransfer::returnDataBuffer(std::shared_ptr<DataBuffer> buffer)

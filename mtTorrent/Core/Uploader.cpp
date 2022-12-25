@@ -107,7 +107,7 @@ void mtt::Uploader::sendRequests()
 				wantedBytes += r.block.length;
 
 				if (delayedCount < i)
-					pendingRequests[delayedCount] = std::move(r);
+					pendingRequests[delayedCount] = r;
 
 				delayedCount++;
 			}

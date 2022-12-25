@@ -1,8 +1,7 @@
 //original source https://github.com/vog/sha1
 
 #include "SHA.h"
-#include "ByteSwap.h"
-#include <cstdint>
+#include "BitUtils.h"
 #include <iostream>
 #include <string>
 #include <sstream>

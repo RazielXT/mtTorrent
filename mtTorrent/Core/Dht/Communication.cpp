@@ -27,6 +27,9 @@ mtt::dht::Communication::Communication() : responder(*this)
 
 mtt::dht::Communication::~Communication()
 {
+	if (refreshTimer)
+		stop();
+
 	udp.reset();
 }
 

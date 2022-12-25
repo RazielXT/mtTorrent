@@ -20,8 +20,8 @@ bool decodeHexa(const std::string& from, uint8_t* to, std::size_t size)
 	{
 		if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))
 			continue;
-		else
-			return false;
+
+		return false;
 	}
 
 	for (size_t i = 0; i < size; i++)

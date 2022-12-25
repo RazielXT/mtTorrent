@@ -200,7 +200,7 @@ extern "C"
 			auto resp = (mtBI::SourcesInfo*) output;
 			auto sources = torrent->getPeers().getSourcesInfo();
 			resp->sources.resize(sources.size());
-			uint32_t currentTime = (uint32_t)time(0);
+			auto currentTime = (uint32_t)time(0);
 
 			for (size_t i = 0; i < sources.size(); i++)
 			{

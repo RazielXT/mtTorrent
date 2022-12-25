@@ -1,5 +1,5 @@
 #include "PiecesProgress.h"
-#include <math.h>
+#include <cmath>
 
 const uint8_t ReadyValue = 0;
 const uint8_t HasFlag = 1;
@@ -273,7 +273,7 @@ bool mtt::PiecesProgress::toBitfield(uint8_t* dataBitfield, std::size_t dataSize
 		if (!hasPiece(i))
 			continue;
 
-		size_t idx = static_cast<size_t>(i / 8.0f);
+		auto idx = static_cast<size_t>(i / 8.0f);
 		unsigned char bitmask = 128 >> i % 8;
 		dataBitfield[idx] |= bitmask;
 	}

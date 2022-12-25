@@ -6,8 +6,8 @@
 
 namespace mtt
 {
-	typedef void* (__cdecl allocate_type)(size_t size);
-	typedef void(__cdecl deallocate_type)(void* ptr);
+	using allocate_type = void* (__cdecl)(size_t size);
+	using deallocate_type = void(__cdecl)(void* ptr);
 
 	inline void* __cdecl allocate_impl(size_t size)
 	{

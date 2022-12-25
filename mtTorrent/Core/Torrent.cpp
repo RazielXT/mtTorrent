@@ -486,7 +486,7 @@ void mtt::Torrent::checkFiles(bool all)
 	for (uint32_t i = 0; i < WorkersCount; i++)
 		service.io.post([WorkersCount, i, finished, localOnFinish, request, wantedChecks, this]()
 			{
-				files.storage.checkStoredPieces(*request.get(), infoFile.info.pieces, WorkersCount, i, wantedChecks);
+				files.storage.checkStoredPieces(*request, infoFile.info.pieces, WorkersCount, i, wantedChecks);
 
 				if (++(*finished) == WorkersCount)
 					localOnFinish();
@@ -506,8 +506,8 @@ float mtt::Torrent::checkingProgress() const
 
 	if (checkState)
 		return checkState->piecesChecked / (float)checkState->piecesCount;
-	else
-		return 1;
+
+	return 1;
 }
 
 bool mtt::Torrent::selectFiles(const std::vector<bool>& s)

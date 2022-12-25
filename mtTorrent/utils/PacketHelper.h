@@ -1,7 +1,6 @@
 #pragma once
 
-#include "ByteSwap.h"
-#include <cstdint>
+#include "BitUtils.h"
 #include <cstring>
 #include <vector>
 #include <sstream>

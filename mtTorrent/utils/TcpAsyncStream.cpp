@@ -45,7 +45,7 @@ void TcpAsyncStream::connect(const std::string& ip, uint16_t port)
 void TcpAsyncStream::init(const std::string& hostname, const std::string& port)
 {
 	info.host = hostname;
-	info.address.port = (uint16_t)strtoul(port.data(), NULL, 10);
+	info.address.port = (uint16_t)strtoul(port.data(), nullptr, 10);
 }
 
 void TcpAsyncStream::close(bool immediate)
@@ -343,7 +343,7 @@ void TcpAsyncStream::handle_write(const std::error_code& error)
 std::error_code TcpAsyncStream::readAvailableData()
 {
 	std::error_code ec;
-	uint32_t availableSize = uint32_t(socket.available(ec));
+	auto availableSize = uint32_t(socket.available(ec));
 	if (ec)
 		return ec;
 

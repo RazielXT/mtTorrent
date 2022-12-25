@@ -181,10 +181,10 @@ void TorrentInstance::drawPeersWindow()
 	{
 		if (!state.connected)
 			return "Connecting";
-		else if (state.choking)
+		if (state.choking)
 			return "Requesting";
-		else
-			return "Connected";
+
+		return "Connected";
 	};
 
 	if (ImGui::BeginTable("##PeersTable", 4, flags))
@@ -196,10 +196,8 @@ void TorrentInstance::drawPeersWindow()
 		ImGui::TableHeadersRow();
 
 		auto peers = torrentPtr->getFileTransfer().getPeersInfo();
-		for (size_t row = 0; row < peers.size(); row++)
+		for (const mtt::ActivePeerInfo& peer : peers)
 		{
-			const auto& peer = peers[row];
-
 			ImGui::TableNextRow();
 			ImGui::TableSetColumnIndex(0);
 			ImGui::Text("%s", peer.address.c_str());
@@ -254,16 +252,16 @@ void TorrentInstance::drawSourcesWindow()
 	{
 		if (state == mtt::TrackerState::Connected || state == mtt::TrackerState::Alive)
 			return "Ready";
-		else if (state == mtt::TrackerState::Connecting)
+		if (state == mtt::TrackerState::Connecting)
 			return "Connecting";
-		else if (state == mtt::TrackerState::Announcing || state == mtt::TrackerState::Reannouncing)
+		if (state == mtt::TrackerState::Announcing || state == mtt::TrackerState::Reannouncing)
 			return "Announcing";
-		else if (state == mtt::TrackerState::Announced)
+		if (state == mtt::TrackerState::Announced)
 			return "Announced";
-		else if (state == mtt::TrackerState::Offline)
+		if (state == mtt::TrackerState::Offline)
 			return "Offline";
-		else
-			return "Stopped";
+
+		return "Stopped";
 	};
 
 	if (ImGui::BeginTable("##SourcesTable", 5, flags))
@@ -275,12 +273,10 @@ void TorrentInstance::drawSourcesWindow()
 		ImGui::TableSetupColumn("Next check", ImGuiTableColumnFlags_WidthStretch);
 		ImGui::TableHeadersRow();
 
-		uint32_t currentTime = (uint32_t)time(0);
+		auto currentTime = (uint32_t)time(0);
 		auto sources = torrentPtr->getPeers().getSourcesInfo();
-		for (size_t row = 0; row < sources.size(); row++)
+		for (const mtt::TrackerInfo& source : sources)
 		{
-			const auto& source = sources[row];
-
 			ImGui::TableNextRow();
 			ImGui::TableSetColumnIndex(0);
 			ImGui::Text("%s", source.hostname.c_str());

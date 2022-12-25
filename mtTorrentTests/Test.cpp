@@ -307,12 +307,13 @@ std::vector<Addr> getPeersFromTrackers(mtt::TorrentFileInfo& parsedTorrent)
 	torrent->service.start(1);
 
 	std::vector<Addr> peers;
-	auto trUpdate = [&peers](Status s, const AnnounceResponse* r, Tracker* t)
+
+	auto trUpdate = [&peers](Status s, const AnnounceResponse* r, const Tracker& t)
 	{
 		if (s == Status::Success && r && peers.empty() && !r->peers.empty())
 		{
 			peers = r->peers;
-			TEST_LOG(peers.size() << " peers from " << t->info.hostname << "\n");
+			TEST_LOG(peers.size() << " peers from " << t.info.hostname << "\n");
 		}
 	};
 
