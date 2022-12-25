@@ -40,8 +40,8 @@ void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listen
 	}
 	);
 
-	refreshTimer = ScheduledTimer::create(torrent.service.io, [this] { update(); });
-	refreshTimer->schedule(1);
+	refreshTimer = ScheduledTimer::create(torrent.service.io, [this] { update(); return ScheduledTimer::Duration(1000); });
+	refreshTimer->schedule(ScheduledTimer::Duration(1000));
 
 	dht.start();
 
@@ -436,8 +436,6 @@ void mtt::Peers::update()
 			c.comm->ext.pex.update(pex.local);
 		}
 	}
-
-	refreshTimer->schedule(1);
 }
 
 mtt::Peers::ActivePeer* mtt::Peers::getActivePeer(const Addr& addr)

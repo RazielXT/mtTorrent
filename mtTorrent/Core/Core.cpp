@@ -286,7 +286,7 @@ mtt::GlobalBandwidth::GlobalBandwidth()
 	bwTimer = ScheduledTimer::create(bwPool.io, [this, bwTick]()
 		{
 			BandwidthManager::Get().updateQuotas(bwTick);
-			bwTimer->schedule(std::chrono::milliseconds(bwTick));
+			return ScheduledTimer::Duration(bwTick);
 		});
 
 	bwTimer->schedule(std::chrono::milliseconds(bwTick));

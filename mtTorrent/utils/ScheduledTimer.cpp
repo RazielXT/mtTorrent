@@ -1,6 +1,6 @@
 #include "ScheduledTimer.h"
 
-ScheduledTimer::ScheduledTimer(asio::io_service& io, std::function<void()> callback) : func(callback)
+ScheduledTimer::ScheduledTimer(asio::io_service& io, std::function<Duration()> callback) : func(callback)
 {
 	timer = std::make_unique<asio::steady_timer>(io);
 }
@@ -10,20 +10,11 @@ ScheduledTimer::~ScheduledTimer()
 	disable();
 }
 
-void ScheduledTimer::schedule(uint32_t secondsOffset)
-{
-	schedule(std::chrono::seconds(secondsOffset));
-}
-
-void ScheduledTimer::schedule(std::chrono::milliseconds time)
+void ScheduledTimer::schedule(Duration time)
 {
 	std::lock_guard<std::mutex> guard(mtx);
 
-	if (timer)
-	{
-		timer->expires_from_now(time);
-		timer->async_wait(std::bind(&ScheduledTimer::checkTimer, shared_from_this(), std::placeholders::_1));
-	}
+	scheduleInternal(time);
 }
 
 void ScheduledTimer::disable()
@@ -40,24 +31,28 @@ void ScheduledTimer::disable()
 	func = nullptr;
 }
 
-void ScheduledTimer::checkTimer(const asio::error_code& error)
+void ScheduledTimer::scheduleInternal(Duration time)
 {
-	std::function<void()> runFunc;
-
+	if (timer)
 	{
-		std::lock_guard<std::mutex> guard(mtx);
-
-		if (!error && timer)
-		{
-			runFunc = func;
-		}
+		timer->expires_from_now(time);
+		timer->async_wait(std::bind(&ScheduledTimer::checkTimer, shared_from_this(), std::placeholders::_1));
 	}
-
-	if (runFunc)
-		runFunc();
 }
 
-std::shared_ptr<ScheduledTimer> ScheduledTimer::create(asio::io_service& io, std::function<void()> callback)
+void ScheduledTimer::checkTimer(const asio::error_code& error)
+{
+	std::lock_guard<std::mutex> guard(mtx);
+
+	if (!error && timer && func)
+	{
+		auto next = func();
+		if (next != Duration(0))
+			scheduleInternal(next);
+	}
+}
+
+std::shared_ptr<ScheduledTimer> ScheduledTimer::create(asio::io_service& io, std::function<Duration()> callback)
 {
 	return std::make_shared<ScheduledTimer>(io, callback);
 }

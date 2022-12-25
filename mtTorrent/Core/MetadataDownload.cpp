@@ -42,13 +42,13 @@ void mtt::MetadataDownload::start(std::function<void(Status, MetadataDownloadSta
 					requestPiece(a);
 				}
 
-				if (retryTimer)
-					retryTimer->schedule(5);
+				return ScheduledTimer::Duration(retryTimer ? 5000 : 0);
 			}
+			return ScheduledTimer::Duration(0);
 		}
 	);
 
-	retryTimer->schedule(5);
+	retryTimer->schedule(ScheduledTimer::Duration(5000));
 }
 
 void mtt::MetadataDownload::stop()

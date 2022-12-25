@@ -6,20 +6,22 @@
 
 struct ScheduledTimer : public std::enable_shared_from_this<ScheduledTimer>
 {
-	static std::shared_ptr<ScheduledTimer> create(asio::io_service& io, std::function<void()> callback);
+	using Duration = std::chrono::milliseconds;
+	static std::shared_ptr<ScheduledTimer> create(asio::io_service& io, std::function<Duration()> callback);
 
-	ScheduledTimer(asio::io_service& io, std::function<void()> callback);
+	ScheduledTimer(asio::io_service& io, std::function<std::chrono::milliseconds()> callback);
 	~ScheduledTimer();
 
-	void schedule(uint32_t secondsOffset);
-	void schedule(std::chrono::milliseconds time);
+	void schedule(Duration time);
 
 	void disable();
 
 private:
 
+	void scheduleInternal(Duration time);
+
 	void checkTimer(const asio::error_code& error);
-	std::function<void()> func;
+	std::function<Duration()> func;
 	std::unique_ptr<asio::steady_timer> timer;
 	std::mutex mtx;
 };

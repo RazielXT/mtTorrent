@@ -118,7 +118,7 @@ void mtt::TrackerManager::onAnnounce(AnnounceResponse& resp, Tracker* t)
 			if (auto trackerInfo = findTrackerInfo(t))
 			{
 				trackerInfo->retryCount = 0;
-				trackerInfo->timer->schedule(resp.interval);
+				trackerInfo->timer->schedule(ScheduledTimer::Duration(resp.interval*1000));
 				trackerInfo->comm->info.nextAnnounce = mtt::CurrentTimestamp() + resp.interval;
 			}
 
@@ -161,7 +161,7 @@ void mtt::TrackerManager::onTrackerFail(Tracker* t)
 					{
 						trackerInfo->retryCount++;
 						uint32_t nextRetry = 30 * trackerInfo->retryCount;
-						trackerInfo->timer->schedule(nextRetry);
+						trackerInfo->timer->schedule(ScheduledTimer::Duration(nextRetry*1000));
 						trackerInfo->comm->info.nextAnnounce = mtt::CurrentTimestamp() + nextRetry;
 					}
 
@@ -193,7 +193,7 @@ bool mtt::TrackerManager::start(TrackerInfo* tracker)
 	tracker->comm->onAnnounceResult = std::bind(&TrackerManager::onAnnounce, this, std::placeholders::_1, tracker->comm.get());
 
 	tracker->comm->init(tracker->uri.host, tracker->uri.port, tracker->uri.path, torrent.shared_from_this());
-	tracker->timer = ScheduledTimer::create(torrent.service.io, std::bind(&Tracker::announce, tracker->comm.get()));
+	tracker->timer = ScheduledTimer::create(torrent.service.io, [tracker]() { tracker->comm->announce(); return ScheduledTimer::Duration(0); });
 	tracker->retryCount = 0;
 
 	tracker->comm->announce();

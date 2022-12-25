@@ -55,8 +55,7 @@ void mtt::FileTransfer::start()
 			updateMeasures();
 			uploader->refreshRequest();
 
-			if (refreshTimer)
-				refreshTimer->schedule(std::chrono::milliseconds(1000));
+			return ScheduledTimer::Duration(refreshTimer ? 1000 : 0);
 		}
 	);
 

@@ -33,7 +33,7 @@ void mtt::utp::Manager::start()
 		timeoutTimer = ScheduledTimer::create(service.io, [this]()
 			{
 				refresh();
-				timeoutTimer->schedule(std::chrono::milliseconds(500));
+				return ScheduledTimer::Duration(500);
 			});
 
 		timeoutTimer->schedule(std::chrono::milliseconds(500));
