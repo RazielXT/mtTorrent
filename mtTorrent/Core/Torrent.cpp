@@ -405,11 +405,11 @@ void mtt::Torrent::stop(StopReason reason)
 		started = false;
 
 	save();
-
 	started = false;
+
 	if (reason != StopReason::Internal)
 		lastError = Status::Success;
-	stateChanged = true;
+
 	stopping = false;
 	activityTime = TimeClock::now();
 }
