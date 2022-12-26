@@ -249,6 +249,15 @@
     <ClCompile Include="..\mtTorrent\Core\ProtocolEncryption.cpp">
       <Filter>Source Files\mtt</Filter>
     </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\HolepunchExtension.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\MetadataExtension.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\PexExtension.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Test.h">
@@ -459,6 +468,15 @@
       <Filter>Source Files\mtt\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\mtTorrent\Core\ProtocolEncryption.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\HolepunchExtension.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\MetadataExtension.h">
+      <Filter>Source Files\mtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\PexExtension.h">
       <Filter>Source Files\mtt</Filter>
     </ClInclude>
   </ItemGroup>
