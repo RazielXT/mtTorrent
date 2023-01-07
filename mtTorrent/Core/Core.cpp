@@ -247,16 +247,16 @@ mtt::Status mtt::Core::removeTorrent(const uint8_t* hash, bool deleteFiles)
 		if (memcmp((*it)->hash(), hash, 20) == 0)
 		{
 			auto t = *it;
+			if (deleteFiles && t->loadFileInfo())
+			{
+				t->files.storage.deleteAll();
+			}
+
 			t->stop();
 			t->removeMetaFiles();
 
 			listener->removeTorrent((*it)->hash());
 			torrents.erase(it);
-	
-			if (deleteFiles)
-			{
-				t->files.storage.deleteAll();
-			}
 
 			saveTorrentList(torrents);
 
