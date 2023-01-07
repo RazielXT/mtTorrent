@@ -258,6 +258,9 @@
     <ClCompile Include="..\mtTorrent\utils\BitUtils.cpp">
       <Filter>Source Files\mtt\utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\DownloadStorage.cpp">
+      <Filter>Source Files\mtt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Test.h">
@@ -478,6 +481,9 @@
     </ClInclude>
     <ClInclude Include="..\mtTorrent\utils\BitUtils.h">
       <Filter>Source Files\mtt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtTorrent\Core\DownloadStorage.h">
+      <Filter>Source Files\mtt</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

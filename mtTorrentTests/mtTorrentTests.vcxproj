@@ -168,6 +168,7 @@
     <ClCompile Include="..\mtTorrent\Core\Dht\Table.cpp" />
     <ClCompile Include="..\mtTorrent\Core\Diagnostics\Diagnostics.cpp" />
     <ClCompile Include="..\mtTorrent\Core\Downloader.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\DownloadStorage.cpp" />
     <ClCompile Include="..\mtTorrent\Core\ExtensionProtocol.cpp" />
     <ClCompile Include="..\mtTorrent\Core\Files.cpp" />
     <ClCompile Include="..\mtTorrent\Core\FileTransfer.cpp" />
@@ -240,6 +241,7 @@
     <ClInclude Include="..\mtTorrent\Core\Dht\Table.h" />
     <ClInclude Include="..\mtTorrent\Core\Diagnostics\Diagnostics.h" />
     <ClInclude Include="..\mtTorrent\Core\Downloader.h" />
+    <ClInclude Include="..\mtTorrent\Core\DownloadStorage.h" />
     <ClInclude Include="..\mtTorrent\Core\ExtensionProtocol.h" />
     <ClInclude Include="..\mtTorrent\Core\Files.h" />
     <ClInclude Include="..\mtTorrent\Core\FileTransfer.h" />
