@@ -12,7 +12,7 @@ enum class LogEvent : uint8_t { Connect, RemoteConnect, Remove, ConnectPeers };
 
 #define PEERS_LOG(x) WRITE_LOG(x)
 
-mtt::Peers::Peers(Torrent& t) : torrent(t), trackers(t), dht(*this, t)
+mtt::Peers::Peers(Torrent& t) : torrent(t), trackers(t), dht(*this, t), listener(&nolistener)
 {
 	pex.info.hostname = "PEX";
 	remoteInfo.hostname = "Remote";
@@ -21,9 +21,8 @@ mtt::Peers::Peers(Torrent& t) : torrent(t), trackers(t), dht(*this, t)
 	CREATE_NAMED_LOG(Peers, torrent.name() + "_peers");
 }
 
-void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listener)
+void mtt::Peers::start(IPeerListener* listener)
 {
-	updateCallback = onPeersUpdated;
 	setTargetListener(listener);
 
 	trackers.start([this](Status s, const AnnounceResponse* r, const Tracker& t)
@@ -45,20 +44,6 @@ void mtt::Peers::start(PeersUpdateCallback onPeersUpdated, IPeerListener* listen
 
 	dht.start();
 
-	std::lock_guard<std::mutex> guard(peersMutex);
-	for (const auto& c : activeConnections)
-	{
-		if (c.comm->isEstablished())
-		{
-			listener->handshakeFinished(c.comm.get());
-
-			if (c.comm->ext.enabled())
-				listener->extendedHandshakeFinished(c.comm.get(), {});
-		}
-
-		c.comm->sendKeepAlive();
-	}
-
 	pex.info.state = TrackerState::Connected;
 	remoteInfo.state = TrackerState::Connected;
 }
@@ -70,6 +55,7 @@ void mtt::Peers::stop()
 
 	{
 		setTargetListener(nullptr);
+		stopConnecting();
 
 		std::lock_guard<std::mutex> guard(peersMutex);
 
@@ -96,22 +82,35 @@ void mtt::Peers::stop()
 		refreshTimer->disable();
 	refreshTimer = nullptr;
 
-	updateCallback = nullptr;
 	pex.info.state = TrackerState::Clear;
 	remoteInfo.state = TrackerState::Clear;
 	remoteInfo.peers = 0;
 }
 
-void mtt::Peers::connectNext(uint32_t count)
+void mtt::Peers::startConnecting()
 {
-	PEERS_LOG("connectNext " << count);
+	if (!connecting)
+	{
+		connecting = true;
+		torrent.service.io.post([this]() { connectNext(); });
+	}
+}
+
+void mtt::Peers::stopConnecting()
+{
+	connecting = false;
+}
+
+void mtt::Peers::connectNext()
+{
+	PEERS_LOG("connectNext");
 
 	std::lock_guard<std::mutex> guard(peersMutex);
 
-	if (mtt::config::getExternal().connection.maxTorrentConnections <= activeConnections.size())
+	if (!connecting || mtt::config::getExternal().connection.maxTorrentConnections <= activeConnections.size())
 		return;
 
-	count = std::min(count, mtt::config::getExternal().connection.maxTorrentConnections - (uint32_t)activeConnections.size());
+	auto count = mtt::config::getExternal().connection.maxTorrentConnections - (uint32_t)activeConnections.size();
 
 	const auto currentTime = mtt::CurrentTimestamp();
 	uint32_t leastConnectionAttempts = 0;
@@ -123,7 +122,7 @@ void mtt::Peers::connectNext(uint32_t count)
 		if (count == 0)
 			break;
 
-		auto&p = knownPeers[i];
+		auto& p = knownPeers[i];
 		if (p.lastQuality == PeerQuality::Unknown)
 		{
 			connect((uint32_t)i);
@@ -140,7 +139,7 @@ void mtt::Peers::connectNext(uint32_t count)
 			if (count == 0)
 				break;
 
-			auto & p = knownPeers[i];
+			auto& p = knownPeers[i];
 			if (p.lastQuality < PeerQuality::Connecting && p.connectionAttempts <= leastConnectionAttempts && p.lastConnectionTime + 30 < currentTime)
 			{
 				connect((uint32_t)i);
@@ -359,8 +358,8 @@ uint32_t mtt::Peers::updateKnownPeers(const std::vector<Addr>& peers, PeerSource
 		}
 	}
 
-	if (updateCallback)
-		updateCallback(mtt::Status::Success, source);
+	if (!newPeers.empty())
+		connectNext();
 
 	return (uint32_t)newPeers.size() + updatedPeers;
 }
@@ -543,9 +542,7 @@ void mtt::Peers::handshakeFinished(mtt::PeerCommunication* p)
 			peer->lastQuality = Peers::PeerQuality::Normal;
 	}
 
-	std::lock_guard<std::mutex> guard(listenerMtx);
-	if (listener)
-		listener->handshakeFinished(p);
+	listener.load()->handshakeFinished(p);
 }
 
 void mtt::Peers::connectionClosed(mtt::PeerCommunication* p, int code)
@@ -553,11 +550,12 @@ void mtt::Peers::connectionClosed(mtt::PeerCommunication* p, int code)
 	KnownPeer info;
 	auto ptr = disconnect(p, &info);
 
-	evaluatePossibleHolepunch(p, info);
+	if (ptr)
+		evaluatePossibleHolepunch(p, info);
 
-	std::lock_guard<std::mutex> guard(listenerMtx);
-	if (listener)
-		listener->connectionClosed(p, code);
+	connectNext();
+
+	listener.load()->connectionClosed(p, code);
 }
 
 void mtt::Peers::messageReceived(mtt::PeerCommunication* p, mtt::PeerMessage& m)
@@ -572,15 +570,31 @@ void mtt::Peers::messageReceived(mtt::PeerCommunication* p, mtt::PeerMessage& m)
 		}
 	}
 
-	std::lock_guard<std::mutex> guard(listenerMtx);
-	if (listener)
-		listener->messageReceived(p, m);
+	listener.load()->messageReceived(p, m);
 }
 
 void mtt::Peers::setTargetListener(mtt::IPeerListener* t)
 {
-	std::lock_guard<std::mutex> guard(listenerMtx);
-	listener = t;
+	if (t)
+	{
+		listener = t;
+
+		std::lock_guard<std::mutex> guard(peersMutex);
+		for (const auto& c : activeConnections)
+		{
+			if (c.comm->isEstablished())
+			{
+				t->handshakeFinished(c.comm.get());
+
+				if (c.comm->ext.enabled())
+					t->extendedHandshakeFinished(c.comm.get(), {});
+			}
+
+			c.comm->sendKeepAlive();
+		}
+	}
+	else
+		listener = &nolistener;
 }
 
 void mtt::Peers::evaluatePossibleHolepunch(PeerCommunication* p, const KnownPeer& info)
@@ -676,9 +690,7 @@ void mtt::Peers::handleHolepunchMessage(PeerCommunication* p, const ext::UtHolep
 
 void mtt::Peers::extendedHandshakeFinished(PeerCommunication* p, const ext::Handshake& h)
 {
-	std::lock_guard<std::mutex> guard(listenerMtx);
-	if (listener)
-		listener->extendedHandshakeFinished(p, h);
+	listener.load()->extendedHandshakeFinished(p, h);
 }
 
 void mtt::Peers::extendedMessageReceived(PeerCommunication* p, ext::Type t, const BufferView& data)
@@ -702,7 +714,5 @@ void mtt::Peers::extendedMessageReceived(PeerCommunication* p, ext::Type t, cons
 		}
 	}
 
-	std::lock_guard<std::mutex> guard(listenerMtx);
-	if (listener)
-		listener->extendedMessageReceived(p, t, data);
+	listener.load()->extendedMessageReceived(p, t, data);
 }

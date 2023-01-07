@@ -14,11 +14,12 @@ namespace mtt
 
 		Peers(Torrent& torrent);
 
-		using PeersUpdateCallback = std::function<void(Status, PeerSource)>;
-		void start(PeersUpdateCallback onPeersUpdated, IPeerListener* peerListener);
+		void start(IPeerListener* listener);
 		void stop();
 
-		void connectNext(uint32_t count);
+		void startConnecting();
+		void stopConnecting();
+
 		void connect(const Addr& addr);
 		size_t add(std::shared_ptr<PeerStream> stream, const BufferView& data);
 		std::shared_ptr<PeerCommunication> disconnect(PeerCommunication*);
@@ -73,6 +74,9 @@ namespace mtt
 		std::shared_ptr<ScheduledTimer> refreshTimer;
 		void update();
 
+		void connectNext();
+		bool connecting = false;
+
 		struct
 		{
 			TrackerInfo info;
@@ -113,11 +117,19 @@ namespace mtt
 		void extendedHandshakeFinished(PeerCommunication*, const ext::Handshake&) override;
 		void extendedMessageReceived(PeerCommunication*, ext::Type, const BufferView&) override;
 
-		std::mutex listenerMtx;
-		mtt::IPeerListener* listener = nullptr;
-		void setTargetListener(mtt::IPeerListener*);
+		class NoListener : public mtt::IPeerListener
+		{
+		public:
+			void handshakeFinished(PeerCommunication*) override {};
+			void connectionClosed(PeerCommunication*, int code) override {};
+			void messageReceived(PeerCommunication*, PeerMessage&) override {};
+			void extendedHandshakeFinished(PeerCommunication*, const ext::Handshake&) override {};
+			void extendedMessageReceived(PeerCommunication*, ext::Type, const BufferView&) override {};
+		}
+		nolistener;
 
-		PeersUpdateCallback updateCallback;
+		std::atomic<mtt::IPeerListener*> listener = nullptr;
+		void setTargetListener(mtt::IPeerListener*);
 
 		struct HolepunchState
 		{
