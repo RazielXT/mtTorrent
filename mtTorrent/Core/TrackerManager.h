@@ -44,7 +44,6 @@ namespace mtt
 		mutable std::mutex trackersMutex;
 
 		bool start(TrackerInfo*);
-		void startNext();
 		void stopAll();
 		TrackerInfo* findTrackerInfo(Tracker*);
 		TrackerInfo* findTrackerInfo(std::string host);
