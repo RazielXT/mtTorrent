@@ -11,44 +11,35 @@ mtt::MetadataDownload::MetadataDownload(Peers& p, ServiceThreadpool& s) : peers(
 {
 }
 
-void mtt::MetadataDownload::start(std::function<void(Status, MetadataDownloadState&)> f)
+void mtt::MetadataDownload::start(std::function<void(const Event&, MetadataReconstruction&)> f)
 {
 	onUpdate = f;
 	state.active = true;
+	addEventLog(nullptr, Event::Searching);
 
 	//peers.trackers.removeTrackers();
 
-	peers.start([this](Status s, mtt::PeerSource source)
-	{
-		std::lock_guard<std::mutex> guard(commsMutex);
-		if (s == Status::Success && state.active)
-		{
-			evalComms();
-		}
-	}
-	, this);
+	peers.start(this);
+	peers.startConnecting();
+	//peers.connect(Addr({ 127,0,0,1 }, 31313));
 
-	//peers.connect(Addr({ 127,0,0,1 }, 31132));
-
-	std::lock_guard<std::mutex> guard(commsMutex);
+	std::lock_guard<std::mutex> guard(stateMutex);
 	retryTimer = ScheduledTimer::create(service.io, [this]()
 		{
 			const auto currentTime = mtt::CurrentTimestamp();
 			if (state.active && !state.finished && lastActivityTime + 5 < currentTime)
 			{
-				std::lock_guard<std::mutex> guard(commsMutex);
+				std::lock_guard<std::mutex> guard(stateMutex);
 				for (const auto& a : activeComms)
 				{
 					requestPiece(a);
 				}
-
-				return ScheduledTimer::Duration(retryTimer ? 5000 : 0);
 			}
-			return ScheduledTimer::Duration(0);
+			return ScheduledTimer::DurationSeconds(5);
 		}
 	);
 
-	retryTimer->schedule(ScheduledTimer::Duration(5000));
+	retryTimer->schedule(ScheduledTimer::DurationSeconds(5));
 }
 
 void mtt::MetadataDownload::stop()
@@ -57,23 +48,20 @@ void mtt::MetadataDownload::stop()
 		retryTimer->disable();
 	retryTimer = nullptr;
 
-	addEventLog(nullptr, EventInfo::End, 0);
-
-	if (!state.finished && state.active)
-		onUpdate(Status::I_Stopped, state);
-
 	state.active = false;
 	{
-		std::lock_guard<std::mutex> guard(commsMutex);
+		std::lock_guard<std::mutex> guard(stateMutex);
+
+		addEventLog(nullptr, Event::End);
 		activeComms.clear();
 	}
 
 	peers.stop();
 }
 
-std::vector<mtt::MetadataDownload::EventInfo> mtt::MetadataDownload::getEvents(size_t startIndex) const
+std::vector<mtt::MetadataDownload::Event> mtt::MetadataDownload::getEvents(size_t startIndex) const
 {
-	std::lock_guard<std::mutex> guard(commsMutex);
+	std::lock_guard<std::mutex> guard(stateMutex);
 
 	if (startIndex >= eventLog.size())
 		return {};
@@ -86,39 +74,6 @@ size_t mtt::MetadataDownload::getEventsCount() const
 	return eventLog.size();
 }
 
-void mtt::MetadataDownload::evalComms()
-{
-	if (activeComms.size() < mtt::config::getExternal().connection.maxTorrentConnections && !state.finished)
-	{
-		addEventLog(nullptr, EventInfo::Searching, (uint32_t)activeComms.size());
-		peers.connectNext(mtt::config::getExternal().connection.maxTorrentConnections);
-	}
-}
-
-void mtt::MetadataDownload::removeBackup(PeerCommunication* p)
-{
-	for (auto it = activeComms.begin(); it != activeComms.end(); it++)
-	{
-		if (it->get() == p)
-		{
-			addEventLog(p->info.id, EventInfo::Disconnected, 0);
-			activeComms.erase(it);
-			break;
-		}
-	}
-
-	evalComms();
-}
-
-void mtt::MetadataDownload::addToBackup(std::shared_ptr<PeerCommunication> peer)
-{
-	std::lock_guard<std::mutex> guard(commsMutex);
-
-	addEventLog(peer->info.id, EventInfo::Connected, 0);
-	activeComms.push_back(peer);
-	requestPiece(peer);
-}
-
 void mtt::MetadataDownload::handshakeFinished(PeerCommunication* p)
 {
 	if (!p->info.supportsExtensions())
@@ -129,11 +84,17 @@ void mtt::MetadataDownload::handshakeFinished(PeerCommunication* p)
 
 void mtt::MetadataDownload::connectionClosed(PeerCommunication* p, int)
 {
-	std::lock_guard<std::mutex> guard(commsMutex);
+	std::lock_guard<std::mutex> guard(stateMutex);
 
-	onUpdate(Status::E_ConnectionClosed, state);
-
-	removeBackup(p);
+	for (auto it = activeComms.begin(); it != activeComms.end(); it++)
+	{
+		if (it->get() == p)
+		{
+			activeComms.erase(it);
+			addEventLog(p->info.id, Event::Disconnected);
+			break;
+		}
+	}
 }
 
 void mtt::MetadataDownload::messageReceived(PeerCommunication* p, PeerMessage& msg)
@@ -153,8 +114,9 @@ void mtt::MetadataDownload::extendedMessageReceived(PeerCommunication* p, ext::T
 
 		if (msg.type == ext::UtMetadata::Type::Data)
 		{
-			std::lock_guard<std::mutex> guard(commsMutex);
-			addEventLog(p->info.id, EventInfo::Receive, msg.piece);
+			std::lock_guard<std::mutex> guard(stateMutex);
+
+			addEventLog(p->info.id, Event::Receive, msg.piece);
 
 			if (metadata.buffer.size() != msg.totalSize)
 			{
@@ -170,7 +132,11 @@ void mtt::MetadataDownload::extendedMessageReceived(PeerCommunication* p, ext::T
 
 			if (metadata.finished())
 			{
-				state.finished = true;
+				if (!state.finished)
+				{
+					state.finished = true;
+					service.io.post([this]() { stop(); });
+				}
 			}
 			else
 			{
@@ -179,17 +145,12 @@ void mtt::MetadataDownload::extendedMessageReceived(PeerCommunication* p, ext::T
 		}
 		else if (msg.type == ext::UtMetadata::Type::Reject)
 		{
-			addEventLog(p->info.id, EventInfo::Reject, msg.piece);
 			peers.disconnect(p);
-			return;
-		}
 
-		if (state.finished)
-		{
-			service.io.post([this]() { stop(); });
-		}
+			std::lock_guard<std::mutex> guard(stateMutex);
 
-		onUpdate(Status::Success, state);
+			addEventLog(p->info.id, Event::Reject, msg.piece);
+		}
 	}
 }
 
@@ -197,13 +158,15 @@ void mtt::MetadataDownload::extendedHandshakeFinished(PeerCommunication* peer, c
 {
 	if (handshake.metadataSize && peer->ext.utm.enabled())
 	{
-		{
-			std::lock_guard<std::mutex> guard(commsMutex);
-			if (metadata.pieces == 0)
-				metadata.init(handshake.metadataSize);
-		}
+		std::lock_guard<std::mutex> guard(stateMutex);
 
-		addToBackup(peer->shared_from_this());
+		addEventLog(peer->info.id, Event::Connected);
+
+		if (metadata.pieces == 0)
+			metadata.init(handshake.metadataSize);
+
+		activeComms.push_back(peer->shared_from_this());
+		requestPiece(peer->shared_from_this());
 	}
 	else
 	{
@@ -218,42 +181,41 @@ void mtt::MetadataDownload::requestPiece(std::shared_ptr<PeerCommunication> peer
 	{
 		uint32_t mdPiece = metadata.getMissingPieceIndex();
 		peer->ext.utm.sendPieceRequest(mdPiece);
-		addEventLog(peer->info.id, EventInfo::Request, mdPiece);
-		onUpdate(Status::I_Requesting, state);
 		lastActivityTime = mtt::CurrentTimestamp();
+
+		addEventLog(peer->info.id, Event::Request, mdPiece);
 	}
 }
 
-void mtt::MetadataDownload::addEventLog(const uint8_t* id, EventInfo::Action action, uint32_t index)
+void mtt::MetadataDownload::addEventLog(const uint8_t* id, Event::Type e, uint32_t index)
 {
-	if (!eventLog.empty() && action == EventInfo::Searching && eventLog.back().action == action && eventLog.back().index == index)
-		return;
-
-	EventInfo info;
-	info.action = action;
+	Event info;
+	info.type = e;
 	info.index = index;
 	if (id)
 		memcpy(info.sourceId, id, 20);
 
 	eventLog.emplace_back(info);
 	BT_UTM_LOG(info.toString());
+
+	onUpdate(info, metadata);
 }
 
-std::string mtt::MetadataDownload::EventInfo::toString()
+std::string mtt::MetadataDownload::Event::toString() const
 {
-	if (action == mtt::MetadataDownload::EventInfo::Connected)
+	if (type == mtt::MetadataDownload::Event::Connected)
 		return hexToString(sourceId, 20) + " connected";
-	if (action == mtt::MetadataDownload::EventInfo::Disconnected)
+	if (type == mtt::MetadataDownload::Event::Disconnected)
 		return hexToString(sourceId, 20) + " disconnected";
-	if (action == mtt::MetadataDownload::EventInfo::End)
-		return "Finished";
-	if (action == mtt::MetadataDownload::EventInfo::Searching)
-		return "Searching for peers, current count " + std::to_string(index);
-	if (action == mtt::MetadataDownload::EventInfo::Request)
+	if (type == mtt::MetadataDownload::Event::End)
+		return "Stopped";
+	if (type == mtt::MetadataDownload::Event::Searching)
+		return "Searching for peers";
+	if (type == mtt::MetadataDownload::Event::Request)
 		return hexToString(sourceId, 20) + " requesting " + std::to_string(index);
-	if (action == mtt::MetadataDownload::EventInfo::Receive)
+	if (type == mtt::MetadataDownload::Event::Receive)
 		return hexToString(sourceId, 20) + " sent " + std::to_string(index);
-	if (action == mtt::MetadataDownload::EventInfo::Reject)
+	if (type == mtt::MetadataDownload::Event::Reject)
 		return hexToString(sourceId, 20) + " rejected index " + std::to_string(index);
 
 	return "";

@@ -16,33 +16,33 @@ namespace mtt
 
 		MetadataDownload(Peers&, ServiceThreadpool& service);
 
-		void start(std::function<void(Status, MetadataDownloadState&)> onUpdate);
+		struct Event;
+		void start(std::function<void(const Event&, MetadataReconstruction&)> onUpdate);
 		void stop();
 
 		MetadataDownloadState state;
-		MetadataReconstruction metadata;
 
-		struct EventInfo
+		struct Event
 		{
+			enum Type { Searching, Connected, Disconnected, Request, Receive, Reject, End };
+			Type type;
 			uint8_t sourceId[20];
-			enum Action { Connected, Disconnected, Request, Receive, Reject, Searching, End } action;
 			uint32_t index;
 
-			std::string toString();
+			std::string toString() const;
 		};
 
-		std::vector<EventInfo> getEvents(size_t startIndex = 0) const;
+		std::vector<Event> getEvents(size_t startIndex = 0) const;
 		size_t getEventsCount() const;
 
 	private:
 
-		mutable std::mutex commsMutex;
-		std::vector<std::shared_ptr<PeerCommunication>> activeComms;
-		void evalComms();
-		void removeBackup(PeerCommunication*);
-		void addToBackup(std::shared_ptr<PeerCommunication>);
+		MetadataReconstruction metadata;
 
-		std::function<void(Status, MetadataDownloadState&)> onUpdate;
+		mutable std::mutex stateMutex;
+		std::vector<std::shared_ptr<PeerCommunication>> activeComms;
+
+		std::function<void(const Event&, MetadataReconstruction&)> onUpdate;
 
 		Peers& peers;
 
@@ -54,8 +54,8 @@ namespace mtt
 
 		void requestPiece(std::shared_ptr<PeerCommunication> peer);
 
-		std::vector<EventInfo> eventLog;
-		void addEventLog(const uint8_t* id, EventInfo::Action action, uint32_t index);
+		std::vector<Event> eventLog;
+		void addEventLog(const uint8_t* id, Event::Type e, uint32_t index = 0);
 
 		std::shared_ptr<ScheduledTimer> retryTimer;
 		Timestamp lastActivityTime = 0;

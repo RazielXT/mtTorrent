@@ -248,29 +248,28 @@ void mtt::Torrent::downloadMetadata()
 	if (!utmDl)
 		utmDl = std::make_unique<MetadataDownload>(*peers, service);
 
-	utmDl->start([this](Status s, MetadataDownloadState& state)
+	utmDl->start([this](const MetadataDownload::Event& e, MetadataReconstruction& metadata)
 	{
-		if (s == Status::Success && state.finished && infoFile.info.files.empty())
+		if (e.type == MetadataDownload::Event::End && metadata.finished())
 		{
-			infoFile.info = utmDl->metadata.getRecontructedInfo();
+			infoFile.info = metadata.getRecontructedInfo();
+			infoFile.info.data = std::move(metadata.buffer);
+
 			loadedState = LoadedState::Full;
 
-			auto fileData = infoFile.createTorrentFileData(utmDl->metadata.buffer.data(), utmDl->metadata.buffer.size());
+			auto fileData = infoFile.createTorrentFileData();
 			saveTorrentFile(fileData.data(), fileData.size());
 
-			infoFile.info.data = std::move(utmDl->metadata.buffer);
+			AlertsManager::Get().metadataAlert(Alerts::Id::MetadataFinished, this);
 
 			initialize();
 			peers->reloadTorrentInfo();
 
-			AlertsManager::Get().metadataAlert(Alerts::Id::MetadataFinished, this);
+			activityTime = TimeClock::now();
 
 			if (isActive())
 				service.io.post([this]() { start(); });
 		}
-
-		if (s == Status::I_Stopped)
-			activityTime = TimeClock::now();
 	});
 
 	activityTime = TimeClock::now();
