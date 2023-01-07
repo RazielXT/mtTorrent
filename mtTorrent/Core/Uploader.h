@@ -19,6 +19,7 @@ namespace mtt
 		void pieceRequest(PeerCommunication* p, const PieceBlockInfo& info);
 		void refreshRequest();
 
+		uint64_t& getUploadSum();
 		uint64_t uploaded = 0;
 
 		std::map<PeerCommunication*, uint32_t> popHandledRequests();
@@ -39,6 +40,7 @@ namespace mtt
 			PieceBlockInfo block;
 		};
 		std::vector<UploadRequest> pendingRequests;
+		DataBuffer buffer;
 
 		bool requestingBytes = false;
 		uint32_t availableBytes = 0;

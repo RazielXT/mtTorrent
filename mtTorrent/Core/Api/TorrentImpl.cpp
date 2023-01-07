@@ -198,10 +198,7 @@ std::vector<std::pair<float, uint32_t>> mttApi::Torrent::getFilesProgress()
 	std::vector<std::pair<float, uint32_t>> out;
 	out.resize(selection.size());
 
-	std::map<uint32_t, uint32_t> unfinished;
-	if (torrent->fileTransfer)
-		unfinished = torrent->fileTransfer->getUnfinishedPiecesDownloadSizeMap();
-
+	auto unfinished = torrent->fileTransfer->downloader.getUnfinishedPiecesDownloadSizeMap();
 	auto pieceSize = (float)torrent->infoFile.info.pieceSize;
 
 	for (size_t i = 0; i < selection.size(); i++)

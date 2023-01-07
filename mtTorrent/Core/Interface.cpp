@@ -33,14 +33,14 @@ bool mtt::SelectedIntervals::isSelected(uint32_t idx)
 	return false;
 }
 
-void mtt::DownloadedPiece::init(uint32_t idx, uint32_t blocksCount)
+void mtt::PieceState::init(uint32_t idx, uint32_t blocksCount)
 {
 	remainingBlocks = blocksCount;
 	blocksState.assign(remainingBlocks, 0);
 	index = idx;
 }
 
-bool mtt::DownloadedPiece::addBlock(const mtt::PieceBlock & block)
+bool mtt::PieceState::addBlock(const mtt::PieceBlock & block)
 {
 	auto blockIdx = (block.info.begin + 1) / BlockRequestMaxSize;
 

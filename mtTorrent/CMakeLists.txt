@@ -6,6 +6,7 @@ set (core_sources
 	Configuration.cpp
 	Core.cpp
 	Downloader.cpp
+	DownloadStorage.cpp
 	ExtensionProtocol.cpp
 	Files.cpp
 	FileTransfer.cpp

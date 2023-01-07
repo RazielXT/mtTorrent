@@ -89,8 +89,8 @@ void mtt::Uploader::sendRequests()
 		{
 			if (availableBytes >= r.block.length)
 			{
-				DataBuffer buffer;
-				torrent.files.storage.loadPieceBlock(r.block, buffer);
+				buffer.resize(r.block.length);
+				torrent.files.storage.loadPieceBlock(r.block, buffer.data());
 
 				PieceBlock block;
 				block.info = r.block;
@@ -131,6 +131,11 @@ void mtt::Uploader::refreshRequest()
 		else
 			it++;
 	}
+}
+
+uint64_t& mtt::Uploader::getUploadSum()
+{
+	return uploaded;
 }
 
 std::map<mtt::PeerCommunication*, uint32_t> mtt::Uploader::popHandledRequests()

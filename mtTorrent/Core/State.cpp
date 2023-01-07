@@ -110,7 +110,7 @@ bool mtt::TorrentState::load(const std::string& name)
 				{
 					if (auto todoItem = u.getTxtItem("blocks"))
 					{
-						mtt::DownloadedPiece state;
+						mtt::PieceState state;
 
 						state.index = (uint32_t)u.getInt("index");
 						state.remainingBlocks = (uint32_t)u.getInt("remaining");

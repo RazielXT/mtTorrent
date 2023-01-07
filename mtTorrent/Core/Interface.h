@@ -44,7 +44,7 @@ namespace mtt
 		BufferView buffer;
 	};
 
-	struct DownloadedPiece
+	struct PieceState
 	{
 		std::vector<uint8_t> blocksState;
 		uint32_t remainingBlocks = 0;

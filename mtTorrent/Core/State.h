@@ -27,7 +27,7 @@ namespace mtt
 		Timestamp addedTime = 0;
 		bool started = false;
 
-		std::vector<DownloadedPiece> unfinishedPieces;
+		std::vector<PieceState> unfinishedPieces;
 
 		uint64_t downloaded = 0;
 		uint64_t uploaded = 0;

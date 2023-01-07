@@ -277,6 +277,9 @@
     <ClCompile Include="utils\BitUtils.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="Core\DownloadStorage.cpp">
+      <Filter>Source Files\Core\Torrent\Control</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Storage.h">
@@ -530,6 +533,9 @@
     </ClInclude>
     <ClInclude Include="utils\BitUtils.h">
       <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\DownloadStorage.h">
+      <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

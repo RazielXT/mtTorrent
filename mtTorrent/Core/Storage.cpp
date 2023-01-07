@@ -116,21 +116,57 @@ mtt::Status mtt::Storage::storePieceBlocks(std::vector<PieceBlockData>& blocks)
 	return status;
 }
 
-mtt::Status mtt::Storage::loadPieceBlock(const PieceBlockInfo& block, DataBuffer& buffer)
+mtt::Status mtt::Storage::loadPieceBlock(const PieceBlockInfo& blockInfo, uint8_t* buffer)
+{
+	return loadPieceBlocks(blockInfo.index, { {blockInfo.begin, blockInfo.length} }, buffer - blockInfo.begin);
+}
+
+mtt::Status mtt::Storage::loadPieceBlocks(uint32_t idx, const std::vector<BlockOffset>& offsets, uint8_t* buffer)
 {
 	Status status = Status::Success;
-	buffer.resize(block.length);
-	auto it = std::lower_bound(info.files.begin(), info.files.end(), block.index, [](const File& f, uint32_t index) { return f.endPieceIndex < index; });
+	auto it = std::lower_bound(info.files.begin(), info.files.end(), idx, [](const File& f, uint32_t index) { return f.endPieceIndex < index; });
 
 	for (; it != info.files.end(); it++)
 	{
-		if (status != Status::Success || !FileContainsPiece(*it, block.index))
+		if (status != Status::Success || !FileContainsPiece(*it, idx))
 			break;
 
-		status = loadPieceBlock(*it, block, buffer);
+		status = loadPieceBlocks(*it, idx, offsets, buffer);
 	}
 
 	return status; 
+}
+
+mtt::Status mtt::Storage::loadPieceBlocks(const File& file, uint32_t idx, const std::vector<BlockOffset>& offsets, uint8_t* buffer)
+{
+	auto path = getFullpath(file);
+	std::ifstream fileOut(path, std::ios_base::binary | std::ios_base::in);
+	if (!fileOut)
+		return Status::E_FileReadError;
+
+	for (auto& offset : offsets)
+	{
+		auto blockInfo = getFileBlockPosition(file, idx, offset.begin, offset.size);
+
+		if (blockInfo.dataSize > 0)
+		{
+			if (idx == file.endPieceIndex)
+			{
+				fileOut.seekg(0, std::ios_base::end);
+				auto existingSize = fileOut.tellg();
+
+				if (existingSize < (std::streampos)file.size)
+					blockInfo.fileDataPos = info.pieceSize - file.startPiecePos + offset.begin;
+			}
+
+			fileOut.seekg(blockInfo.fileDataPos);
+			fileOut.read((char*)buffer + offset.begin + blockInfo.dataPos, blockInfo.dataSize);
+		}
+		else
+			break;
+	}
+
+	return Status::Success;
 }
 
 mtt::Status mtt::Storage::preallocateSelection(const DownloadSelection& selection)
@@ -363,34 +399,6 @@ mtt::Status mtt::Storage::storePieceBlocks(const File& file, const std::vector<P
 			fileOut.seekp(info.pieceSize - file.startPiecePos + block.info.begin);
 			fileOut.write((const char*)block.data, b.info.dataSize);
 		}
-	}
-
-	return Status::Success;
-}
-
-mtt::Status mtt::Storage::loadPieceBlock(const File& file, const PieceBlockInfo& block, DataBuffer& buffer)
-{
-	auto blockInfo = getFileBlockPosition(file, block.index, block.begin, block.length);
-
-	if (blockInfo.dataSize > 0)
-	{
-		auto path = getFullpath(file);
-		std::ifstream fileOut(path, std::ios_base::binary | std::ios_base::in);
-
-		if (!fileOut)
-			return Status::E_FileReadError;
-
-		if (block.index == file.endPieceIndex)
-		{
-			fileOut.seekg(0, std::ios_base::end);
-			auto existingSize = fileOut.tellg();
-
-			if (existingSize < (std::streampos)file.size)
-				blockInfo.fileDataPos = info.pieceSize - file.startPiecePos + block.begin;
-		}
-
-		fileOut.seekg(blockInfo.fileDataPos);
-		fileOut.read((char*)buffer.data() + blockInfo.dataPos, blockInfo.dataSize);
 	}
 
 	return Status::Success;

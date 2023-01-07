@@ -25,7 +25,13 @@ namespace mtt
 		};
 		Status storePieceBlocks(std::vector<PieceBlockData>& blocks);
 
-		Status loadPieceBlock(const PieceBlockInfo& block, DataBuffer& buffer);
+		struct BlockOffset
+		{
+			uint32_t begin;
+			uint32_t size;
+		};
+		Status loadPieceBlocks(uint32_t idx, const std::vector<BlockOffset>&, uint8_t* buffer);
+		Status loadPieceBlock(const PieceBlockInfo&, uint8_t* buffer);
 
 		Status preallocateSelection(const DownloadSelection& files);
 		std::vector<uint64_t> getAllocatedSize() const;
@@ -46,7 +52,7 @@ namespace mtt
 
 		Status preallocate(const File& file, uint64_t size);
 		Status storePieceBlocks(const File& file, const std::vector<PieceBlockData>& blocks);
-		Status loadPieceBlock(const File& file, const PieceBlockInfo& block, DataBuffer& buffer);
+		Status loadPieceBlocks(const File& file, uint32_t idx, const std::vector<BlockOffset>& offsets, uint8_t* buffer);
 
 		struct FileBlockPosition
 		{
