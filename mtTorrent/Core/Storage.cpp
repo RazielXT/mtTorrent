@@ -91,13 +91,13 @@ static bool FileContainsPiece(const mtt::File& f, uint32_t pieceIdx)
 	return f.startPieceIndex <= pieceIdx && f.endPieceIndex >= pieceIdx;
 }
 
-mtt::Status mtt::Storage::storePieceBlocks(std::vector<PieceBlockRequest> blocks)
+mtt::Status mtt::Storage::storePieceBlocks(std::vector<PieceBlockData>& blocks)
 {
 	std::sort(blocks.begin(), blocks.end(),
-		[](const PieceBlockRequest& l, const PieceBlockRequest& r) {return l.index < r.index || (l.index == r.index && l.offset < r.offset); });
+		[](const PieceBlockData& l, const PieceBlockData& r) {return l.info.index < r.info.index || (l.info.index == r.info.index && l.info.begin < r.info.begin); });
 
-	uint32_t startIndex = blocks.front().index;
-	uint32_t lastIndex = blocks.back().index;
+	uint32_t startIndex = blocks.front().info.index;
+	uint32_t lastIndex = blocks.back().info.index;
 
 	auto fIt = std::lower_bound(info.files.begin(), info.files.end(), startIndex, [](const File& f, uint32_t index) { return f.endPieceIndex < index; });
 
@@ -305,7 +305,7 @@ mtt::Storage::FileBlockPosition mtt::Storage::getFileBlockPosition(const File& f
 	return blockInfo;
 }
 
-mtt::Status mtt::Storage::storePieceBlocks(const File& file, const std::vector<PieceBlockRequest>& blocks)
+mtt::Status mtt::Storage::storePieceBlocks(const File& file, const std::vector<PieceBlockData>& blocks)
 {
 	struct FileBlockInfo
 	{
@@ -318,10 +318,10 @@ mtt::Status mtt::Storage::storePieceBlocks(const File& file, const std::vector<P
 	{
 		auto& block = blocks[i];
 
-		if (!FileContainsPiece(file, block.index))
+		if (!FileContainsPiece(file, block.info.index))
 			continue;
 
-		auto info = getFileBlockPosition(file, block.index, block.offset, (uint32_t)block.data->size());
+		auto info = getFileBlockPosition(file, block.info.index, block.info.begin, block.info.length);
 
 		if (info.dataSize == 0)
 			continue;
@@ -353,15 +353,15 @@ mtt::Status mtt::Storage::storePieceBlocks(const File& file, const std::vector<P
 	{
 		auto& block = blocks[b.blockIdx];
 
-		if (existingSize == file.size || block.index == file.startPieceIndex)
+		if (existingSize == file.size || block.info.index == file.startPieceIndex)
 		{
 			fileOut.seekp(b.info.fileDataPos);
-			fileOut.write((const char*)block.data->data() + b.info.dataPos, b.info.dataSize);
+			fileOut.write((const char*)block.data + b.info.dataPos, b.info.dataSize);
 		}
-		else if (block.index == file.endPieceIndex)
+		else if (block.info.index == file.endPieceIndex)
 		{
-			fileOut.seekp(info.pieceSize - file.startPiecePos + block.offset);
-			fileOut.write((const char*)block.data->data(), b.info.dataSize);
+			fileOut.seekp(info.pieceSize - file.startPiecePos + block.info.begin);
+			fileOut.write((const char*)block.data, b.info.dataSize);
 		}
 	}
 

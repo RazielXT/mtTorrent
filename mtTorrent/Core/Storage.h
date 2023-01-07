@@ -18,13 +18,12 @@ namespace mtt
 		Status setPath(std::string path, bool moveFiles = true);
 		std::string getPath() const;
 
-		struct PieceBlockRequest
+		struct PieceBlockData
 		{
-			uint32_t index;
-			uint32_t offset;
-			const DataBuffer* data;
+			const uint8_t* data;
+			PieceBlockInfo info;
 		};
-		Status storePieceBlocks(std::vector<PieceBlockRequest> blocks);
+		Status storePieceBlocks(std::vector<PieceBlockData>& blocks);
 
 		Status loadPieceBlock(const PieceBlockInfo& block, DataBuffer& buffer);
 
@@ -46,7 +45,7 @@ namespace mtt
 		Status validatePath(const DownloadSelection& selection);
 
 		Status preallocate(const File& file, uint64_t size);
-		Status storePieceBlocks(const File& file, const std::vector<PieceBlockRequest>& blocks);
+		Status storePieceBlocks(const File& file, const std::vector<PieceBlockData>& blocks);
 		Status loadPieceBlock(const File& file, const PieceBlockInfo& block, DataBuffer& buffer);
 
 		struct FileBlockPosition
