@@ -71,7 +71,7 @@ mtt::TorrentPtr mtt::Torrent::fromSavedState(std::string name)
 		torrent->stateChanged = true;
 	}
 
-	torrent->files.initialize(state.selection, state.downloadPath);
+	torrent->files.reload(state.selection, state.downloadPath);
 	torrent->lastFileTime = state.lastStateTime;
 	torrent->addedTime = state.addedTime;
 
@@ -302,7 +302,7 @@ mttApi::Torrent::TimePoint mtt::Torrent::getStateTimestamp() const
 void mtt::Torrent::initialize()
 {
 	stateChanged = true;
-	files.setDefaults(infoFile.info);
+	files.initialize(infoFile.info);
 	AlertsManager::Get().torrentAlert(Alerts::Id::TorrentAdded, this);
 }
 
@@ -450,8 +450,6 @@ void mtt::Torrent::checkFiles(bool all)
 
 	auto localOnFinish = [this, request]()
 	{
-		checking = false;
-
 		{
 			std::lock_guard<std::mutex> guard(checkStateMutex);
 			checkState.reset();
@@ -461,6 +459,7 @@ void mtt::Torrent::checkFiles(bool all)
 		{
 			files.progress.select(infoFile.info, files.selection);
 			lastFileTime = files.storage.getLastModifiedTime();
+			checking = false;
 			stateChanged = true;
 
 			if (started)

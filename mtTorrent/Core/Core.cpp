@@ -193,7 +193,7 @@ std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addFile(const uint8_t* data, 
 		return { mtt::Status::I_Merged, t };
 	}
 
-	auto torrent = Torrent::fromFile(infoFile);
+	auto torrent = Torrent::fromFile(std::move(infoFile));
 
 	if (!torrent)
 		return { mtt::Status::E_InvalidInput, nullptr };

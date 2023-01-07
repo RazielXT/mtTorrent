@@ -5,7 +5,7 @@ mtt::Files::Files(const TorrentInfo& info) : storage(info)
 {
 }
 
-void mtt::Files::setDefaults(const TorrentInfo& info)
+void mtt::Files::initialize(const TorrentInfo& info)
 {
 	storage.init(mtt::config::getExternal().files.defaultDirectory);
 
@@ -18,7 +18,7 @@ void mtt::Files::setDefaults(const TorrentInfo& info)
 	progress.init(info.pieces.size());
 }
 
-void mtt::Files::initialize(DownloadSelection s, const std::string& location)
+void mtt::Files::reload(DownloadSelection s, const std::string& location)
 {
 	storage.init(location);
 

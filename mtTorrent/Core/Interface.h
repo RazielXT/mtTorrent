@@ -53,8 +53,6 @@ namespace mtt
 
 		void init(uint32_t idx, uint32_t blocksCount);
 		bool addBlock(const PieceBlock& block);
-
-		static bool isValid(const DataBuffer& data, const uint8_t* expectedHash);
 	};
 
 	using DownloadSelection = std::vector<FileSelection>;

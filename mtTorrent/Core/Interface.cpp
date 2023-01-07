@@ -56,14 +56,6 @@ bool mtt::DownloadedPiece::addBlock(const mtt::PieceBlock & block)
 	return false;
 }
 
-bool mtt::DownloadedPiece::isValid(const DataBuffer& data, const uint8_t* expectedHash)
-{
-	uint8_t hash[SHA_DIGEST_LENGTH];
-	_SHA1((const uint8_t*)data.data(), data.size(), hash);
-
-	return memcmp(hash, expectedHash, SHA_DIGEST_LENGTH) == 0;
-}
-
 mtt::Timestamp mtt::CurrentTimestamp()
 {
 	return (Timestamp)::time(nullptr);
