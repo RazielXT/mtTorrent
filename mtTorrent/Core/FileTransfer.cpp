@@ -55,11 +55,11 @@ void mtt::FileTransfer::start()
 			updateMeasures();
 			uploader->refreshRequest();
 
-			return ScheduledTimer::Duration(refreshTimer ? 1000 : 0);
+			return ScheduledTimer::DurationSeconds(1);
 		}
 	);
 
-	refreshTimer->schedule(std::chrono::milliseconds(1000));
+	refreshTimer->schedule(ScheduledTimer::DurationSeconds(1));
 	evaluateMorePeers();
 }
 

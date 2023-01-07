@@ -142,7 +142,7 @@ void UdpAsyncComm::addPendingResponse(UdpRequest c, UdpResponseCallback response
 	info->client = c;
 	info->defaultTimeout = timeout;
 	info->timeoutTimer = std::make_shared<asio::steady_timer>(pool.io);
-	info->timeoutTimer->expires_from_now(std::chrono::seconds(timeout));
+	info->timeoutTimer->expires_after(std::chrono::seconds(timeout));
 	info->timeoutTimer->async_wait(std::bind(&UdpAsyncComm::checkTimeout, this, c, std::placeholders::_1));
 	info->anySource = anySource;
 	info->onResponse = response;
@@ -354,7 +354,7 @@ void UdpAsyncComm::checkTimeout(UdpRequest client, const asio::error_code& error
 		UDP_LOG(info->client->getName() << " request retry");
 		info->retries++;
 		info->client->write();
-		info->timeoutTimer->expires_from_now(std::chrono::seconds(info->retries + info->defaultTimeout));
+		info->timeoutTimer->expires_after(std::chrono::seconds(info->retries + info->defaultTimeout));
 		info->timeoutTimer->async_wait(std::bind(&UdpAsyncComm::checkTimeout, this, client, std::placeholders::_1));
 	}
 }

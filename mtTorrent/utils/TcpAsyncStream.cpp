@@ -24,7 +24,7 @@ void TcpAsyncStream::connect(const uint8_t* ip, uint16_t port, bool ipv6)
 	info.addressResolved = true;
 	info.host = info.address.toString();
 
-	timeoutTimer->expires_from_now(std::chrono::seconds(10));
+	timeoutTimer->expires_after(std::chrono::seconds(10));
 	timeoutTimer->async_wait(std::bind(&TcpAsyncStream::checkTimeout, shared_from_this(), std::placeholders::_1));
 
 	connectByAddress();
@@ -483,7 +483,7 @@ void TcpAsyncStream::startReceive()
 
 	waiting_for_data = true;
 
-	timeoutTimer->expires_from_now(std::chrono::seconds(60));
+	timeoutTimer->expires_after(std::chrono::seconds(60));
 	timeoutTimer->async_wait(std::bind(&TcpAsyncStream::checkTimeout, shared_from_this(), std::placeholders::_1));
 
 	TCP_LOG_DETAILED("call async_receive for " << max_receive << " bytes");

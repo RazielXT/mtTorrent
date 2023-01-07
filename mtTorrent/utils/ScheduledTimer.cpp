@@ -35,7 +35,7 @@ void ScheduledTimer::scheduleInternal(Duration time)
 {
 	if (timer)
 	{
-		timer->expires_from_now(time);
+		timer->expires_after(time);
 		timer->async_wait(std::bind(&ScheduledTimer::checkTimer, shared_from_this(), std::placeholders::_1));
 	}
 }

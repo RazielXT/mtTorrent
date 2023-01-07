@@ -53,7 +53,7 @@ void mtt::dht::Communication::start()
 	findNode(mtt::config::getInternal().hashId);
 
 	refreshTimer = ScheduledTimer::create(service.io, [this]() { refreshTable(); return ScheduledTimer::Duration(0); });
-	refreshTimer->schedule(ScheduledTimer::Duration((5 * 60 + 5)*1000));
+	refreshTimer->schedule(ScheduledTimer::DurationSeconds(5 * 60 + 5));
 }
 
 void mtt::dht::Communication::stop()

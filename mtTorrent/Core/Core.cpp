@@ -289,7 +289,7 @@ mtt::GlobalBandwidth::GlobalBandwidth()
 			return ScheduledTimer::Duration(bwTick);
 		});
 
-	bwTimer->schedule(std::chrono::milliseconds(bwTick));
+	bwTimer->schedule(ScheduledTimer::Duration(bwTick));
 
 	config::registerOnChangeCallback(config::ValueType::Transfer, [this]()
 		{

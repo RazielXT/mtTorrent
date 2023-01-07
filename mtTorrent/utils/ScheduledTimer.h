@@ -7,9 +7,11 @@
 struct ScheduledTimer : public std::enable_shared_from_this<ScheduledTimer>
 {
 	using Duration = std::chrono::milliseconds;
+	using DurationSeconds = std::chrono::seconds;
+
 	static std::shared_ptr<ScheduledTimer> create(asio::io_service& io, std::function<Duration()> callback);
 
-	ScheduledTimer(asio::io_service& io, std::function<std::chrono::milliseconds()> callback);
+	ScheduledTimer(asio::io_service& io, std::function<Duration()> callback);
 	~ScheduledTimer();
 
 	void schedule(Duration time);

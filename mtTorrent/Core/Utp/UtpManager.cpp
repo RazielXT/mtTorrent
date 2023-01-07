@@ -36,7 +36,7 @@ void mtt::utp::Manager::start()
 				return ScheduledTimer::Duration(500);
 			});
 
-		timeoutTimer->schedule(std::chrono::milliseconds(500));
+		timeoutTimer->schedule(ScheduledTimer::Duration(500));
 	}
 
 }

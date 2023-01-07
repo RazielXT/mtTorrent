@@ -121,7 +121,7 @@ void mtt::TrackerManager::onAnnounce(AnnounceResponse& resp, Tracker* t)
 			if (auto trackerInfo = findTrackerInfo(t))
 			{
 				trackerInfo->retryCount = 0;
-				trackerInfo->timer->schedule(ScheduledTimer::Duration(resp.interval*1000));
+				trackerInfo->timer->schedule(ScheduledTimer::DurationSeconds(resp.interval));
 				trackerInfo->comm->info.nextAnnounce = mtt::CurrentTimestamp() + resp.interval;
 			}
 
@@ -165,7 +165,7 @@ void mtt::TrackerManager::onTrackerFail(Tracker* t)
 					{
 						trackerInfo->retryCount++;
 						uint32_t nextRetry = 30 * trackerInfo->retryCount;
-						trackerInfo->timer->schedule(ScheduledTimer::Duration(nextRetry*1000));
+						trackerInfo->timer->schedule(ScheduledTimer::DurationSeconds(nextRetry));
 						trackerInfo->comm->info.nextAnnounce = mtt::CurrentTimestamp() + nextRetry;
 					}
 
