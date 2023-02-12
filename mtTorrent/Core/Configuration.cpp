@@ -42,7 +42,7 @@ std::string getDefaultDirectory()
 	}
 #endif
 
-	return "";
+	return std::filesystem::current_path().string();
 }
 
 namespace mtt

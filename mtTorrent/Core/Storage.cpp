@@ -21,7 +21,7 @@ std::filesystem::path mtt::Storage::utf8Path(const std::string& p)
 
 mtt::Storage::Storage(const TorrentInfo& i) : info(i)
 {
-	init(std::string(".") + pathSeparator);
+	init(config::getExternal().files.defaultDirectory);
 }
 
 mtt::Storage::~Storage()
@@ -31,6 +31,7 @@ mtt::Storage::~Storage()
 void mtt::Storage::init(const std::string& locationPath)
 {
 	path = locationPath;
+	std::replace(path.begin(), path.end(), '\\', pathSeparator);
 
 	if (!path.empty() && path.back() != pathSeparator)
 		path += pathSeparator;
