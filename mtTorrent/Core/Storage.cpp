@@ -47,10 +47,11 @@ mtt::Status mtt::Storage::setPath(std::string p, bool moveFiles)
 		std::lock_guard<std::mutex> guard(storageMutex);
 
 		std::error_code ec;
-		if (!std::filesystem::exists(utf8Path(p), ec))
+		bool pathExists = std::filesystem::exists(utf8Path(p), ec);
+		if (ec)
 			return mtt::Status::E_InvalidPath;
 
-		if (moveFiles && !info.files.empty())
+		if (pathExists && moveFiles && !info.files.empty())
 		{
 			auto newPath = std::filesystem::path(p + info.files.back().path.front());
 
@@ -74,6 +75,12 @@ mtt::Status mtt::Storage::setPath(std::string p, bool moveFiles)
 				if (ec)
 					return mtt::Status::E_AllocationProblem;
 			}
+		}
+
+		if (!pathExists)
+		{
+			if (!createPath(utf8Path(p)))
+				return mtt::Status::E_InvalidPath;
 		}
 
 		path = p;
