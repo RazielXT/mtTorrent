@@ -13,7 +13,7 @@ void mtt::TrackerManager::start(AnnounceCallback callbk)
 {
 	announceCallback = callbk;
 
-	torrent.service.io.post([this]()
+	torrent.service.post([this]()
 	{
 		std::lock_guard<std::mutex> guard(trackersMutex);
 
@@ -107,7 +107,7 @@ uint32_t mtt::TrackerManager::getTrackersCount()
 
 void mtt::TrackerManager::onAnnounce(AnnounceResponse& resp, Tracker* t)
 {
-	torrent.service.io.post([this, resp, t]()
+	torrent.service.post([this, resp, t]()
 		{
 			std::lock_guard<std::mutex> guard(trackersMutex);
 
@@ -127,7 +127,7 @@ void mtt::TrackerManager::onAnnounce(AnnounceResponse& resp, Tracker* t)
 
 void mtt::TrackerManager::onTrackerFail(Tracker* t)
 {
-	torrent.service.io.post([this, t]()
+	torrent.service.post([this, t]()
 		{
 			std::lock_guard<std::mutex> guard(trackersMutex);
 
@@ -141,7 +141,7 @@ void mtt::TrackerManager::onTrackerFail(Tracker* t)
 					trackerInfo->httpFallbackUsed = true;
 					trackerInfo->uri.protocol = "http";
 
-					torrent.service.io.post([this, trackerInfo]()
+					torrent.service.post([this, trackerInfo]()
 						{
 							trackerInfo->comm.reset();
 

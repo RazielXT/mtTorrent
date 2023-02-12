@@ -19,7 +19,7 @@ class UdpAsyncWriter : public std::enable_shared_from_this<UdpAsyncWriter>
 
 public:
 
-	UdpAsyncWriter(asio::io_service& io_service);
+	UdpAsyncWriter(asio::io_context& io_context);
 	~UdpAsyncWriter();
 
 	void setAddress(const Addr& addr);
@@ -49,7 +49,7 @@ protected:
 
 	void postFail(std::string place, const std::error_code& error);
 
-	void handle_resolve(const std::error_code& error, udp::resolver::iterator iterator, std::shared_ptr<udp::resolver> resolver);
+	void handle_resolve(const std::error_code& error, udp::resolver::results_type iterator, std::shared_ptr<udp::resolver> resolver);
 	void handle_connect(const std::error_code& err);
 	
 	void do_write(DataBuffer data);
@@ -72,7 +72,7 @@ protected:
 
 	udp::endpoint target_endpoint;
 	udp::socket socket;
-	asio::io_service& io_service;
+	asio::io_context& io_context;
 
 	bool resolving = false;
 	void resolveHostname();

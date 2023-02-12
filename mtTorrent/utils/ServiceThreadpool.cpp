@@ -15,10 +15,18 @@ ServiceThreadpool::~ServiceThreadpool()
 	stop();
 }
 
+void ServiceThreadpool::post(std::function<void()> func)
+{
+	asio::post(io, std::move(func));
+}
+
 void ServiceThreadpool::start(uint32_t startWorkers)
 {
 	if (!work)
-		work = std::make_shared<workType>(io.get_executor());
+	{
+		io.restart();
+		work = std::make_unique<workType>(io.get_executor());
+	}
 
 	if (workers >= startWorkers)
 		return;
@@ -27,7 +35,10 @@ void ServiceThreadpool::start(uint32_t startWorkers)
 
 	for (size_t i = workers; i < startWorkers; i++)
 	{
-		myThreads[i] = std::thread([this]() { io.run(); });
+		myThreads[i] = std::thread([this]()
+			{
+				io.run();
+			});
 	}
 
 	workers = std::max(startWorkers, workers);
@@ -44,7 +55,6 @@ void ServiceThreadpool::stop()
 	}
 
 	io.stop();
-	io.reset();
 
 	workers = 0;
 }

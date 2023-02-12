@@ -66,9 +66,9 @@ private:
 };
 sliding_average<int, 16> m_rtt;
 
-mtt::utp::Stream::Stream(asio::io_service& io) : io_service(io)
+mtt::utp::Stream::Stream(asio::io_context& io) : io_context(io)
 {
-	writer = std::make_shared<UdpAsyncWriter>(io_service);
+	writer = std::make_shared<UdpAsyncWriter>(io_context);
 	CREATE_LOG(UtpStream);
 }
 
@@ -286,7 +286,7 @@ void mtt::utp::Stream::close()
 		return;
 
 	auto self = shared_from_this();
-	io_service.post([this, self]()
+	asio::post(io_context, [this, self]()
 		{
 			std::lock_guard<std::mutex> guard(callbackMutex);
 

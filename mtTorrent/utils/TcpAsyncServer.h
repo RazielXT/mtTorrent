@@ -4,7 +4,7 @@ class TcpAsyncServer : public std::enable_shared_from_this<TcpAsyncServer>
 {
 public:
 
-	TcpAsyncServer(asio::io_service& io_service, uint16_t port, bool ipv6);
+	TcpAsyncServer(asio::io_context& io_context, uint16_t port, bool ipv6);
 
 	void listen();
 	void stop();
@@ -20,7 +20,7 @@ private:
 	tcp::endpoint endpoint;
 
 	asio::ip::tcp::acceptor acceptor_;
-	asio::io_service& service;
+	asio::io_context& io;
 
 	std::mutex mtx;
 };

@@ -3,7 +3,7 @@
 #include "UdpAsyncComm.h"
 #include "XmlParser.h"
 
-UpnpDiscovery::UpnpDiscovery(asio::io_service& io_service) : io(io_service)
+UpnpDiscovery::UpnpDiscovery(asio::io_context& io_context) : io(io_context)
 {
 
 }

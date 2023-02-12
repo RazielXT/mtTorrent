@@ -41,7 +41,7 @@ void mtt::Uploader::pieceRequest(PeerCommunication* p, const PieceBlockInfo& inf
 	pendingRequests.push_back({ p, info });
 
 	if (!requestingBytes)
-		torrent.service.io.post([this]() { sendRequests(); });
+		torrent.service.post([this]() { sendRequests(); });
 }
 
 void mtt::Uploader::assignBandwidth(int amount)
@@ -52,7 +52,7 @@ void mtt::Uploader::assignBandwidth(int amount)
 	availableBytes += amount;
 
 	if (isActive())
-		torrent.service.io.post([this]() { sendRequests(); });
+		torrent.service.post([this]() { sendRequests(); });
 }
 
 void mtt::Uploader::requestBytes(uint32_t amount)

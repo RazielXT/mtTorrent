@@ -1,6 +1,6 @@
 #include "ScheduledTimer.h"
 
-ScheduledTimer::ScheduledTimer(asio::io_service& io, std::function<Duration()> callback) : func(callback)
+ScheduledTimer::ScheduledTimer(asio::io_context& io, std::function<Duration()> callback) : func(callback)
 {
 	timer = std::make_unique<asio::steady_timer>(io);
 }
@@ -23,8 +23,7 @@ void ScheduledTimer::disable()
 
 	if (timer)
 	{
-		std::error_code ec;
-		timer->cancel(ec);
+		timer->cancel();
 		timer.reset();
 	}
 
@@ -52,7 +51,7 @@ void ScheduledTimer::checkTimer(const asio::error_code& error)
 	}
 }
 
-std::shared_ptr<ScheduledTimer> ScheduledTimer::create(asio::io_service& io, std::function<Duration()> callback)
+std::shared_ptr<ScheduledTimer> ScheduledTimer::create(asio::io_context& io, std::function<Duration()> callback)
 {
 	return std::make_shared<ScheduledTimer>(io, callback);
 }

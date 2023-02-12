@@ -8,7 +8,7 @@ class UdpAsyncReceiver : public std::enable_shared_from_this<UdpAsyncReceiver>
 {
 public:
 
-	UdpAsyncReceiver(asio::io_service& io_service, uint16_t port, bool ipv6);
+	UdpAsyncReceiver(asio::io_context& io_context, uint16_t port, bool ipv6);
 
 	void listen();
 	void stop();

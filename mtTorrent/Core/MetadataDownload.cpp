@@ -135,7 +135,7 @@ void mtt::MetadataDownload::extendedMessageReceived(PeerCommunication* p, ext::T
 				if (!state.finished)
 				{
 					state.finished = true;
-					service.io.post([this]() { stop(); });
+					service.post([this]() { stop(); });
 				}
 			}
 			else

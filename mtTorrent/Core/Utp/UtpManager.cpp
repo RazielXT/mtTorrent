@@ -70,7 +70,7 @@ void mtt::utp::Manager::connectStream(StreamPtr s, const udp::endpoint& e)
 {
 	s->init(e, currentUdpPort);
 
-	service.io.post([s, this]
+	service.post([s, this]
 		{
 			{
 				std::lock_guard<std::mutex> guard(streamsMutex);

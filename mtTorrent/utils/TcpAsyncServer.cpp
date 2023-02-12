@@ -3,7 +3,7 @@
 
 #define TCP_LOG(x) WRITE_GLOBAL_LOG(TcpListener, x)
 
-TcpAsyncServer::TcpAsyncServer(asio::io_service& io_service, uint16_t port, bool ipv6) : endpoint(ipv6 ? asio::ip::tcp::v6() : asio::ip::tcp::v4(), port), acceptor_(io_service, endpoint), service(io_service)
+TcpAsyncServer::TcpAsyncServer(asio::io_context& io_context, uint16_t port, bool ipv6) : endpoint(ipv6 ? asio::ip::tcp::v6() : asio::ip::tcp::v4(), port), acceptor_(io_context, endpoint), io(io_context)
 {
 }
 
@@ -20,7 +20,7 @@ void TcpAsyncServer::stop()
 
 void TcpAsyncServer::startListening()
 {
-	auto connection = std::make_shared<TcpAsyncStream>(service);
+	auto connection = std::make_shared<TcpAsyncStream>(io);
 
 	acceptor_.async_accept(connection->socket, endpoint, std::bind(&TcpAsyncServer::handle_accept, shared_from_this(), connection, std::placeholders::_1));
 }

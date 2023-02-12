@@ -3,7 +3,7 @@
 #include "Api/Interface.h"
 #include "Logging.h"
 
-mtt::PeerStream::PeerStream(asio::io_service& io) : io_service(io)
+mtt::PeerStream::PeerStream(asio::io_context& io) : io_context(io)
 {
 	CREATE_LOG(PeerStream);
 	INDEX_LOG();
@@ -53,7 +53,7 @@ void mtt::PeerStream::open(const Addr& address, const uint8_t* t)
 	else
 	{
 		auto ptr = shared_from_this();
-		io_service.post([ptr] { ptr->onCloseCallback(0); });
+		asio::post(io_context, [ptr] { ptr->onCloseCallback(0); });
 	}
 }
 
@@ -191,7 +191,7 @@ void mtt::PeerStream::initializeTcpStream()
 	WRITE_LOG("initializeTcpStream");
 
 	if (!tcpStream || state.reconnect)
-		tcpStream = std::make_shared<TcpAsyncStream>(io_service);
+		tcpStream = std::make_shared<TcpAsyncStream>(io_context);
 
 	tcpStream->onConnectCallback = std::bind(&PeerStream::connectionOpened, shared_from_this(), Type::Tcp);
 	tcpStream->onCloseCallback = [this](int code) { connectionClosed(Type::Tcp, code); };
@@ -218,7 +218,7 @@ void mtt::PeerStream::initializeUtpStream()
 	WRITE_LOG("initializeUtpStream");
 
 	if (!utpStream || state.reconnect)
-		utpStream = std::make_shared<mtt::utp::Stream>(io_service);
+		utpStream = std::make_shared<mtt::utp::Stream>(io_context);
 
 	utpStream->onConnectCallback = std::bind(&PeerStream::connectionOpened, shared_from_this(), Type::Utp);
 	utpStream->onCloseCallback = [this](int code) { connectionClosed(Type::Utp, code); };

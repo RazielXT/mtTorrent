@@ -18,7 +18,7 @@ class TcpAsyncStream : public std::enable_shared_from_this<TcpAsyncStream>, publ
 
 public:
 
-	TcpAsyncStream(asio::io_service& io_service);
+	TcpAsyncStream(asio::io_context& io_context);
 	~TcpAsyncStream();
 
 	void connect(const uint8_t* data, uint16_t port, bool ipv6);
@@ -55,8 +55,8 @@ protected:
 	void postFail(const char* place, const std::error_code& error);
 
 	enum { Clear, Connecting, Connected, Disconnected } state = Clear;
-	void handle_resolve(const std::error_code& error, tcp::resolver::iterator iterator, std::shared_ptr<tcp::resolver> resolver);
-	void handle_resolver_connect(const std::error_code& err, tcp::resolver::iterator endpoint_iterator, std::shared_ptr<tcp::resolver> resolver);
+	void handle_resolve(const std::error_code& error, tcp::resolver::results_type results, std::shared_ptr<tcp::resolver> resolver);
+	void handle_resolver_connect(const std::error_code& err, tcp::resolver::results_type results, int counter, std::shared_ptr<tcp::resolver> resolver);
 	void handle_connect(const std::error_code& err);
 	void do_close();
 
@@ -90,7 +90,7 @@ protected:
 	void checkTimeout(const asio::error_code& error);
 	std::unique_ptr<asio::steady_timer> timeoutTimer;
 
-	asio::io_service& io_service;
+	asio::io_context& io_context;
 
 	struct  
 	{

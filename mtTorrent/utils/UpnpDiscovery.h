@@ -1,6 +1,6 @@
 #pragma once
 
-#include "asio/io_service.hpp"
+#include "asio/io_context.hpp"
 #include "NetAdaptersList.h"
 #include "TcpAsyncStream.h"
 #include "UdpAsyncWriter.h"
@@ -12,7 +12,7 @@ class UpnpDiscovery
 {
 public:
 
-	UpnpDiscovery(asio::io_service& io_service);
+	UpnpDiscovery(asio::io_context& io_context);
 
 	struct DeviceInfo
 	{
@@ -44,7 +44,7 @@ private:
 	std::vector<UpnpLocation> upnpLocationQueue;
 
 	std::shared_ptr<TcpAsyncStream> stream;
-	asio::io_service& io;
+	asio::io_context& io;
 
 	struct SsdpSearch
 	{

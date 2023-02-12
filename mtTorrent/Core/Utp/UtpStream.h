@@ -21,7 +21,7 @@ namespace mtt
 		{
 		public:
 
-			Stream(asio::io_service& io_service);
+			Stream(asio::io_context& io_context);
 			~Stream();
 
 			void init(const udp::endpoint&, uint16_t bindPort);
@@ -181,7 +181,7 @@ namespace mtt
 			std::pair<DataBuffer&, uint16_t> createDataBuffer(size_t size);
 			std::vector<DataBuffer> dataBuffers;//cache for reuse
 
-			asio::io_service& io_service;
+			asio::io_context& io_context;
 
 			std::mutex callbackMutex;
 

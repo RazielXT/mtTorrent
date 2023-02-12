@@ -3,7 +3,7 @@
 #define TCP_LOG(x) WRITE_LOG(x)
 #define TCP_LOG_DETAILED(x) //WRITE_LOG(x)
 
-TcpAsyncStream::TcpAsyncStream(asio::io_service& io) : io_service(io), socket(io)
+TcpAsyncStream::TcpAsyncStream(asio::io_context& io) : io_context(io), socket(io)
 {
 	timeoutTimer = std::make_unique<asio::steady_timer>(io);
 	setBandwidthChannels(nullptr, 0);
@@ -60,17 +60,17 @@ void TcpAsyncStream::close(bool immediate)
 	if (state == Disconnected)
 		return;
 
-	io_service.post(std::bind(&TcpAsyncStream::do_close, shared_from_this()));
+	asio::post(io_context, std::bind(&TcpAsyncStream::do_close, shared_from_this()));
 }
 
 void TcpAsyncStream::write(const DataBuffer& data)
 {
-	io_service.post(std::bind(&TcpAsyncStream::do_write, shared_from_this(), data));
+	asio::post(io_context, std::bind(&TcpAsyncStream::do_write, shared_from_this(), data));
 }
 
 void TcpAsyncStream::write(DataBuffer&& data)
 {
-	io_service.post(std::bind(&TcpAsyncStream::do_write, shared_from_this(), std::move(data)));
+	asio::post(io_context, std::bind(&TcpAsyncStream::do_write, shared_from_this(), std::move(data)));
 }
 
 const std::string& TcpAsyncStream::getHostname() const
@@ -121,10 +121,8 @@ void TcpAsyncStream::connectByHostname()
 
 	state = Connecting;
 
-	tcp::resolver::query query(info.host, std::to_string(info.address.port));
-
-	auto resolver = std::make_shared<tcp::resolver>(io_service);
-	resolver->async_resolve(query, std::bind(&TcpAsyncStream::handle_resolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2, resolver));
+	auto resolver = std::make_shared<tcp::resolver>(io_context);
+	resolver->async_resolve(info.host, std::to_string(info.address.port), std::bind(&TcpAsyncStream::handle_resolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2, resolver));
 }
 
 void TcpAsyncStream::connectByAddress()
@@ -246,13 +244,13 @@ void TcpAsyncStream::handle_connect(const std::error_code& error)
 	}
 }
 
-void TcpAsyncStream::handle_resolve(const std::error_code& error, tcp::resolver::iterator iterator, std::shared_ptr<tcp::resolver> resolver)
+void TcpAsyncStream::handle_resolve(const std::error_code& error, tcp::resolver::results_type results, std::shared_ptr<tcp::resolver> resolver)
 {
-	if (!error)
+	if (!error && !results.empty())
 	{
 		TCP_LOG("resolved connecting");
-		tcp::endpoint endpoint = *iterator;
-		socket.async_connect(endpoint, std::bind(&TcpAsyncStream::handle_resolver_connect, shared_from_this(), std::placeholders::_1, ++iterator, resolver));
+		tcp::endpoint endpoint = results.begin()->endpoint();
+		socket.async_connect(endpoint, std::bind(&TcpAsyncStream::handle_resolver_connect, shared_from_this(), std::placeholders::_1, results, 1, resolver));
 	}
 	else
 	{
@@ -260,16 +258,20 @@ void TcpAsyncStream::handle_resolve(const std::error_code& error, tcp::resolver:
 	}
 }
 
-void TcpAsyncStream::handle_resolver_connect(const std::error_code& error, tcp::resolver::iterator iterator, std::shared_ptr<tcp::resolver> resolver)
+void TcpAsyncStream::handle_resolver_connect(const std::error_code& error, tcp::resolver::results_type results, int counter, std::shared_ptr<tcp::resolver> resolver)
 {
-	if (error && iterator != tcp::resolver::iterator())
+	if (error && results.size() < counter)
 	{
 		TCP_LOG("connect resolved next");
 
 		asio::error_code ec;
 		socket.close(ec);
-		tcp::endpoint endpoint = *iterator;
-		socket.async_connect(endpoint, std::bind(&TcpAsyncStream::handle_resolver_connect, shared_from_this(), std::placeholders::_1, ++iterator, resolver));
+
+		auto it = results.begin();
+		for (int i = 0; i < counter; i++) it++;
+		tcp::endpoint endpoint = it->endpoint();
+
+		socket.async_connect(endpoint, std::bind(&TcpAsyncStream::handle_resolver_connect, shared_from_this(), std::placeholders::_1, results, counter + 1, resolver));
 	}
 	else
 	{

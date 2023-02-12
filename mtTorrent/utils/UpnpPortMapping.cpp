@@ -3,7 +3,7 @@
 #include "NetAdaptersList.h"
 #include "HttpHeader.h"
 
-UpnpPortMapping::UpnpPortMapping(asio::io_service& io_service) : io(io_service), discovery(io_service)
+UpnpPortMapping::UpnpPortMapping(asio::io_context& io_context) : io(io_context), discovery(io_context)
 {
 	state = std::make_shared<UpnpMappingState>();
 	upnpMappingServiceName = "urn:schemas-upnp-org:service:WANIPConnection:1";

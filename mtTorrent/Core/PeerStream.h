@@ -11,7 +11,7 @@ namespace mtt
 	{
 	public:
 
-		PeerStream(asio::io_service& io);
+		PeerStream(asio::io_context& io);
 		~PeerStream();
 
 		void fromStream(std::shared_ptr<TcpAsyncStream> stream);
@@ -44,7 +44,7 @@ namespace mtt
 
 	protected:
 
-		asio::io_service& io_service;
+		asio::io_context& io_context;
 
 		std::shared_ptr<TcpAsyncStream> tcpStream;
 		void initializeTcpStream();

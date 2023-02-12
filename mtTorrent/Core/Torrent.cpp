@@ -268,7 +268,7 @@ void mtt::Torrent::downloadMetadata()
 			activityTime = TimeClock::now();
 
 			if (isActive())
-				service.io.post([this]() { start(); });
+				service.post([this]() { start(); });
 		}
 	});
 

@@ -65,7 +65,7 @@ namespace mtt
 	{
 	public:
 
-		PeerCommunication(TorrentInfo& torrent, IPeerListener& listener, asio::io_service& io_service);
+		PeerCommunication(TorrentInfo& torrent, IPeerListener& listener, asio::io_context& io_context);
 		~PeerCommunication();
 
 		PeerInfo info;

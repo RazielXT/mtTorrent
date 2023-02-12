@@ -2,7 +2,7 @@
 
 #define UDP_LOG(x) WRITE_LOG(x)
 
-UdpAsyncWriter::UdpAsyncWriter(asio::io_service& io) : io_service(io), socket(io)
+UdpAsyncWriter::UdpAsyncWriter(asio::io_context& io) : io_context(io), socket(io)
 {
 	CREATE_LOG(UdpWriter);
 }
@@ -58,17 +58,17 @@ void UdpAsyncWriter::setBindPort(uint16_t port)
 
 void UdpAsyncWriter::close()
 {
-	io_service.post(std::bind(&UdpAsyncWriter::do_close, shared_from_this()));
+	asio::post(io_context, std::bind(&UdpAsyncWriter::do_close, shared_from_this()));
 }
 
 void UdpAsyncWriter::write(const DataBuffer& data)
 {
-	io_service.post(std::bind(&UdpAsyncWriter::do_write, shared_from_this(), data));
+	asio::post(io_context, std::bind(&UdpAsyncWriter::do_write, shared_from_this(), data));
 }
 
 void UdpAsyncWriter::write()
 {
-	io_service.post(std::bind(&UdpAsyncWriter::do_rewrite, shared_from_this()));
+	asio::post(io_context, std::bind(&UdpAsyncWriter::do_rewrite, shared_from_this()));
 }
 
 void UdpAsyncWriter::write(const BufferView& data, WriteOption option)
@@ -77,7 +77,7 @@ void UdpAsyncWriter::write(const BufferView& data, WriteOption option)
 		send_message(data, option);
 	else
 	{
-		io_service.post(std::bind(&UdpAsyncWriter::do_write, shared_from_this(), DataBuffer(data.data, data.data + data.size)));
+		asio::post(io_context, std::bind(&UdpAsyncWriter::do_write, shared_from_this(), DataBuffer(data.data, data.data + data.size)));
 	}
 }
 
@@ -89,21 +89,20 @@ void UdpAsyncWriter::resolveHostname()
 	UDP_LOG("resolveHostname");
 
 	resolving = true;
-	udp::resolver::query query(hostname, port);
 
-	auto resolver = std::make_shared<udp::resolver>(io_service);
-	resolver->async_resolve(query, std::bind(&UdpAsyncWriter::handle_resolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2, resolver));
+	auto resolver = std::make_shared<udp::resolver>(io_context);
+	resolver->async_resolve(hostname, port, std::bind(&UdpAsyncWriter::handle_resolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2, resolver));
 }
 
-void UdpAsyncWriter::handle_resolve(const std::error_code& error, udp::resolver::iterator iterator, std::shared_ptr<udp::resolver> resolver)
+void UdpAsyncWriter::handle_resolve(const std::error_code& error, udp::resolver::results_type results, std::shared_ptr<udp::resolver> resolver)
 {
 	std::lock_guard<std::mutex> guard(stateMutex);
 
 	UDP_LOG("handle_resolve");
 
-	if (!error)
+	if (!error && !results.empty())
 	{
-		target_endpoint = *iterator;
+		target_endpoint = results.begin()->endpoint();
 		state = Initialized;
 
 		if (!messageBuffer.empty())

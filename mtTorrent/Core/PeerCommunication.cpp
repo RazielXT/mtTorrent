@@ -154,9 +154,9 @@ bool mtt::PeerInfo::supportsDht()
 	return (protocol[7] & 0x80) != 0;
 }
 
-mtt::PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, asio::io_service& io_service) : torrent(t), listener(l)
+mtt::PeerCommunication::PeerCommunication(TorrentInfo& t, IPeerListener& l, asio::io_context& io_context) : torrent(t), listener(l)
 {
-	stream = std::make_shared<PeerStream>(io_service);
+	stream = std::make_shared<PeerStream>(io_context);
 	CREATE_LOG(Peer);
 	INDEX_LOG();
 }

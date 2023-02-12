@@ -3,7 +3,7 @@
 
 #define UDP_LOG(x) WRITE_GLOBAL_LOG(UdpListener, x)
 
-UdpAsyncReceiver::UdpAsyncReceiver(asio::io_service& io_service, uint16_t port, bool ipv6) : socket_(io_service)
+UdpAsyncReceiver::UdpAsyncReceiver(asio::io_context& io_context, uint16_t port, bool ipv6) : socket_(io_context)
 {
 	auto myEndpoint = udp::endpoint(ipv6 ? udp::v6() : udp::v4(), port);
 	std::error_code ec;
