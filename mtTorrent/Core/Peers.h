@@ -20,9 +20,9 @@ namespace mtt
 		void startConnecting();
 		void stopConnecting();
 
-		void connect(const Addr& addr);
+		Status connect(const Addr& addr);
 		size_t add(std::shared_ptr<PeerStream> stream, const BufferView& data);
-		std::shared_ptr<PeerCommunication> disconnect(PeerCommunication*);
+		bool disconnect(PeerCommunication*, bool unwanted = false);
 
 		std::vector<TrackerInfo> getSourcesInfo();
 		void refreshSource(const std::string& name);
@@ -40,27 +40,32 @@ namespace mtt
 
 		FileLog log;
 
-		enum class PeerQuality { Unknown, Closed, Offline, Connecting, Bad, Normal, Good };
 		struct KnownPeer
 		{
 			bool operator==(const Addr& r);
 
 			Addr address;
-			uint8_t pexFlags = {};
 			PeerSource source;
-			PeerQuality lastQuality = PeerQuality::Unknown;
+
+			uint8_t pexFlags = {};
+			bool unwanted = false;
+
+			enum class State { Disconnected, Connecting, Connected };
+			State state = State::Disconnected;
+
 			Timestamp lastConnectionTime = 0;
 			uint32_t connectionAttempts = 0;
 		};
 
 		uint32_t updateKnownPeers(const ext::PeerExchange::Message& pex);
 		uint32_t updateKnownPeers(const std::vector<Addr>& peers, PeerSource source, const uint8_t* flags = nullptr);
-		uint32_t updateKnownPeers(const Addr& addr, PeerSource source);
 		std::vector<KnownPeer> knownPeers;
+		size_t currentConnectIdx = 0;
+
 		mutable std::mutex peersMutex;
 
-		std::shared_ptr<PeerCommunication> disconnect(PeerCommunication*, KnownPeer* info);
-		void connect(uint32_t idx);
+		std::shared_ptr<PeerCommunication> removePeer(PeerCommunication*, KnownPeer& info);
+		void connect(const Addr& addr, uint32_t knownIdx);
 		struct ActivePeer
 		{
 			std::shared_ptr<PeerCommunication> comm;
@@ -74,6 +79,7 @@ namespace mtt
 		std::shared_ptr<ScheduledTimer> refreshTimer;
 		void update();
 
+		bool stopped() const;
 		void connectNext();
 		bool connecting = false;
 

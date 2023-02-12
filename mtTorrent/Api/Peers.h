@@ -26,6 +26,6 @@ namespace mttApi
 		/*
 			Force connect to peer with specific address (ip:port)
 		*/
-		API_EXPORT void connect(const char* address);
+		API_EXPORT mtt::Status connect(const char* address);
 	};
 }

@@ -68,6 +68,9 @@ void Addr::set(const DataBuffer& ip, uint16_t p)
 
 void Addr::set(const asio::ip::address& addr, uint16_t port_num)
 {
+	if (addr.is_unspecified())
+		return;
+
 	port = port_num;
 	ipv6 = addr.is_v6();
 
@@ -169,6 +172,11 @@ std::string Addr::toData() const
 	*reinterpret_cast<uint16_t*>(data.data() + addrSize) = swap16(port);
 
 	return data;
+}
+
+bool Addr::valid() const
+{
+	return port != 0;
 }
 
 bool Addr::operator<(const Addr& r) const

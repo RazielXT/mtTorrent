@@ -20,7 +20,10 @@ uint32_t mttApi::Peers::receivedCount() const
 	return static_cast<const mtt::Peers*>(this)->receivedCount();
 }
 
-void mttApi::Peers::connect(const char* address)
+mtt::Status mttApi::Peers::connect(const char* address)
+{
+	return static_cast<mtt::Peers*>(this)->connect(Addr::fromString(address));
+}
 {
 	static_cast<mtt::Peers*>(this)->connect(Addr::fromString(address));
 }

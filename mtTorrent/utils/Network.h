@@ -39,6 +39,8 @@ struct Addr
 	uint32_t toUint() const;
 	std::string toData() const;
 
+	bool valid() const;
+
 	bool operator==(const Addr& r) const;
 	bool operator<(const Addr& r) const;
 };
