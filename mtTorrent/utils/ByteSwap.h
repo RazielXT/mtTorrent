@@ -1,15 +1,5 @@
 #pragma once
 
-#include <cstdint>
-
-namespace mtt
-{
-	namespace utils
-	{
-		constexpr uint64_t firstBit(uint64_t number) { uint64_t b = 1; while (!(number & b)) b <<= 1; return b; }
-	}
-}
-
 #ifdef _WIN32
 
 #include <cstdlib>
@@ -19,6 +9,7 @@ namespace mtt
 
 #elif __GNUC__
 
+#include <cstdint>
 uint16_t swap16(uint16_t i);
 uint32_t swap32(uint32_t i);
 uint64_t swap64(uint64_t i);

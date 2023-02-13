@@ -274,7 +274,7 @@
     <ClCompile Include="Core\MetadataExtension.cpp">
       <Filter>Source Files\Core\Torrent\Peer\Protocol</Filter>
     </ClCompile>
-    <ClCompile Include="utils\BitUtils.cpp">
+    <ClCompile Include="utils\ByteSwap.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
     <ClCompile Include="Core\DownloadStorage.cpp">
@@ -531,7 +531,7 @@
     <ClInclude Include="utils\int128.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="utils\BitUtils.h">
+    <ClInclude Include="utils\ByteSwap.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="Core\DownloadStorage.h">

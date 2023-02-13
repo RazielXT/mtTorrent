@@ -1,5 +1,5 @@
 #include "Network.h"
-#include "BitUtils.h"
+#include "ByteSwap.h"
 
 Addr::Addr()
 {

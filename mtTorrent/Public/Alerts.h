@@ -1,9 +1,11 @@
 #pragma once
 
-#include "../utils/BitUtils.h"
+#include <cstdint>
 
 namespace mtt
 {
+	constexpr uint64_t firstBit(uint64_t number) { uint64_t b = 1; while (!(number & b)) b <<= 1; return b; }
+
 	namespace Alerts
 	{
 		enum Category
@@ -15,12 +17,12 @@ namespace mtt
 
 		enum Id
 		{
-			TorrentAdded = utils::firstBit(Category::Torrent),
-			TorrentFinished = TorrentAdded << 1,
+			TorrentFinished = firstBit(Category::Torrent),
+			TorrentAdded = TorrentFinished << 1,
 
-			MetadataFinished = utils::firstBit(Category::Metadata),
+			MetadataInitialized = firstBit(Category::Metadata),
 
-			ConfigChanged = utils::firstBit(Category::Config),
+			ConfigChanged = firstBit(Category::Config),
 		};
 	}
 }

@@ -1,4 +1,4 @@
-#include "BitUtils.h"
+#include "ByteSwap.h"
 
 #ifdef __GNUC__
 uint16_t swap16(uint16_t i) { return __builtin_bswap16(i); }

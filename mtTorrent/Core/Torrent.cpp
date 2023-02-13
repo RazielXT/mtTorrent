@@ -27,11 +27,12 @@ mtt::TorrentPtr mtt::Torrent::fromFile(mtt::TorrentFileInfo fileInfo)
 
 	torrent->infoFile = std::move(fileInfo);
 	torrent->loadedState = LoadedState::Full;
-	torrent->initialize();
 
 	torrent->peers = std::make_unique<Peers>(*torrent);
 	torrent->fileTransfer = std::make_unique<FileTransfer>(*torrent);
 	torrent->addedTime = mtt::CurrentTimestamp();
+
+	torrent->initialize();
 
 	return torrent;
 }
@@ -259,13 +260,12 @@ void mtt::Torrent::downloadMetadata()
 
 			auto fileData = infoFile.createTorrentFileData();
 			saveTorrentFile(fileData.data(), fileData.size());
-
-			AlertsManager::Get().metadataAlert(Alerts::Id::MetadataFinished, this);
-
-			initialize();
 			peers->reloadTorrentInfo();
 
 			activityTime = TimeClock::now();
+
+			initialize();
+			AlertsManager::Get().metadataAlert(Alerts::Id::MetadataInitialized, *this);
 
 			if (isActive())
 				service.post([this]() { start(); });
