@@ -150,7 +150,7 @@ bool mtt::UdpTrackerComm::onAnnounceUdpResponse(UdpRequest comm, DataBuffer* dat
 	{
 		UDP_TRACKER_LOG("received peers:" << announceMsg.peers.size() << ", p: " << announceMsg.seedCount << ", l: " << announceMsg.leechCount);
 		info.state = TrackerState::Announced;
-		info.leechers = announceMsg.leechCount;
+		info.leeches = announceMsg.leechCount;
 		info.seeds = announceMsg.seedCount;
 		info.peers = (uint32_t)announceMsg.peers.size();
 		info.announceInterval = announceMsg.interval;
@@ -192,10 +192,8 @@ void mtt::UdpTrackerComm::announce()
 	{
 		UDP_TRACKER_LOG("announcing");
 
-		if (info.state == TrackerState::Announced)
-			info.state = TrackerState::Reannouncing;
-		else
-			info.state = TrackerState::Announcing;
+		info.state = TrackerState::Announcing;
+		info.nextAnnounce = 0;
 
 		udp->sendMessage(createAnnounceRequest(), comm, std::bind(&UdpTrackerComm::onAnnounceUdpResponse, this, std::placeholders::_1, std::placeholders::_2), 5);
 	}

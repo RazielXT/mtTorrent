@@ -99,7 +99,7 @@ namespace mtt
 		Priority priority;
 	};
 
-	enum class TrackerState { Clear, Initialized, Offline, Alive, Connecting, Connected, Announcing, Announced, Reannouncing };
+	enum class TrackerState { Clear, Initialized, Offline, Alive, Connecting, Connected, Announcing, Announced };
 
 	struct TrackerInfo
 	{
@@ -109,7 +109,7 @@ namespace mtt
 
 		uint32_t peers = 0;
 		uint32_t seeds = 0;
-		uint32_t leechers = 0;
+		uint32_t leeches = 0;
 		uint32_t announceInterval = 0;
 		Timestamp lastAnnounce = 0;
 		Timestamp nextAnnounce = 0;

@@ -43,9 +43,9 @@ void mtt::HttpsTrackerComm::init(std::string host, std::string port, std::string
 
 void mtt::HttpsTrackerComm::fail()
 {
-	if (info.state == TrackerState::Announcing || info.state == TrackerState::Reannouncing)
+	if (info.state == TrackerState::Announcing)
 	{
-		if (info.state == TrackerState::Reannouncing)
+		if (info.lastAnnounce)
 			info.state = TrackerState::Alive;
 		else
 			info.state = TrackerState::Offline;
@@ -57,7 +57,7 @@ void mtt::HttpsTrackerComm::fail()
 
 void mtt::HttpsTrackerComm::onTcpReceived(const BufferView& responseData)
 {
-	if (info.state == TrackerState::Announcing || info.state == TrackerState::Reannouncing)
+	if (info.state == TrackerState::Announcing)
 	{
 		mtt::AnnounceResponse announceResp;
 		auto msgSize = readAnnounceResponse((const char*)responseData.data, responseData.size, announceResp);
@@ -73,7 +73,7 @@ void mtt::HttpsTrackerComm::onTcpReceived(const BufferView& responseData)
 		{
 			info.state = TrackerState::Announced;
 
-			info.leechers = announceResp.leechCount;
+			info.leeches = announceResp.leechCount;
 			info.seeds = announceResp.seedCount;
 			info.peers = (uint32_t)announceResp.peers.size();
 			info.announceInterval = announceResp.interval;
@@ -91,10 +91,8 @@ void mtt::HttpsTrackerComm::announce()
 {
 	HTTP_TRACKER_LOG("announcing");
 
-	if (info.state == TrackerState::Announced)
-		info.state = TrackerState::Reannouncing;
-	else
-		info.state = TrackerState::Announcing;
+	info.state = TrackerState::Announcing;
+	info.nextAnnounce = 0;
 
 	std::lock_guard<std::mutex> guard(commMutex);
 

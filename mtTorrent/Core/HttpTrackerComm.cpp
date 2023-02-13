@@ -57,9 +57,9 @@ void mtt::HttpTrackerComm::fail()
 		tcpComm.reset();
 	}
 
-	if (info.state == TrackerState::Announcing || info.state == TrackerState::Reannouncing)
+	if (info.state == TrackerState::Announcing)
 	{
-		if (info.state == TrackerState::Reannouncing)
+		if (info.lastAnnounce)
 			info.state = TrackerState::Alive;
 		else
 			info.state = TrackerState::Offline;
@@ -82,7 +82,7 @@ void mtt::HttpTrackerComm::onTcpConnected()
 
 size_t mtt::HttpTrackerComm::onTcpReceived(const BufferView& respData)
 {
-	if (info.state == TrackerState::Announcing || info.state == TrackerState::Reannouncing)
+	if (info.state == TrackerState::Announcing)
 	{
 		mtt::AnnounceResponse announceResp;
 		auto msgSize = readAnnounceResponse((const char*)respData.data, respData.size, announceResp);
@@ -97,7 +97,7 @@ size_t mtt::HttpTrackerComm::onTcpReceived(const BufferView& respData)
 		{
 			info.state = TrackerState::Announced;
 
-			info.leechers = announceResp.leechCount;
+			info.leeches = announceResp.leechCount;
 			info.seeds = announceResp.seedCount;
 			info.peers = (uint32_t)announceResp.peers.size();
 			info.announceInterval = announceResp.interval;
@@ -200,10 +200,8 @@ void mtt::HttpTrackerComm::announce()
 	if (!tcpComm)
 		initializeStream();
 
-	if (info.state == TrackerState::Announced)
-		info.state = TrackerState::Reannouncing;
-	else
-		info.state = TrackerState::Announcing;
+	info.state = TrackerState::Announcing;
+	info.nextAnnounce = 0;
 
 	auto request = createAnnounceRequest(info.path, info.hostname, info.port);
 
