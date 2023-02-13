@@ -31,7 +31,7 @@ void mtt::TrackerManager::stop()
 	announceCallback = nullptr;
 }
 
-void mtt::TrackerManager::addTracker(std::string addr)
+mtt::Status mtt::TrackerManager::addTracker(const std::string& addr)
 {
 	std::lock_guard<std::mutex> guard(trackersMutex);
 
@@ -50,18 +50,25 @@ void mtt::TrackerManager::addTracker(std::string addr)
 			{
 				i->uri.protocol = "udp";
 				i->httpFallback = true;
+				return Status::Success;
 			}
+
+			return Status::I_AlreadyExists;
 		}
-		else
-			trackers.push_back(info);
+
+		trackers.push_back(info);
 	}
 	else if (info.uri.protocol == "https")
 		trackers.push_back(info);
+	else
+		return Status::E_InvalidInput;
+
+	return Status::Success;
 }
 
 void mtt::TrackerManager::addTrackers(const std::vector<std::string>& trackers)
 {
-	for (auto& t : trackers)
+	for (const auto& t : trackers)
 	{
 		addTracker(t);
 	}

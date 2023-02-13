@@ -187,10 +187,10 @@ std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addFile(const uint8_t* data, 
 
 	if (auto t = getTorrent(infoFile.info.hash))
 	{
-		if (!t->importTrackers(infoFile))
-			return { mtt::Status::I_AlreadyExists, t };
+		if (t->peers->importTrackers(infoFile.announceList) == Status::Success)
+			return { mtt::Status::I_Merged, t };
 
-		return { mtt::Status::I_Merged, t };
+		return { mtt::Status::I_AlreadyExists, t };
 	}
 
 	auto torrent = Torrent::fromFile(std::move(infoFile));
@@ -215,10 +215,10 @@ std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addMagnet(const char* magnet)
 
 	if (auto t = getTorrent(torrent->hash()))
 	{
-		if (t->importTrackers(torrent->infoFile))
-			return { mtt::Status::I_AlreadyExists, t };
+		if (t->peers->importTrackers(torrent->infoFile.announceList) == Status::Success)
+			return { mtt::Status::I_Merged, t };
 
-		return { mtt::Status::I_Merged, t };
+		return { mtt::Status::I_AlreadyExists, t };
 	}
 
 	torrent->downloadMetadata();

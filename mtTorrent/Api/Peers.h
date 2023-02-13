@@ -9,13 +9,17 @@ namespace mttApi
 	public:
 
 		/*
-			Get list of trackers and their current state
+			Get list of sources/trackers and their current state
 		*/
 		API_EXPORT std::vector<mtt::TrackerInfo> getSourcesInfo();
 		/*
-			Force announce tracker by its name
+			Force announce tracker/source by its name
 		*/
 		API_EXPORT void refreshSource(const std::string& name);
+		/*
+			Add trackers by its full url eg. udp://path.com:port/announce
+		*/
+		API_EXPORT mtt::Status addTrackers(const std::vector<std::string>& urls);
 
 		/*
 			Get count of currently connected/found peers

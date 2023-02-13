@@ -73,7 +73,6 @@ namespace mtt
 		void removeMetaFiles();
 		bool loadFileInfo();
 
-		bool importTrackers(const mtt::TorrentFileInfo& fileInfo);
 
 	protected:
 

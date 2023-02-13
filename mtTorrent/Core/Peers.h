@@ -26,6 +26,7 @@ namespace mtt
 
 		std::vector<TrackerInfo> getSourcesInfo();
 		void refreshSource(const std::string& name);
+		Status importTrackers(const std::vector<std::string>& urls);
 
 		TrackerManager trackers;
 		Torrent& torrent;

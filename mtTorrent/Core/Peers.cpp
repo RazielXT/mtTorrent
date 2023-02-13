@@ -287,6 +287,39 @@ void mtt::Peers::refreshSource(const std::string& name)
 		dht.findPeers();
 }
 
+mtt::Status mtt::Peers::importTrackers(const std::vector<std::string>& urls)
+{
+	torrent.loadFileInfo();
+
+	bool added = false;
+	auto& infoFile = torrent.infoFile;
+	Status status = Status::I_AlreadyExists;
+
+	for (auto& t : urls)
+	{
+		if (std::find(infoFile.announceList.begin(), infoFile.announceList.end(), t) == infoFile.announceList.end())
+		{
+			status = trackers.addTracker(t);
+			if (status == Status::Success)
+			{
+				infoFile.announceList.push_back(t);
+				added = true;
+			}
+		}
+	}
+
+	if (added)
+	{
+		if (infoFile.announce.empty())
+			infoFile.announce = infoFile.announceList.front();
+
+		auto newFile = infoFile.createTorrentFileData();
+		torrent.saveTorrentFile(newFile.data(), newFile.size());
+	}
+
+	return added ? Status::Success : status;
+}
+
 uint32_t mtt::Peers::connectedCount() const
 {
 	return (uint32_t)activeConnections.size();

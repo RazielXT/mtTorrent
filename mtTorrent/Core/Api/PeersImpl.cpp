@@ -7,7 +7,12 @@ std::vector<mtt::TrackerInfo> mttApi::Peers::getSourcesInfo()
 
 void mttApi::Peers::refreshSource(const std::string& name)
 {
-	return static_cast<mtt::Peers*>(this)->refreshSource(name);
+	static_cast<mtt::Peers*>(this)->refreshSource(name);
+}
+
+mtt::Status mttApi::Peers::addTrackers(const std::vector<std::string>& urls)
+{
+	return static_cast<mtt::Peers*>(this)->importTrackers(urls);
 }
 
 uint32_t mttApi::Peers::connectedCount() const

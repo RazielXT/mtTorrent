@@ -17,7 +17,7 @@ namespace mtt
 		void start(AnnounceCallback announceCallback);
 		void stop();
 
-		void addTracker(std::string addr);
+		Status addTracker(const std::string& addr);
 		void addTrackers(const std::vector<std::string>& trackers);
 		void removeTrackers();
 
