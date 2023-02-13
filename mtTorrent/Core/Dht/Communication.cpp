@@ -77,6 +77,11 @@ void mtt::dht::Communication::stop()
 	save();
 }
 
+bool mtt::dht::Communication::active() const
+{
+	return refreshTimer != nullptr;
+}
+
 void mtt::dht::Communication::removeListener(ResultsListener* listener)
 {
 	std::lock_guard<std::mutex> guard(peersQueriesMutex);
@@ -268,4 +273,9 @@ bool mtt::dht::Communication::onUdpPacket(udp::endpoint& e, std::vector<DataBuff
 		responder.handlePacket(e, *d);
 	}
 	return true;
+}
+
+uint32_t mtt::dht::Communication::getNodesCount() const
+{
+	return table->getActiveNodesCount();
 }

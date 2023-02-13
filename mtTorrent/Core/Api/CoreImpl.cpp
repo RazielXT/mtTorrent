@@ -1,6 +1,7 @@
 #include "Core.h"
 #include "IncomingPeersListener.h"
 #include "AlertsManager.h"
+#include "Dht/Communication.h"
 
 std::shared_ptr<mttApi::Core> mttApi::Core::create()
 {
@@ -75,4 +76,9 @@ void mttApi::Core::registerAlerts(uint64_t alertMask)
 std::vector<std::unique_ptr<mtt::AlertMessage>> mttApi::Core::popAlerts()
 {
 	return mtt::AlertsManager::Get().popAlerts();
+}
+
+mttApi::Dht& mttApi::Core::getDht() const
+{
+	return *static_cast<const mtt::Core*>(this)->dht;
 }

@@ -280,6 +280,9 @@
     <ClCompile Include="Core\DownloadStorage.cpp">
       <Filter>Source Files\Core\Torrent\Control</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Api\DhtImpl.cpp">
+      <Filter>Source Files\Core\ApiImpl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Storage.h">
@@ -536,6 +539,9 @@
     </ClInclude>
     <ClInclude Include="Core\DownloadStorage.h">
       <Filter>Source Files\Core\Torrent\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="Api\Dht.h">
+      <Filter>Source Files\Api</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

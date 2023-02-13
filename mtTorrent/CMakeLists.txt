@@ -45,6 +45,7 @@ set (core_api_sources
 	MagnetDownloadImpl.cpp
 	PeersImpl.cpp
 	TorrentImpl.cpp
+	DhtImpl.cpp
 )
 
 list(TRANSFORM core_api_sources PREPEND "Core/Api/")

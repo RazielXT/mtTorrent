@@ -302,6 +302,17 @@ std::vector<NodeInfo> mtt::dht::Table::getInactiveNodes()
 	return out;
 }
 
+uint32_t Table::getActiveNodesCount() const
+{
+	std::lock_guard<std::mutex> guard(tableMutex);
+	uint32_t count = 0;
+	for (auto& b : buckets)
+	{
+		count += (uint32_t)b.nodes.size();
+	}
+	return count;
+}
+
 bool mtt::dht::isValidNode(const uint8_t* hash)
 {
 	bool allZero = true;

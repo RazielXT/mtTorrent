@@ -224,6 +224,7 @@
   <ItemGroup>
     <ClCompile Include="Core\AlertsManager.cpp" />
     <ClCompile Include="Core\Api\CoreImpl.cpp" />
+    <ClCompile Include="Core\Api\DhtImpl.cpp" />
     <ClCompile Include="Core\Api\FileTransferImpl.cpp" />
     <ClCompile Include="Core\Api\InterfaceImpl.cpp" />
     <ClCompile Include="Core\Api\ListenerImpl.cpp" />
@@ -302,6 +303,7 @@
   <ItemGroup>
     <ClInclude Include="Api\Configuration.h" />
     <ClInclude Include="Api\Core.h" />
+    <ClInclude Include="Api\Dht.h" />
     <ClInclude Include="Api\FileTransfer.h" />
     <ClInclude Include="Api\Interface.h" />
     <ClInclude Include="Api\Listener.h" />

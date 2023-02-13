@@ -27,6 +27,7 @@ namespace mtt
 			uint32_t load(const std::string&);
 
 			std::vector<NodeInfo> getInactiveNodes();
+			uint32_t getActiveNodesCount() const;
 
 		private:
 
@@ -54,7 +55,7 @@ namespace mtt
 				Node* findCache(const NodeInfo& node);
 			};
 
-			std::mutex tableMutex;
+			mutable std::mutex tableMutex;
 			std::array<Bucket, 160> buckets;
 		};
 

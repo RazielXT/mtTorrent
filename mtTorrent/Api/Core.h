@@ -62,5 +62,10 @@ namespace mttApi
 			Get all alerts happening since last popAlerts call
 		*/
 		API_EXPORT std::vector<std::unique_ptr<mtt::AlertMessage>> popAlerts();
+
+		/*
+			get DHT network object
+		*/
+		API_EXPORT mttApi::Dht& getDht() const;
 	};
 }

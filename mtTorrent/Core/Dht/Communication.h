@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <map>
+#include "Api/Dht.h"
 #include "Dht/Query.h"
 #include "Dht/Responder.h"
 #include "utils/ServiceThreadpool.h"
@@ -13,7 +14,7 @@ namespace mtt
 {
 	namespace dht
 	{
-		class Communication : public DataListener
+		class Communication : public DataListener, public mttApi::Dht
 		{
 		public:
 
@@ -24,6 +25,7 @@ namespace mtt
 
 			void start();
 			void stop();
+			bool active() const;
 
 			void findPeers(const uint8_t* hash, ResultsListener* listener);
 			void stopFindingPeers(const uint8_t* hash);
@@ -38,6 +40,7 @@ namespace mtt
 			void load();
 
 			bool onUdpPacket(udp::endpoint&, std::vector<DataBuffer*>&);
+			uint32_t getNodesCount() const;
 
 		protected:
 
