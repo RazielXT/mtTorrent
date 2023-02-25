@@ -79,7 +79,7 @@ namespace mtt
 
 				virtual DataBuffer createRequest(const uint8_t* hash, bool bothProtocols, uint16_t transactionId) = 0;
 				virtual void sendRequest(const Addr& addr, const DataBuffer& data, RequestInfo& info) = 0;
-				virtual bool onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request) = 0;
+				virtual bool onResponse(UdpRequest comm, const BufferView& data, RequestInfo request) = 0;
 
 				std::shared_ptr<Table> table;
 				DataListener* listener = nullptr;
@@ -92,10 +92,10 @@ namespace mtt
 				uint32_t MaxReturnedValues = 50;
 				uint32_t foundCount = 0;
 
-				virtual DataBuffer createRequest(const uint8_t* hash, bool bothProtocols, uint16_t transactionId) override;
-				virtual void sendRequest(const Addr& addr, const DataBuffer& data, RequestInfo& info);
-				virtual bool onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request) override;
-				GetPeersResponse parseGetPeersResponse(DataBuffer& message);		
+				DataBuffer createRequest(const uint8_t* hash, bool bothProtocols, uint16_t transactionId) override;
+				void sendRequest(const Addr& addr, const DataBuffer& data, RequestInfo& info);
+				bool onResponse(UdpRequest comm, const BufferView& data, RequestInfo request) override;
+				GetPeersResponse parseGetPeersResponse(const BufferView& message);
 			};
 
 			struct FindNode : public DhtQuery, public std::enable_shared_from_this<FindNode>
@@ -108,10 +108,10 @@ namespace mtt
 
 				bool findClosest = true;
 
-				virtual DataBuffer createRequest(const uint8_t* hash, bool bothProtocols, uint16_t transactionId) override;
-				virtual void sendRequest(const Addr& addr, const DataBuffer& data, RequestInfo& info);
-				virtual bool onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request) override;
-				FindNodeResponse parseFindNodeResponse(DataBuffer& message);
+				DataBuffer createRequest(const uint8_t* hash, bool bothProtocols, uint16_t transactionId) override;
+				void sendRequest(const Addr& addr, const DataBuffer& data, RequestInfo& info);
+				bool onResponse(UdpRequest comm, const BufferView& data, RequestInfo request) override;
+				FindNodeResponse parseFindNodeResponse(const BufferView& message);
 			};
 
 			struct PingNodes : public std::enable_shared_from_this<PingNodes>
@@ -125,7 +125,7 @@ namespace mtt
 			protected:
 
 				std::shared_ptr<Table> table;
-				DataListener* listener;
+				DataListener* listener = nullptr;
 
 				uint32_t MaxSimultaneousRequests = 5;
 
@@ -142,8 +142,8 @@ namespace mtt
 					NodeInfo node;
 					bool unknown;
 				};
-				bool onResponse(UdpRequest comm, DataBuffer* data, PingInfo request);
-				PingMessage parseResponse(DataBuffer& message);
+				bool onResponse(UdpRequest comm, const BufferView& data, PingInfo request);
+				PingMessage parseResponse(const BufferView& message);
 			};
 
 			void AnnouncePeer(const uint8_t* infohash, const std::string& token, const udp::endpoint& target, DataListener* dhtListener);

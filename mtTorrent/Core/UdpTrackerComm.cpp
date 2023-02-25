@@ -9,7 +9,7 @@
 
 using namespace mtt;
 
-mtt::UdpTrackerComm::UdpTrackerComm()
+mtt::UdpTrackerComm::UdpTrackerComm() : udp(UdpAsyncComm::Get())
 {
 }
 
@@ -23,13 +23,12 @@ void UdpTrackerComm::init(std::string host, std::string port, std::string, Torre
 	info.hostname = host;
 	torrent = t;
 
-	udp = UdpAsyncComm::Get();
-	comm = udp->create(host, port);
+	comm = udp.create(host, port);
 }
 
 void mtt::UdpTrackerComm::deinit()
 {
-	udp->removeCallback(comm);
+	udp.removeCallback(comm);
 }
 
 DataBuffer UdpTrackerComm::createConnectRequest()
@@ -62,16 +61,16 @@ void mtt::UdpTrackerComm::fail()
 		onFail();
 }
 
-bool mtt::UdpTrackerComm::onConnectUdpResponse(UdpRequest comm, DataBuffer* data)
+bool mtt::UdpTrackerComm::onConnectUdpResponse(UdpRequest comm, const BufferView& data)
 {
-	if (!data)
+	if (!data.size)
 	{
 		fail();
 
 		return false;
 	}
 
-	auto response = getConnectResponse(*data);
+	auto response = getConnectResponse(data);
 
 	if (validResponse(response))
 	{
@@ -135,16 +134,16 @@ DataBuffer UdpTrackerComm::createAnnounceRequest()
 	return packet.getBuffer();
 }
 
-bool mtt::UdpTrackerComm::onAnnounceUdpResponse(UdpRequest comm, DataBuffer* data)
+bool mtt::UdpTrackerComm::onAnnounceUdpResponse(UdpRequest comm, const BufferView& data)
 {
-	if (!data)
+	if (!data.size)
 	{
 		fail();
 
 		return false;
 	}
 
-	auto announceMsg = getAnnounceResponse(*data);
+	auto announceMsg = getAnnounceResponse(data);
 
 	if (validResponse(announceMsg.udp))
 	{
@@ -176,7 +175,7 @@ void mtt::UdpTrackerComm::connect()
 	UDP_TRACKER_LOG("connecting");
 	info.state = TrackerState::Connecting;
 
-	udp->sendMessage(createConnectRequest(), comm, std::bind(&UdpTrackerComm::onConnectUdpResponse, this, std::placeholders::_1, std::placeholders::_2), 5);
+	udp.sendMessage(createConnectRequest(), comm, std::bind(&UdpTrackerComm::onConnectUdpResponse, this, std::placeholders::_1, std::placeholders::_2), 5);
 }
 
 bool mtt::UdpTrackerComm::validResponse(TrackerMessage& resp)
@@ -195,15 +194,15 @@ void mtt::UdpTrackerComm::announce()
 		info.state = TrackerState::Announcing;
 		info.nextAnnounce = 0;
 
-		udp->sendMessage(createAnnounceRequest(), comm, std::bind(&UdpTrackerComm::onAnnounceUdpResponse, this, std::placeholders::_1, std::placeholders::_2), 5);
+		udp.sendMessage(createAnnounceRequest(), comm, std::bind(&UdpTrackerComm::onAnnounceUdpResponse, this, std::placeholders::_1, std::placeholders::_2), 5);
 	}
 }
 
-UdpTrackerComm::ConnectResponse UdpTrackerComm::getConnectResponse(DataBuffer& buffer)
+UdpTrackerComm::ConnectResponse UdpTrackerComm::getConnectResponse(const BufferView& buffer)
 {
 	ConnectResponse out;
 
-	if (buffer.size() >= sizeof(ConnectResponse))
+	if (buffer.size >= sizeof(ConnectResponse))
 	{
 		PacketReader packet(buffer);
 
@@ -215,7 +214,7 @@ UdpTrackerComm::ConnectResponse UdpTrackerComm::getConnectResponse(DataBuffer& b
 	return out;
 }
 
-UdpTrackerComm::UdpAnnounceResponse UdpTrackerComm::getAnnounceResponse(DataBuffer& buffer)
+UdpTrackerComm::UdpAnnounceResponse UdpTrackerComm::getAnnounceResponse(const BufferView& buffer)
 {
 	PacketReader packet(buffer);
 
@@ -224,7 +223,7 @@ UdpTrackerComm::UdpAnnounceResponse UdpTrackerComm::getAnnounceResponse(DataBuff
 	resp.udp.action = packet.pop32();
 	resp.udp.transaction = packet.pop32();
 
-	if (buffer.size() < 26)
+	if (buffer.size < 26)
 		return resp;
 
 	resp.interval = packet.pop32();

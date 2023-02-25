@@ -135,14 +135,12 @@ bool mtt::dht::Query::DhtQuery::finished()
 	return requests.empty() && receivedNodes.empty();
 }
 
-GetPeersResponse mtt::dht::Query::GetPeers::parseGetPeersResponse(DataBuffer& message)
+GetPeersResponse mtt::dht::Query::GetPeers::parseGetPeersResponse(const BufferView& message)
 {
 	GetPeersResponse response;
-
-	if (!message.empty())
 	{
 		BencodeParser parser;
-		parser.parse(message.data(), message.size());
+		parser.parse(message.data, message.size);
 		auto root = parser.getRoot();
 
 		if (root && root->isMap())
@@ -226,13 +224,13 @@ GetPeersResponse mtt::dht::Query::GetPeers::parseGetPeersResponse(DataBuffer& me
 	return response;
 }
 
-bool mtt::dht::Query::GetPeers::onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request)
+bool mtt::dht::Query::GetPeers::onResponse(UdpRequest comm, const BufferView& data, RequestInfo request)
 {
 	bool isResponse = false;
 
-	if (data)
+	if (data.size)
 	{
-		auto resp = parseGetPeersResponse(*data);
+		auto resp = parseGetPeersResponse(data);
 		isResponse = resp.transaction == request.transactionId;
 
 		if (isResponse && request.node.id == resp.id)
@@ -377,13 +375,13 @@ DataBuffer mtt::dht::Query::FindNode::createRequest(const uint8_t* hash, bool bo
 	return packet.getBuffer();
 }
 
-bool mtt::dht::Query::FindNode::onResponse(UdpRequest comm, DataBuffer* data, RequestInfo request)
+bool mtt::dht::Query::FindNode::onResponse(UdpRequest comm, const BufferView& data, RequestInfo request)
 {
 	bool isResponse = false;
 
-	if (data)
+	if (data.size)
 	{
-		auto resp = parseFindNodeResponse(*data);
+		auto resp = parseFindNodeResponse(data);
 
 		DHT_LOG("FindNode response " << comm->getName() DHT_NODE_ID(resp.id));
 
@@ -468,14 +466,12 @@ void mtt::dht::Query::GetPeers::sendRequest(const Addr& addr, const DataBuffer& 
 	requests.push_back(req);
 }
 
-mtt::dht::FindNodeResponse mtt::dht::Query::FindNode::parseFindNodeResponse(DataBuffer& message)
+mtt::dht::FindNodeResponse mtt::dht::Query::FindNode::parseFindNodeResponse(const BufferView& message)
 {
 	FindNodeResponse response;
-
-	if (!message.empty())
 	{
 		BencodeParser parser;
-		parser.parse(message.data(), message.size());
+		parser.parse(message.data, message.size);
 		auto root = parser.getRoot();
 
 		if (root && root->isMap())
@@ -589,11 +585,11 @@ DataBuffer mtt::dht::Query::PingNodes::createRequest(uint16_t transactionId)
 	return packet.getBuffer();
 }
 
-bool mtt::dht::Query::PingNodes::onResponse(UdpRequest comm, DataBuffer* data, PingInfo request)
+bool mtt::dht::Query::PingNodes::onResponse(UdpRequest comm, const BufferView& data, PingInfo request)
 {
-	if (data)
+	if (data.size)
 	{
-		auto resp = parseResponse(*data);
+		auto resp = parseResponse(data);
 
 		if (request.unknown)
 		{
@@ -636,15 +632,12 @@ bool mtt::dht::Query::PingNodes::onResponse(UdpRequest comm, DataBuffer* data, P
 	return true;
 }
 
-mtt::dht::PingMessage mtt::dht::Query::PingNodes::parseResponse(DataBuffer& message)
+mtt::dht::PingMessage mtt::dht::Query::PingNodes::parseResponse(const BufferView& message)
 {
-	PingMessage response;
-	memset(response.id, 0, 20);
-
-	if (!message.empty())
+	PingMessage response = {};
 	{
 		BencodeParser parser;
-		parser.parse(message.data(), message.size());
+		parser.parse(message.data, message.size);
 		auto root = parser.getRoot();
 
 		if (root && root->isMap())

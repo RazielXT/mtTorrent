@@ -333,7 +333,7 @@ void UdpAsyncWriter::readSocket()
 		if (transferred)
 		{
 			receiveBuffer.resize(transferred);
-			onResponse(shared_from_this(), &receiveBuffer);
+			onResponse(shared_from_this(), receiveBuffer);
 			UDP_LOG("readSocket received " << transferred);
 		}
 	}

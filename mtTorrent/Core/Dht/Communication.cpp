@@ -266,11 +266,11 @@ void mtt::dht::Communication::announceTokenReceived(const uint8_t* hash, const s
 	Query::AnnouncePeer(hash, token, source, this);
 }
 
-bool mtt::dht::Communication::onUdpPacket(udp::endpoint& e, std::vector<DataBuffer*>& data)
+bool mtt::dht::Communication::onUdpPacket(udp::endpoint& e, std::vector<BufferView>& data)
 {
 	for (auto d : data)
 	{
-		responder.handlePacket(e, *d);
+		responder.handlePacket(e, d);
 	}
 	return true;
 }

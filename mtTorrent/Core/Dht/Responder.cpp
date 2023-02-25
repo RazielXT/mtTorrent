@@ -11,13 +11,13 @@ mtt::dht::Responder::Responder(DataListener& l) : listener(l)
 	tokenSecret[0] = tokenSecret[1] = Random::Number();
 }
 
-bool mtt::dht::Responder::handlePacket(const udp::endpoint& endpoint, DataBuffer& data)
+bool mtt::dht::Responder::handlePacket(const udp::endpoint& endpoint, const BufferView& data)
 {
-	if (data.empty())
+	if (!data.size)
 		return false;
 
 	BencodeParser parser;
-	if (!parser.parse(data.data(), data.size()) || !parser.getRoot()->isMap())
+	if (!parser.parse(data.data, data.size) || !parser.getRoot()->isMap())
 		return false;
 
 	auto root = parser.getRoot();

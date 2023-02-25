@@ -22,11 +22,11 @@ namespace mtt
 
 		void fail();
 
-		UdpCommPtr udp;
+		UdpAsyncComm& udp;
 		UdpRequest comm;
 
-		bool onConnectUdpResponse(UdpRequest comm, DataBuffer* data);
-		bool onAnnounceUdpResponse(UdpRequest comm, DataBuffer* data);
+		bool onConnectUdpResponse(UdpRequest comm, const BufferView& data);
+		bool onAnnounceUdpResponse(UdpRequest comm, const BufferView& data);
 
 		struct TrackerMessage
 		{
@@ -61,11 +61,11 @@ namespace mtt
 		};
 
 		DataBuffer createConnectRequest();
-		ConnectResponse getConnectResponse(DataBuffer& buffer);
+		ConnectResponse getConnectResponse(const BufferView& buffer);
 		void connect();
 
 		DataBuffer createAnnounceRequest();
-		UdpAnnounceResponse getAnnounceResponse(DataBuffer& buffer);
+		UdpAnnounceResponse getAnnounceResponse(const BufferView& buffer);
 
 		bool validResponse(TrackerMessage& resp);
 

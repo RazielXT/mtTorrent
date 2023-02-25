@@ -2,7 +2,7 @@
 
 #include "UdpAsyncWriter.h"
 
-using UdpPacketCallback = std::function<void(udp::endpoint&, std::vector<DataBuffer*>&)>;
+using UdpPacketCallback = std::function<void(udp::endpoint&, std::vector<BufferView>&)>;
 
 class UdpAsyncReceiver : public std::enable_shared_from_this<UdpAsyncReceiver>
 {
@@ -24,14 +24,15 @@ private:
 
 	void readSocket();
 
-	static constexpr std::size_t MaxReadIterations = 30;
+	const std::size_t MinBufferSize = 10 * 1024;
+	const std::size_t MaxBufferSize = 50 * 1024;
+	const std::size_t MinBufferReadSize = 2048;
 	struct
 	{
 		udp::endpoint endpoint;
-		DataBuffer data[MaxReadIterations];
-		std::vector<DataBuffer*> dataVec;
+		DataBuffer buffer;
+		std::vector<BufferView> packets;
 	}
 	tmp;
-
-	static constexpr std::size_t ListenBufferSize = 2048;
+	void flushPackets();
 };

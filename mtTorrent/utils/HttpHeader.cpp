@@ -48,9 +48,9 @@ std::vector<DataChunk> readChunkedData(const char* buffer, std::size_t bufferSiz
 	return chunks;
 }
 
-HttpHeaderInfo HttpHeaderInfo::readFromBuffer(DataBuffer& buffer)
+HttpHeaderInfo HttpHeaderInfo::readFromBuffer(const BufferView& buffer)
 {
-	return HttpHeaderInfo::read((const char*)buffer.data(), buffer.size());
+	return HttpHeaderInfo::read((const char*)buffer.data, buffer.size);
 }
 
 HttpHeaderInfo HttpHeaderInfo::read(const char* buffer, std::size_t bufferSize)

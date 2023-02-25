@@ -214,9 +214,9 @@ void UpnpDiscovery::SsdpSearch::start(std::function<void(HttpHeaderInfo*)> onRes
 		{
 			std::lock_guard<std::mutex> guard(mtx);
 
-			if (data)
+			if (data.size)
 			{
-				HttpHeaderInfo info = HttpHeaderInfo::readFromBuffer(*data);
+				HttpHeaderInfo info = HttpHeaderInfo::readFromBuffer(data);
 
 				if (info.success)
 					onResponse(&info);
@@ -241,7 +241,7 @@ void UpnpDiscovery::SsdpSearch::stop()
 
 	if (request)
 	{
-		UdpAsyncComm::Get()->removeCallback(request);
+		UdpAsyncComm::Get().removeCallback(request);
 		request.reset();
 	}
 }

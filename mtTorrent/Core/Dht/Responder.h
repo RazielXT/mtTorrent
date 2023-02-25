@@ -17,7 +17,7 @@ namespace mtt
 
 			void refresh();
 
-			bool handlePacket(const udp::endpoint&, DataBuffer&);
+			bool handlePacket(const udp::endpoint&, const BufferView&);
 
 			std::shared_ptr<Table> table;
 

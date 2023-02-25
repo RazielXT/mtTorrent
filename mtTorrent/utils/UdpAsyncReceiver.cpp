@@ -16,6 +16,7 @@ UdpAsyncReceiver::UdpAsyncReceiver(asio::io_context& io_context, uint16_t port, 
 void UdpAsyncReceiver::listen()
 {
 	active = true;
+	tmp.buffer.resize(MinBufferSize);
 	socket_.async_receive(asio::null_buffers(), std::bind(&UdpAsyncReceiver::handle_receive, shared_from_this(), std::placeholders::_1));
 }
 
@@ -38,19 +39,23 @@ void UdpAsyncReceiver::handle_receive(const std::error_code& error)
 
 void UdpAsyncReceiver::readSocket()
 {
-	size_t bufferStart = 0;
-	size_t buffer = 0;
-	udp::endpoint lastEndpoint;
-	tmp.dataVec.clear();
+	std::error_code ec;
+	auto available = std::min(MaxBufferSize, socket_.available(ec));
+	UDP_LOG("readSocket available " << available);
 
-	for (size_t i = 0; i < MaxReadIterations; i++)
+	if (available > tmp.buffer.size())
 	{
-		std::error_code ec;
-		//auto av = socket_.available(ec);
-		tmp.data[buffer].resize(ListenBufferSize);
-		size_t transferred = socket_.receive_from(asio::buffer(tmp.data[buffer]), tmp.endpoint, 0, ec);
+		tmp.buffer.resize(available);
+	}
 
-		if (ec)
+	udp::endpoint lastEndpoint;
+	size_t bufferPos = 0;
+
+	while (tmp.buffer.size() - bufferPos >= MinBufferReadSize)
+	{
+		size_t transferred = socket_.receive_from(asio::buffer(tmp.buffer.data() + bufferPos, tmp.buffer.size() - bufferPos), tmp.endpoint, 0, ec);
+
+		if (ec || !transferred)
 		{
 			if (ec == asio::error::interrupted)
 				continue;
@@ -61,29 +66,32 @@ void UdpAsyncReceiver::readSocket()
 			break;
 		}
 
-		if (transferred)
-		{
-			UDP_LOG("transferred " << transferred);
+		UDP_LOG("transferred " << transferred);
 
-			tmp.data[buffer].resize(transferred);
-			tmp.dataVec.push_back(&tmp.data[buffer]);
+		if (lastEndpoint != tmp.endpoint)
+			flushPackets();
+		else
+			UDP_LOG("append");
 
-			if (buffer > 0 && lastEndpoint != tmp.endpoint)
-			{
-				if (receiveCallback)
-					receiveCallback(tmp.endpoint, tmp.dataVec);
+		tmp.packets.emplace_back(tmp.buffer.data() + bufferPos, transferred);
 
-				bufferStart = buffer;
-				tmp.dataVec.clear();
-			}
-
-			buffer++;
-			lastEndpoint = tmp.endpoint;
-		}
+		bufferPos += transferred;
+		lastEndpoint = tmp.endpoint;
 	}
 
-	if (buffer && receiveCallback)
-		receiveCallback(tmp.endpoint, tmp.dataVec);
+	flushPackets();
+	UDP_LOG("total " << bufferPos);
+}
 
-	UDP_LOG(tmp.endpoint.address().to_string() << " sent " << buffer << " buffers");
+void UdpAsyncReceiver::flushPackets()
+{
+	if (!tmp.packets.empty())
+	{
+		UDP_LOG(tmp.endpoint.address().to_string() << " sent " << tmp.packets.size() << " buffers");
+
+		if (receiveCallback)
+			receiveCallback(tmp.endpoint, tmp.packets);
+
+		tmp.packets.clear();
+	}
 }

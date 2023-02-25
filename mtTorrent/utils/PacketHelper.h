@@ -50,7 +50,7 @@ struct PacketReader
 		return out;
 	}
 
-	PacketReader(DataBuffer& buffer) : buffer(buffer.data()), size(buffer.size())
+	PacketReader(const BufferView& buffer) : buffer(buffer.data), size(buffer.size)
 	{
 	}
 

@@ -23,7 +23,7 @@ PeerMessage::PeerMessage(const BufferView& buffer)
 		return;
 	}
 
-	PacketReader reader(buffer.data, buffer.size);
+	PacketReader reader(buffer);
 
 	auto size = reader.pop32();
 	messageSize = size + 4;

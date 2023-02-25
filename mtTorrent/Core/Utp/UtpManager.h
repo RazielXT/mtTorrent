@@ -30,7 +30,7 @@ namespace mtt
 
 			void setConnectionCallback(std::function<void(StreamPtr)>);
 
-			bool onUdpPacket(udp::endpoint&, std::vector<DataBuffer*>&);
+			bool onUdpPacket(udp::endpoint&, std::vector<BufferView>&);
 
 		private:
 
@@ -47,7 +47,7 @@ namespace mtt
 			bool active = false;
 
 			std::vector<uint32_t> headerSizes;
-			std::vector<DataBuffer*> usedBuffers;
+			std::vector<BufferView> usedBuffers;
 
 			uint16_t currentUdpPort = {};
 

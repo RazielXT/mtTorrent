@@ -37,7 +37,7 @@ public:
 	void write();
 	void close();
 
-	std::function<void(UdpRequest, DataBuffer*)> onResponse;
+	std::function<void(UdpRequest, const BufferView&)> onResponse;
 	std::function<void(UdpRequest)> onCloseCallback;
 
 protected:

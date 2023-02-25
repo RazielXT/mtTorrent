@@ -39,7 +39,8 @@ namespace mtt
 			void save();
 			void load();
 
-			bool onUdpPacket(udp::endpoint&, std::vector<DataBuffer*>&);
+			bool onUdpPacket(udp::endpoint&, std::vector<BufferView>&);
+
 			uint32_t getNodesCount() const;
 
 		protected:

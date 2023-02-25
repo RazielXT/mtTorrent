@@ -3,25 +3,24 @@
 
 #define UDP_LOG(x) WRITE_GLOBAL_LOG(UdpMgr, x)
 
-static UdpCommPtr ptr;
+UdpAsyncComm* ptr = nullptr;
 
-UdpCommPtr UdpAsyncComm::Get()
+UdpAsyncComm::UdpAsyncComm()
 {
-	return ptr;
+	ptr = this;
 }
 
-UdpCommPtr UdpAsyncComm::Init()
+UdpAsyncComm::~UdpAsyncComm()
 {
-	if (!ptr)
-	{
-		ptr = std::make_shared<UdpAsyncComm>();
-		ptr->pool.start(4);
-	}
-
-	return ptr;
+	deinit();
 }
 
-void UdpAsyncComm::Deinit()
+UdpAsyncComm& UdpAsyncComm::Get()
+{
+	return *ptr;
+}
+
+void UdpAsyncComm::deinit()
 {
 	if (ptr)
 	{
@@ -34,7 +33,7 @@ void UdpAsyncComm::Deinit()
 		}
 
 		ptr->pool.stop();
-		ptr.reset();
+		ptr = nullptr;
 	}
 }
 
@@ -44,15 +43,21 @@ void UdpAsyncComm::setBindPort(uint16_t port)
 	{
 		bindPort = port;
 
-		startListening();
+		if (listener)
+			startListening();
 	}
 }
 
 void UdpAsyncComm::listen(UdpPacketCallback receive)
 {
-	std::lock_guard<std::mutex> guard(respondingMutex);
+	pool.start(4);
 
-	onUnhandledReceive = receive;
+	{
+		std::lock_guard<std::mutex> guard(respondingMutex);
+		onUnhandledReceive = receive;
+	}
+
+	startListening();
 }
 
 void UdpAsyncComm::removeListeners()
@@ -169,13 +174,13 @@ UdpRequest UdpAsyncComm::findPendingConnection(UdpRequest source)
 	return c;
 }
 
-void UdpAsyncComm::onUdpReceiveBuffers(udp::endpoint& source, std::vector<DataBuffer*>& buffers)
+void UdpAsyncComm::onUdpReceiveBuffers(udp::endpoint& source, const std::vector<BufferView>& buffers)
 {
-	std::vector<DataBuffer*> unhandled;
+	std::vector<BufferView> unhandled;
 
 	for (auto data : buffers)
 	{
-		if (!onUdpReceive(source, *data))
+		if (!onUdpReceive(source, data))
 			unhandled.push_back(data);
 	}
 
@@ -183,9 +188,9 @@ void UdpAsyncComm::onUdpReceiveBuffers(udp::endpoint& source, std::vector<DataBu
 		onUnhandledReceive(source, unhandled);
 }
 
-void UdpAsyncComm::onDirectUdpReceive(UdpRequest client, DataBuffer* data)
+void UdpAsyncComm::onDirectUdpReceive(UdpRequest client, const BufferView& data)
 {
-	if (!data)
+	if (!data.data)
 		return;
 
 	std::vector<std::shared_ptr<ResponseRetryInfo>> foundPendingResponses;
@@ -229,7 +234,7 @@ void UdpAsyncComm::onDirectUdpReceive(UdpRequest client, DataBuffer* data)
 	}
 }
 
-bool UdpAsyncComm::onUdpReceive(udp::endpoint& source, DataBuffer& data)
+bool UdpAsyncComm::onUdpReceive(udp::endpoint& source, const BufferView& data)
 {
 	std::vector<std::shared_ptr<ResponseRetryInfo>> foundPendingResponses;
 
@@ -255,7 +260,7 @@ bool UdpAsyncComm::onUdpReceive(udp::endpoint& source, DataBuffer& data)
 
 	for (const auto& r : foundPendingResponses)
 	{
-		if (!handled && r->onResponse(r->client, &data))
+		if (!handled && r->onResponse(r->client, data))
 		{
 			UDP_LOG(r->client->getName() << " successfully handled, removing");
 
@@ -299,7 +304,7 @@ void UdpAsyncComm::onUdpClose(UdpRequest source)
 	for (const auto& r : foundPendingResponses)
 	{
 		r->reset();
-		r->onResponse(source, nullptr);
+		r->onResponse(source, {});
 	}
 
 	UDP_LOG(source->getName() << " closed, is handled response:" << !foundPendingResponses.empty());

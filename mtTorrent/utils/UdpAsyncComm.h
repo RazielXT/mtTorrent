@@ -4,19 +4,18 @@
 #include "UdpAsyncReceiver.h"
 #include "ServiceThreadpool.h"
 
-using UdpResponseCallback = std::function<bool(UdpRequest, DataBuffer*)>;
-
-class UdpAsyncComm;
-using UdpCommPtr = std::shared_ptr<UdpAsyncComm>;
+using UdpResponseCallback = std::function<bool(UdpRequest, const BufferView&)>;
 
 class UdpAsyncComm
 {
 public:
 
-	static UdpCommPtr Get();
+	UdpAsyncComm();
+	~UdpAsyncComm();
 
-	static UdpCommPtr Init();
-	static void Deinit();
+	static UdpAsyncComm& Get();
+
+	void deinit();
 
 	void setBindPort(uint16_t port);
 
@@ -53,9 +52,9 @@ private:
 	UdpRequest findPendingConnection(UdpRequest);
 
 	void checkTimeout(UdpRequest, const asio::error_code& error);
-	void onUdpReceiveBuffers(udp::endpoint&, std::vector<DataBuffer*>&);
-	void onDirectUdpReceive(UdpRequest, DataBuffer*);
-	bool onUdpReceive(udp::endpoint&, DataBuffer&);
+	void onUdpReceiveBuffers(udp::endpoint&, const std::vector<BufferView>&);
+	void onDirectUdpReceive(UdpRequest, const BufferView&);
+	bool onUdpReceive(udp::endpoint&, const BufferView&);
 	void onUdpClose(UdpRequest);
 	UdpPacketCallback onUnhandledReceive;
 

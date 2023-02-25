@@ -87,29 +87,29 @@ void mtt::utp::Manager::setConnectionCallback(std::function<void(StreamPtr)> cb)
 	onConnection = cb;
 }
 
-bool mtt::utp::Manager::onUdpPacket(udp::endpoint& e, std::vector<DataBuffer*>& buffers)
+bool mtt::utp::Manager::onUdpPacket(udp::endpoint& e, std::vector<BufferView>& buffers)
 {
 	if (!active)
 		return false;
 
-	auto getUtpPacketHeaderSize = [](DataBuffer* data) -> uint32_t
+	auto getUtpPacketHeaderSize = [](const BufferView& data) -> uint32_t
 	{
-		if (data->size() < sizeof(utp::MessageHeader))
+		if (data.size < sizeof(utp::MessageHeader))
 			return 0;
 
-		auto header = reinterpret_cast<utp::MessageHeader*>(data->data());
+		auto header = reinterpret_cast<const utp::MessageHeader*>(data.data);
 
 		if (header->getVersion() != utp::MessageHeader::CurrentVersion || header->getType() > ST_SYN)
 			return 0;
 
-		return parseHeaderSize(header, data->size());
+		return parseHeaderSize(header, data.size);
 	};
 
 	std::swap(usedBuffers, buffers);
 	headerSizes.clear();
 	buffers.clear();
 
-	for (auto data : usedBuffers)
+	for (auto& data : usedBuffers)
 	{
 		headerSizes.push_back(getUtpPacketHeaderSize(data));
 
@@ -151,14 +151,14 @@ bool mtt::utp::Manager::onUdpPacket(udp::endpoint& e, std::vector<DataBuffer*>& 
 		auto headerSize = headerSizes[i];
 		if (headerSize == 0)
 			continue;
-		auto data = usedBuffers[i];
-		auto header = reinterpret_cast<utp::MessageHeader*>(data->data());
+		auto& data = usedBuffers[i];
+		auto header = reinterpret_cast<const utp::MessageHeader*>(data.data);
 
 		if (findStream(header->connection_id))
 		{
-			currentStream->readUdpPacket(*header, { data->data() + headerSize , data->size() - headerSize });
+			currentStream->readUdpPacket(*header, { data.data + headerSize , data.size - headerSize });
 		}
-		else if (header->getType() == ST_SYN && data->size() == headerSize)
+		else if (header->getType() == ST_SYN && data.size == headerSize)
 		{
 			onNewConnection(e, *header);
 		}
