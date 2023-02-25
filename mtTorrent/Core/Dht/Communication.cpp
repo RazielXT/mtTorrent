@@ -4,18 +4,31 @@
 #include "utils/Filesystem.h"
 #include <fstream>
 
-mtt::dht::Communication* comm;
+mtt::dht::Communication* comm = nullptr;
 
 #define DHT_LOG(x) WRITE_GLOBAL_LOG(Dht, x)
 #define DHT_DETAIL_LOG(x) //WRITE_GLOBAL_LOG(Dht, x)
 
-mtt::dht::Communication::Communication() : responder(*this)
+mtt::dht::Communication::Communication(UdpAsyncComm& udpComm) : responder(*this), udp(udpComm)
 {
-	udp = UdpAsyncComm::Init();
 	comm = this;
 	
 	responder.table = table = std::make_shared<Table>();
+}
 
+mtt::dht::Communication::~Communication()
+{
+	if (refreshTimer)
+		stop();
+}
+
+mtt::dht::Communication& mtt::dht::Communication::get()
+{
+	return *comm;
+}
+
+void mtt::dht::Communication::init()
+{
 	config::registerOnChangeCallback(config::ValueType::Dht, [this]()
 		{
 			if (mtt::config::getExternal().dht.enabled)
@@ -23,19 +36,9 @@ mtt::dht::Communication::Communication() : responder(*this)
 			else
 				stop();
 		});
-}
 
-mtt::dht::Communication::~Communication()
-{
-	if (refreshTimer)
-		stop();
-
-	udp.reset();
-}
-
-mtt::dht::Communication& mtt::dht::Communication::get()
-{
-	return *comm;
+	if (mtt::config::getExternal().dht.enabled)
+		start();
 }
 
 void mtt::dht::Communication::start()
@@ -71,7 +74,7 @@ void mtt::dht::Communication::stop()
 		refreshTimer->disable();
 	refreshTimer = nullptr;
 
-	udp->removeListeners();
+	udp.removeListeners();
 	service.stop();
 
 	save();
@@ -186,42 +189,37 @@ void mtt::dht::Communication::findingPeersFinished(const uint8_t* hash, uint32_t
 
 UdpRequest mtt::dht::Communication::sendMessage(const Addr& addr, const DataBuffer& data, UdpResponseCallback response)
 {
-	return udp->sendMessage(data, addr, response);
+	return udp.sendMessage(data, addr, response);
 }
 
 void mtt::dht::Communication::stopMessage(UdpRequest r)
 {
-	udp->removeCallback(r);
+	udp.removeCallback(r);
 }
 
 void mtt::dht::Communication::sendMessage(const udp::endpoint& endpoint, const DataBuffer& data)
 {
-	udp->sendMessage(data, endpoint);
+	udp.sendMessage(data, endpoint);
 }
 
 void mtt::dht::Communication::loadDefaultRoots()
 {
 	auto resolveFunc = [this]
-	(const std::error_code& error, udp::resolver::iterator iterator, std::shared_ptr<udp::resolver> resolver)
+	(const std::error_code& error, udp::resolver::results_type results, std::shared_ptr<udp::resolver> resolver)
 	{
 		if (!error)
 		{
-			udp::resolver::iterator end;
-
-			while (iterator != end)
+			for (auto& r : results)
 			{
-				pingNode(Addr{ iterator->endpoint().address(), iterator->endpoint().port() });
-
-				iterator++;
+				pingNode(Addr{ r.endpoint().address(), r.endpoint().port() });
 			}
 		}
 	};
 
 	for (auto& r : mtt::config::getInternal().dht.defaultRootHosts)
 	{
-		udp::resolver::query query(r.first, r.second);
 		auto resolver = std::make_shared<udp::resolver>(service.io);
-		resolver->async_resolve(query, std::bind(resolveFunc, std::placeholders::_1, std::placeholders::_2, resolver));
+		resolver->async_resolve(r.first, r.second, std::bind(resolveFunc, std::placeholders::_1, std::placeholders::_2, resolver));
 	}
 }
 

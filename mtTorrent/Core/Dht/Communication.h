@@ -18,11 +18,12 @@ namespace mtt
 		{
 		public:
 
-			Communication();
+			Communication(UdpAsyncComm&);
 			~Communication();
 
 			static Communication& get();
 
+			void init();
 			void start();
 			void stop();
 			bool active() const;
@@ -45,7 +46,7 @@ namespace mtt
 
 		protected:
 
-			UdpCommPtr udp;
+			UdpAsyncComm& udp;
 
 			uint32_t onFoundPeers(const uint8_t* hash, const std::vector<Addr>& values) override;
 			void findingPeersFinished(const uint8_t* hash, uint32_t count) override;
@@ -55,8 +56,6 @@ namespace mtt
 			void stopMessage(UdpRequest r) override;
 
 			void announceTokenReceived(const uint8_t* hash, const std::string& token, const udp::endpoint& source) override;
-
-		private:
 
 			struct QueryInfo
 			{

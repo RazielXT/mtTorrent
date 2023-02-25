@@ -66,13 +66,7 @@ void mtt::Core::init()
 
 	mtt::config::load();
 
-	UdpAsyncComm::Init()->setBindPort(mtt::config::getExternal().connection.udpPort);
-	config::registerOnChangeCallback(config::ValueType::Connection, [this]()
-		{
-			UdpAsyncComm::Get()->setBindPort(mtt::config::getExternal().connection.udpPort);
-		});
-
-	dht = std::make_shared<dht::Communication>();
+	dht = std::make_shared<dht::Communication>(udpComm);
 
 	bandwidth = std::make_unique<GlobalBandwidth>();
 
@@ -83,15 +77,6 @@ void mtt::Core::init()
 		});
 
 	utp.init();
-
-	UdpAsyncComm::Get()->listen([this](udp::endpoint& e, std::vector<DataBuffer*>& b)
-		{
-			utp.onUdpPacket(e, b);
-			dht->onUdpPacket(e, b);
-		});
-
-	if (mtt::config::getExternal().dht.enabled)
-		dht->start();
 
 	TorrentsList list;
 	list.load();
@@ -152,7 +137,7 @@ void mtt::Core::deinit()
 	}
 
 	utp.stop();
-	UdpAsyncComm::Deinit();
+	udpComm.deinit();
 
 	mtt::config::save();
 

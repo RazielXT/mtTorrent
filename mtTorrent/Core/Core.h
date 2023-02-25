@@ -3,6 +3,7 @@
 #include "Torrent.h"
 #include "Api/Core.h"
 #include "utils/ScheduledTimer.h"
+#include "utils/UdpAsyncComm.h"
 #include "Utp/UtpManager.h"
 
 class TcpAsyncServer;
@@ -49,5 +50,6 @@ namespace mtt
 
 		std::unique_ptr<GlobalBandwidth> bandwidth;
 		utp::Manager utp;
+		UdpAsyncComm udpComm;
 	};
 }
