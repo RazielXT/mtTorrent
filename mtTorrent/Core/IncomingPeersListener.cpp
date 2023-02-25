@@ -8,8 +8,15 @@
 
 #define PEER_LOG(x) WRITE_GLOBAL_LOG(PeersListener, x)
 
-mtt::IncomingPeersListener::IncomingPeersListener(std::function<size_t(std::shared_ptr<PeerStream>, const BufferView& data, const uint8_t* hash)> cb)
+mtt::IncomingPeersListener::IncomingPeersListener()
 {
+}
+
+void mtt::IncomingPeersListener::start(std::function<size_t(std::shared_ptr<PeerStream>, const BufferView& data, const uint8_t* hash)> cb)
+{
+	if (tcpListener)
+		stop();
+
 	onNewPeer = cb;
 	pool.start(2);
 
@@ -67,7 +74,8 @@ mtt::IncomingPeersListener::IncomingPeersListener(std::function<size_t(std::shar
 
 void mtt::IncomingPeersListener::stop()
 {
-	upnp->unmapAllMappedAdapters();
+	if (upnp)
+		upnp->unmapAllMappedAdapters();
 
 	if (tcpListener)
 	{
@@ -90,7 +98,7 @@ void mtt::IncomingPeersListener::stop()
 
 std::string mtt::IncomingPeersListener::getUpnpReadableInfo() const
 {
-	return upnp->getReadableInfo();
+	return upnp ? upnp->getReadableInfo() : "";
 }
 
 void mtt::IncomingPeersListener::createTcpListener()

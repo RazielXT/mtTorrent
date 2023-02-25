@@ -34,6 +34,7 @@ namespace mtt
 		std::unique_ptr<IncomingPeersListener> listener;
 		std::shared_ptr<dht::Communication> dht;
 
+		mutable std::mutex torrentsMtx;
 		std::vector<TorrentPtr> torrents;
 
 		void init();
@@ -51,5 +52,10 @@ namespace mtt
 		std::unique_ptr<GlobalBandwidth> bandwidth;
 		utp::Manager utp;
 		UdpAsyncComm udpComm;
+
+	private:
+
+		bool listening = false;
+		void initListeners();
 	};
 }

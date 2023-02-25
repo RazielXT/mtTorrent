@@ -4,7 +4,6 @@
 #include "utils/TcpAsyncStream.h"
 #include "Api/Listener.h"
 #include "PeerStream.h"
-#include <set>
 
 class UpnpPortMapping;
 
@@ -14,8 +13,9 @@ namespace mtt
 	{
 	public:
 
-		IncomingPeersListener(std::function<size_t(std::shared_ptr<PeerStream>, const BufferView& data, const uint8_t* hash)> onNewPeer);
+		IncomingPeersListener();
 
+		void start(std::function<size_t(std::shared_ptr<PeerStream>, const BufferView& data, const uint8_t* hash)> onNewPeer);
 		void stop();
 
 		std::string getUpnpReadableInfo() const;
@@ -45,7 +45,7 @@ namespace mtt
 		std::shared_ptr<ProtocolEncryptionHandshake> getPeHandshake(void* s);
 
 		std::shared_ptr<UpnpPortMapping> upnp;
-		bool upnpEnabled;
+		bool upnpEnabled = false;
 
 		struct UsedPorts
 		{

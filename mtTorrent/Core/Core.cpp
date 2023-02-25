@@ -70,16 +70,15 @@ void mtt::Core::init()
 
 	bandwidth = std::make_unique<GlobalBandwidth>();
 
-	listener = std::make_unique<IncomingPeersListener>([this](std::shared_ptr<PeerStream> s, const BufferView& data, const uint8_t* hash)
-		{
-			auto t = getTorrent(hash);
-			return t ? t->peers->add(s, data) : 0;
-		});
+	listener = std::make_unique<IncomingPeersListener>();
 
 	utp.init();
 
 	TorrentsList list;
 	list.load();
+
+	if (!list.torrents.empty())
+		initListeners();
 
 	for (auto& t : list.torrents)
 	{
@@ -120,15 +119,17 @@ void mtt::Core::deinit()
 		listener->stop();
 	}
 
-	saveTorrentList(torrents);
-
-	for (auto& t : torrents)
 	{
-		t->stop(Torrent::StopReason::Deinit);
-	}
+		std::lock_guard<std::mutex> guard(torrentsMtx);
+		saveTorrentList(torrents);
 
+		for (auto& t : torrents)
+		{
+			t->stop(Torrent::StopReason::Deinit);
+		}
+		torrents.clear();
+	}
 	listener.reset();
-	torrents.clear();
 
 	if (dht)
 	{
@@ -178,15 +179,20 @@ std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addFile(const uint8_t* data, 
 		return { mtt::Status::I_AlreadyExists, t };
 	}
 
-	auto torrent = Torrent::fromFile(std::move(infoFile));
-
-	if (!torrent)
+	if (infoFile.info.pieces.empty())
 		return { mtt::Status::E_InvalidInput, nullptr };
 
-	torrent->saveTorrentFile(data, size);
-	torrents.push_back(torrent);
+	auto torrent = Torrent::fromFile(std::move(infoFile));
+
+	{
+		std::lock_guard<std::mutex> guard(torrentsMtx);
+		torrents.push_back(torrent);
+		saveTorrentList(torrents);
+	}
+	initListeners();
+
 	listener->addTorrent(torrent->hash());
-	saveTorrentList(torrents);
+	torrent->saveTorrentFile(data, size);
 
 	return { mtt::Status::Success, torrent };
 }
@@ -206,16 +212,24 @@ std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addMagnet(const char* magnet)
 		return { mtt::Status::I_AlreadyExists, t };
 	}
 
-	torrent->downloadMetadata();
-	torrents.push_back(torrent);
+	{
+		std::lock_guard<std::mutex> guard(torrentsMtx);
+		torrents.push_back(torrent);
+		saveTorrentList(torrents);
+	}
+	initListeners();
+
 	listener->addTorrent(torrent->hash());
-	saveTorrentList(torrents);
+	torrent->downloadMetadata();
+
 
 	return { mtt::Status::Success, torrent };
 }
 
 mtt::TorrentPtr mtt::Core::getTorrent(const uint8_t* hash) const
 {
+	std::lock_guard<std::mutex> guard(torrentsMtx);
+
 	for (auto t : torrents)
 	{
 		if (memcmp(t->hash(), hash, 20) == 0)
@@ -227,6 +241,8 @@ mtt::TorrentPtr mtt::Core::getTorrent(const uint8_t* hash) const
 
 mtt::Status mtt::Core::removeTorrent(const uint8_t* hash, bool deleteFiles)
 {
+	std::lock_guard<std::mutex> guard(torrentsMtx);
+
 	for (auto it = torrents.begin(); it != torrents.end(); it++)
 	{
 		if (memcmp((*it)->hash(), hash, 20) == 0)
@@ -250,6 +266,34 @@ mtt::Status mtt::Core::removeTorrent(const uint8_t* hash, bool deleteFiles)
 	}
 
 	return Status::E_InvalidInput;
+}
+
+void mtt::Core::initListeners()
+{
+	if (listening)
+		return;
+
+	listening = true;
+
+	udpComm.setBindPort(mtt::config::getExternal().connection.udpPort);
+	config::registerOnChangeCallback(config::ValueType::Connection, [this]()
+		{
+			udpComm.setBindPort(mtt::config::getExternal().connection.udpPort);
+		});
+
+	udpComm.listen([this](udp::endpoint& e, std::vector<BufferView>& b)
+		{
+			utp.onUdpPacket(e, b);
+			dht->onUdpPacket(e, b);
+		});
+
+	dht->init();
+
+	listener->start([this](std::shared_ptr<PeerStream> s, const BufferView& data, const uint8_t* hash)
+		{
+			auto t = getTorrent(hash);
+			return t ? t->peers->add(s, data) : 0;
+		});
 }
 
 mtt::Status mtt::Core::removeTorrent(const char* hash, bool deleteFiles)
