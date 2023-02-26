@@ -33,8 +33,6 @@ Addr::Addr(const asio::ip::address& addr, uint16_t port_num)
 
 Addr Addr::fromString(const char* str)
 {
-	auto a = asio::ip::address::from_string(str);
-
 	size_t portStart = strlen(str);
 	while (portStart > 0)
 		if (str[portStart] == ':')
@@ -42,7 +40,18 @@ Addr Addr::fromString(const char* str)
 		else
 			portStart--;
 
-	return Addr(a, (uint16_t)strtoul(str + portStart + 1, nullptr, 10));
+	return Addr(asioFromString(str), (uint16_t)strtoul(str + portStart + 1, nullptr, 10));
+}
+
+Addr Addr::fromString(const char* str, uint16_t port)
+{
+	return Addr(asioFromString(str), port);
+}
+
+asio::ip::address Addr::asioFromString(const char* str)
+{
+	asio::error_code ec;
+	return asio::ip::make_address(str, ec);
 }
 
 void Addr::set(const uint8_t* ip, uint16_t p, bool isIpv6)
@@ -166,7 +175,7 @@ uint32_t Addr::toUint() const
 std::string Addr::toData() const
 {
 	std::string data;
-	int addrSize = ipv6 ? 16 : 4;
+	size_t addrSize = ipv6 ? 16 : 4;
 	data.resize(addrSize + 2);
 	memcpy(data.data(), addrBytes, addrSize);
 	*reinterpret_cast<uint16_t*>(data.data() + addrSize) = swap16(port);

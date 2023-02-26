@@ -60,7 +60,7 @@ void UpnpDiscovery::start(std::function<void(DeviceInfo&)> onNewDeviceCb)
 	if (search.active())
 		return;
 
-	search.start([this](HttpHeaderInfo* response) 
+	search.start([this](HttpHeaderInfo* response, const NetAdapters::NetAdapter& adapter)
 		{
 			for (auto& p : response->headerParameters)
 			{
@@ -70,21 +70,16 @@ void UpnpDiscovery::start(std::function<void(DeviceInfo&)> onNewDeviceCb)
 
 					if (!url.address.empty() && url.port)
 					{
-						auto adapters = NetAdapters::getActiveNetAdapters();
+						std::lock_guard<std::mutex> guard(mtx);
 
-						for (auto& a : adapters)
-						{
-							std::lock_guard<std::mutex> guard(mtx);
-
-							if (a.gateway == url.address)
-								upnpLocationQueue.push_back({ a , url.port, url.path });
-						}
+						if (adapter.gateway == url.address)
+							upnpLocationQueue.push_back({ adapter , url.port, url.path });
 					}
 				}
 			}
 
 			queryNext();
-		});
+		}, io);
 
 	onNewDevice = onNewDeviceCb;
 }
@@ -103,6 +98,11 @@ void UpnpDiscovery::stop()
 		stream->close();
 		stream.reset();
 	}
+}
+
+bool UpnpDiscovery::active() const
+{
+	return search.active();
 }
 
 void UpnpDiscovery::queryNext()
@@ -199,54 +199,60 @@ void UpnpDiscovery::onRootXmlReceive(const char* xml, uint32_t size, DeviceInfo 
 	}
 }
 
-void UpnpDiscovery::SsdpSearch::start(std::function<void(HttpHeaderInfo*)> onResponse)
+void UpnpDiscovery::SsdpSearch::start(std::function<void(HttpHeaderInfo*, const NetAdapters::NetAdapter&)> onResponse, asio::io_context& io)
 {
-	std::string requestStr = "M-SEARCH * HTTP/1.1\r\n"
-		"ST: upnp:rootdevice\r\n"
-		"MX: 3\r\n"
-		"MAN: \"ssdp:discover\"\r\n"
-		"HOST: 239.255.255.250:1900\r\n\r\n";
-
-	DataBuffer buffer;
-	buffer.assign(requestStr.begin(), requestStr.end());
-
-	request = UdpAsyncComm::Get()->sendMessage(buffer, "239.255.255.250", "1900", [this, onResponse](UdpRequest, DataBuffer* data)
+	auto adapters = NetAdapters::getActiveNetAdapters();
+	for (auto& a : adapters)
+	{
+		if (!a.gateway.empty() && a.clientIp != "0.0.0.0")
 		{
-			std::lock_guard<std::mutex> guard(mtx);
+			NetAdapters::NetAdapter adapter = a;
 
-			if (data.size)
+			auto request = std::make_shared<UdpAsyncWriter>(io);
+			request->setAddress(Addr({ 239,255,255,250 }, 1900));
+			request->setBindAddress(Addr::asioFromString(adapter.clientIp.c_str()));
+			request->setBroadcast(true);
+			request->onResponse = [this, onResponse, adapter](UdpRequest, const BufferView& data)
 			{
-				HttpHeaderInfo info = HttpHeaderInfo::readFromBuffer(data);
+				std::lock_guard<std::mutex> guard(mtx);
 
-				if (info.success)
-					onResponse(&info);
-
-				if (info.valid)
+				if (data.size)
 				{
-					request.reset();
-					return true;
-				}
-			}
-			else
-				request.reset();
+					HttpHeaderInfo info = HttpHeaderInfo::readFromBuffer(data);
 
-			return false;
+					if (info.success)
+						onResponse(&info, adapter);
+				}
+			};
+
+			const std::string_view requestStr = "M-SEARCH * HTTP/1.1\r\n"
+				"ST: upnp:rootdevice\r\n"
+				"MX: 3\r\n"
+				"MAN: \"ssdp:discover\"\r\n"
+				"HOST: 239.255.255.250:1900\r\n\r\n";
+
+			DataBuffer buffer;
+			buffer.assign(requestStr.begin(), requestStr.end());
+
+			request->write(buffer);
+			requests.push_back(request);
 		}
-	, false, 2, true);
+	}
 }
 
 void UpnpDiscovery::SsdpSearch::stop()
 {
 	std::lock_guard<std::mutex> guard(mtx);
 
-	if (request)
+	for (auto& r : requests)
 	{
-		UdpAsyncComm::Get().removeCallback(request);
-		request.reset();
+		r->close();
 	}
+
+	requests.clear();
 }
 
-bool UpnpDiscovery::SsdpSearch::active()
+bool UpnpDiscovery::SsdpSearch::active() const
 {
-	return request != nullptr;
+	return !requests.empty();
 }

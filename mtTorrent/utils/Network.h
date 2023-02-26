@@ -22,6 +22,8 @@ struct Addr
 	Addr(const asio::ip::address& addr, uint16_t port_num);
 
 	static Addr fromString(const char* str);
+	static Addr fromString(const char* str, uint16_t port);
+	static asio::ip::address asioFromString(const char* str);
 
 	uint8_t addrBytes[16];
 	uint16_t port = 0;

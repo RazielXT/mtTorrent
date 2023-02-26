@@ -50,12 +50,12 @@ void mtt::IncomingPeersListener::start(std::function<size_t(std::shared_ptr<Peer
 			{
 				if (usedPorts.udp != settings.udpPort)
 				{
-					upnp->unmapMappedAdapters(usedPorts.udp, UpnpPortMapping::PortType::Udp, false);
+					upnp->unmapMappedAdapters(usedPorts.udp, UpnpPortMapping::PortType::Udp);
 					upnp->mapActiveAdapters(settings.udpPort, UpnpPortMapping::PortType::Udp);
 				}
 				if (usedPorts.tcp != settings.tcpPort)
 				{
-					upnp->unmapMappedAdapters(usedPorts.udp, UpnpPortMapping::PortType::Tcp, false);
+					upnp->unmapMappedAdapters(usedPorts.tcp, UpnpPortMapping::PortType::Tcp);
 					upnp->mapActiveAdapters(settings.tcpPort, UpnpPortMapping::PortType::Tcp);
 				}
 			}

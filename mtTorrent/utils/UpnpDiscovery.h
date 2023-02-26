@@ -19,13 +19,15 @@ public:
 		std::string name;
 		std::string gateway;
 		std::string clientIp;
-		uint16_t port;
+		uint16_t port = 0;
 
 		std::map<std::string, std::string> services;
 	};
 
 	void start(std::function<void(DeviceInfo&)> onNewDevice);
 	void stop();
+
+	bool active() const;
 
 private:
 
@@ -48,12 +50,12 @@ private:
 
 	struct SsdpSearch
 	{
-		void start(std::function<void(HttpHeaderInfo*)> onResponse);
+		void start(std::function<void(HttpHeaderInfo*, const NetAdapters::NetAdapter& adapter)> onResponse, asio::io_context& io);
 		void stop();
-		bool active();
+		bool active() const;
 
-		std::mutex mtx;
-		UdpRequest request;
+		mutable std::mutex mtx;
+		std::vector<UdpRequest> requests;
 	}
 	search;
 };

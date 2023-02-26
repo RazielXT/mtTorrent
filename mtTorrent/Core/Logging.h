@@ -28,6 +28,7 @@ enum class LogType
 	TcpStream = FIRST << 18,
 	PeerStream = FIRST << 19,
 	General = FIRST << 20,
+	Upnp = FIRST << 21,
 
 	Test = FIRST << 30
 };
