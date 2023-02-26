@@ -40,20 +40,19 @@ void UdpAsyncWriter::setAddress(const std::string& host, const std::string& p)
 	resolveHostname();
 }
 
-void UdpAsyncWriter::setAddress(const std::string& host, const std::string& p, bool ipv6)
+void UdpAsyncWriter::setBindAddress(const asio::ip::address& addr)
 {
-	hostname = host;
-	port = p;
-
-	NAME_LOG(getName())
-	UDP_LOG(host << " host");
-
-	resolveHostname();
+	bindAddress = addr;
 }
 
 void UdpAsyncWriter::setBindPort(uint16_t port)
 {
 	bindPort = port;
+}
+
+void UdpAsyncWriter::setBroadcast(bool b)
+{
+	broadcast = b;
 }
 
 void UdpAsyncWriter::close()
@@ -136,20 +135,25 @@ void UdpAsyncWriter::handle_connect(const std::error_code& error)
 
 	if (!error)
 	{
-		if (onResponse && state != Connected)
-		{
-			UDP_LOG("call async_receive");
-			socket.async_receive(asio::null_buffers(), std::bind(&UdpAsyncWriter::handle_receive, shared_from_this(), std::placeholders::_1));
-		}
-
-		state = Connected;
-
-		send_message();
+		setConnected();
 	}
 	else
 	{
 		postFail("Connect", error);
 	}
+}
+
+void UdpAsyncWriter::setConnected()
+{
+	if (onResponse && state != Connected)
+	{
+		UDP_LOG("call async_receive");
+		socket.async_receive(asio::null_buffers(), std::bind(&UdpAsyncWriter::handle_receive, shared_from_this(), std::placeholders::_1));
+	}
+
+	state = Connected;
+
+	send_message();
 }
 
 void UdpAsyncWriter::do_close()
@@ -198,7 +202,7 @@ void UdpAsyncWriter::send_message()
 {
 	if (state == Initialized)
 	{
-		if (bindPort && !socket.is_open())
+		if (!socket.is_open())
 		{
 			std::error_code ec;
 
@@ -207,7 +211,11 @@ void UdpAsyncWriter::send_message()
 			socket.set_option(asio::socket_base::receive_buffer_size(4000000), ec);
 			//socket.set_option(asio::socket_base::send_buffer_size(1000000), ec);
 
-			socket.bind(udp::endpoint(target_endpoint.protocol(), bindPort), ec);
+			if (!bindAddress.is_unspecified())
+				socket.bind(udp::endpoint(bindAddress, bindPort), ec);
+			else if (bindPort)
+				socket.bind(udp::endpoint(target_endpoint.protocol(), bindPort), ec);
+
 			socket.non_blocking(true, ec);
 
 			if (ec)
@@ -216,7 +224,10 @@ void UdpAsyncWriter::send_message()
 			}
 		}
 
-		socket.async_connect(target_endpoint, std::bind(&UdpAsyncWriter::handle_connect, shared_from_this(), std::placeholders::_1));
+		if (broadcast)
+			setConnected();
+		else
+			socket.async_connect(target_endpoint, std::bind(&UdpAsyncWriter::handle_connect, shared_from_this(), std::placeholders::_1));
 	}
 	else if (state == Connected)
 	{
@@ -325,7 +336,7 @@ void UdpAsyncWriter::readSocket()
 				continue;
 
 			if (ec != asio::error::would_block)
-				UDP_LOG("receive_from error: " << ec.message());
+				UDP_LOG("receive error: " << ec.message());
 
 			break;
 		}

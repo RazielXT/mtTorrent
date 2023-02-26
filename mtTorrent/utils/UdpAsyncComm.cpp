@@ -81,14 +81,14 @@ UdpRequest UdpAsyncComm::create(const std::string& host, const std::string& port
 	return c;
 }
 
-UdpRequest UdpAsyncComm::sendMessage(const DataBuffer& data, const std::string& host, const std::string& port, UdpResponseCallback response, bool ipv6, uint32_t timeout, bool anySource)
+UdpRequest UdpAsyncComm::sendMessage(const DataBuffer& data, const Addr& addr, UdpResponseCallback response, uint32_t timeout)
 {
 	UdpRequest c = std::make_shared<UdpAsyncWriter>(pool.io);
 
 	if (response)
-		addPendingResponse(c, response, timeout, anySource);
+		addPendingResponse(c, response, timeout);
 
-	c->setAddress(host, port, ipv6);
+	c->setAddress(addr);
 	c->setBindPort(bindPort);
 	c->write(data);
 
@@ -101,20 +101,6 @@ void UdpAsyncComm::sendMessage(const DataBuffer& data, UdpRequest c, UdpResponse
 		addPendingResponse(c, response, timeout);
 
 	c->write(data);
-}
-
-UdpRequest UdpAsyncComm::sendMessage(const DataBuffer& data, const Addr& addr, UdpResponseCallback response)
-{
-	UdpRequest c = std::make_shared<UdpAsyncWriter>(pool.io);
-
-	if (response)
-		addPendingResponse(c, response);
-
-	c->setAddress(addr);
-	c->setBindPort(bindPort);
-	c->write(data);
-
-	return c;
 }
 
 void UdpAsyncComm::sendMessage(const DataBuffer& data, const udp::endpoint& endpoint)
@@ -141,7 +127,7 @@ void UdpAsyncComm::removeCallback(UdpRequest target)
 	}
 }
 
-void UdpAsyncComm::addPendingResponse(UdpRequest c, UdpResponseCallback response, uint32_t timeout, bool anySource)
+void UdpAsyncComm::addPendingResponse(UdpRequest c, UdpResponseCallback response, uint32_t timeout)
 {
 	auto info = std::make_shared<ResponseRetryInfo>();
 	info->client = c;
@@ -149,11 +135,10 @@ void UdpAsyncComm::addPendingResponse(UdpRequest c, UdpResponseCallback response
 	info->timeoutTimer = std::make_shared<asio::steady_timer>(pool.io);
 	info->timeoutTimer->expires_after(std::chrono::seconds(timeout));
 	info->timeoutTimer->async_wait(std::bind(&UdpAsyncComm::checkTimeout, this, c, std::placeholders::_1));
-	info->anySource = anySource;
 	info->onResponse = response;
 
 	c->onResponse = std::bind(&UdpAsyncComm::onDirectUdpReceive, this, std::placeholders::_1, std::placeholders::_2);
-	c->onCloseCallback = std::bind(&UdpAsyncComm::onUdpClose, this, std::placeholders::_1);
+	c->onCloseCallback = [this](UdpRequest c) { std::lock_guard<std::mutex> guard(respondingMutex); onUdpClose(c); };
 
 	std::lock_guard<std::mutex> guard(responsesMutex);
 
@@ -246,7 +231,7 @@ bool UdpAsyncComm::onUdpReceive(udp::endpoint& source, const BufferView& data)
 		auto it = pendingResponses.begin();
 		while (it != pendingResponses.end())
 		{
-			if ((*it)->client->getEndpoint() == source || (*it)->anySource)
+			if ((*it)->client->getEndpoint() == source)
 			{
 				foundPendingResponses.push_back(*it);
 				it = pendingResponses.erase(it);
@@ -276,14 +261,14 @@ bool UdpAsyncComm::onUdpReceive(udp::endpoint& source, const BufferView& data)
 		}
 	}
 
+	if (!handled)
+		handled = false;
 	return handled;
 }
 
 void UdpAsyncComm::onUdpClose(UdpRequest source)
 {
 	std::vector<std::shared_ptr<ResponseRetryInfo>> foundPendingResponses;
-
-	std::lock_guard<std::mutex> guard(respondingMutex);
 
 	{
 		std::lock_guard<std::mutex> guard(responsesMutex);
@@ -344,6 +329,8 @@ void UdpAsyncComm::checkTimeout(UdpRequest client, const asio::error_code& error
 		}
 	}
 
+	std::lock_guard<std::mutex> guard(respondingMutex);
+
 	if (!info || info->retries == 255)
 		return;
 
@@ -356,6 +343,7 @@ void UdpAsyncComm::checkTimeout(UdpRequest client, const asio::error_code& error
 	}
 	else
 	{
+
 		UDP_LOG(info->client->getName() << " request retry");
 		info->retries++;
 		info->client->write();

@@ -25,8 +25,9 @@ public:
 	void setAddress(const Addr& addr);
 	void setAddress(const udp::endpoint& addr);
 	void setAddress(const std::string& hostname, const std::string& port);
-	void setAddress(const std::string& hostname, const std::string& port, bool ipv6);
+	void setBindAddress(const asio::ip::address& addr);
 	void setBindPort(uint16_t port);
+	void setBroadcast(bool);
 
 	std::string getName() const;
 	const udp::endpoint& getEndpoint() const;
@@ -51,7 +52,8 @@ protected:
 
 	void handle_resolve(const std::error_code& error, udp::resolver::results_type iterator, std::shared_ptr<udp::resolver> resolver);
 	void handle_connect(const std::error_code& err);
-	
+	void setConnected();
+
 	void do_write(DataBuffer data);
 	void do_rewrite();
 	void do_close();
@@ -62,13 +64,13 @@ protected:
 	void send_message(const BufferView&);
 	void send_message(const BufferView&, WriteOption opt);
 
-	void handle_write(const std::error_code& error, std::size_t sz, WriteOption opt);
-
 	void handle_receive(const std::error_code& error);
 	void readSocket();
 	DataBuffer receiveBuffer;
 
+	asio::ip::address bindAddress;
 	uint16_t bindPort = 0;
+	bool broadcast = false;
 
 	udp::endpoint target_endpoint;
 	udp::socket socket;
