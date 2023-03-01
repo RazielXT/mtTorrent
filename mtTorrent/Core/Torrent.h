@@ -20,7 +20,6 @@ namespace mtt
 		~Torrent();
 
 		bool started = false;
-		bool checking = false;
 		Status lastError = Status::Success;
 
 		static TorrentPtr fromFile(mtt::TorrentFileInfo fileInfo);
@@ -35,14 +34,6 @@ namespace mtt
 		mtt::Status start();
 		enum class StopReason { Deinit, Manual, Internal };
 		void stop(StopReason reason = StopReason::Manual);
-
-		void checkFiles(bool all = false);
-		float checkingProgress() const;
-
-		bool selectFiles(const std::vector<bool>&);
-		bool selectFile(uint32_t index, bool selected);
-		void setFilesPriority(const std::vector<mtt::Priority>&);
-		mtt::Status setLocationPath(const std::string& path, bool moveFiles);
 
 		const std::string& name() const;
 		float progress() const;
@@ -73,16 +64,15 @@ namespace mtt
 		void removeMetaFiles();
 		bool loadFileInfo();
 
+		void prepareForChecking();
+		void refreshAfterChecking(const PiecesCheck&);
+
+		void refreshSelection();
 
 	protected:
 
 		static bool loadSavedTorrentFile(const std::string& hash, DataBuffer& out);
 
-		mutable std::mutex checkStateMutex;
-		std::shared_ptr<mtt::PiecesCheck> checkState;
-
-		void refreshLastState();
-		uint64_t lastFileTime = 0;
 		Timestamp addedTime = 0;
 
 		bool stateChanged = false;

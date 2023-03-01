@@ -10,7 +10,7 @@
 #define MT_HASH_NAME "-mt0900-"
 #define MT_NAME_SHORT "mt09"
 
-const uint32_t BlockRequestMaxSize = 16 * 1024;
+const uint32_t BlockMaxSize = 16 * 1024;
 
 namespace mtt
 {
@@ -57,18 +57,17 @@ namespace mtt
 
 	using DownloadSelection = std::vector<FileSelection>;
 
-	struct SelectedIntervals
+	struct SelectedFiles
 	{
-		SelectedIntervals(const mtt::TorrentInfo info, const mtt::DownloadSelection& selection);
-		bool isSelected(const mtt::File& f);
-		bool isSelected(uint32_t idx);
+		SelectedFiles(const mtt::TorrentInfo info, const mtt::DownloadSelection& selection);
+		SelectedFiles(const mtt::TorrentInfo info, uint32_t idx);
 
-		struct Interval
+		struct Selection
 		{
-			uint32_t beginIdx;
-			uint32_t endIdx;
+			uint32_t idx;
+			uint64_t size;
 		};
-		std::vector<Interval> selectedIntervals;
+		std::vector<Selection> files;
 	};
 
 	struct AnnounceResponse

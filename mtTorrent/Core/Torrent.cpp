@@ -10,7 +10,7 @@
 #include "AlertsManager.h"
 #include <filesystem>
 
-mtt::Torrent::Torrent() : service(0), files(infoFile.info)
+mtt::Torrent::Torrent() : service(0), files(*this)
 {
 }
 
@@ -72,8 +72,7 @@ mtt::TorrentPtr mtt::Torrent::fromSavedState(std::string name)
 		torrent->stateChanged = true;
 	}
 
-	torrent->files.reload(state.selection, state.downloadPath);
-	torrent->lastFileTime = state.lastStateTime;
+	torrent->files.initialize(state);
 	torrent->addedTime = state.addedTime;
 
 	if (torrent->addedTime == 0)
@@ -127,7 +126,7 @@ void mtt::Torrent::save()
 	saveState.info.pieceSize = infoFile.info.pieceSize;
 	saveState.info.fullSize = infoFile.info.fullSize;
 	saveState.downloadPath = files.storage.getPath();
-	saveState.lastStateTime = lastFileTime = files.storage.getLastModifiedTime();
+	saveState.lastStateTime = files.getLastModifiedTime();
 	saveState.addedTime = addedTime;
 	saveState.started = started;
 	saveState.uploaded = fileTransfer->uploader->uploaded;
@@ -161,29 +160,36 @@ void mtt::Torrent::removeMetaFiles()
 	std::remove((path + ".state").data());
 }
 
-bool mtt::Torrent::importTrackers(const mtt::TorrentFileInfo& otherFileInfo)
+void mtt::Torrent::prepareForChecking()
 {
-	bool added = false;
+	fileTransfer->stop();
+	lastError = Status::Success;
+	activityTime = TimeClock::now();
+}
 
-	for (auto& t : otherFileInfo.announceList)
+void mtt::Torrent::refreshAfterChecking(const PiecesCheck& check)
+{
+	if (!check.rejected)
 	{
-		if (std::find(infoFile.announceList.begin(), infoFile.announceList.end(), t) == infoFile.announceList.end())
-		{
-			infoFile.announceList.push_back(t);
-			peers->trackers.addTracker(t);
-		}
+		stateChanged = true;
+
+		if (started)
+			start();
+		else
+			stop();
 	}
 
-	if (added)
+	AlertsManager::Get().torrentAlert(Alerts::Id::TorrentCheckFinished, *this);
+}
+
+void mtt::Torrent::refreshSelection()
+{
+	stateChanged = true;
+
+	if (started)
 	{
-		if (infoFile.announce.empty())
-			infoFile.announce = infoFile.announceList.front();
-
-		auto newFile = infoFile.createTorrentFileData();
-		saveTorrentFile(newFile.data(), newFile.size());
+		fileTransfer->refreshSelection();
 	}
-
-	return added;
 }
 
 bool mtt::Torrent::loadSavedTorrentFile(const std::string& hash, DataBuffer& out)
@@ -197,37 +203,6 @@ bool mtt::Torrent::loadSavedTorrentFile(const std::string& hash, DataBuffer& out
 	out = DataBuffer((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
 
 	return !out.empty();
-}
-
-void mtt::Torrent::refreshLastState()
-{
-	if (!checking)
-	{
-		bool needRecheck = false;
-		uint64_t filesTime = 0;
-
-		const auto& tfiles = infoFile.info.files;
-		for (size_t i = 0; i < tfiles.size(); i++)
-		{
-			auto fileTime = files.storage.getLastModifiedTime(i);
-
-			if (filesTime < fileTime)
-				filesTime = fileTime;
-
-			if (!fileTime && files.progress.hasPiece(tfiles[i].startPieceIndex) && tfiles[i].size != 0)
-				needRecheck = true;
-		}
-
-		if (filesTime != lastFileTime || needRecheck)
-		{
-			fileTransfer->downloader.storage.clearUnfinishedPieces();
-
-			if (filesTime == 0)
-				lastFileTime = 0;
-
-			checkFiles();
-		}
-	}
 }
 
 void mtt::Torrent::downloadMetadata()
@@ -265,7 +240,7 @@ void mtt::Torrent::downloadMetadata()
 
 mttApi::Torrent::State mtt::Torrent::getState() const
 {
-	if (checking)
+	if (files.checking)
 		return mttApi::Torrent::State::CheckingFiles;
 	if (stopping)
 		return mttApi::Torrent::State::Stopping;
@@ -290,8 +265,7 @@ mttApi::Torrent::TimePoint mtt::Torrent::getStateTimestamp() const
 void mtt::Torrent::initialize()
 {
 	stateChanged = true;
-	files.initialize(infoFile.info);
-	AlertsManager::Get().torrentAlert(Alerts::Id::TorrentAdded, this);
+	files.initialize();
 }
 
 mtt::Status mtt::Torrent::start()
@@ -320,17 +294,7 @@ mtt::Status mtt::Torrent::start()
 	}
 
 	if (loadFileInfo())
-	{
-		refreshLastState();
-
-		if (!checking && !selectionFinished())
-		{
-			lastError = files.prepareSelection();
-
-			if (lastError == mtt::Status::Success)
-				lastFileTime = files.storage.getLastModifiedTime();
-		}
-	}
+		lastError = files.start();
 
 	if (lastError != mtt::Status::Success)
 	{
@@ -345,7 +309,7 @@ mtt::Status mtt::Torrent::start()
 	stateChanged = true;
 	activityTime = TimeClock::now();
 
-	if (!checking)
+	if (!files.checking)
 		fileTransfer->start();
 
 	return Status::Success;
@@ -358,15 +322,7 @@ void mtt::Torrent::stop(StopReason reason)
 
 	std::lock_guard<std::mutex> guard(stateMutex);
 
-	if (checking)
-	{
-		std::lock_guard<std::mutex> guard(checkStateMutex);
-
-		if (checkState)
-			checkState->rejected = true;
-
-		checking = false;
-	}
+	files.stop();
 
 	if (utmDl)
 	{
@@ -399,155 +355,6 @@ void mtt::Torrent::stop(StopReason reason)
 
 	stopping = false;
 	activityTime = TimeClock::now();
-}
-
-void mtt::Torrent::checkFiles(bool all)
-{
-	if (checking)
-		return;
-
-	if (all)
-	{
-		lastFileTime = 0;
-	}
-
-	auto request = std::make_shared<mtt::PiecesCheck>(files.progress);
-	request->piecesCount = (uint32_t)files.progress.pieces.size();
-
-	std::vector<bool> wantedChecks(infoFile.info.pieces.size());
-	const auto& tfiles = infoFile.info.files;
-	for (size_t i = 0; i < tfiles.size(); i++)
-	{
-		bool checkFile = !lastFileTime;
-		if (!checkFile)
-		{
-			auto fileTime = files.storage.getLastModifiedTime(i);
-
-			if (lastFileTime < fileTime || (!fileTime && files.progress.selectedPiece(tfiles[i].startPieceIndex)))
-				checkFile = true;
-		}
-
-		if (checkFile)
-		{
-			for (uint32_t p = tfiles[i].startPieceIndex; p <= tfiles[i].endPieceIndex; p++)
-				wantedChecks[p] = true;
-		}
-	}
-
-	files.progress.removeReceived(wantedChecks);
-
-	auto localOnFinish = [this, request]()
-	{
-		{
-			std::lock_guard<std::mutex> guard(checkStateMutex);
-			checkState.reset();
-		}
-
-		if (!request->rejected)
-		{
-			files.progress.select(infoFile.info, files.selection);
-			lastFileTime = files.storage.getLastModifiedTime();
-			checking = false;
-			stateChanged = true;
-
-			if (started)
-				start();
-			else
-				stop();
-		}
-		else
-			lastFileTime = 0;
-	};
-
-	checking = true;
-	lastError = Status::Success;
-
-	loadFileInfo();
-
-	const uint32_t WorkersCount = 4;
-	service.start(WorkersCount);
-
-	auto finished = std::make_shared<uint32_t>(0);
-
-	for (uint32_t i = 0; i < WorkersCount; i++)
-		service.io.post([WorkersCount, i, finished, localOnFinish, request, wantedChecks, this]()
-			{
-				files.storage.checkStoredPieces(*request, infoFile.info.pieces, WorkersCount, i, wantedChecks);
-
-				if (++(*finished) == WorkersCount)
-					localOnFinish();
-			});
-
-	{
-		std::lock_guard<std::mutex> guard(checkStateMutex);
-		checkState = request;
-	}
-
-	activityTime = TimeClock::now();
-}
-
-float mtt::Torrent::checkingProgress() const
-{
-	std::lock_guard<std::mutex> guard(checkStateMutex);
-
-	if (checkState)
-		return checkState->piecesChecked / (float)checkState->piecesCount;
-
-	return 1;
-}
-
-bool mtt::Torrent::selectFiles(const std::vector<bool>& s)
-{
-	loadFileInfo();
-
-	if (!files.select(infoFile.info, s))
-		return false;
-
-	stateChanged = true;
-
-	if (started)
-	{
-		lastError = files.prepareSelection();
-		fileTransfer->refreshSelection();
-
-		return lastError == Status::Success;
-	}
-
-	return true;
-}
-
-bool mtt::Torrent::selectFile(uint32_t index, bool selected)
-{
-	loadFileInfo();
-
-	if (!files.select(infoFile.info, index, selected))
-		return false;
-
-	if (started)
-	{
-		lastError = files.prepareSelection();
-		fileTransfer->refreshSelection();
-
-		return lastError == Status::Success;
-	}
-
-	return true;
-}
-
-void mtt::Torrent::setFilesPriority(const std::vector<mtt::Priority>& priority)
-{
-	loadFileInfo();
-
-	if (files.selection.size() != priority.size())
-		return;
-
-	for (size_t i = 0; i < priority.size(); i++)
-		files.selection[i].priority = priority[i];
-
-	if (started)
-		fileTransfer->refreshSelection();
-
-	stateChanged = true;
 }
 
 bool mtt::Torrent::finished() const
@@ -652,16 +459,4 @@ uint64_t mtt::Torrent::receivedBytes() const
 uint64_t mtt::Torrent::dataLeft() const
 {
 	return infoFile.info.fullSize - downloaded();
-}
-
-mtt::Status mtt::Torrent::setLocationPath(const std::string& path, bool moveFiles)
-{
-	stateChanged = true;
-
-	auto status = files.storage.setPath(path, moveFiles);
-
-	if (!moveFiles)
-		checkFiles(true);
-
-	return status;
 }

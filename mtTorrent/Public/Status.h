@@ -10,8 +10,9 @@ namespace mtt
 		I_Connecting,
 		I_Requesting,
 		I_Stopped,
-		I_AlreadyExists,
 		I_Merged,
+		I_AlreadyExists,
+		I_Mismatch,
 
 		E_Unknown = 1000,
 		E_InvalidInput,

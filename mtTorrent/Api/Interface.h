@@ -86,12 +86,10 @@ namespace mtt
 		API_EXPORT DataBuffer createTorrentFileData();
 	};
 
-	enum class Priority : uint8_t
-	{
-		Low = 10,
-		Normal = 50,
-		High = 90
-	};
+	using Priority = uint8_t;
+	constexpr Priority PriorityLow = 10;
+	constexpr Priority PriorityNormal = 50;
+	constexpr Priority PriorityHigh = 90;
 
 	struct FileSelection
 	{
@@ -149,6 +147,17 @@ namespace mtt
 		bool requesting = false;
 		std::string country;
 		uint32_t flags = 0;
+	};
+
+	struct PathValidation
+	{
+		mtt::Status status = mtt::Status::E_InvalidPath;
+
+		uint64_t fullSpace = 0;
+		uint64_t availableSpace = 0;
+
+		uint64_t requiredSize = 0;
+		uint64_t missingSize = 0;	//not yet allocated
 	};
 
 	struct AlertMessage

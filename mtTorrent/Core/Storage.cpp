@@ -4,7 +4,7 @@
 #include "utils/SHA.h"
 #include "utils/Filesystem.h"
 #include <fstream>
-#include <iostream>
+#include <numeric>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -53,7 +53,7 @@ mtt::Status mtt::Storage::setPath(std::string p, bool moveFiles)
 
 		if (pathExists && moveFiles && !info.files.empty())
 		{
-			auto newPath = std::filesystem::path(p + info.files.back().path.front());
+			auto newPath = getRootpath(p);
 
 			if (info.files.size() == 1)
 			{
@@ -66,7 +66,7 @@ mtt::Status mtt::Storage::setPath(std::string p, bool moveFiles)
 					return mtt::Status::E_NotEmpty;
 			}
 
-			auto originalPath = std::filesystem::path(path + info.files.back().path.front());
+			auto originalPath = getCurrentRootpath();
 
 			if (std::filesystem::exists(originalPath, ec))
 			{
@@ -177,55 +177,27 @@ mtt::Status mtt::Storage::loadPieceBlocks(const File& file, uint32_t idx, const 
 	return Status::Success;
 }
 
+mtt::Status mtt::Storage::preallocateFile(uint32_t idx)
+{
+	return preallocateSelection(SelectedFiles(info, idx));
+}
+
 mtt::Status mtt::Storage::preallocateSelection(const DownloadSelection& selection)
+{
+	return preallocateSelection(SelectedFiles(info, selection));
+}
+
+mtt::Status mtt::Storage::preallocateSelection(const SelectedFiles& selected)
 {
 	std::lock_guard<std::mutex> guard(storageMutex);
 
-	auto s = validatePath(selection);
+	auto s = validatePath(selected, path).status;
 	if (s != Status::Success)
 		return s;
 
-	struct FileAllocations
+	for (auto file : selected.files)
 	{
-		const mtt::File& file;
-		uint64_t size;
-	};
-	std::vector<FileAllocations> allocations;
-
-	mtt::SelectedIntervals selected(info, selection);
-
-	if (selected.selectedIntervals.empty())
-		return Status::Success;
-
-	for (size_t i = 0; i < info.files.size(); i++)
-	{
-		const auto& file = info.files[i];
-		uint64_t sz = 0;
-
-		if (selection[i].selected)
-			sz = file.size;
-		else if (selected.isSelected(file))
-		{
-			if (!allocations.empty() && allocations.back().file.endPieceIndex == file.startPieceIndex)
-			{
-				sz = info.pieceSize - file.startPiecePos;
-
-				if (sz > file.size)
-					sz = file.size;
-			}
-			else
-				sz += file.endPiecePos;
-		}
-
-		if (sz || selection[i].selected)
-			allocations.push_back({ file, sz });
-		else if (selected.selectedIntervals.back().endIdx < file.startPieceIndex)
-			break;
-	}
-
-	for (auto a : allocations)
-	{
-		auto s = preallocate(a.file, a.size);
+		auto s = preallocate(info.files[file.idx], file.size);
 		if (s != Status::Success)
 			return s;
 	}
@@ -263,7 +235,7 @@ mtt::Status mtt::Storage::deleteAll()
 	}
 
 	if (info.files.size() > 1)
-		std::filesystem::remove_all(utf8Path(path + info.files.front().path.front()), ec);
+		std::filesystem::remove_all(getCurrentRootpath(), ec);
 
 	return Status::Success;
 }
@@ -272,12 +244,12 @@ static uint64_t getWriteTime(const std::filesystem::path& filepath)
 {
 #ifdef __GNUC__
 	struct stat attrib = {};
-	stat(filepath.u8string().data(), &attrib);
+	stat(filepath.string().data(), &attrib);
 	return (uint64_t) attrib.st_mtime;
 #else
 	std::error_code ec;
 	auto tm = std::filesystem::last_write_time(filepath, ec);
-	return ec ? 0 : tm.time_since_epoch().count();
+	return ec ? 0 : (uint64_t)tm.time_since_epoch().count();
 #endif
 }
 
@@ -292,10 +264,8 @@ uint64_t mtt::Storage::getLastModifiedTime()
 		auto path = getFullpath(f);
 		auto fileTime = getWriteTime(path);
 
-		if (fileTime)
-		{
-			time = std::max(time, fileTime);
-		}
+		if (fileTime > time)
+			time = fileTime;
 	}
 
 	return time;
@@ -534,7 +504,8 @@ void mtt::Storage::checkStoredPieces(PiecesCheck& checkState, const std::vector<
 mtt::Status mtt::Storage::preallocate(const File& file, uint64_t size)
 {
 	auto fullpath = getFullpath(file);
-	createPath(fullpath);
+	if (!createPath(fullpath))
+		return Status::E_InvalidPath;
 
 	std::error_code ec;
 	bool exists = std::filesystem::exists(fullpath, ec);
@@ -588,27 +559,48 @@ mtt::Status mtt::Storage::preallocate(const File& file, uint64_t size)
 
 		if (fileOut.fail())
 			return Status::E_AllocationProblem;
+
+		lastAllocationTime = getWriteTime(fullpath);
 	}
 
 	return Status::Success;
 }
 
-std::filesystem::path mtt::Storage::getFullpath(const File& file) const
+std::filesystem::path mtt::Storage::getRootpath(const std::string& p) const
+{
+	return utf8Path(p + info.name);
+}
+
+std::filesystem::path mtt::Storage::getCurrentRootpath() const
+{
+	return getRootpath(path);
+}
+
+std::filesystem::path mtt::Storage::getFullpath(const File& file, const std::string& path) const
 {
 	std::string filePath;
+	filePath.reserve(file.name.size() + path.size() + file.path.size() + std::accumulate(file.path.begin(), file.path.end(), (size_t)0, [](size_t sum, const auto& p) { return sum + p.size(); }));
+	filePath = path;
+	if (!filePath.empty() && filePath.back() != pathSeparator)
+		filePath += pathSeparator;
 
 	for (auto& p : file.path)
 	{
-		if (!filePath.empty())
-			filePath += pathSeparator;
-
 		filePath += p;
+		filePath += pathSeparator;
 	}
 
-	return utf8Path(path + filePath);
+	filePath += file.name;
+
+	return utf8Path(filePath);
 }
 
-void mtt::Storage::createPath(const std::filesystem::path& path)
+std::filesystem::path mtt::Storage::getFullpath(const File& file) const
+{
+	return getFullpath(file, path);
+}
+
+bool mtt::Storage::createPath(const std::filesystem::path& path)
 {
 	auto folder = path.parent_path();
 
@@ -616,51 +608,60 @@ void mtt::Storage::createPath(const std::filesystem::path& path)
 	{
 		std::error_code ec;
 		if (!std::filesystem::create_directories(folder, ec))
-			return;
+			return false;
 	}
+
+	return true;
 }
 
-mtt::Status mtt::Storage::validatePath(const DownloadSelection& selection)
+mtt::PathValidation mtt::Storage::validatePath(const SelectedFiles& selection, const std::string& validatedPath) const
 {
-	std::filesystem::path dlPath = utf8Path(path);
+	auto dlPath = mtt::Storage::utf8Path(validatedPath);
 	std::error_code ec;
 
-	if (!dlPath.has_root_path())
+	if (dlPath.is_relative())
+		dlPath = std::filesystem::absolute(path, ec);
+
+	dlPath = dlPath.root_path();
+
+	if (dlPath.empty() || !std::filesystem::exists(dlPath, ec))
+		return { Status::E_InvalidPath };
+
+	PathValidation validation;
+
+	for (auto& selectedFile : selection.files)
 	{
-		if (dlPath.is_relative())
-		{
-			if (!std::filesystem::exists(dlPath, ec))
-				return Status::E_InvalidPath;
-		}
-	}
-	else
-	{
-		auto root = dlPath.root_path();
+		auto fullpath = getFullpath(info.files[selectedFile.idx], validatedPath);
+		bool exists = std::filesystem::exists(fullpath, ec);
+		auto existingSize = exists ? std::filesystem::file_size(fullpath, ec) : 0;
 
-		if (!std::filesystem::exists(root, ec))
-			return Status::E_InvalidPath;
-	}
+		if (existingSize < selectedFile.size)
+			validation.missingSize += selectedFile.size - existingSize;
 
-	uint64_t fullSize = 0;
-	for (size_t i = 0; i < info.files.size(); i++)
-	{
-		if (selection[i].selected)
-		{
-			const auto& file = info.files[i];
-
-			auto fullpath = getFullpath(file);
-			bool exists = std::filesystem::exists(fullpath, ec);
-			auto existingSize = exists ? std::filesystem::file_size(fullpath, ec) : 0;
-
-			if (existingSize < file.size)
-				fullSize += file.size - existingSize;
-		}
+		validation.requiredSize += selectedFile.size;
 	}
 
 	auto spaceInfo = std::filesystem::space(dlPath, ec);
-	if (spaceInfo.available < fullSize)
-		return Status::E_NotEnoughSpace;
+	if (!ec)
+	{
+		validation.fullSpace = spaceInfo.capacity;
+		validation.availableSpace = spaceInfo.available;
 
-	return Status::Success;
+		if (spaceInfo.available < validation.missingSize)
+			validation.status = Status::E_NotEnoughSpace;
+		else
+			validation.status = Status::Success;
+	}
+
+	return validation;
 }
 
+mtt::PathValidation mtt::Storage::validatePath(const DownloadSelection& selection, const std::string& validatedPath) const
+{
+	return validatePath(SelectedFiles(info, selection), validatedPath);
+}
+
+mtt::PathValidation mtt::Storage::validatePath(const DownloadSelection& selection) const
+{
+	return validatePath(selection, path);
+}

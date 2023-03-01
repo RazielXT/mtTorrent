@@ -55,9 +55,9 @@ std::vector<mtt::PieceBlockInfo> mtt::TorrentInfo::makePieceBlocksInfo(uint32_t 
 mtt::PieceBlockInfo mtt::TorrentInfo::getPieceBlockInfo(uint32_t idx, uint32_t blockIdx) const
 {
 	PieceBlockInfo block;
-	block.begin = blockIdx * BlockRequestMaxSize;
+	block.begin = blockIdx * BlockMaxSize;
 	block.index = idx;
-	block.length = std::min(BlockRequestMaxSize, pieceSize - block.begin);
+	block.length = std::min(BlockMaxSize, pieceSize - block.begin);
 
 	if (idx == lastPieceIndex && blockIdx == lastPieceLastBlockIndex)
 		block.length = lastPieceLastBlockSize;
@@ -72,7 +72,7 @@ uint32_t mtt::TorrentInfo::getPieceSize(uint32_t idx) const
 
 uint32_t mtt::TorrentInfo::getPieceBlocksCount(uint32_t idx) const
 {
-	return (idx == lastPieceIndex) ? (lastPieceLastBlockIndex + 1) : ((pieceSize + BlockRequestMaxSize - 1) / BlockRequestMaxSize);
+	return (idx == lastPieceIndex) ? (lastPieceLastBlockIndex + 1) : ((pieceSize + BlockMaxSize - 1) / BlockMaxSize);
 }
 
 mtt::Status mtt::TorrentFileInfo::parseMagnetLink(std::string link)
@@ -165,7 +165,7 @@ DataBuffer mtt::TorrentFileInfo::createTorrentFileData()
 		{
 			writer.startRawArrayItem("5:files");
 
-			for (auto f : info.files)
+			for (auto& f : info.files)
 			{
 				writer.startMap();
 				writer.addRawItem("6:length", f.size);

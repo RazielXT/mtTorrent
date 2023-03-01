@@ -90,7 +90,7 @@ bool mtt::TorrentState::load(const std::string& name)
 		}
 
 		downloadPath = root->getTxt("downloadPath");
-		lastStateTime = (int64_t)root->getBigInt("lastStateTime");
+		lastStateTime = root->getBigInt("lastStateTime");
 		addedTime = (Timestamp)root->getBigInt("addedTime");
 		started = root->getInt("started");
 		uploaded = root->getBigInt("uploaded");
@@ -134,7 +134,7 @@ bool mtt::TorrentState::load(const std::string& name)
 					selection.push_back({ params->getInt() != 0, (Priority)params->getNextSibling()->getInt() });
 				}
 				else
-					selection.push_back({ false, Priority::Normal });
+					selection.push_back({ false, PriorityNormal });
 			}
 		}
 	}

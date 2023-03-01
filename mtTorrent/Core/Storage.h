@@ -33,7 +33,11 @@ namespace mtt
 		Status loadPieceBlocks(uint32_t idx, const std::vector<BlockOffset>&, uint8_t* buffer);
 		Status loadPieceBlock(const PieceBlockInfo&, uint8_t* buffer);
 
-		Status preallocateSelection(const DownloadSelection& files);
+		Status preallocateFile(uint32_t idx);
+		Status preallocateSelection(const DownloadSelection& selection);
+		Status preallocateSelection(const SelectedFiles& selection);
+		uint64_t lastAllocationTime = 0;
+
 		std::vector<uint64_t> getAllocatedSize() const;
 		void checkStoredPieces(PiecesCheck& checkState, const std::vector<PieceInfo>& piecesInfo, uint32_t workersCount, uint32_t workerIdx, const std::vector<bool>& wantedChecks);
 
@@ -43,12 +47,18 @@ namespace mtt
 
 		static std::filesystem::path utf8Path(const std::string& p);
 
+		PathValidation validatePath(const DownloadSelection& selection) const;
+		PathValidation validatePath(const DownloadSelection& selection, const std::string&) const;
+		PathValidation validatePath(const SelectedFiles& selection, const std::string&) const;
+
 	private:
 
-		std::filesystem::path getFullpath(const File& file) const;
-		void createPath(const std::filesystem::path& path);
+		std::filesystem::path getRootpath(const std::string& path) const;
+		std::filesystem::path getCurrentRootpath() const;
 
-		Status validatePath(const DownloadSelection& selection);
+		std::filesystem::path getFullpath(const File& file, const std::string& path) const;
+		std::filesystem::path getFullpath(const File& file) const;
+		bool createPath(const std::filesystem::path& path);
 
 		Status preallocate(const File& file, uint64_t size);
 		Status storePieceBlocks(const File& file, const std::vector<PieceBlockData>& blocks);

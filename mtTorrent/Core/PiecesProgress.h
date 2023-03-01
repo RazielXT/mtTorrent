@@ -12,7 +12,6 @@ namespace mtt
 		void removeReceived(const std::vector<bool>&);
 
 		void select(const File& info, bool selected);
-		void select(const TorrentInfo& info, const DownloadSelection& selection);
 		void fromBitfield(const BufferView& bitfield);
 		void fromList(const std::vector<uint8_t>& pieces);
 		DataBuffer toBitfield() const;

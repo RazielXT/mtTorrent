@@ -4,7 +4,7 @@
 #include "Interface.h"
 #include "FileTransfer.h"
 #include "Peers.h"
-#include <memory>
+#include "Files.h"
 #include "MetadataDownload.h"
 #include <chrono>
 
@@ -51,48 +51,6 @@ namespace mttApi
 		API_EXPORT mtt::Status getLastError() const;
 
 		/*
-			progress of last files checking task (0-1)
-		*/
-		API_EXPORT float checkingProgress() const;
-		/*
-			start check of existing files, if not already checking
-		*/
-		API_EXPORT void checkFiles();
-
-		/*
-			get files with current selection info
-		*/
-		API_EXPORT std::vector<mtt::FileSelection> getFilesSelection() const;
-		/*
-			get download progress of files, sorted by order in torrent file, % (including unfinished pieces) and finished pieces
-		*/
-		API_EXPORT std::vector<std::pair<float, uint32_t>> getFilesProgress();
-		/*
-			get current allocated sizes on disk in bytes, sorted by order in torrent file
-		*/
-		API_EXPORT std::vector<uint64_t> getFilesAllocatedSize();
-		/*
-			select/deselect files to download, sorted by order in torrent file
-		*/
-		API_EXPORT bool selectFiles(const std::vector<bool>&);
-		/*
-			select/deselect file to download, index sorted by order in torrent file
-		*/
-		API_EXPORT bool selectFile(uint32_t index, bool selected);
-		/*
-			set priority of files download, sorted by order in torrent file
-		*/
-		API_EXPORT void setFilesPriority(const std::vector<mtt::Priority>&);
-		/*
-			get current download location path
-		*/
-		API_EXPORT std::string getLocationPath() const;
-		/*
-			change download location path, moving existing files if wanted
-		*/
-		API_EXPORT mtt::Status setLocationPath(const std::string& path, bool moveFiles);
-
-		/*
 			get name of file from torrent file
 		*/
 		API_EXPORT const std::string& name() const;
@@ -134,37 +92,34 @@ namespace mttApi
 		API_EXPORT mtt::Timestamp getTimeAdded() const;
 
 		/*
-			get loaded torrent file
+			check missing info in case of unfinished magnet link
 		*/
-		API_EXPORT const mtt::TorrentFileInfo& getFileInfo();
+		API_EXPORT bool hasMetadata() const;
+		/*
+			get loaded torrent file metadata
+		*/
+		API_EXPORT const mtt::TorrentFileMetadata& getMetadata();
+		/*
+			get list of files, from metadata
+		*/
+		API_EXPORT const std::vector<mtt::File>& getFilesInfo();
 
+		/*
+			see Api\Files.h
+		*/
+		API_EXPORT Files& getFiles() const;
 		/*
 			see Api\Peers.h
 		*/
-		API_EXPORT Peers& getPeers();
+		API_EXPORT Peers& getPeers() const;
 		/*
 			see Api\FileTransfer.h
 		*/
-		API_EXPORT FileTransfer& getFileTransfer();
+		API_EXPORT FileTransfer& getFileTransfer() const;
 		/*
-			see Api\MagnetDownload.h
-			optional
+			see Api\MetadataDownload.h
+			optional in case of magnet link
 		*/
-		API_EXPORT const MagnetDownload* getMagnetDownload();
-
-		/*
-			get count of all pieces
-		*/
-		API_EXPORT std::size_t getPiecesCount() const;
-		/*
-			get pieces progress as bitfield
-			in/out dataSize is returned as current bitfield size
-		*/
-		API_EXPORT bool getPiecesBitfield(uint8_t* dataBitfield, std::size_t& dataSize) const;
-		/*
-			get indices of all received pieces
-			in/out dataSize is returned as count of received pieces
-		*/
-		API_EXPORT bool getReceivedPieces(uint32_t* dataPieces, std::size_t& dataSize) const;
+		API_EXPORT const MetadataDownload* getMetadataDownload() const;
 	};
 }

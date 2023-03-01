@@ -230,7 +230,7 @@ void mtt::FileTransfer::removePeer(PeerCommunication* p)
 void mtt::FileTransfer::evaluateMorePeers()
 {
 	TRANSFER_LOG("evaluateMorePeers");
-	if (!torrent.selectionFinished() && !torrent.checking)
+	if (!torrent.selectionFinished() && !torrent.files.checking)
 		torrent.peers->startConnecting();
 	else
 		torrent.peers->stopConnecting();

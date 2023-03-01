@@ -385,7 +385,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 	{
 		BT_LOG("Unchoke");
 		state.peerChoking = false;
-		stream->setMinBandwidthRequest(BlockRequestMaxSize + 20);
+		stream->setMinBandwidthRequest(BlockMaxSize + 20);
 	}
 	else if (message.id == PeerMessage::Choke)
 	{

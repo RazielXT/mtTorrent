@@ -2,6 +2,7 @@
 
 #include "Torrent.h"
 #include "PeerCommunication.h"
+#include <list>
 
 namespace mtt
 {

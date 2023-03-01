@@ -109,46 +109,19 @@ void mtt::PiecesProgress::removeReceived(const std::vector<bool>& where)
 	}
 }
 
-void mtt::PiecesProgress::select(const TorrentInfo& info, const DownloadSelection& selection)
-{
-	init(info.pieces.size());
-	selectedPieces = 0;
-
-	mtt::SelectedIntervals selectionIntervals(info, selection);
-
-	for (size_t i = 0; i < pieces.size(); i++)
-	{
-		bool selected = selectionIntervals.isSelected((uint32_t)i);
-
-		if (pieces[i] & HasFlag)
-		{
-			receivedPiecesCount++;
-
-			if (selected)
-				selectedReceivedPiecesCount++;
-		}
-
-		if (selected)
-		{
-			selectedPieces++;
-			pieces[i] &= ~UnselectedFlag;
-		}
-		else
-			pieces[i] |= UnselectedFlag;
-	}
-}
-
 void mtt::PiecesProgress::select(const File& info, bool selected)
 {
-	for (uint32_t i = info.startPieceIndex; i != info.endPieceIndex; i++)
+	for (uint32_t i = info.startPieceIndex; i <= info.endPieceIndex; i++)
 	{
-		if ((pieces[i] & UnselectedFlag) && !selected)
+		if (selectedPiece(i) == selected)
 			continue;
 
 		if (pieces[i] & HasFlag)
 		{
 			if (selected)
 				selectedReceivedPiecesCount++;
+			else
+				selectedReceivedPiecesCount--;
 		}
 
 		if (selected)
@@ -157,7 +130,10 @@ void mtt::PiecesProgress::select(const File& info, bool selected)
 			pieces[i] &= ~UnselectedFlag;
 		}
 		else
+		{
+			selectedPieces--;
 			pieces[i] |= UnselectedFlag;
+		}
 	}
 }
 
@@ -185,7 +161,7 @@ void mtt::PiecesProgress::removePiece(uint32_t index)
 {
 	if (hasPiece(index))
 	{
-		if (wantedPiece(index))
+		if (selectedPiece(index))
 			selectedReceivedPiecesCount--;
 
 		pieces[index] &= ~HasFlag;

@@ -23,7 +23,7 @@ namespace mtt
 		DownloadSelection selection;
 
 		std::vector<uint8_t>& pieces;
-		int64_t lastStateTime = 0;
+		uint64_t lastStateTime;
 		Timestamp addedTime = 0;
 		bool started = false;
 
