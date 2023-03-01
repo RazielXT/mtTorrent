@@ -5,7 +5,7 @@
 #include "utils/PacketHelper.h"
 #include "utils/BencodeWriter.h"
 #include "utils/SHA.h"
-
+#include <cmath>
 
 static bool parseTorrentHash(std::string from, uint8_t* to)
 {
@@ -203,4 +203,25 @@ std::vector<uint8_t> mtt::TorrentFileMetadata::createTorrentFileData()
 	writer.endMap();
 
 	return writer.data;
+}
+
+bool mtt::Bitfield::has(uint32_t idx) const
+{
+	auto dataIdx = static_cast<uint32_t>(idx / 8.0f);
+	uint8_t bitmask = 128 >> idx % 8;
+
+	return (data[dataIdx] & bitmask) != 0;
+}
+
+void mtt::Bitfield::put(uint32_t idx)
+{
+	auto dataIdx = static_cast<uint32_t>(idx / 8.0f);
+	uint8_t bitmask = 128 >> idx % 8;
+
+	data[dataIdx] |= bitmask;
+}
+
+void mtt::Bitfield::init(std::size_t size)
+{
+	data.resize((size_t)ceil(size / 8.0f), 0);
 }

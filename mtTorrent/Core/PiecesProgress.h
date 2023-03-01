@@ -12,12 +12,10 @@ namespace mtt
 		void removeReceived(const std::vector<bool>&);
 
 		void select(const File& info, bool selected);
-		void fromBitfield(const BufferView& bitfield);
+		void fromBitfieldData(const BufferView& bitfield);
 		void fromList(const std::vector<uint8_t>& pieces);
-		DataBuffer toBitfield() const;
-		void toBitfield(DataBuffer&) const;
-		bool toBitfield(uint8_t* dataBitfield, std::size_t dataSize) const;
-		size_t getBitfieldSize() const;
+		DataBuffer toBitfieldData() const;
+		void toBitfield(Bitfield&) const;
 
 		bool empty() const;
 		float getPercentage() const;
@@ -31,7 +29,6 @@ namespace mtt
 		void removePiece(uint32_t index);
 		bool selectedPiece(uint32_t index) const;
 		bool wantedPiece(uint32_t index) const;
-		uint32_t firstEmptyPiece() const;
 		size_t getReceivedPiecesCount() const;
 
 		std::vector<uint8_t> pieces;

@@ -2,7 +2,6 @@
 
 #include "../Public/Status.h"
 #include "../Public/Alerts.h"
-#include "../utils/DataBuffer.h"
 #include "Configuration.h"
 #include <string>
 #include <vector>
@@ -70,6 +69,14 @@ namespace mtt
 		std::vector<uint8_t> data;
 		std::set<std::string> paths;
 	};
+
+	struct Bitfield
+	{
+		API_EXPORT bool has(uint32_t idx) const;
+		API_EXPORT void put(uint32_t idx);
+
+		API_EXPORT void init(std::size_t size);
+		std::vector<uint8_t> data;
 	};
 
 	struct TorrentFileMetadata
@@ -87,7 +94,7 @@ namespace mtt
 		about;
 
 		API_EXPORT Status parseMagnetLink(std::string link);
-		API_EXPORT DataBuffer createTorrentFileData();
+		API_EXPORT std::vector<uint8_t> createTorrentFileData();
 	};
 
 	using Priority = uint8_t;

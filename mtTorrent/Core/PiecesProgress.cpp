@@ -1,7 +1,6 @@
 #include "PiecesProgress.h"
 #include <cmath>
 
-const uint8_t ReadyValue = 0;
 const uint8_t HasFlag = 1;
 const uint8_t UnselectedFlag = 8;
 
@@ -179,23 +178,12 @@ bool mtt::PiecesProgress::wantedPiece(uint32_t index) const
 	return pieces[index] == 0;
 }
 
-uint32_t mtt::PiecesProgress::firstEmptyPiece() const
-{
-	for (uint32_t id = 0; id < pieces.size(); id++)
-	{
-		if (!pieces[id])
-			return id;
-	}
-
-	return -1;
-}
-
 size_t mtt::PiecesProgress::getReceivedPiecesCount() const
 {
 	return receivedPiecesCount;
 }
 
-void mtt::PiecesProgress::fromBitfield(const BufferView& bitfield)
+void mtt::PiecesProgress::fromBitfieldData(const BufferView& bitfield)
 {
 	size_t maxPiecesCount = pieces.empty() ? bitfield.size * 8 : pieces.size();
 
@@ -208,7 +196,7 @@ void mtt::PiecesProgress::fromBitfield(const BufferView& bitfield)
 
 		bool value = (bitfield.data[idx] & bitmask) != 0;
 
-		pieces[i] = value ? HasFlag : ReadyValue;
+		pieces[i] = value ? HasFlag : 0;
 		receivedPiecesCount += value;
 	}
 }
@@ -230,41 +218,24 @@ void mtt::PiecesProgress::fromList(const std::vector<uint8_t>& piecesList)
 			pieces[i] &= ~HasFlag;
 }
 
-DataBuffer mtt::PiecesProgress::toBitfield() const
+DataBuffer mtt::PiecesProgress::toBitfieldData() const
 {
-	DataBuffer buffer;
+	Bitfield bitfield;
 
-	toBitfield(buffer);
+	toBitfield(bitfield);
 
-	return buffer;
+	return bitfield.data;
 }
 
-bool mtt::PiecesProgress::toBitfield(uint8_t* dataBitfield, std::size_t dataSize) const
+void mtt::PiecesProgress::toBitfield(Bitfield& bitfield) const
 {
-	if (dataSize < getBitfieldSize())
-		return false;
+	bitfield.init(pieces.size());
 
 	for (uint32_t i = 0; i < pieces.size(); i++)
 	{
 		if (!hasPiece(i))
 			continue;
 
-		auto idx = static_cast<size_t>(i / 8.0f);
-		unsigned char bitmask = 128 >> i % 8;
-		dataBitfield[idx] |= bitmask;
+		bitfield.put(i);
 	}
-
-	return true;
-}
-
-void mtt::PiecesProgress::toBitfield(DataBuffer& buffer) const
-{
-	buffer.resize(getBitfieldSize());
-
-	toBitfield(buffer.data(), buffer.size());
-}
-
-size_t mtt::PiecesProgress::getBitfieldSize() const
-{
-	return (size_t)ceil(pieces.size() / 8.0f);
 }

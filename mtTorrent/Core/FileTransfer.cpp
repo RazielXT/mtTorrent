@@ -81,7 +81,7 @@ void mtt::FileTransfer::handshakeFinished(PeerCommunication* p)
 
 	TRANSFER_LOG("handshake " << p->getStream()->getAddressName());
 	if (!torrent.files.progress.empty())
-		p->sendBitfield(torrent.files.progress.toBitfield());
+		p->sendBitfield(torrent.files.progress.toBitfieldData());
 
 	addPeer(p);
 	downloader.handshakeFinished(p);

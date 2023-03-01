@@ -371,7 +371,7 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 {
 	if (message.id == PeerMessage::Bitfield)
 	{
-		info.pieces.fromBitfield(message.bitfield);
+		info.pieces.fromBitfieldData(message.bitfield);
 
 		BT_LOG("Bitfield progress: " << info.pieces.getPercentage());
 	}
