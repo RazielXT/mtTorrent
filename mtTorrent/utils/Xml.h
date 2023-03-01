@@ -5,7 +5,7 @@
 
 namespace mtt
 {
-	namespace xml
+	namespace XmlParser
 	{
 		struct Element
 		{
@@ -14,6 +14,8 @@ namespace mtt
 
 			std::string_view value() const;
 			std::string_view value(std::string_view name) const;
+			uint64_t valueNumber() const;
+			uint64_t valueNumber(std::string_view name) const;
 			bool hasValue = false;
 
 			const Element* nextSibling() const;
@@ -45,10 +47,40 @@ namespace mtt
 		{
 			const Element* getRoot();
 
-			bool parse(const char* input, uint32_t size);
+			bool parse(const char* input, size_t size);
 
 		private:
 			std::vector<Element> elements;
 		};
 	};
+
+	namespace XmlWriter
+	{
+		struct Element
+		{
+			Element(std::string& buffer, std::string_view name);
+
+			Element(Element& parent, std::string_view name);
+
+			Element(Element& parent, std::string_view name, std::initializer_list<std::pair<std::string_view, std::string_view>> attributes);
+
+			Element createChild(std::string_view);
+
+			Element& setValue(std::string_view);
+
+			void addValueCData(std::string_view, std::string_view value);
+
+			void addValue(std::string_view, std::string_view value);
+
+			void addValue(std::string_view, uint64_t value);
+
+			void close();
+
+		private:
+			size_t depth = 0;
+			bool hasChildren = false;
+			std::string& buffer;
+			std::string name;
+		};
+	}
 };

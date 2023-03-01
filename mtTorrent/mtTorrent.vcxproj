@@ -298,7 +298,7 @@
     <ClCompile Include="utils\UpnpPortMapping.cpp" />
     <ClCompile Include="utils\Uri.cpp" />
     <ClCompile Include="utils\UrlEncoding.cpp" />
-    <ClCompile Include="utils\XmlParser.cpp" />
+    <ClCompile Include="utils\Xml.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Api\Configuration.h" />
@@ -386,7 +386,7 @@
     <ClInclude Include="utils\UpnpPortMapping.h" />
     <ClInclude Include="utils\Uri.h" />
     <ClInclude Include="utils\UrlEncoding.h" />
-    <ClInclude Include="utils\XmlParser.h" />
+    <ClInclude Include="utils\Xml.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

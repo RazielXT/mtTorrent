@@ -2,9 +2,8 @@
 #include "utils/HexEncoding.h"
 #include "AlertsManager.h"
 #include "Api/Configuration.h"
-#include "utils/BencodeWriter.h"
-#include "utils/BencodeParser.h"
 #include "utils/Filesystem.h"
+#include "utils/Xml.h"
 #include <map>
 #include <mutex>
 #include <filesystem>
@@ -135,6 +134,14 @@ namespace mtt
 			}
 		}
 
+		void setValues(const External& val)
+		{
+			setValues(val.files);
+			setValues(val.connection);
+			setValues(val.dht);
+			setValues(val.transfer);
+		}
+
 		void setInternalValues(const Internal& val)
 		{
 			internal_ = val;
@@ -169,89 +176,65 @@ namespace mtt
 				std::filesystem::create_directory(dir, ec);
 			}
 
-			std::ifstream file(mtt::config::getInternal().programFolderPath + pathSeparator + "cfg", std::ios::binary);
+			std::ifstream file(mtt::config::getInternal().programFolderPath + pathSeparator + "config.xml", std::ios::binary);
 
 			if (file)
 			{
 				std::string data((std::istreambuf_iterator<char>(file)),
 					std::istreambuf_iterator<char>());
 
-				mtt::BencodeParser parser;
-				if (!parser.parse((const uint8_t*)data.data(), data.size()))
-					return;
-
-				dirty = false;
-				auto root = parser.getRoot();
-
-				if (auto internalSettings = root->getDictObject("internal"))
+				mtt::XmlParser::Document parser;
+				if (parser.parse(data.data(), data.size()))
 				{
-					auto id = internalSettings->getTxt("hashId");
-					if (id.length() == 40)
-						decodeHexa(id, internal_.hashId);
+					dirty = false;
 
-					if (auto i = internalSettings->getIntObject("maxPeersPerTrackerRequest"))
-						internal_.maxPeersPerTrackerRequest = (uint32_t)i->getBigInt();
+					auto root = parser.getRoot();
 
-					if (auto dhtSettings = internalSettings->getDictObject("dht"))
+					if (auto internalSettings = root->firstNode("internal"))
 					{
-						if (auto i = dhtSettings->getIntObject("peersCheckInterval"))
-							internal_.dht.peersCheckInterval = (uint32_t)i->getBigInt();
-						if (auto i = dhtSettings->getIntObject("maxStoredAnnouncedPeers"))
-							internal_.dht.maxStoredAnnouncedPeers = (uint32_t)i->getBigInt();
-						if (auto i = dhtSettings->getIntObject("maxPeerValuesResponse"))
-							internal_.dht.maxPeerValuesResponse = (uint32_t)i->getBigInt();
+						auto id = internalSettings->value("hashId");
+						if (id.length() == 20)
+							memcpy(internal_.hashId, id.data(), 20);
+					}
 
-						if (auto rootHosts = dhtSettings->getListObject("defaultRootHosts"))
+					if (auto externalSettings = root->firstNode("external"))
+					{
+						if (auto cSettings = externalSettings->firstNode("connection"))
 						{
-							internal_.dht.defaultRootHosts.clear();
-							for (auto& host : *rootHosts)
-							{
-								auto str = host.getTxt();
-								size_t portStart = str.find_last_of(':');
-								if (portStart != std::string::npos)
-									internal_.dht.defaultRootHosts.emplace_back(str.substr(0, portStart) , str.substr(portStart + 1));
-							}
+							if (auto i = cSettings->firstNode("tcpPort"))
+								external.connection.tcpPort = (uint16_t)i->valueNumber();
+							if (auto i = cSettings->firstNode("udpPort"))
+								external.connection.udpPort = (uint16_t)i->valueNumber();
+							if (auto i = cSettings->firstNode("maxTorrentConnections"))
+								external.connection.maxTorrentConnections = (uint32_t)i->valueNumber();
+							if (auto i = cSettings->firstNode("upnpPortMapping"))
+								external.connection.upnpPortMapping = (bool)i->valueNumber();
+							if (auto i = cSettings->firstNode("enableTcpIn"))
+								external.connection.enableTcpIn = (bool)i->valueNumber();
+							if (auto i = cSettings->firstNode("enableTcpOut"))
+								external.connection.enableTcpOut = (bool)i->valueNumber();
+							if (auto i = cSettings->firstNode("enableUtpIn"))
+								external.connection.enableUtpIn = (bool)i->valueNumber();
+							if (auto i = cSettings->firstNode("enableUtpOut"))
+								external.connection.enableUtpOut = (bool)i->valueNumber();
 						}
-					}
-				}
-
-				if (auto externalSettings = root->getDictObject("external"))
-				{
-					if (auto cSettings = externalSettings->getDictObject("connection"))
-					{
-						if (auto i = cSettings->getIntObject("tcpPort"))
-							external.connection.tcpPort = (uint16_t)i->getBigInt();
-						if (auto i = cSettings->getIntObject("udpPort"))
-							external.connection.udpPort = (uint16_t)i->getBigInt();
-						if (auto i = cSettings->getIntObject("maxTorrentConnections"))
-							external.connection.maxTorrentConnections = (uint32_t)i->getBigInt();
-						if (auto i = cSettings->getIntObject("upnpPortMapping"))
-							external.connection.upnpPortMapping = (bool)i->getBigInt();
-						if (auto i = cSettings->getIntObject("enableTcpIn"))
-							external.connection.enableTcpIn = (bool)i->getInt();
-						if (auto i = cSettings->getIntObject("enableTcpOut"))
-							external.connection.enableTcpOut = (bool)i->getInt();
-						if (auto i = cSettings->getIntObject("enableUtpIn"))
-							external.connection.enableUtpIn = (bool)i->getInt();
-						if (auto i = cSettings->getIntObject("enableUtpOut"))
-							external.connection.enableUtpOut = (bool)i->getInt();
-					}
-					if (auto dhtSettings = externalSettings->getDictObject("dht"))
-					{
-						if (auto i = dhtSettings->getIntObject("enabled"))
-							external.dht.enabled = (bool)i->getBigInt();
-					}
-					if (auto tSettings = externalSettings->getDictObject("transfer"))
-					{
-						if (auto i = tSettings->getIntObject("maxDownloadSpeed"))
-							external.transfer.maxDownloadSpeed = (uint32_t)i->getBigInt();
-						if (auto i = tSettings->getIntObject("maxUploadSpeed"))
-							external.transfer.maxUploadSpeed = (uint32_t)i->getBigInt();
-					}
-					if (auto fSettings = externalSettings->getDictObject("files"))
-					{
-						if (auto i = fSettings->getTxtItem("directory"))
-							external.files.defaultDirectory = std::string(i->data, i->size);
+						if (auto dhtSettings = externalSettings->firstNode("dht"))
+						{
+							if (auto i = dhtSettings->firstNode("enabled"))
+								external.dht.enabled = (bool)i->valueNumber();
+						}
+						if (auto tSettings = externalSettings->firstNode("transfer"))
+						{
+							if (auto i = tSettings->firstNode("maxDownloadSpeed"))
+								external.transfer.maxDownloadSpeed = (uint32_t)i->valueNumber();
+							if (auto i = tSettings->firstNode("maxUploadSpeed"))
+								external.transfer.maxUploadSpeed = (uint32_t)i->valueNumber();
+						}
+						if (auto fSettings = externalSettings->firstNode("files"))
+						{
+							if (auto i = fSettings->firstNode("directory"))
+								external.files.defaultDirectory = i->value();
+						}
 					}
 				}
 			}
@@ -265,52 +248,52 @@ namespace mtt
 			if (!dirty)
 				return;
 
-			std::ofstream file(mtt::config::getInternal().programFolderPath + pathSeparator + "cfg", std::ios::binary);
+			std::ofstream file(mtt::config::getInternal().programFolderPath + pathSeparator + "config.xml", std::ios::binary);
 
 			if (file)
 			{
-				mtt::BencodeWriter writer;
-				writer.startMap();
+				std::string buffer;
+				mtt::XmlWriter::Element writer(buffer, "config");
 
 				{
-					writer.startMapItem("internal");
-					writer.addItem("hashId", hexToString(internal_.hashId, 20));
-					writer.endMap();
+					auto e = writer.createChild("internal");
+					e.addValueCData("hashId", std::string_view((const char*)internal_.hashId, 20));
+					e.close();
 				}
 
 				{
-					writer.startMapItem("external");
+					auto e = writer.createChild("external");
 
-					writer.startMapItem("connection");
-					writer.addItem("tcpPort", external.connection.tcpPort);
-					writer.addItem("udpPort", external.connection.udpPort);
-					writer.addItem("maxTorrentConnections", external.connection.maxTorrentConnections);
-					writer.addItem("upnpPortMapping", external.connection.upnpPortMapping);
-					writer.addItem("enableTcpIn", external.connection.enableTcpIn);
-					writer.addItem("enableTcpOut", external.connection.enableTcpOut);
-					writer.addItem("enableUtpIn", external.connection.enableUtpIn);
-					writer.addItem("enableUtpOut", external.connection.enableUtpOut);
-					writer.endMap();
+					auto c = e.createChild("connection");
+					c.addValue("tcpPort", external.connection.tcpPort);
+					c.addValue("udpPort", external.connection.udpPort);
+					c.addValue("maxTorrentConnections", external.connection.maxTorrentConnections);
+					c.addValue("upnpPortMapping", external.connection.upnpPortMapping);
+					c.addValue("enableTcpIn", external.connection.enableTcpIn);
+					c.addValue("enableTcpOut", external.connection.enableTcpOut);
+					c.addValue("enableUtpIn", external.connection.enableUtpIn);
+					c.addValue("enableUtpOut", external.connection.enableUtpOut);
+					c.close();
 
-					writer.startMapItem("dht");
-					writer.addItem("enabled", external.dht.enabled);
-					writer.endMap();
+					auto d = e.createChild("dht");
+					d.addValue("enabled", external.dht.enabled);
+					d.close();
 
-					writer.startMapItem("transfer");
-					writer.addItem("maxDownloadSpeed", external.transfer.maxDownloadSpeed);
-					writer.addItem("maxUploadSpeed", external.transfer.maxUploadSpeed);
-					writer.endMap();
+					auto t = e.createChild("transfer");
+					t.addValue("maxDownloadSpeed", external.transfer.maxDownloadSpeed);
+					t.addValue("maxUploadSpeed", external.transfer.maxUploadSpeed);
+					t.close();
 
-					writer.startMapItem("files");
-					writer.addItem("directory", external.files.defaultDirectory);
-					writer.endMap();
+					auto f = e.createChild("files");
+					f.addValueCData("directory", external.files.defaultDirectory);
+					f.close();
 
-					writer.endMap();
+					e.close();
 				}
 
-				writer.endMap();
+				writer.close();
 
-				file.write((const char*)writer.data.data(), writer.data.size());
+				file.write(buffer.data(), buffer.size());
 			}
 		}
 
@@ -323,8 +306,6 @@ namespace mtt
 			programFolderPath = std::string(".") + pathSeparator + "data" + pathSeparator;
 			stateFolder = programFolderPath + "state";
 
-			srand(mtt::CurrentTimestamp());
-			
 			memcpy(hashId, MT_HASH_NAME, std::size(MT_HASH_NAME));
 
 			static char const printable[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"

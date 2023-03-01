@@ -98,7 +98,7 @@ set (utils_sources
 	UpnpPortMapping.cpp
 	Uri.cpp
 	UrlEncoding.cpp
-	XmlParser.cpp
+	Xml.cpp
 	BigNumber.cpp
 	DataBuffer.cpp
 	DiffieHellman.cpp

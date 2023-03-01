@@ -232,7 +232,7 @@
     <ClCompile Include="utils\SslAsyncStream.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="utils\XmlParser.cpp">
+    <ClCompile Include="utils\Xml.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
     <ClCompile Include="Core\Utp\UtpManager.cpp">
@@ -498,7 +498,7 @@
     <ClInclude Include="utils\SslAsyncStream.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="utils\XmlParser.h">
+    <ClInclude Include="utils\Xml.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="Core\Utp\UtpManager.h">

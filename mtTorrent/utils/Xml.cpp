@@ -1,10 +1,10 @@
-#include "XmlParser.h"
+#include "Xml.h"
 #include <functional>
 #include <cctype>
 #include <cstring>
 #include <algorithm>
 
-const mtt::xml::Element* mtt::xml::Document::getRoot()
+const mtt::XmlParser::Element* mtt::XmlParser::Document::getRoot()
 {
 	return elements.empty() ? nullptr : &elements.front();
 }
@@ -12,9 +12,9 @@ const mtt::xml::Element* mtt::xml::Document::getRoot()
 /*
 variation of parsing algorithm from libtorrent xml_parserXml
 */
-bool mtt::xml::Document::parse(const char* input, uint32_t size)
+bool mtt::XmlParser::Document::parse(const char* input, size_t size)
 {
-	elements.reserve(std::min(100u, size / 25));
+	elements.reserve(std::min((size_t)100, size / 25));
 
 	char const* p = input;
 	char const* end = input + size;
@@ -40,11 +40,11 @@ bool mtt::xml::Document::parse(const char* input, uint32_t size)
 
 		// '<'
 		++p;
-		if (p != end && p + 8 < end && strcmp(p, "![CDATA[") == 0)
+		if (p != end && p + 8 < end && std::memcmp(p, "![CDATA[", 8) == 0)
 		{
 			p += 8;
 			start = p;
-			while (p != end && strcmp(p - 2, "]]>") != 0) ++p;
+			while (p != end && std::memcmp(p - 2, "]]>", 3) != 0) ++p;
 
 			// parse error
 			if (p == end)
@@ -163,15 +163,26 @@ bool mtt::xml::Document::parse(const char* input, uint32_t size)
 	return !elements.empty() && currentTreeStack.empty();
 }
 
-std::string_view mtt::xml::Element::value() const
+std::string_view mtt::XmlParser::Element::value() const
 {
 	auto valuePtr = this + attributesCount + 1;
 
-	return (hasValue && valuePtr->type == Element::Type::String) ? valuePtr->name : "";
+	return (hasValue && valuePtr->type == Element::Type::String) || valuePtr->type == Element::Type::Cdata ? valuePtr->name : "";
 }
 
+uint64_t mtt::XmlParser::Element::valueNumber(std::string_view name) const
+{
+	auto v = value(name);
+	return v.empty() ? 0 : strtoull(v.data(), nullptr, 10);
+}
 
-std::string_view mtt::xml::Element::value(std::string_view name) const
+uint64_t mtt::XmlParser::Element::valueNumber() const
+{
+	auto v = value();
+	return v.empty() ? 0 : strtoull(v.data(), nullptr, 10);
+}
+
+std::string_view mtt::XmlParser::Element::value(std::string_view name) const
 {
 	if (auto node = firstNode(name))
 		return node->value();
@@ -179,18 +190,18 @@ std::string_view mtt::xml::Element::value(std::string_view name) const
 	return "";
 }
 
-const mtt::xml::Element* mtt::xml::Element::attributes() const
+const mtt::XmlParser::Element* mtt::XmlParser::Element::attributes() const
 {
 	return attributesCount ? this + 1 : nullptr;
 }
 
-const mtt::xml::Element* mtt::xml::Element::nextSibling() const
+const mtt::XmlParser::Element* mtt::XmlParser::Element::nextSibling() const
 {
 	return nextSiblingOffset ? this + nextSiblingOffset : nullptr;
 }
 
 
-const mtt::xml::Element* mtt::xml::Element::nextSibling(std::string_view name) const
+const mtt::XmlParser::Element* mtt::XmlParser::Element::nextSibling(std::string_view name) const
 {
 	auto node = nextSibling();
 
@@ -205,12 +216,12 @@ const mtt::xml::Element* mtt::xml::Element::nextSibling(std::string_view name) c
 	return node;
 }
 
-const mtt::xml::Element* mtt::xml::Element::firstNode() const
+const mtt::XmlParser::Element* mtt::XmlParser::Element::firstNode() const
 {
 	return firstChildOffset ? this + firstChildOffset : nullptr;
 }
 
-const mtt::xml::Element* mtt::xml::Element::firstNode(std::string_view name) const
+const mtt::XmlParser::Element* mtt::XmlParser::Element::firstNode(std::string_view name) const
 {
 	auto node = firstNode();
 
@@ -223,4 +234,88 @@ const mtt::xml::Element* mtt::xml::Element::firstNode(std::string_view name) con
 	}
 
 	return node;
+}
+
+mtt::XmlWriter::Element::Element(std::string& b, std::string_view n) : name(n), buffer(b)
+{
+	buffer += '<';
+	buffer += name;
+	buffer += '>';
+}
+
+mtt::XmlWriter::Element::Element(Element& parent, std::string_view n) : depth(parent.depth + 1), name(n), buffer(parent.buffer)
+{
+	buffer += '\n';
+
+	for (size_t i = 0; i < depth; i++)
+		buffer += '\t';
+
+	buffer += '<';
+	buffer += name;
+	buffer += '>';
+
+	parent.hasChildren = true;
+}
+
+mtt::XmlWriter::Element::Element(Element& parent, std::string_view n, std::initializer_list<std::pair<std::string_view, std::string_view>> attributes) : Element(parent, n)
+{
+	buffer.pop_back();
+	for (auto& a : attributes)
+	{
+		buffer += ' ';
+		buffer += a.first;
+		buffer += '=';
+		buffer += '"';
+		buffer += a.second;
+		buffer += '"';
+	}
+	buffer += '>';
+}
+
+mtt::XmlWriter::Element mtt::XmlWriter::Element::createChild(std::string_view n)
+{
+	return Element(*this, n);
+}
+
+void mtt::XmlWriter::Element::addValue(std::string_view n, std::string_view value)
+{
+	auto c = createChild(n);
+	c.setValue(value);
+	c.close();
+}
+
+void mtt::XmlWriter::Element::addValue(std::string_view n, uint64_t value)
+{
+	addValue(n, std::to_string(value));
+}
+
+mtt::XmlWriter::Element& mtt::XmlWriter::Element::setValue(std::string_view value)
+{
+	buffer += value;
+	return *this;
+}
+
+void mtt::XmlWriter::Element::addValueCData(std::string_view n, std::string_view value)
+{
+	auto c = createChild(n);
+	buffer += "<![CDATA[";
+	c.setValue(value);
+	buffer += "]]>";
+	c.close();
+}
+
+void mtt::XmlWriter::Element::close()
+{
+	if (hasChildren)
+	{
+		buffer += '\n';
+
+		for (size_t i = 0; i < depth; i++)
+			buffer += '\t';
+	}
+
+	buffer += '<';
+	buffer += '/';
+	buffer += name;
+	buffer += '>';
 }

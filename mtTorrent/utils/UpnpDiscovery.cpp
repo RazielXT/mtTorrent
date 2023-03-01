@@ -1,7 +1,7 @@
 #include "UpnpDiscovery.h"
 #include "NetAdaptersList.h"
 #include "UdpAsyncComm.h"
-#include "XmlParser.h"
+#include "Xml.h"
 
 UpnpDiscovery::UpnpDiscovery(asio::io_context& io_context) : io(io_context)
 {
@@ -157,7 +157,7 @@ void UpnpDiscovery::queryNext()
 	stream->connect(upnpLocation.adapter.gateway, upnpLocation.port);
 }
 
-static void parseDevicesNode(const mtt::xml::Element* node, std::string& name, std::map<std::string, std::string>& services)
+static void parseDevicesNode(const mtt::XmlParser::Element* node, std::string& name, std::map<std::string, std::string>& services)
 {
 	auto deviceNode = node->firstNode("device");
 	while (deviceNode)
@@ -191,7 +191,7 @@ static void parseDevicesNode(const mtt::xml::Element* node, std::string& name, s
 
 void UpnpDiscovery::onRootXmlReceive(const char* xml, uint32_t size, DeviceInfo info)
 {
-	mtt::xml::Document doc;
+	mtt::XmlParser::Document doc;
 	if (doc.parse(xml, size))
 	{
 		parseDevicesNode(doc.getRoot(), info.name, info.services);
