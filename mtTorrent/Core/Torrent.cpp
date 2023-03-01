@@ -18,11 +18,8 @@ mtt::Torrent::~Torrent()
 {
 }
 
-mtt::TorrentPtr mtt::Torrent::fromFile(mtt::TorrentFileInfo fileInfo)
+mtt::TorrentPtr mtt::Torrent::fromFile(mtt::TorrentFileMetadata fileInfo)
 {
-	if (fileInfo.info.name.empty())
-		return nullptr;
-
 	mtt::TorrentPtr torrent = std::make_shared<Torrent>();
 
 	torrent->infoFile = std::move(fileInfo);

@@ -75,7 +75,7 @@ uint32_t mtt::TorrentInfo::getPieceBlocksCount(uint32_t idx) const
 	return (idx == lastPieceIndex) ? (lastPieceLastBlockIndex + 1) : ((pieceSize + BlockMaxSize - 1) / BlockMaxSize);
 }
 
-mtt::Status mtt::TorrentFileInfo::parseMagnetLink(std::string link)
+mtt::Status mtt::TorrentFileMetadata::parseMagnetLink(std::string link)
 {
 	if (link.length() < 8)
 		return Status::E_InvalidInput;
@@ -127,7 +127,7 @@ mtt::Status mtt::TorrentFileInfo::parseMagnetLink(std::string link)
 	return correct ? Status::Success : Status::E_InvalidInput;
 }
 
-DataBuffer mtt::TorrentFileInfo::createTorrentFileData()
+std::vector<uint8_t> mtt::TorrentFileMetadata::createTorrentFileData()
 {
 	BencodeWriter writer;
 

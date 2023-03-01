@@ -22,7 +22,7 @@ namespace mtt
 		bool started = false;
 		Status lastError = Status::Success;
 
-		static TorrentPtr fromFile(mtt::TorrentFileInfo fileInfo);
+		static TorrentPtr fromFile(mtt::TorrentFileMetadata fileInfo);
 		static TorrentPtr fromMagnetLink(std::string link);
 		static TorrentPtr fromSavedState(std::string name);
 		void downloadMetadata();
@@ -52,7 +52,7 @@ namespace mtt
 		Timestamp getTimeAdded() const;
 
 		Files files;
-		TorrentFileInfo infoFile;
+		TorrentFileMetadata infoFile;
 		ServiceThreadpool service;
 
 		std::unique_ptr<Peers> peers;

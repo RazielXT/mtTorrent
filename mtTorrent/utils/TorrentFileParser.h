@@ -11,7 +11,7 @@ namespace mtt
 {
 	namespace TorrentFileParser
 	{
-		TorrentFileInfo parse(const uint8_t* data, std::size_t length);
+		TorrentFileMetadata parse(const uint8_t* data, std::size_t length);
 
 		TorrentInfo parseTorrentInfo(const uint8_t* data, std::size_t length);
 	}

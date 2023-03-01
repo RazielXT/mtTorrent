@@ -65,7 +65,7 @@ mtt::Status mttApi::Core::removeTorrent(const uint8_t* hash, bool deleteFiles)
 
 mtt::Status mttApi::Core::removeTorrent(TorrentPtr torrent, bool deleteFiles)
 {
-	return static_cast<mtt::Core*>(this)->removeTorrent(torrent->getFileInfo().info.hash, deleteFiles);
+	return static_cast<mtt::Core*>(this)->removeTorrent(torrent->getMetadata().info.hash, deleteFiles);
 }
 
 void mttApi::Core::registerAlerts(uint64_t alertMask)

@@ -88,7 +88,7 @@ mtt::Timestamp mttApi::Torrent::getTimeAdded() const
 	return static_cast<const mtt::Torrent*>(this)->getTimeAdded();
 }
 
-const mtt::TorrentFileInfo& mttApi::Torrent::getFileInfo()
+const mtt::TorrentFileMetadata& mttApi::Torrent::getMetadata()
 {
 	auto torrent = static_cast<mtt::Torrent*>(this);
 	torrent->loadFileInfo();
