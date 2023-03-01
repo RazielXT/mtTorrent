@@ -37,8 +37,8 @@ namespace mtt
 		struct ActivePeer
 		{
 			//todo to stream
-			Timestamp connectionTime;
-			Timestamp lastActivityTime;
+			Timestamp connectionTime = 0;
+			Timestamp lastActivityTime = 0;
 
 			//todo to stream bandwidth
 			uint32_t downloadSpeed = 0;

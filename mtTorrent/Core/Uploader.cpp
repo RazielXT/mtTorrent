@@ -133,11 +133,6 @@ void mtt::Uploader::refreshRequest()
 	}
 }
 
-uint64_t& mtt::Uploader::getUploadSum()
-{
-	return uploaded;
-}
-
 std::map<mtt::PeerCommunication*, uint32_t> mtt::Uploader::popHandledRequests()
 {
 	std::lock_guard<std::mutex> guard(requestsMutex);

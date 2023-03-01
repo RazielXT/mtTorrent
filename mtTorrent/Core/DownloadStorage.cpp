@@ -205,7 +205,7 @@ void mtt::UnfinishedPiecesState::clear()
 std::vector<mtt::PieceState> mtt::UnfinishedPiecesState::getState()
 {
 	std::lock_guard<std::mutex> guard(mutex);
-	return std::move(pieces);
+	return pieces;
 }
 
 size_t mtt::UnfinishedPiecesState::getDownloadSize()

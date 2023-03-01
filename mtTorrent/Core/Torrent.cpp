@@ -83,20 +83,8 @@ mtt::TorrentPtr mtt::Torrent::fromSavedState(std::string name)
 	torrent->fileTransfer = std::make_unique<FileTransfer>(*torrent);
 
 	torrent->fileTransfer->downloader.downloaded = state.downloaded;
-	torrent->fileTransfer->uploader->getUploadSum() = state.uploaded;
-	torrent->fileTransfer->downloader.storage.addUnfinishedPieces(state.unfinishedPieces);
-
-	if (state.version == 0)
-	{
-		torrent->loadFileInfo();
-		if (torrent->fileTransfer->downloader.downloaded == 0)
-		{
-			torrent->fileTransfer->downloader.downloaded = torrent->downloaded();
-
-			if (torrent->fileTransfer->downloader.downloaded)
-				torrent->stateChanged = true;
-		}
-	}
+	torrent->fileTransfer->uploader->uploaded = state.uploaded;
+	torrent->fileTransfer->downloader.unfinishedPieces.add(state.unfinishedPieces);
 
 	if (state.started)
 		torrent->start();
@@ -142,9 +130,9 @@ void mtt::Torrent::save()
 	saveState.lastStateTime = lastFileTime = files.storage.getLastModifiedTime();
 	saveState.addedTime = addedTime;
 	saveState.started = started;
-	saveState.uploaded = fileTransfer->uploader->getUploadSum();
+	saveState.uploaded = fileTransfer->uploader->uploaded;
 	saveState.downloaded = fileTransfer->downloader.downloaded;
-	saveState.unfinishedPieces = fileTransfer->downloader.storage.getUnfinishedPiecesState();
+	saveState.unfinishedPieces = fileTransfer->downloader.unfinishedPieces.getState();
 
 	for (auto& f : files.selection)
 		saveState.selection.push_back({ f.selected, f.priority });
@@ -648,7 +636,7 @@ size_t mtt::Torrent::downloadSpeed() const
 
 uint64_t mtt::Torrent::uploaded() const
 {
-	return fileTransfer->uploader->getUploadSum();
+	return fileTransfer->uploader->uploaded;
 }
 
 size_t mtt::Torrent::uploadSpeed() const

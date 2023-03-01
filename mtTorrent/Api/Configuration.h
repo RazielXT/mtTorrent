@@ -93,7 +93,7 @@ namespace mtt
 
 			uint32_t bandwidthUpdatePeriodMs = 250;
 
-			uint32_t fileStoringBufferSize = 5 * 1024 * 1024;
+			uint32_t downloadCachePerGroup = 2 * 1024 * 1024;
 		};
 
 		const API_EXPORT External& getExternal();

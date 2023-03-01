@@ -36,68 +36,62 @@ namespace mtt
 
 		struct PeerRequestsInfo
 		{
-			PeerCommunication* comm;
-
 			struct RequestedPiece
 			{
 				uint32_t idx;
 				uint32_t activeBlocksCount = 0;
 				std::vector<bool> blocks;
 			};
-			std::vector<RequestedPiece> requestedPieces;
-
-			bool operator==(const mtt::PeerCommunication* p) { return comm == p; }
+			std::vector<RequestedPiece> currentRequests;
+			std::vector<uint32_t> requestedPieces;
 
 			void received();
 			float deltaReceive = 0;
 			Torrent::TimePoint lastReceive;
 
-			std::set<PeerCommunication*> sharedSuspicion;
-			bool suspicious() const;
+			uint32_t suspiciousGroup = 0;
+			uint32_t suspicion = 0;
 		};
-		std::vector<PeerRequestsInfo> peersRequestsInfo;
+		std::map<PeerCommunication*, PeerRequestsInfo> peersRequestsInfo;
 
-		void unchokePeer(PeerRequestsInfo*);
-		void evaluateNextRequests(PeerRequestsInfo*);
+		void unchokePeer(PeerCommunication*);
+		void evaluateNextRequests(PeerRequestsInfo&, PeerCommunication*);
 
 		PeerRequestsInfo* addPeerBlockResponse(PieceBlock& block, PeerCommunication* source);
 
-		std::vector<uint32_t> sortedSelectedPieces;
-		std::mutex sortedSelectedPiecesMutex;
+		struct PieceInfo
+		{
+			uint32_t idx;
+			Priority priority;
+		};
+		std::vector<PieceInfo> sortedSelectedPieces;
 
 		struct RequestInfo
 		{
 			PieceState piece;
 			uint16_t activeRequestsCount = 0;
-			bool dontShare = false;
 			std::set<PeerCommunication*> sources;
+			std::set<uint32_t> groups;
 		};
-		std::vector<std::shared_ptr<RequestInfo>> requests;
+		std::map<uint32_t, std::shared_ptr<RequestInfo>> requests;
+		uint32_t GroupIdx = 0;
 
 		void pieceBlockReceived(PieceBlock& block, PeerCommunication* source);
 		void pieceChecked(uint32_t, Status, const RequestInfo& info);
-		void refreshPieceSources(uint32_t, Status, const std::set<PeerCommunication*>& sources);
+		void refreshPieceSources(Status, const RequestInfo& info);
 
-		RequestInfo* getRequest(uint32_t i);
-		RequestInfo* addRequest(uint32_t i);
+		RequestInfo& getRequest(uint32_t i);
 		mutable std::mutex requestsMutex;
 
-		struct PieceDownloadState
-		{
-			Priority priority = Priority(0);
-			bool missing = false;
-			bool request = false;
-		};
-		std::vector<PieceDownloadState> piecesDlState;
-
-		RequestInfo* getBestNextRequest(PeerRequestsInfo*);
+		RequestInfo* getBestNextRequest(PeerRequestsInfo&, PeerCommunication*);
 		bool fastCheck = true;
 
+		uint32_t checkingPieces = 0;
 		std::vector<uint32_t> freshPieces;
 
-		uint32_t sendPieceRequests(PeerCommunication*, PeerRequestsInfo::RequestedPiece*, RequestInfo*, uint32_t max);
+		uint32_t sendPieceRequests(PeerCommunication*, PeerRequestsInfo::RequestedPiece&, RequestInfo&, uint32_t max);
 		bool hasWantedPieces(PeerCommunication*);
-		bool isMissingPiece(uint32_t idx);
+		bool isMissingPiece(uint32_t idx) const;
 		void finish();
 
 		uint64_t duplicatedDataSum = 0;

@@ -9,7 +9,7 @@ namespace mttApi
 	public:
 
 		/*
-			Get bytes downloaded/uploaded last second
+			Get bytes downloaded/uploaded in last second
 		*/
 		API_EXPORT uint32_t getDownloadSpeed() const;
 		API_EXPORT uint32_t getUploadSpeed() const;
@@ -23,5 +23,10 @@ namespace mttApi
 			Get list of currently requested pieces
 		*/
 		API_EXPORT std::vector<uint32_t> getCurrentRequests() const;
+
+	protected:
+
+		FileTransfer() = default;
+		FileTransfer(const FileTransfer&) = delete;
 	};
 }

@@ -60,12 +60,11 @@ void mtt::FileTransfer::stop()
 
 	torrent.peers->stop();
 
-	downloader.stop();
-
 	if (refreshTimer)
 		refreshTimer->disable();
 	refreshTimer = nullptr;
 
+	downloader.stop();
 	uploader->stop();
 }
 
@@ -77,6 +76,9 @@ void mtt::FileTransfer::refreshSelection()
 
 void mtt::FileTransfer::handshakeFinished(PeerCommunication* p)
 {
+	if (!refreshTimer)
+		return;
+
 	TRANSFER_LOG("handshake " << p->getStream()->getAddressName());
 	if (!torrent.files.progress.empty())
 		p->sendBitfield(torrent.files.progress.toBitfield());
@@ -95,6 +97,9 @@ void mtt::FileTransfer::connectionClosed(PeerCommunication* p, int code)
 
 void mtt::FileTransfer::messageReceived(PeerCommunication* p, PeerMessage& msg)
 {
+	if (!refreshTimer)
+		return;
+
 	TRANSFER_LOG("msg " << msg.id << " " << p->getStream()->getAddressName());
 
 	if (msg.id == PeerMessage::Interested)
@@ -339,13 +344,18 @@ void mtt::FileTransfer::updateMeasures()
 		auto finishedUploadRequests = uploader->popHandledRequests();
 		for (const auto& r : finishedUploadRequests)
 		{
-			activePeers[r.first].uploaded += r.second;
+			auto it = activePeers.find(r.first);
+			if (it != activePeers.end())
+				it->second.uploaded += r.second;
 		}
 
 		for (auto& [comm, peer] : activePeers)
 		{
 			peer.downloaded = comm->getStream()->getReceivedDataCount();
 			currentMeasure[comm] = { peer.downloaded, peer.uploaded };
+
+			peer.downloadSpeed = 0;
+			peer.uploadSpeed = 0;
 
 			auto last = lastSpeedMeasure.find(comm);
 			if (last != lastSpeedMeasure.end())
@@ -354,11 +364,6 @@ void mtt::FileTransfer::updateMeasures()
 					peer.downloadSpeed = (uint32_t)(peer.downloaded - last->second.first);
 				if (peer.uploaded > last->second.second)
 					peer.uploadSpeed = (uint32_t)(peer.uploaded - last->second.second);
-			}
-			else
-			{
-				peer.downloadSpeed = 0;
-				peer.uploadSpeed = 0;
 			}
 
 			if (comm->isEstablished())
