@@ -48,8 +48,8 @@ namespace mtt
 				std::vector<Node> nodes;
 				std::deque<Node> cache;
 
-				uint32_t lastupdate = 0;
-				uint32_t lastcacheupdate = 0;
+				Timestamp lastupdate = 0;
+				Timestamp lastcacheupdate = 0;
 
 				Node* find(const NodeInfo& node);
 				Node* findCache(const NodeInfo& node);

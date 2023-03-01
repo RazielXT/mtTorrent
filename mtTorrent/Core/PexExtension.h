@@ -61,7 +61,7 @@ namespace mtt
 
 			private:
 				size_t lastHash = 0;
-				uint32_t lastSendTime = 0;
+				Timestamp lastSendTime = 0;
 
 				std::set<Addr> peers;
 				mutable std::mutex peersMutex;

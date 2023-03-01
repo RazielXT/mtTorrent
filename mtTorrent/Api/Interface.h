@@ -17,7 +17,7 @@ namespace mttApi
 
 namespace mtt
 {
-	using Timestamp = uint32_t;
+	using Timestamp = uint64_t;
 
 	struct File
 	{
