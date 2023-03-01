@@ -2,14 +2,14 @@
 
 #include "utils/ServiceThreadpool.h"
 #include "utils/TcpAsyncStream.h"
-#include "Api/Listener.h"
+#include "Api/PortListener.h"
 #include "PeerStream.h"
 
 class UpnpPortMapping;
 
 namespace mtt
 {
-	class IncomingPeersListener : public mttApi::Listener, public ProtocolEncryptionListener
+	class IncomingPeersListener : public mttApi::PortListener, public ProtocolEncryptionListener
 	{
 	public:
 

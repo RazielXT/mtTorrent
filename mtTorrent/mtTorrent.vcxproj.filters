@@ -456,7 +456,7 @@
     <ClInclude Include="Api\Torrent.h">
       <Filter>Source Files\Api</Filter>
     </ClInclude>
-    <ClInclude Include="Api\Listener.h">
+    <ClInclude Include="Api\PortListener.h">
       <Filter>Source Files\Api</Filter>
     </ClInclude>
     <ClInclude Include="Api\Peers.h">

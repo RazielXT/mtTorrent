@@ -53,9 +53,9 @@ mttApi::TorrentPtr mttApi::Core::getTorrent(const uint8_t* hash) const
 	return static_cast<const mtt::Core*>(this)->getTorrent(hash);
 }
 
-const mttApi::Listener* mttApi::Core::getListener()
+const mttApi::PortListener& mttApi::Core::getPortListener() const
 {
-	return static_cast<mtt::Core*>(this)->listener.get();
+	return *static_cast<const mtt::Core*>(this)->listener;
 }
 
 mtt::Status mttApi::Core::removeTorrent(const uint8_t* hash, bool deleteFiles)

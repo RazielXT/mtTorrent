@@ -306,7 +306,7 @@
     <ClInclude Include="Api\Dht.h" />
     <ClInclude Include="Api\FileTransfer.h" />
     <ClInclude Include="Api\Interface.h" />
-    <ClInclude Include="Api\Listener.h" />
+    <ClInclude Include="Api\PortListener.h" />
     <ClInclude Include="Api\MagnetDownload.h" />
     <ClInclude Include="Api\Peers.h" />
     <ClInclude Include="Api\Torrent.h" />

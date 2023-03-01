@@ -1,7 +1,8 @@
 #pragma once
 
 #include "Torrent.h"
-#include "Listener.h"
+#include "PortListener.h"
+#include "Dht.h"
 
 namespace mttApi
 {
@@ -40,9 +41,9 @@ namespace mttApi
 		API_EXPORT std::vector<TorrentPtr> getTorrents() const;
 
 		/*
-			Get object of Listener, used for receiving incoming connections from other peers
+			Get object used for receiving incoming connections on listening port
 		*/
-		API_EXPORT const Listener* getListener();
+		API_EXPORT const PortListener& getPortListener() const;
 
 		/*
 			Remove torrent and optionally all created torrent files

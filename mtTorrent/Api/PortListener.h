@@ -4,7 +4,7 @@
 
 namespace mttApi
 {
-	class Listener
+	class PortListener
 	{
 	public:
 
@@ -13,5 +13,9 @@ namespace mttApi
 		*/
 		API_EXPORT std::string getUpnpReadableInfo() const;
 
+	protected:
+
+		PortListener() = default;
+		PortListener(const PortListener&) = delete;
 	};
 }
