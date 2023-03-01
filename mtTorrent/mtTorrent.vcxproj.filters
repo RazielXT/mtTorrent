@@ -214,7 +214,7 @@
     <ClCompile Include="utils\Uri.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Api\MagnetDownloadImpl.cpp">
+    <ClCompile Include="Core\Api\MetadataDownloadImpl.cpp">
       <Filter>Source Files\Core\ApiImpl</Filter>
     </ClCompile>
     <ClCompile Include="Core\Api\InterfaceImpl.cpp">
@@ -486,7 +486,7 @@
     <ClInclude Include="utils\Uri.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Api\MagnetDownload.h">
+    <ClInclude Include="Api\MetadataDownload.h">
       <Filter>Source Files\Api</Filter>
     </ClInclude>
     <ClInclude Include="Core\AlertsManager.h">

@@ -48,6 +48,7 @@ namespace mtt
 
 			const Object* getFirstItem() const;
 			const Object* getNextSibling() const;
+			bool isLastItem() const;
 
 			struct iterator {
 			public:

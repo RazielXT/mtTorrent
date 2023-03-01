@@ -187,14 +187,22 @@ mtt::TorrentInfo parseTorrentInfo(const BencodeParser::Object* infoDictionary)
 		auto file = files->getFirstItem();
 		while(file)
 		{
-			std::vector<std::string> path;
+			std::string filename;
+
+			std::vector<std::string_view> path;
 			path.push_back(info.name);
 
 			if (auto pathList = file->getListObject("path"))
 			{
 				for (auto& p : *pathList)
 				{
-					path.push_back(p.getTxt());
+					if (p.isLastItem())
+						filename = p.getTxt();
+					else
+					{
+						auto it = info.paths.insert(p.getTxt());
+						path.emplace_back(*it.first);
+					}
 				}
 			}
 
@@ -205,7 +213,7 @@ mtt::TorrentInfo parseTorrentInfo(const BencodeParser::Object* infoDictionary)
 			auto endId = size ? getPieceIndex(sizeSum, info.pieceSize, true) : startId;
 			auto endPos = sizeSum % info.pieceSize;
 
-			info.files.push_back({ path,  size, startId, (uint32_t)startPos, endId, (uint32_t)endPos });
+			info.files.push_back({ filename, path,  size, startId, (uint32_t)startPos, endId, (uint32_t)endPos });
 			file = file->getNextSibling();
 		}
 
@@ -216,7 +224,7 @@ mtt::TorrentInfo parseTorrentInfo(const BencodeParser::Object* infoDictionary)
 		uint64_t size = infoDictionary->getBigInt("length");
 		auto endPos = size % info.pieceSize;
 		info.name = infoDictionary->getTxt("name");
-		info.files.push_back({ { info.name }, size, 0, 0, static_cast<uint32_t>(info.pieces.size() - 1), (uint32_t)(endPos ? endPos : info.pieceSize) });
+		info.files.push_back({ info.name, {}, size, 0, 0, static_cast<uint32_t>(info.pieces.size() - 1), (uint32_t)(endPos ? endPos : info.pieceSize) });
 
 		info.fullSize = size;
 	}
@@ -225,13 +233,9 @@ mtt::TorrentInfo parseTorrentInfo(const BencodeParser::Object* infoDictionary)
 	{
 		info.lastPieceIndex = info.files.back().endPieceIndex;
 		info.lastPieceSize = info.files.back().endPiecePos;
-		info.lastPieceLastBlockIndex = (info.lastPieceSize - 1) / BlockRequestMaxSize;
-		info.lastPieceLastBlockSize = info.lastPieceSize - (info.lastPieceLastBlockIndex * BlockRequestMaxSize);
+		info.lastPieceLastBlockIndex = (info.lastPieceSize - 1) / BlockMaxSize;
+		info.lastPieceLastBlockSize = info.lastPieceSize - (info.lastPieceLastBlockIndex * BlockMaxSize);
 	}
-
-	auto piecesCount = info.pieces.size();
-	auto addExpected = piecesCount % 8 > 0 ? 1 : 0; //8 pieces in byte
-	info.expectedBitfieldSize = piecesCount / 8 + addExpected;
 
 	return info;
 }

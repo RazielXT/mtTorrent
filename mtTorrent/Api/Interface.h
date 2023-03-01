@@ -8,6 +8,7 @@
 #include <vector>
 #include <cstring>
 #include <memory>
+#include <set>
 
 namespace mttApi
 {
@@ -21,7 +22,9 @@ namespace mtt
 
 	struct File
 	{
-		std::vector<std::string> path;
+		std::string name;
+		std::vector<std::string_view> path;
+
 		uint64_t size;
 		uint32_t startPieceIndex;
 		uint32_t startPiecePos;
@@ -50,7 +53,6 @@ namespace mtt
 
 		std::vector<PieceInfo> pieces;
 		uint32_t pieceSize = 0;
-		size_t expectedBitfieldSize = 0;
 		uint64_t fullSize = 0;
 
 		API_EXPORT std::vector<PieceBlockInfo> makePieceBlocksInfo(uint32_t idx) const;
@@ -65,7 +67,9 @@ namespace mtt
 
 		bool isPrivate = false;
 
-		DataBuffer data;
+		std::vector<uint8_t> data;
+		std::set<std::string> paths;
+	};
 	};
 
 	struct TorrentFileMetadata

@@ -332,6 +332,11 @@ const mtt::BencodeParser::Object* mtt::BencodeParser::Object::getNextSibling() c
 	return info.nextSiblingOffset ? this + info.nextSiblingOffset : nullptr;
 }
 
+bool mtt::BencodeParser::Object::isLastItem() const
+{
+	return info.nextSiblingOffset == 0;
+}
+
 bool mtt::BencodeParser::Object::Item::equals(const char* txt, std::size_t l) const
 {
 	return l == size && strncmp(txt, data, size) == 0;

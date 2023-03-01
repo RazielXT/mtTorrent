@@ -83,7 +83,6 @@ mtt::Status mtt::TorrentFileMetadata::parseMagnetLink(std::string link)
 	size_t dataPos = 8;
 	bool correct = false;
 
-	info.expectedBitfieldSize = 0;
 	info.pieceSize = 0;
 	info.fullSize = 0;
 
@@ -173,7 +172,7 @@ std::vector<uint8_t> mtt::TorrentFileMetadata::createTorrentFileData()
 
 				for (size_t i = 1; i < f.path.size(); i++)
 				{
-					writer.addText(f.path[i]);
+					writer.addText(f.path[i].data());
 				}
 
 				writer.endArray();
