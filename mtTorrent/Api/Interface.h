@@ -68,7 +68,7 @@ namespace mtt
 		DataBuffer data;
 	};
 
-	struct TorrentFileInfo
+	struct TorrentFileMetadata
 	{
 		std::string announce;
 		std::vector<std::string> announceList;

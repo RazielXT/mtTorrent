@@ -4,8 +4,8 @@
 #include "Interface.h"
 #include "FileTransfer.h"
 #include "Peers.h"
-#include "MagnetDownload.h"
 #include <memory>
+#include "MetadataDownload.h"
 #include <chrono>
 
 namespace mttApi

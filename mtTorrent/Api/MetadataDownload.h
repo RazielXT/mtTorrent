@@ -4,7 +4,7 @@
 
 namespace mttApi
 {
-	class MagnetDownload
+	class MetadataDownload
 	{
 	public:
 
@@ -18,5 +18,10 @@ namespace mttApi
 		*/
 		API_EXPORT std::size_t getDownloadLog(std::vector<std::string>& logs, std::size_t logStart = 0) const;
 		API_EXPORT std::size_t getDownloadLogSize() const;
+
+	protected:
+
+		MetadataDownload() = default;
+		MetadataDownload(const MetadataDownload&) = delete;
 	};
 }

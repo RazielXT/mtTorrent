@@ -6,11 +6,11 @@
 #include "Peers.h"
 #include "MetadataReconstruction.h"
 #include "Interface.h"
-#include "Api/MagnetDownload.h"
+#include "Api/MetadataDownload.h"
 
 namespace mtt
 {
-	class MetadataDownload : public mttApi::MagnetDownload, public IPeerListener
+	class MetadataDownload : public mttApi::MetadataDownload, public IPeerListener
 	{
 	public:
 
