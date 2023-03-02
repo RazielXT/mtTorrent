@@ -5,8 +5,6 @@ VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mtTorrent", "mtTorrent\mtTorrent.vcxproj", "{7A7123CF-1E7A-408F-8281-6A0ADB328253}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mtTorrentLiteGui", "mtTorrentLiteGui\mtTorrentLiteGui.vcxproj", "{08F6658C-96BE-43CD-AF5D-090AD85673CC}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "countryIpListParser", "countryIpListParser\countryIpListParser.vcxproj", "{841FA89C-34F1-4180-BECC-193231E68E8F}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SdkExample", "SdkExample\SdkExample.vcxproj", "{8D1AE2D0-94D2-4705-91B2-CA824F565537}"
@@ -39,18 +37,6 @@ Global
 		{7A7123CF-1E7A-408F-8281-6A0ADB328253}.ReleaseWithSSL|x64.Build.0 = ReleaseWithSSL|x64
 		{7A7123CF-1E7A-408F-8281-6A0ADB328253}.ReleaseWithSSL|x86.ActiveCfg = ReleaseWithSSL|Win32
 		{7A7123CF-1E7A-408F-8281-6A0ADB328253}.ReleaseWithSSL|x86.Build.0 = ReleaseWithSSL|Win32
-		{08F6658C-96BE-43CD-AF5D-090AD85673CC}.Debug|x64.ActiveCfg = Debug|x64
-		{08F6658C-96BE-43CD-AF5D-090AD85673CC}.Debug|x64.Build.0 = Debug|x64
-		{08F6658C-96BE-43CD-AF5D-090AD85673CC}.Debug|x86.ActiveCfg = Debug|Win32
-		{08F6658C-96BE-43CD-AF5D-090AD85673CC}.Debug|x86.Build.0 = Debug|Win32
-		{08F6658C-96BE-43CD-AF5D-090AD85673CC}.Release|x64.ActiveCfg = Release|x64
-		{08F6658C-96BE-43CD-AF5D-090AD85673CC}.Release|x64.Build.0 = Release|x64
-		{08F6658C-96BE-43CD-AF5D-090AD85673CC}.Release|x86.ActiveCfg = Release|Win32
-		{08F6658C-96BE-43CD-AF5D-090AD85673CC}.Release|x86.Build.0 = Release|Win32
-		{08F6658C-96BE-43CD-AF5D-090AD85673CC}.ReleaseWithSSL|x64.ActiveCfg = Release|x64
-		{08F6658C-96BE-43CD-AF5D-090AD85673CC}.ReleaseWithSSL|x64.Build.0 = Release|x64
-		{08F6658C-96BE-43CD-AF5D-090AD85673CC}.ReleaseWithSSL|x86.ActiveCfg = Release|Win32
-		{08F6658C-96BE-43CD-AF5D-090AD85673CC}.ReleaseWithSSL|x86.Build.0 = Release|Win32
 		{841FA89C-34F1-4180-BECC-193231E68E8F}.Debug|x64.ActiveCfg = Debug|x64
 		{841FA89C-34F1-4180-BECC-193231E68E8F}.Debug|x64.Build.0 = Debug|x64
 		{841FA89C-34F1-4180-BECC-193231E68E8F}.Debug|x86.ActiveCfg = Debug|Win32

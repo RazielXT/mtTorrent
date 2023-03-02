@@ -232,7 +232,6 @@
     <ClCompile Include="Core\Api\MetadataDownloadImpl.cpp" />
     <ClCompile Include="Core\Api\PeersImpl.cpp" />
     <ClCompile Include="Core\Api\TorrentImpl.cpp" />
-    <ClCompile Include="Core\BinaryInterfaceHandler.cpp" />
     <ClCompile Include="Core\Core.cpp" />
     <ClCompile Include="Core\DownloadStorage.cpp" />
     <ClCompile Include="Core\Files.cpp" />
@@ -270,7 +269,6 @@
     <ClCompile Include="Core\Uploader.cpp" />
     <ClCompile Include="Core\Utp\UtpManager.cpp" />
     <ClCompile Include="Core\Utp\UtpStream.cpp" />
-    <ClCompile Include="Public\ModuleString.cpp" />
     <ClCompile Include="utils\Bandwidth.cpp" />
     <ClCompile Include="utils\Base32.cpp" />
     <ClCompile Include="utils\BencodeWriter.cpp" />
@@ -353,12 +351,8 @@
     <ClInclude Include="Core\Uploader.h" />
     <ClInclude Include="Core\Utp\UtpManager.h" />
     <ClInclude Include="Core\Utp\UtpStream.h" />
-    <ClInclude Include="Public\BinaryInterface.h" />
     <ClInclude Include="Public\Alerts.h" />
-    <ClInclude Include="Public\ModuleAllocator.h" />
-    <ClInclude Include="Public\ModuleArray.h" />
     <ClInclude Include="Public\Status.h" />
-    <ClInclude Include="Public\ModuleString.h" />
     <ClInclude Include="utils\Bandwidth.h" />
     <ClInclude Include="utils\Base32.h" />
     <ClInclude Include="utils\BencodeWriter.h" />
