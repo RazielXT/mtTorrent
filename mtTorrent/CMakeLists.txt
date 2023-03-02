@@ -2,7 +2,6 @@ cmake_minimum_required (VERSION 3.8)
 
 set (core_sources
 	AlertsManager.cpp
-	BinaryInterfaceHandler.cpp
 	Configuration.cpp
 	Core.cpp
 	Downloader.cpp
@@ -40,9 +39,10 @@ list(TRANSFORM core_sources PREPEND "Core/")
 set (core_api_sources
 	CoreImpl.cpp
 	FileTransferImpl.cpp
+	FilesImpl.cpp
 	InterfaceImpl.cpp
 	ListenerImpl.cpp
-	MagnetDownloadImpl.cpp
+	MetadataDownloadImpl.cpp
 	PeersImpl.cpp
 	TorrentImpl.cpp
 	DhtImpl.cpp
@@ -67,18 +67,12 @@ set (core_utp_sources
 
 list(TRANSFORM core_utp_sources PREPEND "Core/Utp/")
 
-set (public_sources
-	ModuleString.cpp
-)
-
-list(TRANSFORM public_sources PREPEND "Public/")
-
 set (utils_sources
 	Bandwidth.cpp
 	Base32.cpp
 	BencodeParser.cpp
 	BencodeWriter.cpp
-	BitUtils.cpp
+	ByteSwap.cpp
 	FastIpToCountry.cpp
 	HexEncoding.cpp
 	HttpHeader.cpp
@@ -114,7 +108,6 @@ add_library (mtTorrent
 	${core_api_sources}
 	${core_dht_sources}
 	${core_utp_sources}
-	${public_sources}
 	${utils_sources}
 )
 
