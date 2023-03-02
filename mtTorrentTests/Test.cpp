@@ -23,6 +23,8 @@
 #include "utils/BigNumber.h"
 #include "utils/SHA.h"
 #include "utils/DiffieHellman.h"
+#include <numeric>
+#include <random>
 
 using namespace mtt;
 
@@ -82,26 +84,27 @@ void testAsyncDhtUdpRequest()
 	packet.add("1:y1:qe", 7);
 
 	bool responded = false;
-	auto udp = UdpAsyncComm::Init();
-	udp->setBindPort(55466);
+	UdpAsyncComm udp;
+	udp.setBindPort(mtt::config::getExternal().connection.udpPort);
+	udp.listen({});
 
-	auto respFunc = [&responded](UdpRequest r, DataBuffer* d)
+	auto respFunc = [&responded](UdpRequest r, const BufferView& d)
 	{
 		responded = true;
 
-		if (d)
+		if (d.size)
 		{
 			BencodeParser parser;
-			parser.parse(d->data(), d->size());
+			parser.parse(d.data, d.size);
 		}
 
 		return true;
 	};
 
-	auto req = udp->sendMessage(packet.getBuffer(), dhtRoot, dhtRootPort, respFunc, false);
+	auto req = udp.create(dhtRoot, dhtRootPort);
+	udp.sendMessage(packet.getBuffer(), req, respFunc);
 
 	WAITFOR(responded);
-	UdpAsyncComm::Deinit();
 }
 
 class DhtTestListener : public mtt::dht::ResultsListener
@@ -195,13 +198,12 @@ public:
 
 void testAsyncDhtGetPeers()
 {
-	mtt::dht::Communication dht;
-	dht.start();
+	UdpAsyncComm udp;
+	udp.setBindPort(mtt::config::getExternal().connection.udpPort);
+	udp.listen({});
 
-	UdpAsyncComm::Get()->listen([&](udp::endpoint& e, std::vector<DataBuffer*>& b)
-		{
-			dht.onUdpPacket(e, b);
-		});
+	mtt::dht::Communication dht(udp);
+	dht.start();
 
 	//ZEF3LK3MCLY5HQGTIUVAJBFMDNQW6U3J	boku 26
 	//6QBN6XVGKV7CWOT5QXKDYWF3LIMUVK4I	owarimonogatari batch
@@ -301,11 +303,14 @@ std::string GetClipboardText()
 	return text;
 }
 
-std::vector<Addr> getPeersFromTrackers(mtt::TorrentFileInfo& parsedTorrent)
+std::vector<Addr> getPeersFromTrackers(mtt::TorrentFileMetadata& parsedTorrent)
 {
 	TorrentPtr torrent = mtt::Torrent::fromFile(parsedTorrent);
 
-	UdpAsyncComm::Init()->setBindPort(mtt::config::getExternal().connection.udpPort);
+	UdpAsyncComm udp;
+	udp.setBindPort(mtt::config::getExternal().connection.udpPort);
+	udp.listen({});
+
 	torrent->service.start(1);
 
 	std::vector<Addr> peers;
@@ -327,7 +332,7 @@ std::vector<Addr> getPeersFromTrackers(mtt::TorrentFileInfo& parsedTorrent)
 
 	trackers.stop();
 	torrent->service.stop();
-	UdpAsyncComm::Deinit();
+	udp.deinit();
 
 	return peers;
 }
@@ -335,7 +340,7 @@ std::vector<Addr> getPeersFromTrackers(mtt::TorrentFileInfo& parsedTorrent)
 void testTrackers()
 {
 	std::string link = GetClipboardText();
-	mtt::TorrentFileInfo parsedTorrent;
+	mtt::TorrentFileMetadata parsedTorrent;
 	parsedTorrent.parseMagnetLink(link);
 
 	auto addr = getPeersFromTrackers(parsedTorrent);
@@ -343,23 +348,23 @@ void testTrackers()
 	WAITFOR(false);
 }
 
-std::string findFileByPiece(mtt::TorrentFileInfo& file, uint32_t piece)
+std::string findFileByPiece(mtt::TorrentFileMetadata& file, uint32_t piece)
 {
 	for (auto& f : file.info.files)
 	{
 		if (f.startPieceIndex <= piece && f.endPieceIndex >= piece)
-			return f.path.back();
+			return f.name;
 	}
 
 	return "";
 }
 
-static TorrentFileInfo parseTorrentFile(const char* filepath)
+static TorrentFileMetadata parseTorrentFile(const char* filepath)
 {
 	std::ifstream file(filepath, std::ios_base::binary);
 
 	if (!file.good())
-		return TorrentFileInfo{};
+		return TorrentFileMetadata{};
 
 	DataBuffer buffer((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
 
@@ -390,7 +395,7 @@ void testStorageLoad()
 {
 	auto torrent = parseTorrentFile("C:\\Torrent\\test\\test.torrent");
 
-	DownloadSelection selection(torrent.info.files.size(), { false, Priority::Normal });
+	DownloadSelection selection(torrent.info.files.size(), { false, PriorityNormal });
 
 	mtt::Storage storage(torrent.info);
 	storage.setPath("C:\\Torrent\\test");
@@ -407,8 +412,9 @@ void testStorageLoad()
 		auto blocksInfo = torrent.info.makePieceBlocksInfo(i);
 
 		for (auto& blockInfo : blocksInfo)
-		{		
-			storage.loadPieceBlock(blockInfo, buffer);
+		{
+			buffer.resize(blockInfo.length);
+			storage.loadPieceBlock(blockInfo, buffer.data());
 		}
 
 		std::vector<Storage::PieceBlockData> data = { { buffer.data(), PieceBlockInfo{i, 0, (uint32_t)buffer.size()} } };
@@ -457,7 +463,8 @@ void testDumpStoredPiece()
 	DataBuffer buffer;
 	for (auto& blockInfo : blocksInfo)
 	{
-		auto status = storage.loadPieceBlock(blockInfo, buffer);
+		buffer.resize(blockInfo.length);
+		auto status = storage.loadPieceBlock(blockInfo, buffer.data());
 		memcpy(pieceData.data() + blockInfo.begin, buffer.data(), buffer.size());
 
 		if (status != Status::Success)
@@ -467,11 +474,49 @@ void testDumpStoredPiece()
 	std::cout << "Piece: " << (isValidPiece(pieceData, torrent.info.pieces[pieceIdx].hash) ? "Valid" : "Not valid") << std::endl;
 }
 
+void testDownloadCache()
+{
+	auto torrent = parseTorrentFile("C:\\Torrent\\test\\test.torrent");
+
+	mtt::Storage storage(torrent.info);
+	ServiceThreadpool pool;
+	pool.start(4);
+
+	auto internalCfg = mtt::config::getInternal();
+	internalCfg.downloadCachePerGroup = 10 * BlockMaxSize;
+	mtt::config::setInternalValues(internalCfg);
+
+	mtt::WriteCache cache(pool, storage);
+
+	DataBuffer buffer;
+	buffer.resize(BlockMaxSize);
+
+	std::vector<int> order;
+	order.resize(64);
+	std::iota(order.begin(), order.end(), 0);
+	std::shuffle(order.begin(), order.end(), std::minstd_rand{ 0 });
+
+	for (int i = 0; i < 64; i++)
+	{
+		int blockPos = order[i];
+
+		buffer[0] = (uint8_t)(blockPos + 1);
+
+		mtt::PieceBlock block;
+		block.buffer = buffer;
+		block.info = { 0, blockPos * BlockMaxSize, BlockMaxSize };
+		cache.storeBlock(block);
+	}
+
+	cache.flush();
+	pool.stop();
+}
+
 void testPeerListen()
 {
 	auto torrent = parseTorrentFile("C:\\Torrent\\test\\test.torrent");
 
-	DownloadSelection selection(torrent.info.files.size(), { false, Priority::Normal });
+	DownloadSelection selection(torrent.info.files.size(), { false, PriorityNormal });
 	selection.front().selected = true;
 
 	mtt::Storage storage(torrent.info);
@@ -521,7 +566,8 @@ void testPeerListen()
 				block.info.length = msg.request.length;
 
 				DataBuffer buffer;
-				storage->loadPieceBlock(block.info, buffer);
+				buffer.resize(block.info.length);
+				storage->loadPieceBlock(block.info, buffer.data());
 
 				block.buffer = buffer;
 				comm->sendPieceBlock(block);
@@ -530,7 +576,7 @@ void testPeerListen()
 
 		Storage* storage{};
 		PeerCommunication* comm{};
-		TorrentFileInfo* torrent{};
+		TorrentFileMetadata* torrent{};
 		bool success = false;
 	}
 	listener;
@@ -546,7 +592,7 @@ void testPeerListen()
 
 	if (listener.success)
 	{
-		peer->sendBitfield(progress.toBitfield());
+		peer->sendBitfield(progress.toBitfieldData());
 
 		WAITFOR(listener.closed);
 	}
@@ -554,13 +600,17 @@ void testPeerListen()
 
 void testDhtTable()
 {
-	mtt::dht::Communication dhtComm;
+	UdpAsyncComm udp;
+	udp.setBindPort(mtt::config::getExternal().connection.udpPort);
+	udp.listen({});
+
+	mtt::dht::Communication dhtComm(udp);
 	dhtComm.start();
 
 	//494981B03AFDDED5C07B8D81B999A53496854826	common
 	//6QBN6XVGKV7CWOT5QXKDYWF3LIMUVK4I less rare
 	//47e2bac3c75e738f17eaeffae949c80c61e7e675 very rare fear
-	TorrentFileInfo info;
+	TorrentFileMetadata info;
 	info.parseMagnetLink("494981B03AFDDED5C07B8D81B999A53496854826");
 
 	auto targetId = info.info.hash;
@@ -572,26 +622,25 @@ void testDhtTable()
 // 	Sleep(10000);
 
 	dhtComm.stop();
-	UdpAsyncComm::Deinit();
+	udp.deinit();
 }
 
 void testDownloader()
 {
 	auto parsedTorrent = parseTorrentFile("C:\\Torrent\\test\\test.torrent");
 
-	DownloadSelection selection(parsedTorrent.info.files.size(), { false, Priority::Normal });
-	std::vector<bool> selectionBool(parsedTorrent.info.files.size());
-	selection[1].selected = selectionBool[1] = true;
-	selection[2].selected = selectionBool[2] = true;
+	DownloadSelection selection(parsedTorrent.info.files.size(), { false, PriorityNormal });
+	selection[1].selected = true;
+	selection[2].selected = true;
 
 	TorrentPtr torrent = mtt::Torrent::fromFile(parsedTorrent);
-	torrent->files.initialize(parsedTorrent.info);
-	torrent->files.select(parsedTorrent.info, selectionBool);
-	torrent->files.prepareSelection();
-	torrent->service.start(4);
+	torrent->files.selectFile(1, true);
+	torrent->files.selectFile(2, true);
 
-// 	torrent->checkFiles();
-// 	WAITFOR(!torrent->checking);
+	torrent->service.start(4);
+	torrent->files.start();
+// 	torrent->files.checkFiles();
+// 	WAITFOR(!torrent->files.checking);
 
 	Downloader dl(*torrent);
 	dl.refreshSelection(selection, std::vector<uint32_t>(parsedTorrent.info.pieces.size(), 0));
@@ -627,7 +676,7 @@ void testDownloader()
 		return;
 
 	WAITFOR(peerListener.closed || torrent->selectionFinished());
-	WAITFOR(!torrent->checking)
+	WAITFOR(!torrent->files.checking)
 
 	peer->close();
 
@@ -645,10 +694,12 @@ void testTorrentFileSerialization()
 void bigTestGetTorrentFileByLink()
 {
 	std::string link = "magnet:?xt=urn:btih:3CB11691C0AD8D327ECB9D5E242FDDAF0B2E32B0&dn=Bruce+Springsteen+-+Only+the+Strong+Survive+%282022%29+Mp3+320kbps+%5BPMEDIA%5D+%E2%AD%90%EF%B8%8F&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.dler.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fopentracker.i2p.rocks%3A6969%2Fannounce&tr=udp%3A%2F%2F47.ip-51-68-199.eu%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2F9.rarbg.to%3A2920%2Fannounce&tr=udp%3A%2F%2Ftracker.pirateparty.gr%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce";
-	mtt::TorrentFileInfo parsedTorrent;
+	link = "0E77F0FC2D7860B6470F99402202044E2EA268E1";
+
+	mtt::TorrentFileMetadata parsedTorrent;
 	parsedTorrent.parseMagnetLink(link);
 
-	std::vector<Addr> addr = getPeersFromTrackers(parsedTorrent);
+	std::vector<Addr> addr = { Addr::fromString("185.149.90.102:51020") };//getPeersFromTrackers(parsedTorrent);
 	TEST_LOG("received peers size " << addr.size());
 
 	ServiceThreadpool service(1);
@@ -695,22 +746,37 @@ void bigTestGetTorrentFileByLink()
 
 	if (metadata.finished())
 	{
-		auto info = mtt::TorrentFileParser::parseTorrentInfo(metadata.buffer.data(), metadata.buffer.size());
-		TEST_LOG("metadata finished" << info.files[0].path[0]);
+		TorrentFileMetadata finfo;
+		finfo.info = mtt::TorrentFileParser::parseTorrentInfo(metadata.buffer.data(), metadata.buffer.size());
+		auto data = finfo.createTorrentFileData();
 
-		DownloadSelection selection(info.files.size(), { false, Priority::Normal });
+		std::ofstream file("./outMt", std::ios::binary);
+
+		if (!file)
+			return;
+
+		file.write((const char*)data.data(), data.size());
+	}
+
+	if (metadata.finished())
+	{
+		auto info = mtt::TorrentFileParser::parseTorrentInfo(metadata.buffer.data(), metadata.buffer.size());
+		TEST_LOG("metadata finished" << info.name);
+
+		DownloadSelection selection(info.files.size(), { false, PriorityNormal });
 		selection.front().selected = true;
+
+		PiecesProgress piecesTodo;
+		piecesTodo.select(info.files.front(), true);
 
 		mtt::Storage storage(info);
 		storage.preallocateSelection(selection);
-
-		PiecesProgress piecesTodo;
-		piecesTodo.select(info, selection);
 
 		connectedPeer->setInterested(true);
 
 		PieceState pieceTodo;
 		DataBuffer blockBuffer;
+		blockBuffer.resize(info.pieceSize);
 		std::mutex pieceMtx;
 		bool finished = false;
 		uint32_t finishedPieces = 0;
@@ -719,26 +785,38 @@ void bigTestGetTorrentFileByLink()
 			std::lock_guard<std::mutex> guard(pieceMtx);
 			if (msg.id == PeerMessage::Piece)
 			{
-				blockBuffer.assign(msg.piece.buffer.data, msg.piece.buffer.data + msg.piece.buffer.size);
+				auto& piece = msg.piece;
+				memcpy(blockBuffer.data() + piece.info.begin, msg.piece.buffer.data, msg.piece.buffer.size);
 
-				std::vector<Storage::PieceBlockData> data = { { { blockBuffer.data(), msg.piece.info } } };
-				storage.storePieceBlocks(data);
-				pieceTodo.addBlock(msg.piece);
+				//std::vector<Storage::PieceBlockData> data = { { { blockBuffer.data(), msg.piece.info } } };
+				
+				//storage.storePieceBlocks(data);
+				pieceTodo.addBlock(piece);
 
 				if (pieceTodo.remainingBlocks == 0)
 				{
 					piecesTodo.addPiece(pieceTodo.index);
 					finished = true;
 					finishedPieces++;
+
+					{
+						std::ofstream file("./piece" + std::to_string(piece.info.index), std::ios::binary);
+
+						if (!file)
+							return;
+
+						file.write((const char*)blockBuffer.data(), pieceTodo.downloadedSize);
+					}
 				}
 			}
 		};
 
-		while (finishedPieces < info.pieces.size())
+		//while (finishedPieces < info.pieces.size())
 		{
-			auto p = piecesTodo.firstEmptyPiece();
-			if (p == -1)
-				break;
+// 			auto p = piecesTodo.firstEmptyPiece();
+// 			if (p == -1)
+// 				break;
+			int p = 116;
 
 			auto blocks = info.makePieceBlocksInfo(p);
 			TEST_LOG("Requesting idx " << p);
@@ -761,7 +839,7 @@ void bigTestGetTorrentFileByLink()
 
 void testMetadataReceive()
 {
-	TorrentFileInfo torrent;
+	TorrentFileMetadata torrent;
 	torrent.parseMagnetLink("6F98F622E8DB6676D6645B6632871B41B97547CC");
 
 	ServiceThreadpool service(1);
@@ -817,7 +895,7 @@ const char* tempLink = "magnet:?xt=urn:btih:HMSXZ6DMI56OOTADFNV5R77O34WK4S65&tr=
 void testMagnetLink()
 {
 	auto& alerts = mtt::AlertsManager::Get();
-	alerts.registerAlerts(Alerts::Id::MetadataFinished);
+	alerts.registerAlerts(Alerts::Id::MetadataInitialized);
 
 	TorrentPtr torrent = Torrent::fromMagnetLink(tempLink);
 
@@ -831,7 +909,7 @@ void testMagnetLink()
 		auto newAlerts = alerts.popAlerts();
 		for (auto& a : newAlerts)
 		{
-			if (a->id == Alerts::Id::MetadataFinished)
+			if (a->id == Alerts::Id::MetadataInitialized)
 			{
 				TEST_LOG("Metadata finished\n");
 				break;
@@ -851,9 +929,9 @@ void torrentFilesCheckTest()
 	if (!torrent|| torrent->name().empty())
 		return;
 
-	torrent->checkFiles();
+	torrent->files.checkFiles();
 
-	WAITFOR(!torrent->checking);
+	WAITFOR(!torrent->files.checking);
 
 	auto progress = torrent->progress();
 }
@@ -878,7 +956,7 @@ void localDownloadTest()
 
 	std::vector<bool> selectionBool(torrent->infoFile.info.files.size());
 	selectionBool[1] = selectionBool[2] = true;
-	torrent->selectFiles(selectionBool);
+	torrent->files.selectFiles(selectionBool);
 
 	torrent->peers->trackers.removeTrackers();
 
@@ -887,10 +965,10 @@ void localDownloadTest()
 
 	torrent->peers->connect(Addr({ 127,0,0,1 }, 13131));
 
-	while (!torrent->selectionFinished() || torrent->checking)
+	while (!torrent->selectionFinished() || torrent->files.checking)
 	{
-		if (torrent->checking)
-			TEST_LOG("Checking: " << torrent->checkingProgress())
+		if (torrent->files.checking)
+			TEST_LOG("Checking: " << torrent->files.checkingProgress())
 		else
 			TEST_LOG("Progress: " << torrent->selectionFinished() << "(" << torrent->downloaded()/(1024.f*1024) << "MB) (" << torrent->downloadSpeed() / (1024.f * 1024) << " MBps)");
 
@@ -980,7 +1058,6 @@ namespace mtt
 
 std::vector<DataBuffer> packets;
 std::mutex packetMutex;
-utp::TimePoint packetTime;
 
 void serializePackets()
 {
@@ -1188,7 +1265,6 @@ void testUtpLocalConnection()
 // 	std::remove("utpPackets");
 // 	std::remove("fileLogger");
 // 	packets.reserve(1000000);
-// 	bool requestTest = false;
 
 	ServiceThreadpool pool(2);
 
@@ -1197,7 +1273,7 @@ void testUtpLocalConnection()
 	utpMgr.start();
 
 	auto udpReceiver = std::make_shared<UdpAsyncReceiver>(pool.io, connectionSettings.udpPort, false);
-	udpReceiver->receiveCallback = [&](udp::endpoint& e, std::vector<DataBuffer*>& d)
+	udpReceiver->receiveCallback = [&](udp::endpoint& e, std::vector<BufferView>& d)
 	{
 		if (utpMgr.onUdpPacket(e, d))
 			handledCount++;
@@ -1220,7 +1296,8 @@ void testUtpLocalConnection()
 			if (msg.id == PeerMessage::Request)
 			{
 				DataBuffer buffer;
-				storage.loadPieceBlock(msg.request, buffer);
+				buffer.resize(msg.request.length);
+				storage.loadPieceBlock(msg.request, buffer.data());
 
 				PieceBlock block;
 				block.info = msg.request;
@@ -1249,29 +1326,30 @@ void testUtpLocalConnection()
 
 	WAITFOR(peer->isEstablished());
 
-// 	if (requestTest)
-// 	{
-// 		peer->setInterested(true);
-// 
-// 		WAITFOR(!peer->state.peerChoking);
-// 
-// 		uint32_t pieceIdx = 0;
-// 		uint32_t blocksCount = torrentInfo.getPieceBlocksCount(pieceIdx);
-// 		peerListener.piece.init(pieceIdx, torrentInfo);
-// 
-// 		while (peerListener.piece.remainingBlocks > 0)
-// 		{
-// 			peerListener.askNext = false;
-// 
-// 			auto blockIdx = blocksCount - peerListener.piece.remainingBlocks;
-// 			auto block = torrentInfo.getPieceBlockInfo(pieceIdx, blockIdx);
-// 			peer->requestPieceBlock(block);
-// 
-// 			WAITFOR(peerListener.askNext);
-// 		}
-// 
-// 		auto success = peerListener.piece.isValid(torrentInfo.pieces[pieceIdx].hash);
-// 	}
+ 	const bool requestTest = true;
+	if (requestTest)
+	{
+		peer->setInterested(true);
+
+		WAITFOR(!peer->state.peerChoking);
+
+		uint32_t pieceIdx = 139;
+		uint32_t blocksCount = torrentInfo.getPieceBlocksCount(pieceIdx);
+		peerListener.piece.init(pieceIdx, torrentInfo);
+
+		while (peerListener.piece.remainingBlocks > 0)
+		{
+			peerListener.askNext = false;
+
+			auto blockIdx = blocksCount - peerListener.piece.remainingBlocks;
+			auto block = torrentInfo.getPieceBlockInfo(pieceIdx, blockIdx);
+			peer->requestPieceBlock(block);
+
+			WAITFOR(peerListener.askNext);
+		}
+
+		auto success = peerListener.piece.isValid(torrentInfo.pieces[pieceIdx].hash);
+	}
 // 	else
 // 	{
 // 		DataBuffer bitfield;
@@ -1312,7 +1390,7 @@ void testUtpLocalProtocol()
 
 			utpMgr.start();
 			udpReceiver = std::make_shared<UdpAsyncReceiver>(pool.io, port, false);
-			udpReceiver->receiveCallback = [&](udp::endpoint& e, std::vector<DataBuffer*>& d)
+			udpReceiver->receiveCallback = [&](udp::endpoint& e, std::vector<BufferView>& d)
 			{
 				utpMgr.onUdpPacket(e, d);
 			};
@@ -1343,7 +1421,8 @@ void testUtpLocalProtocol()
 			if (msg.id == PeerMessage::Request)
 			{
 				DataBuffer buffer;
-				storage.loadPieceBlock(msg.request, buffer);
+				buffer.resize(msg.request.length);
+				storage.loadPieceBlock(msg.request, buffer.data());
 
 				PieceBlock block;
 				block.info = msg.request;
@@ -1575,5 +1654,5 @@ void testLocalPeerEncryptionListen()
 
 void TorrentTest::start()
 {
-	localDownloadTest();
+	testDownloadCache();
 }

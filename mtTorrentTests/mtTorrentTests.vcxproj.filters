@@ -5,14 +5,6 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
     <Filter Include="Source Files\mtt">
       <UniqueIdentifier>{3fc41926-8c6c-4e19-ac98-0cb4899de37a}</UniqueIdentifier>
     </Filter>
@@ -177,7 +169,7 @@
     <ClCompile Include="..\mtTorrent\utils\UrlEncoding.cpp">
       <Filter>Source Files\mtt\utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\mtTorrent\utils\XmlParser.cpp">
+    <ClCompile Include="..\mtTorrent\utils\Xml.cpp">
       <Filter>Source Files\mtt\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\mtTorrent\Core\Utp\UtpManager.cpp">
@@ -196,9 +188,6 @@
       <Filter>Source Files\mtt\api</Filter>
     </ClCompile>
     <ClCompile Include="..\mtTorrent\Core\Api\ListenerImpl.cpp">
-      <Filter>Source Files\mtt\api</Filter>
-    </ClCompile>
-    <ClCompile Include="..\mtTorrent\Core\Api\MagnetDownloadImpl.cpp">
       <Filter>Source Files\mtt\api</Filter>
     </ClCompile>
     <ClCompile Include="..\mtTorrent\Core\Api\PeersImpl.cpp">
@@ -255,11 +244,11 @@
     <ClCompile Include="..\mtTorrent\Core\PexExtension.cpp">
       <Filter>Source Files\mtt</Filter>
     </ClCompile>
-    <ClCompile Include="..\mtTorrent\utils\BitUtils.cpp">
-      <Filter>Source Files\mtt\utils</Filter>
-    </ClCompile>
     <ClCompile Include="..\mtTorrent\Core\DownloadStorage.cpp">
       <Filter>Source Files\mtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtTorrent\Core\Api\MetadataDownloadImpl.cpp">
+      <Filter>Source Files\mtt\api</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -419,7 +408,7 @@
     <ClInclude Include="..\mtTorrent\utils\UrlEncoding.h">
       <Filter>Source Files\mtt\utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\mtTorrent\utils\XmlParser.h">
+    <ClInclude Include="..\mtTorrent\utils\Xml.h">
       <Filter>Source Files\mtt\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\mtTorrent\Core\Utp\UtpManager.h">
@@ -478,9 +467,6 @@
     </ClInclude>
     <ClInclude Include="..\mtTorrent\Core\PexExtension.h">
       <Filter>Source Files\mtt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\mtTorrent\utils\BitUtils.h">
-      <Filter>Source Files\mtt\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\mtTorrent\Core\DownloadStorage.h">
       <Filter>Source Files\mtt</Filter>

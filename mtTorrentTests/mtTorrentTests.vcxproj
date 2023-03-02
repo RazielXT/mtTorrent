@@ -156,7 +156,7 @@
     <ClCompile Include="..\mtTorrent\Core\Api\FileTransferImpl.cpp" />
     <ClCompile Include="..\mtTorrent\Core\Api\InterfaceImpl.cpp" />
     <ClCompile Include="..\mtTorrent\Core\Api\ListenerImpl.cpp" />
-    <ClCompile Include="..\mtTorrent\Core\Api\MagnetDownloadImpl.cpp" />
+    <ClCompile Include="..\mtTorrent\Core\Api\MetadataDownloadImpl.cpp" />
     <ClCompile Include="..\mtTorrent\Core\Api\PeersImpl.cpp" />
     <ClCompile Include="..\mtTorrent\Core\Api\TorrentImpl.cpp" />
     <ClCompile Include="..\mtTorrent\Core\Configuration.cpp" />
@@ -201,7 +201,6 @@
     <ClCompile Include="..\mtTorrent\utils\BencodeParser.cpp" />
     <ClCompile Include="..\mtTorrent\utils\BencodeWriter.cpp" />
     <ClCompile Include="..\mtTorrent\utils\BigNumber.cpp" />
-    <ClCompile Include="..\mtTorrent\utils\BitUtils.cpp" />
     <ClCompile Include="..\mtTorrent\utils\DataBuffer.cpp" />
     <ClCompile Include="..\mtTorrent\utils\DiffieHellman.cpp" />
     <ClCompile Include="..\mtTorrent\utils\FastIpToCountry.cpp" />
@@ -224,7 +223,7 @@
     <ClCompile Include="..\mtTorrent\utils\UpnpPortMapping.cpp" />
     <ClCompile Include="..\mtTorrent\utils\Uri.cpp" />
     <ClCompile Include="..\mtTorrent\utils\UrlEncoding.cpp" />
-    <ClCompile Include="..\mtTorrent\utils\XmlParser.cpp" />
+    <ClCompile Include="..\mtTorrent\utils\Xml.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Test.cpp" />
   </ItemGroup>
@@ -276,7 +275,6 @@
     <ClInclude Include="..\mtTorrent\utils\BencodeParser.h" />
     <ClInclude Include="..\mtTorrent\utils\BencodeWriter.h" />
     <ClInclude Include="..\mtTorrent\utils\BigNumber.h" />
-    <ClInclude Include="..\mtTorrent\utils\BitUtils.h" />
     <ClInclude Include="..\mtTorrent\utils\DataBuffer.h" />
     <ClInclude Include="..\mtTorrent\utils\DiffieHellman.h" />
     <ClInclude Include="..\mtTorrent\utils\FastIpToCountry.h" />
@@ -301,7 +299,7 @@
     <ClInclude Include="..\mtTorrent\utils\UpnpPortMapping.h" />
     <ClInclude Include="..\mtTorrent\utils\Uri.h" />
     <ClInclude Include="..\mtTorrent\utils\UrlEncoding.h" />
-    <ClInclude Include="..\mtTorrent\utils\XmlParser.h" />
+    <ClInclude Include="..\mtTorrent\utils\Xml.h" />
     <ClInclude Include="Test.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
