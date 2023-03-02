@@ -366,7 +366,7 @@ size_t ProtocolEncryptionHandshake::readPe4Handshake(const BufferView& data)
 		return data.size;
 	}
 
-	auto pad = reader.pop16();
+	auto pad = (size_t)reader.pop16();
 
 	pos += 6 + pad;
 

@@ -67,7 +67,7 @@ protected:
 
 	struct ReadBuffer
 	{
-		LogWriter* log;
+		LogWriter* log = nullptr;
 
 		void advanceBuffer(size_t size);
 		void consume(size_t size);

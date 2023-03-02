@@ -35,7 +35,8 @@ void TcpAsyncStream::connect(const std::string& ip, uint16_t port)
 	if (state != Clear)
 		return;
 
-	info.address.set(asio::ip::address::from_string(ip), port);
+	asio::error_code ec;
+	info.address.set(asio::ip::make_address(ip, ec), port);
 	info.addressResolved = true;
 	info.host = ip;
 
