@@ -60,16 +60,19 @@ void mtt::Peers::stop()
 	dht.stop();
 
 	{
+		std::lock_guard<std::mutex> guard(peersMutex);
+
+		auto lastListener = listener.load();
 		setTargetListener(nullptr);
 		stopConnecting();
-
-		std::lock_guard<std::mutex> guard(peersMutex);
 
 		int i = 0;
 		for (const auto& c : activeConnections)
 		{	
 			if (c.comm)
 			{
+				lastListener->connectionClosed(c.comm.get(), 0);
+
 				auto& peer = knownPeers[c.idx];
 				peer.state = KnownPeer::State::Disconnected;
 				PEERS_LOG("Stop " << peer.address);
