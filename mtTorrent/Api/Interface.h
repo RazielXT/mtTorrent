@@ -194,7 +194,7 @@ namespace mtt
 	{
 		virtual ~AlertMessage() = default;
 
-		Alerts::Id id;
+		Alerts::Id id = {};
 
 		template <class T> const T* getAs() const
 		{

@@ -3,27 +3,27 @@
 
 mtt::AlertsManager instance;
 
-void mtt::AlertsManager::torrentAlert(Alerts::Id id, Torrent* torrent)
+void mtt::AlertsManager::torrentAlert(Alerts::Id id, Torrent& torrent)
 {
 	if (!isAlertRegistered(id))
 		return;
 
 	auto alert = std::make_unique<TorrentAlert>();
 	alert->id = id;
-	alert->torrent = torrent->shared_from_this();
+	alert->torrent = torrent.shared_from_this();
 
 	std::lock_guard<std::mutex> guard(alertsMutex);
 	alerts.push_back(std::move(alert));
 }
 
-void mtt::AlertsManager::metadataAlert(Alerts::Id id, Torrent* torrent)
+void mtt::AlertsManager::metadataAlert(Alerts::Id id, Torrent& torrent)
 {
 	if (!isAlertRegistered(id))
 		return;
 
 	auto alert = std::make_unique<MetadataAlert>();
 	alert->id = id;
-	alert->torrent = torrent->shared_from_this();
+	alert->torrent = torrent.shared_from_this();
 
 	std::lock_guard<std::mutex> guard(alertsMutex);
 	alerts.push_back(std::move(alert));

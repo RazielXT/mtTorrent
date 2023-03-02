@@ -194,6 +194,9 @@ std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addFile(const uint8_t* data, 
 	listener->addTorrent(torrent->hash());
 	torrent->saveTorrentFile(data, size);
 
+	AlertsManager::Get().torrentAlert(Alerts::Id::TorrentAdded, *torrent);
+	AlertsManager::Get().metadataAlert(Alerts::Id::MetadataInitialized, *torrent);
+
 	return { mtt::Status::Success, torrent };
 }
 
@@ -222,6 +225,7 @@ std::pair<mtt::Status, mtt::TorrentPtr> mtt::Core::addMagnet(const char* magnet)
 	listener->addTorrent(torrent->hash());
 	torrent->downloadMetadata();
 
+	AlertsManager::Get().torrentAlert(Alerts::Id::TorrentAdded, *torrent);
 
 	return { mtt::Status::Success, torrent };
 }
@@ -260,6 +264,8 @@ mtt::Status mtt::Core::removeTorrent(const uint8_t* hash, bool deleteFiles)
 			torrents.erase(it);
 
 			saveTorrentList(torrents);
+
+			AlertsManager::Get().torrentAlert(Alerts::Id::TorrentRemoved, *t);
 
 			return Status::Success;
 		}

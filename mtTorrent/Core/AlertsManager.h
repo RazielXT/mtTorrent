@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Interface.h"
 
 namespace mtt
@@ -8,8 +9,8 @@ namespace mtt
 	public:
 
 		static AlertsManager& Get();
-		void torrentAlert(Alerts::Id id, Torrent* torrent);
-		void metadataAlert(Alerts::Id id, Torrent* torrent);
+		void torrentAlert(Alerts::Id id, Torrent& torrent);
+		void metadataAlert(Alerts::Id id, Torrent& torrent);
 		void configAlert(Alerts::Id id, config::ValueType type);
 
 		void registerAlerts(uint64_t alertMask);
