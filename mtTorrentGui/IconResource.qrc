@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/new/res">
+        <file>icons/mtt.ico</file>
+    </qresource>
+</RCC>

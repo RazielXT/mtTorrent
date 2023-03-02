@@ -15,6 +15,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SdkGuiExample", "SdkGuiExam
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mtTorrentTests", "mtTorrentTests\mtTorrentTests.vcxproj", "{C2B5C776-4C76-4FF9-A62C-F3B033EFC267}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mtTorrentGui", "mtTorrentGui\mtTorrentGui.vcxproj", "{BD72F5DE-167E-4B76-A007-C4A83A73370C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -97,6 +99,18 @@ Global
 		{C2B5C776-4C76-4FF9-A62C-F3B033EFC267}.ReleaseWithSSL|x64.Build.0 = Release|x64
 		{C2B5C776-4C76-4FF9-A62C-F3B033EFC267}.ReleaseWithSSL|x86.ActiveCfg = Release|Win32
 		{C2B5C776-4C76-4FF9-A62C-F3B033EFC267}.ReleaseWithSSL|x86.Build.0 = Release|Win32
+		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.Debug|x64.ActiveCfg = Debug|x64
+		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.Debug|x64.Build.0 = Debug|x64
+		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.Debug|x86.ActiveCfg = Debug|x64
+		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.Debug|x86.Build.0 = Debug|x64
+		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.Release|x64.ActiveCfg = Release|x64
+		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.Release|x64.Build.0 = Release|x64
+		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.Release|x86.ActiveCfg = Release|x64
+		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.Release|x86.Build.0 = Release|x64
+		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.ReleaseWithSSL|x64.ActiveCfg = ReleaseWithSSL|x64
+		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.ReleaseWithSSL|x64.Build.0 = ReleaseWithSSL|x64
+		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.ReleaseWithSSL|x86.ActiveCfg = Release|x64
+		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.ReleaseWithSSL|x86.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

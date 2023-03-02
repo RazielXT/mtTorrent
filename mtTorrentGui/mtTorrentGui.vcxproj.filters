@@ -1,0 +1,173 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>qml;cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>qrc;rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Form Files">
+      <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
+      <Extensions>ui</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Forms">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Data">
+      <UniqueIdentifier>{33e41f48-bf3e-4529-ad3c-cbbbecaab82e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Data\Models">
+      <UniqueIdentifier>{01407cd9-bac8-40b8-b0c0-f81bef92a133}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="MainWindow.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtMoc Include="MainWindow.h">
+      <Filter>Source Files\Forms</Filter>
+    </QtMoc>
+    <QtRcc Include="IconResource.qrc">
+      <Filter>Resource Files</Filter>
+    </QtRcc>
+    <QtUic Include="MagnetWindow.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="NewTorrentWindow.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="AddPeerWindow.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MainWindow.cpp">
+      <Filter>Source Files\Forms</Filter>
+    </ClCompile>
+    <ClCompile Include="SettingsWindow.cpp">
+      <Filter>Source Files\Forms</Filter>
+    </ClCompile>
+    <ClCompile Include="TorrentsList.cpp">
+      <Filter>Source Files\Data</Filter>
+    </ClCompile>
+    <ClCompile Include="FilesTab.cpp">
+      <Filter>Source Files\Data</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils.cpp">
+      <Filter>Source Files\Data</Filter>
+    </ClCompile>
+    <ClCompile Include="SpeedTab.cpp">
+      <Filter>Source Files\Data</Filter>
+    </ClCompile>
+    <ClCompile Include="InfoTab.cpp">
+      <Filter>Source Files\Data</Filter>
+    </ClCompile>
+    <ClCompile Include="FilesDataModel.cpp">
+      <Filter>Source Files\Data\Models</Filter>
+    </ClCompile>
+    <ClCompile Include="TorrentsDataModel.cpp">
+      <Filter>Source Files\Data\Models</Filter>
+    </ClCompile>
+    <ClCompile Include="MagnetWindow.cpp">
+      <Filter>Source Files\Forms</Filter>
+    </ClCompile>
+    <ClCompile Include="NewTorrentWindow.cpp">
+      <Filter>Source Files\Forms</Filter>
+    </ClCompile>
+    <ClCompile Include="PeersTab.cpp">
+      <Filter>Source Files\Data</Filter>
+    </ClCompile>
+    <ClCompile Include="PeersDataModel.cpp">
+      <Filter>Source Files\Data\Models</Filter>
+    </ClCompile>
+    <ClCompile Include="SourcesTab.cpp">
+      <Filter>Source Files\Data</Filter>
+    </ClCompile>
+    <ClCompile Include="SourcesDataModel.cpp">
+      <Filter>Source Files\Data\Models</Filter>
+    </ClCompile>
+    <ClCompile Include="AddPeerWindow.cpp">
+      <Filter>Source Files\Forms</Filter>
+    </ClCompile>
+    <ClCompile Include="CrossProcess.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="app.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="icons\mtt.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="SettingsWindow.h">
+      <Filter>Source Files\Forms</Filter>
+    </QtMoc>
+    <QtMoc Include="TorrentsDataModel.h">
+      <Filter>Source Files\Data\Models</Filter>
+    </QtMoc>
+    <QtMoc Include="FilesDataModel.h">
+      <Filter>Source Files\Data\Models</Filter>
+    </QtMoc>
+    <QtMoc Include="MagnetWindow.h">
+      <Filter>Source Files\Forms</Filter>
+    </QtMoc>
+    <QtMoc Include="NewTorrentWindow.h">
+      <Filter>Source Files\Forms</Filter>
+    </QtMoc>
+    <QtMoc Include="PeersDataModel.h">
+      <Filter>Source Files\Data\Models</Filter>
+    </QtMoc>
+    <QtMoc Include="SourcesDataModel.h">
+      <Filter>Source Files\Data\Models</Filter>
+    </QtMoc>
+    <QtMoc Include="Utils.h">
+      <Filter>Source Files\Data</Filter>
+    </QtMoc>
+    <QtMoc Include="AddPeerWindow.h">
+      <Filter>Source Files\Forms</Filter>
+    </QtMoc>
+    <QtMoc Include="CrossProcess.h">
+      <Filter>Source Files</Filter>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="SettingsWindow.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resource1.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SpeedTab.h">
+      <Filter>Source Files\Data</Filter>
+    </ClInclude>
+    <ClInclude Include="InfoTab.h">
+      <Filter>Source Files\Data</Filter>
+    </ClInclude>
+    <ClInclude Include="FilesTab.h">
+      <Filter>Source Files\Data</Filter>
+    </ClInclude>
+    <ClInclude Include="TorrentsList.h">
+      <Filter>Source Files\Data</Filter>
+    </ClInclude>
+    <ClInclude Include="PeersTab.h">
+      <Filter>Source Files\Data</Filter>
+    </ClInclude>
+    <ClInclude Include="SourcesTab.h">
+      <Filter>Source Files\Data</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
