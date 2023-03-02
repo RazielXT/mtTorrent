@@ -13,7 +13,7 @@ void mttApi::Torrent::stop()
 	static_cast<mtt::Torrent*>(this)->stop();
 }
 
-bool mttApi::Torrent::isStarted() const
+bool mttApi::Torrent::started() const
 {
 	return static_cast<const mtt::Torrent*>(this)->started;
 }

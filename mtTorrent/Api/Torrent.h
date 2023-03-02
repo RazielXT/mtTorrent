@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../Public/Status.h"
 #include "Interface.h"
 #include "FileTransfer.h"
 #include "Peers.h"
@@ -22,9 +21,9 @@ namespace mttApi
 		API_EXPORT void stop();
 
 		/*
-			torrent is started and any stop action havent finished
+			torrent is started and any stop action hasnt finished
 		*/
-		API_EXPORT bool isStarted() const;
+		API_EXPORT bool started() const;
 
 		enum class State
 		{
