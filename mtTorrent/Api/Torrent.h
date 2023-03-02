@@ -31,7 +31,6 @@ namespace mttApi
 			Active,					//connecting to peers to download/upload files
 			Stopping,				//in process of stopping
 			Stopped,				//correctly stopped and not making any work
-			Interrupted,			//stopped due to error, see getLastError
 			CheckingFiles,			//checking integrity of existing files, see checkingProgress
 			DownloadingMetadata,	//downloading metadata from magnet link, see getMagnetDownload
 		};
@@ -46,7 +45,7 @@ namespace mttApi
 		*/
 		API_EXPORT TimePoint getStateTimestamp() const;
 		/*
-			get specific error which happened in Interrupted state
+			get specific error which stopped torrent
 		*/
 		API_EXPORT mtt::Status getLastError() const;
 

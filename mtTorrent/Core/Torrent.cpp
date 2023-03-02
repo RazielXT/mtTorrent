@@ -244,7 +244,7 @@ mttApi::Torrent::State mtt::Torrent::getState() const
 	if (utmDl && utmDl->state.active)
 		return mttApi::Torrent::State::DownloadingMetadata;
 	if (!started)
-		return lastError == Status::Success ? mttApi::Torrent::State::Stopped : mttApi::Torrent::State::Interrupted;
+		return mttApi::Torrent::State::Stopped;
 
 	return mttApi::Torrent::State::Active;
 }
