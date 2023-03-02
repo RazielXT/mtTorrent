@@ -48,15 +48,16 @@ void mtt::MetadataDownload::stop()
 		retryTimer->disable();
 	retryTimer = nullptr;
 
-	state.active = false;
+	if (state.active)
 	{
-		std::lock_guard<std::mutex> guard(stateMutex);
-
-		addEventLog(nullptr, Event::End);
-		activeComms.clear();
+		state.active = false;
+		{
+			std::lock_guard<std::mutex> guard(stateMutex);
+			addEventLog(nullptr, Event::End);
+			activeComms.clear();
+		}
+		peers.stop();
 	}
-
-	peers.stop();
 }
 
 std::vector<mtt::MetadataDownload::Event> mtt::MetadataDownload::getEvents(size_t startIndex) const
