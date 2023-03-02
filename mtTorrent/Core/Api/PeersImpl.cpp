@@ -29,6 +29,8 @@ mtt::Status mttApi::Peers::connect(const char* address)
 {
 	return static_cast<mtt::Peers*>(this)->connect(Addr::fromString(address));
 }
+
+std::vector<mtt::ConnectedPeerInfo> mttApi::Peers::getConnectedPeersInfo() const
 {
-	static_cast<mtt::Peers*>(this)->connect(Addr::fromString(address));
+	return static_cast<const mtt::Peers*>(this)->getConnectedPeersInfo();
 }

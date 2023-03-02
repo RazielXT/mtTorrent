@@ -10,27 +10,6 @@
 
 namespace mtt
 {
-	struct PeerCommunicationState
-	{
-		bool finishedHandshake = false;
-
-		bool amChoking = true;
-		bool amInterested = false;
-
-		bool peerChoking = true;
-		bool peerInterested = false;
-
-		enum
-		{
-			Disconnected,
-			Connecting,
-			Connected,
-			Handshake,
-			Established
-		}
-		action = Disconnected;
-	};
-
 	struct PeerInfo
 	{
 		PeerInfo();
@@ -69,7 +48,7 @@ namespace mtt
 		~PeerCommunication();
 
 		PeerInfo info;
-		PeerCommunicationState state;
+		PeerState state;
 		PeerExtensions ext;
 
 		void connect(const Addr& address);

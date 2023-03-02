@@ -33,7 +33,7 @@ namespace mtt
 
 		uint32_t connectedCount() const;
 		uint32_t receivedCount() const;
-		std::vector<std::shared_ptr<PeerCommunication>> getActivePeers() const;
+		std::vector<mtt::ConnectedPeerInfo> getConnectedPeersInfo() const;
 
 		void reloadTorrentInfo();
 
@@ -73,6 +73,7 @@ namespace mtt
 			uint32_t idx;
 		};
 		std::vector<ActivePeer> activeConnections;
+
 		KnownPeer* getKnownPeer(PeerCommunication* p);
 		ActivePeer* getActivePeer(PeerCommunication* p);
 		ActivePeer* getActivePeer(const Addr&);

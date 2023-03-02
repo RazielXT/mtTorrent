@@ -146,18 +146,37 @@ namespace mtt
 		};
 	}
 
-	struct ActivePeerInfo
+	struct PeerState
+	{
+		bool finishedHandshake = false;
+
+		bool amChoking = true;
+		bool amInterested = false;
+
+		bool peerChoking = true;
+		bool peerInterested = false;
+
+		enum
+		{
+			Disconnected,
+			Connecting,
+			Connected,
+			Handshake,
+			Established
+		}
+		action = Disconnected;
+	};
+
+	struct ConnectedPeerInfo
 	{
 		std::string address;
 		std::string client;
 		uint32_t uploadSpeed = 0;
 		uint32_t downloadSpeed = 0;
 		float percentage = 0;
-		bool connected = false;
-		bool choking = false;
-		bool requesting = false;
 		std::string country;
 		uint32_t flags = 0;
+		PeerState state;
 	};
 
 	struct PathValidation

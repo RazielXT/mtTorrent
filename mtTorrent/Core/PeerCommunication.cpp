@@ -6,11 +6,6 @@
 #include "utils/HexEncoding.h"
 #include <fstream>
 
-enum class PeerEventType : uint8_t
-{
-	Connect, Connected, RemoteConnected, Disconnect, ReceiveMessage, Interested, Choke, RequestPiece, Piece
-};
-#define DIAGNOSTICS(eventType, x) {}//WRITE_DIAGNOSTIC_LOG(std::string(#eventType)/*(char)PeerEventType::##eventType*/ << x)
 #define BT_LOG(x) WRITE_LOG(x)
 
 namespace mtt
@@ -169,7 +164,7 @@ size_t mtt::PeerCommunication::fromStream(std::shared_ptr<PeerStream> s, const B
 {
 	stream = s;
 	initializeStream();
-	state.action = PeerCommunicationState::Connected;
+	state.action = PeerState::Connected;
 
 	NAME_LOG(stream->getAddressName());
 	BT_LOG("RemoteConnected");
@@ -188,10 +183,10 @@ void mtt::PeerCommunication::connect(const Addr& address)
 {
 	NAME_LOG(address.toString());
 
-	if (state.action != PeerCommunicationState::Disconnected)
+	if (state.action != PeerState::Disconnected)
 		resetState();
 
-	state.action = PeerCommunicationState::Connecting;
+	state.action = PeerState::Connecting;
 
 	initializeStream();
 	stream->open(address, torrent.hash);
@@ -201,7 +196,7 @@ void mtt::PeerCommunication::sendHandshake()
 {
 	BT_LOG("sendHandshake");
 
-	state.action = PeerCommunicationState::Handshake;
+	state.action = PeerState::Handshake;
 	send(mtt::bt::createHandshake(torrent.hash, mtt::config::getInternal().hashId));
 }
 
@@ -235,7 +230,7 @@ size_t mtt::PeerCommunication::dataReceived(const BufferView& buffer)
 
 void mtt::PeerCommunication::connectionOpened()
 {
-	state.action = PeerCommunicationState::Connected;
+	state.action = PeerState::Connected;
 	BT_LOG("connected");
 
 	sendHandshake();
@@ -243,9 +238,9 @@ void mtt::PeerCommunication::connectionOpened()
 
 void mtt::PeerCommunication::close()
 {
-	if (state.action != PeerCommunicationState::Disconnected)
+	if (state.action != PeerState::Disconnected)
 	{
-		state.action = PeerCommunicationState::Disconnected;
+		state.action = PeerState::Disconnected;
 		stream->close();
 	}
 }
@@ -258,12 +253,7 @@ const std::shared_ptr<mtt::PeerStream> mtt::PeerCommunication::getStream() const
 void mtt::PeerCommunication::connectionClosed(int code)
 {
 	BT_LOG("connectionClosed " << code);
-
-	if (state.action != PeerCommunicationState::Disconnected)
-	{
-		state.action = PeerCommunicationState::Disconnected;
-		listener.connectionClosed(this, code);
-	}
+	listener.connectionClosed(this, code);
 
 	stream->onOpenCallback = nullptr;
 }
@@ -308,7 +298,7 @@ void mtt::PeerCommunication::requestPieceBlock(const PieceBlockInfo& pieceInfo)
 
 bool mtt::PeerCommunication::isEstablished() const
 {
-	return state.action == PeerCommunicationState::Established;
+	return state.action == PeerState::Established;
 }
 
 void mtt::PeerCommunication::sendKeepAlive()
@@ -349,7 +339,7 @@ void mtt::PeerCommunication::sendBitfield(const DataBuffer& bitfield)
 
 void mtt::PeerCommunication::resetState()
 {
-	state = PeerCommunicationState();
+	state = PeerState();
 	info = PeerInfo();
 }
 
@@ -412,12 +402,12 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 	{
 		BT_LOG("Handshake");
 
-		if (state.action == PeerCommunicationState::Handshake || state.action == PeerCommunicationState::Connected)
+		if (state.action == PeerState::Handshake || state.action == PeerState::Connected)
 		{
-			if (state.action == PeerCommunicationState::Connected)
+			if (state.action == PeerState::Connected)
 				sendHandshake();
 
-			state.action = PeerCommunicationState::Established;
+			state.action = PeerState::Established;
 			BT_LOG("finished handshake");
 			memcpy(info.id, message.handshake.peerId, 20);
 			memcpy(info.protocol, message.handshake.reservedBytes, 8);

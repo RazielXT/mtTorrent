@@ -4,19 +4,26 @@
 #include "Configuration.h"
 #include "Dht/Communication.h"
 #include "Uploader.h"
-#include <fstream>
+#include <numeric>
+#include "utils/FastIpToCountry.h"
+#include "FileTransfer.h"
 
-enum class LogEvent : uint8_t { Connect, RemoteConnect, Remove, ConnectPeers };
+FastIpToCountry ipToCountry;
+bool ipToCountryLoaded = false;
 
-#define DIAGNOSTICS(eventType, x) WRITE_DIAGNOSTIC_LOG((char)LogEvent::eventType << x)
-
-#define PEERS_LOG(x) WRITE_LOG(x)
+#define PEERS_LOG(x) {WRITE_LOG(x)}
 
 mtt::Peers::Peers(Torrent& t) : torrent(t), trackers(t), dht(*this, t), listener(&nolistener)
 {
 	pex.info.hostname = "PEX";
 	remoteInfo.hostname = "Remote";
 	reloadTorrentInfo();
+
+	if (!ipToCountryLoaded)
+	{
+		ipToCountryLoaded = true;
+		ipToCountry.fromFile(mtt::config::getInternal().programFolderPath);
+	}
 
 	CREATE_NAMED_LOG(Peers, torrent.name() + "_peers");
 }
@@ -30,10 +37,6 @@ void mtt::Peers::start(IPeerListener* listener)
 		if (r)
 		{
 			PEERS_LOG(t.info.hostname << " returned " << r->peers.size());
-			for (auto& a : r->peers)
-			{
-				PEERS_LOG(t.info.hostname << " " << a.toString());
-			}
 			updateKnownPeers(r->peers, PeerSource::Tracker);
 		}
 	}
@@ -224,7 +227,7 @@ size_t mtt::Peers::add(std::shared_ptr<PeerStream> stream, const BufferView& dat
 
 		peer.idx = (uint32_t)knownPeers.size() - 1;
 		activeConnections.push_back(peer);
-		DIAGNOSTICS(RemoteConnect, p.address);
+		PEERS_LOG("RemoteConnect " << p.address);
 
 		remoteInfo.peers++;
 	}
@@ -330,16 +333,35 @@ uint32_t mtt::Peers::receivedCount() const
 	return (uint32_t)knownPeers.size();
 }
 
-std::vector<std::shared_ptr<mtt::PeerCommunication>> mtt::Peers::getActivePeers() const
+std::vector<mtt::ConnectedPeerInfo> mtt::Peers::getConnectedPeersInfo() const
 {
-	std::vector<std::shared_ptr<mtt::PeerCommunication>> out;
+	auto speeds = torrent.fileTransfer->getPeersSpeeds();
+
 	std::lock_guard<std::mutex> guard(peersMutex);
 
-	for (auto& peer : activeConnections)
-	{
-		out.push_back(peer.comm);
-	}
+	std::vector<mtt::ConnectedPeerInfo> out;
+	out.resize(activeConnections.size());
 
+	uint32_t i = 0;
+	for (const auto& peer : activeConnections)
+	{
+		auto addr = peer.comm->getStream()->getAddress();
+		out[i].address = addr.toString();
+		out[i].country = addr.ipv6 ? "" : ipToCountry.GetCountry(swap32(addr.toUint()));
+		out[i].percentage = peer.comm->info.pieces.getPercentage();
+		out[i].client = peer.comm->info.client;
+		out[i].state = peer.comm->state;
+		out[i].flags = peer.comm->getStream()->getFlags();
+
+		const auto& info = speeds.find(peer.comm.get());
+		if (info != speeds.end())
+		{
+			out[i].downloadSpeed = info->second.first;
+			out[i].uploadSpeed = info->second.second;
+		}
+
+		i++;
+	}
 	return out;
 }
 

@@ -20,13 +20,13 @@ namespace mtt
 
 		void refreshSelection();
 
-		std::vector<ActivePeerInfo> getPeersInfo() const;
-
 		Downloader downloader;
 		std::shared_ptr<Uploader> uploader;
 
 		uint32_t getDownloadSpeed() const;
 		uint32_t getUploadSpeed() const;
+
+		std::map<PeerCommunication*, std::pair<uint32_t, uint32_t>> getPeersSpeeds() const;
 
 	private:
 

@@ -6,23 +6,12 @@
 #include "Peers.h"
 #include "Configuration.h"
 #include "AlertsManager.h"
-#include "utils/FastIpToCountry.h"
-#include <fstream>
-
-FastIpToCountry ipToCountry;
-bool ipToCountryLoaded = false;
 
 #define TRANSFER_LOG(x) WRITE_LOG(x)
 
 mtt::FileTransfer::FileTransfer(Torrent& t) : downloader(t), torrent(t)
 {
 	uploader = std::make_shared<Uploader>(torrent);
-
-	if (!ipToCountryLoaded)
-	{
-		ipToCountryLoaded = true;
-		ipToCountry.fromFile(mtt::config::getInternal().programFolderPath);
-	}
 
 	CREATE_NAMED_LOG(Transfer, torrent.name());
 }
@@ -53,11 +42,6 @@ void mtt::FileTransfer::start()
 
 void mtt::FileTransfer::stop()
 {
-	{
-		std::lock_guard<std::mutex> guard(peersMutex);
-		activePeers.clear();
-	}
-
 	torrent.peers->stop();
 
 	if (refreshTimer)
@@ -179,35 +163,15 @@ uint32_t mtt::FileTransfer::getUploadSpeed() const
 	return sum;
 }
 
-std::vector<mtt::ActivePeerInfo> mtt::FileTransfer::getPeersInfo() const
+std::map<mtt::PeerCommunication*, std::pair<uint32_t, uint32_t>> mtt::FileTransfer::getPeersSpeeds() const
 {
-	auto allPeers = torrent.peers->getActivePeers();
-
-	std::vector<mtt::ActivePeerInfo> out;
-	out.resize(allPeers.size());
-
 	std::lock_guard<std::mutex> guard(peersMutex);
 
-	uint32_t i = 0;
-	for (auto& comm : allPeers)
+	std::map<mtt::PeerCommunication*, std::pair<uint32_t, uint32_t>> out;
+	for (auto&[comm, info] : activePeers)
 	{
-		auto addr = comm->getStream()->getAddress();
-		out[i].address = addr.toString();
-		out[i].country = addr.ipv6 ? "" : ipToCountry.GetCountry(swap32(addr.toUint()));
-		out[i].percentage = comm->info.pieces.getPercentage();
-		out[i].client = comm->info.client;
-		out[i].connected = comm->isEstablished();
-		out[i].choking = comm->state.peerChoking;
-		out[i].requesting = comm->state.amInterested;
-		out[i].flags = comm->getStream()->getFlags();
-
-		const auto& info = activePeers.find(comm.get());
-		out[i].downloadSpeed = info->second.downloadSpeed;
-		out[i].uploadSpeed = info->second.uploadSpeed;
-
-		i++;
+		out[comm] = { info.downloadSpeed, info.uploadSpeed };
 	}
-
 	return out;
 }
 

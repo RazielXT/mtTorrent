@@ -31,5 +31,15 @@ namespace mttApi
 			Force connect to peer with specific address (ip:port)
 		*/
 		API_EXPORT mtt::Status connect(const char* address);
+
+		/*
+			Get list of currently connected peers
+		*/
+		API_EXPORT std::vector<mtt::ConnectedPeerInfo> getConnectedPeersInfo() const;
+
+	protected:
+
+		Peers() = default;
+		Peers(const Peers&) = delete;
 	};
 }
