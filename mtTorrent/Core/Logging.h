@@ -98,15 +98,16 @@ private:
 };
 
 //----------
+// log per object instance
 
 #define CREATE_LOG(type) log = LogEnabled(LogType::type) ? LogWriter::Create(LogType::type) : nullptr; if (log) log->name = #type "_";
 #define CREATE_NAMED_LOG(type, n) CREATE_LOG(type) if (log) log->name += n;
 #define NAME_LOG(n)if (log && log->name.back() == '_') log->name += n;
 #define INDEX_LOG()if (log) log->assignIndex();
-#define _WRITE_LOG(logdata, diagnostic)  if (log && log->Enabled()) { static auto LogId = diagnostic ? LogWriter::NoParamsLineId : log->CreateLogLineId(); std::lock_guard<std::mutex> guard(log->mtx); log->StartLogLine(LogId); *log << logdata << LogWriter::ENDL;}
-#define WRITE_LOG(logdata) _WRITE_LOG(logdata, false)
-#define WRITE_DIAGNOSTIC_LOG(logdata) _WRITE_LOG(logdata, true)
+
+#define WRITE_LOG(logdata)  if (log && log->Enabled()) { static auto LogId = log->CreateLogLineId(); std::lock_guard<std::mutex> guard(log->mtx); log->StartLogLine(LogId); *log << logdata << LogWriter::ENDL;}
 
 //----------
+// log per object type
 
 #define WRITE_GLOBAL_LOG(type, logdata) if (LogEnabled(LogType::type)) { static auto log = LogWriter::GetGlobalLog(LogType::type, #type); std::lock_guard<std::mutex> guard(log->mtx); static auto LogId = log->CreateLogLineId(); log->StartLogLine(LogId); *log << logdata << LogWriter::ENDL;}
