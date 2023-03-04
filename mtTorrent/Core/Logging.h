@@ -29,6 +29,7 @@ enum class LogType
 	PeerStream = FIRST << 19,
 	General = FIRST << 20,
 	Upnp = FIRST << 21,
+	Uploader = FIRST << 22,
 
 	Test = FIRST << 30
 };

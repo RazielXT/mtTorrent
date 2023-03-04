@@ -48,5 +48,7 @@ namespace mtt
 		std::map<PeerCommunication*, uint32_t> handledRequests;
 
 		Torrent& torrent;
+
+		FileLog log;
 	};
 }

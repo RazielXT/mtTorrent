@@ -2,8 +2,12 @@
 #include "Torrent.h"
 #include "PeerCommunication.h"
 
+#define UP_LOG(x) WRITE_LOG(x)
+
 mtt::Uploader::Uploader(Torrent& t) : torrent(t)
 {
+	CREATE_NAMED_LOG(Uploader, torrent.name());
+
 	globalBw = BandwidthManager::Get().GetChannel("upload");
 }
 
@@ -17,6 +21,7 @@ void mtt::Uploader::stop()
 
 void mtt::Uploader::isInterested(PeerCommunication* p)
 {
+	UP_LOG("isInterested " << p->getStream()->getAddress());
 	p->setChoke(false);
 }
 
@@ -50,6 +55,7 @@ void mtt::Uploader::assignBandwidth(int amount)
 
 	requestingBytes = false;
 	availableBytes += amount;
+	UP_LOG("assignBandwidth " << amount << ", total " << availableBytes);
 
 	if (isActive())
 		torrent.service.post([this]() { sendRequests(); });
@@ -57,11 +63,14 @@ void mtt::Uploader::assignBandwidth(int amount)
 
 void mtt::Uploader::requestBytes(uint32_t amount)
 {
+	UP_LOG("requestBytes " << amount);
+
 	if (amount <= availableBytes || requestingBytes)
 		return;
 	amount -= availableBytes;
 
 	uint32_t returned = BandwidthManager::Get().requestBandwidth(shared_from_this(), amount, 1, &globalBw, 1);
+	UP_LOG("requestBandwidth " << amount << ", returned " << returned);
 
 	if (returned == 0)
 		requestingBytes = true;
@@ -76,6 +85,7 @@ bool mtt::Uploader::isActive()
 
 void mtt::Uploader::sendRequests()
 {
+	UP_LOG("sendRequests");
 	std::lock_guard<std::mutex> guard(requestsMutex);
 
 	uint32_t wantedBytes = 0;
@@ -89,6 +99,7 @@ void mtt::Uploader::sendRequests()
 		{
 			if (availableBytes >= r.block.length)
 			{
+				UP_LOG("sendPieceBlock size " << r.block.length << " to " << r.peer->getStream()->getAddress());
 				buffer.resize(r.block.length);
 				torrent.files.storage.loadPieceBlock(r.block, buffer.data());
 
