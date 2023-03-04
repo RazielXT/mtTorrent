@@ -45,8 +45,8 @@ SettingsWindow::SettingsWindow(QWidget *parent)
 
 	ui.listenPortSpinBox->setValue((int)config.connection.tcpPort);
 	ui.maxConnectionsSpinBox->setValue((int)config.connection.maxTorrentConnections);
-	ui.maxDlSpinBox->setValue((int)config.transfer.maxDownloadSpeed * 1024);
-	ui.maxUpSpinBox->setValue((int)config.transfer.maxUploadSpeed * 1024);
+	ui.maxDlSpinBox->setValue((int)config.transfer.maxDownloadSpeed / 1024);
+	ui.maxUpSpinBox->setValue((int)config.transfer.maxUploadSpeed / 1024);
 	ui.upnpCheckBox->setChecked(config.connection.upnpPortMapping);
 
 	ui.dhtCheckBox->setChecked(config.dht.enabled);
@@ -109,8 +109,8 @@ void SettingsWindow::saveButton()
 
 	config.connection.tcpPort = config.connection.udpPort = (uint32_t)ui.listenPortSpinBox->value();
 	config.connection.maxTorrentConnections = (uint32_t)ui.maxConnectionsSpinBox->value();
-	config.transfer.maxDownloadSpeed = (uint32_t) ui.maxDlSpinBox->value() / 1024;
-	config.transfer.maxUploadSpeed = (uint32_t)ui.maxUpSpinBox->value() / 1024;
+	config.transfer.maxDownloadSpeed = (uint32_t) ui.maxDlSpinBox->value() * 1024;
+	config.transfer.maxUploadSpeed = (uint32_t)ui.maxUpSpinBox->value() * 1024;
 	config.connection.upnpPortMapping = (uint32_t)ui.upnpCheckBox->isChecked();
 
 	config.dht.enabled = ui.dhtCheckBox->isChecked();
