@@ -74,6 +74,7 @@ struct BandwidthRequest
 	int priority;
 	int assigned = 0;
 	int requestSize;
+	int minimumAssign = 16 * 1024;
 
 	// the max number of ms for this request to survive
 	// this ensures that requests gets responses at very low

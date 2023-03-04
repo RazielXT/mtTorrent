@@ -230,7 +230,7 @@ void BandwidthManager::updateQuotas(uint32_t dt)
 		{
 			r->ttl -= dt;
 			int a = r->assignBandwidth();
-			if (r->assigned == r->requestSize || (r->ttl <= 0 && r->assigned > 0))
+			if (r->assigned == r->requestSize || (r->assigned >= r->minimumAssign) || (r->ttl <= 0 && r->assigned > 0))
 			{
 				a += r->requestSize - r->assigned;
 				queue.push_back(std::move(*r));
