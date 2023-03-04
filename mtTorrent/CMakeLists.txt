@@ -1,4 +1,8 @@
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.18)
+
+option(static_runtime "Build with static runtime" OFF)
+option(BUILD_SHARED_LIBS "Build as a shared library" ON)
+option(USE_SSL "Include OpenSSL for HTTPS" OFF)
 
 set (core_sources
 	AlertsManager.cpp
@@ -101,8 +105,6 @@ set (utils_sources
 
 list(TRANSFORM utils_sources PREPEND "utils/")
 
-option (BUILD_SHARED_LIBS "build mtTorrent as a shared library" ON)
-
 add_library (mtTorrent
 	${core_sources}
 	${core_api_sources}
@@ -119,7 +121,6 @@ target_compile_features (mtTorrent
 )
 
 #ASIO
-
 add_compile_definitions (ASIO_STANDALONE)
 
 target_include_directories (mtTorrent PUBLIC asio/asio/include)
@@ -130,3 +131,35 @@ elseif (UNIX)
 	find_package ( Threads )
 	target_link_libraries ( mtTorrent ${CMAKE_THREAD_LIBS_INIT} )
 endif ()
+
+#OPENSSL
+if (USE_SSL)
+	add_compile_definitions (MTT_WITH_SSL)
+
+	find_package(OpenSSL REQUIRED)
+	include_directories(${OPENSSL_INCLUDE_DIR})
+	target_link_libraries( mtTorrent PUBLIC OpenSSL::SSL)
+
+	if (WIN32 AND static_runtime)
+		target_link_libraries( mtTorrent PRIVATE crypt32)
+		set(OPENSSL_MSVC_STATIC_RT ON)
+	endif()
+
+	if (WIN32)
+		target_link_libraries( mtTorrent PRIVATE OpenSSL::applink)
+	endif()
+
+	if (NOT BUILD_SHARED_LIBS)
+		set(OPENSSL_USE_STATIC_LIBS ON)
+	endif()
+endif()
+
+#runtime
+if (WIN32 AND static_runtime)
+	ucm_set_runtime(STATIC)
+endif()
+
+#DLL
+if (WIN32 AND BUILD_SHARED_LIBS)
+	add_compile_definitions (MTT_IS_DLL)
+endif()

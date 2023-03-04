@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#if defined(_WIN32) && defined(_MTTDLL)
+#if defined(_WIN32) && defined(MTT_IS_DLL)
 #	ifdef ASIO_STANDALONE
 #		define API_EXPORT __declspec(dllexport)
 #	else
