@@ -162,6 +162,8 @@ void mtt::Torrent::prepareForChecking()
 	fileTransfer->stop();
 	lastError = Status::Success;
 	activityTime = TimeClock::now();
+
+	AlertsManager::Get().torrentAlert(Alerts::Id::TorrentCheckStarted, *this);
 }
 
 void mtt::Torrent::refreshAfterChecking(const PiecesCheck& check)

@@ -20,7 +20,8 @@ namespace mtt
 			TorrentFinished = firstBit(Category::Torrent),
 			TorrentAdded = TorrentFinished << 1,
 			TorrentRemoved = TorrentFinished << 2,
-			TorrentCheckFinished = TorrentFinished << 3,
+			TorrentCheckStarted = TorrentFinished << 3,
+			TorrentCheckFinished = TorrentFinished << 4,
 
 			MetadataInitialized = firstBit(Category::Metadata),
 
