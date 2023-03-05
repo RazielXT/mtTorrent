@@ -313,7 +313,7 @@ namespace mtt
 
 			for (size_t i = std::size(MT_HASH_NAME) - 1; i < 20; i++)
 			{
-				hashId[i] = (uint8_t)printable[Random::Number() % std::size(printable)];
+				hashId[i] = (uint8_t)printable[Random::Number() % (std::size(printable)-1)];
 			}
 			trackerKey = Random::Number();
 
