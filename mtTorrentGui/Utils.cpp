@@ -62,18 +62,32 @@ QString utils::formatTimestamp(uint64_t tm)
 	return QDateTime::fromSecsSinceEpoch(tm).toString("dd-MMM-yy H:mm");
 }
 
-QString utils::formatDuration(uint64_t seconds)
+QString utils::formatDuration(uint64_t time)
 {
 	QString timeTxt;
-	if (seconds)
+	if (time)
 	{
-		timeTxt = QString::number(seconds % 60) + "s";
-		seconds /= 60;
-		if (auto minutes = seconds % 60)
-			timeTxt = QString::number(minutes) + "m" + timeTxt;
-		seconds /= 60;
-		if (auto hours = seconds)
-			timeTxt = QString::number(hours) + "h" + timeTxt;
+		auto seconds = time % 60;
+		time /= 60;
+		auto minutes = time % 60;
+		time /= 60;
+		auto hours = time;
+
+		if (hours >= 24)
+			return QString::number(hours / 24) + " days";
+
+		if (hours)
+		{
+			timeTxt = QString::number(hours) + "h";
+		}
+		if (minutes)
+		{
+			timeTxt += QString::number(minutes) + "m";
+		}
+		if (!hours)
+		{
+			timeTxt += QString::number(seconds) + "s";
+		}
 	}
 	return timeTxt;
 }
