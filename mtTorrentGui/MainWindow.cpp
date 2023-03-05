@@ -30,6 +30,7 @@ MainWindow::MainWindow(QStringList params, QWidget* parent)	: QMainWindow(parent
 	QTimer* timer = new QTimer(ui.itemsTable);
 	connect(timer, &QTimer::timeout, [this]()
 		{
+			bool update = false;
 			auto alerts = app::core().popAlerts();
 			for (auto& a : alerts)
 			{
@@ -51,9 +52,16 @@ MainWindow::MainWindow(QStringList params, QWidget* parent)	: QMainWindow(parent
 					w->setWindowModality(Qt::ApplicationModal);
 					w->show();
 				}
+				if (a->id == mtt::Alerts::Id::TorrentCheckStarted || a->id == mtt::Alerts::Id::TorrentCheckFinished || a->id == mtt::Alerts::Id::TorrentFinished)
+				{
+					update = true;
+				}
 			}
+
+			if (update)
+				torrents.refresh();
 		});
-	timer->start(500);
+	timer->start(100);
 
 	crossProcess.onMessage = [this](const QStringList& params)
 	{

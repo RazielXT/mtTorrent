@@ -105,14 +105,7 @@ void TorrentsList::init(Ui_mainWindowWidget& mainWindow)
 	auto timer = new QTimer(table);
 	table->connect(timer, &QTimer::timeout, [this]()
 		{
-			model->update();
-
-			filesTab.update();
-			speedTab.update();
-			peersTab.update();
-			sourcesTab.update();
-
-			refreshButtons();
+			refresh();
 		});
 	timer->start(1000);
 
@@ -301,6 +294,18 @@ void TorrentsList::refresh(mttApi::TorrentPtr t)
 {
 	model->forceRefresh = t;
 	infoTab.selectTorrent(t);
+}
+
+void TorrentsList::refresh()
+{
+	model->update();
+
+	filesTab.update();
+	speedTab.update();
+	peersTab.update();
+	sourcesTab.update();
+
+	refreshButtons();
 }
 
 mttApi::TorrentPtr TorrentsList::getTorrent(const QModelIndex& idx) const

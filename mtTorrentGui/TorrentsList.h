@@ -21,6 +21,7 @@ public:
 	void remove(mttApi::TorrentPtr);
 	void select(mttApi::TorrentPtr);
 	void refresh(mttApi::TorrentPtr);
+	void refresh();
 
 	mttApi::TorrentPtr getTorrent(const QModelIndex& idx) const;
 
