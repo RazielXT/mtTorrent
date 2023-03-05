@@ -223,5 +223,6 @@ void mtt::Bitfield::put(uint32_t idx)
 
 void mtt::Bitfield::init(std::size_t size)
 {
-	data.resize((size_t)ceil(size / 8.0f), 0);
+	data.resize((size_t)ceil(size / 8.0f));
+	memset(data.data(), 0, data.size());
 }
