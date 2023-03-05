@@ -99,12 +99,8 @@ void mtt::PiecesProgress::removeReceived(const std::vector<bool>& where)
 {
 	for (size_t i = 0; i < pieces.size(); i++)
 	{
-		if (where[i] && pieces[i] & HasFlag)
-		{
-			receivedPiecesCount--;
-			selectedReceivedPiecesCount--;
-			pieces[i] &= ~HasFlag;
-		}
+		if (where[i])
+			removePiece((uint32_t)i);
 	}
 }
 

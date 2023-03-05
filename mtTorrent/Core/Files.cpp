@@ -42,13 +42,19 @@ mtt::Status mtt::Files::start()
 	{
 		auto fileTime = storage.getLastModifiedTime(i);
 
-		if (lastFileTime < fileTime || (lastFileTime && !fileTime && selection[i].selected && files[i].size != 0))
+		if (lastFileTime < fileTime)
 		{
 			if (wantedChecks.empty())
 				wantedChecks.resize(progress.pieces.size());
 
 			for (uint32_t p = files[i].startPieceIndex; p <= files[i].endPieceIndex; p++)
 				wantedChecks[p] = true;
+		}
+
+		if (!fileTime)
+		{
+			for (uint32_t p = files[i].startPieceIndex; p <= files[i].endPieceIndex; p++)
+				progress.removePiece(p);
 		}
 	}
 
