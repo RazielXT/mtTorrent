@@ -63,8 +63,11 @@ void FilesTab::selectTorrent(mttApi::TorrentPtr t)
 	selected = t;
 	model->select(selected);
 
-	if (t)
+	if (selected)
+	{
 		filesTree->expandAll();
+		piecesChartLabel->setToolTip("Piece size " + utils::formatBytes(selected->getMetadata().info.pieceSize));
+	}
 	else
 		clear();
 }
@@ -101,7 +104,7 @@ void FilesTab::filesClicked(const QModelIndex& index)
 
 void FilesTab::redrawPiecesChart()
 {
-	size_t piecesCount = selected->getMetadata().info.pieces.size();
+	size_t piecesCount = selected->getFiles().getPiecesCount();
 	uint32_t finishedPieces = 0;
 
 	if (piecesImage.width() != piecesCount)
