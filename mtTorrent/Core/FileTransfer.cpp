@@ -54,7 +54,9 @@ void mtt::FileTransfer::stop()
 
 void mtt::FileTransfer::refreshSelection()
 {
-	downloader.refreshSelection(torrent.files.selection, piecesAvailability);
+	if (!piecesAvailability.empty())
+		downloader.refreshSelection(torrent.files.selection, piecesAvailability);
+
 	evaluateMorePeers();
 }
 
