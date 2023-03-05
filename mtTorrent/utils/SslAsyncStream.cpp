@@ -4,7 +4,7 @@
 
 #define SSL_TCP_LOG(x) WRITE_LOG(x)
 
-SslAsyncStream::SslAsyncStream(asio::io_service& io) : io_service(io), socket(io, ctx), ctx(asio::ssl::context::tls)
+SslAsyncStream::SslAsyncStream(asio::io_context& io_context) : io(io_context), socket(io, ctx), ctx(asio::ssl::context::tls)
 {
 	CREATE_LOG(SslTcp);
 	ctx.set_default_verify_paths();
@@ -52,10 +52,8 @@ void SslAsyncStream::connectByHostname()
 
 	state = Connecting;
 
-	tcp::resolver::query query(info.host, info.service);
-
-	auto resolver = std::make_shared<tcp::resolver>(io_service);
-	resolver->async_resolve(query, std::bind(&SslAsyncStream::handle_resolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2, resolver));
+	auto resolver = std::make_shared<tcp::resolver>(io);
+	resolver->async_resolve(info.host, info.service, std::bind(&SslAsyncStream::handle_resolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2, resolver));
 }
 
 void SslAsyncStream::connectEndpoint()
@@ -85,12 +83,13 @@ void SslAsyncStream::postFail(const char* place, const std::error_code& error)
 	onReceiveCallback = nullptr;
 }
 
-void SslAsyncStream::handle_resolve(const std::error_code& error, tcp::resolver::iterator iterator, std::shared_ptr<tcp::resolver> resolver)
+void SslAsyncStream::handle_resolve(const std::error_code& error, tcp::resolver::results_type results, std::shared_ptr<tcp::resolver> resolver)
 {
-	if (!error)
+	if (!error && !results.empty())
 	{
-		SSL_TCP_LOG("resolved connecting " << iterator->endpoint().address().to_string());
-		asio::async_connect(socket.lowest_layer(), iterator, std::bind(&SslAsyncStream::handle_connect, shared_from_this(), std::placeholders::_1));
+		tcp::endpoint endpoint = results.begin()->endpoint();
+		SSL_TCP_LOG("resolved connecting " << endpoint.address().to_string());
+		socket.next_layer().async_connect(endpoint, std::bind(&SslAsyncStream::handle_connect, shared_from_this(), std::placeholders::_1));
 	}
 	else
 	{

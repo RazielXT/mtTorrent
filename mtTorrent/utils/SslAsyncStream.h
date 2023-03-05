@@ -16,7 +16,7 @@ class SslAsyncStream : public std::enable_shared_from_this<SslAsyncStream>
 
 public:
 
-	SslAsyncStream(asio::io_service& io_service);
+	SslAsyncStream(asio::io_context& io);
 	~SslAsyncStream();
 
 	void init(const std::string& hostname, const std::string& service);
@@ -33,7 +33,7 @@ protected:
 	void postFail(const char* place, const std::error_code& error);
 
 	enum { Disconnected, Connecting, Handshake, Connected } state = Disconnected;
-	void handle_resolve(const std::error_code& error, tcp::resolver::iterator iterator, std::shared_ptr<tcp::resolver> resolver);
+	void handle_resolve(const std::error_code& error, tcp::resolver::results_type results, std::shared_ptr<tcp::resolver> resolver);
 	void handle_connect(const std::error_code& error);
 	void handle_handshake(const asio::error_code& err);
 
@@ -43,7 +43,7 @@ protected:
 
 	asio::ssl::context ctx;
 	asio::ssl::stream<tcp::socket> socket;
-	asio::io_service& io_service;
+	asio::io_context& io;
 
 	struct
 	{
