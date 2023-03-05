@@ -2,13 +2,12 @@
 
 #include "DataBuffer.h"
 
-#define _WIN32_WINDOWS 0x0603
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
-
 #include <asio.hpp>
+
 #ifdef MTT_WITH_SSL
 #include <asio/ssl.hpp>
 #endif
+
 using asio::ip::tcp;
 using asio::ip::udp;
 
