@@ -88,7 +88,18 @@ void mtt::Downloader::connectionClosed(PeerCommunication* p)
 
 	auto it = peersRequestsInfo.find(p);
 	if (it != peersRequestsInfo.end())
+	{
+		for (auto& r : it->second.currentRequests)
+		{
+			auto it = requests.find(r.idx);
+			if (it != requests.end())
+			{
+				it->second->activePeers.erase(p);
+			}
+		}
+
 		peersRequestsInfo.erase(it);
+	}
 }
 
 size_t mtt::Downloader::getUnfinishedPiecesDownloadSize()
@@ -240,7 +251,7 @@ void mtt::Downloader::pieceBlockReceived(PieceBlock& block, PeerCommunication* s
 		else
 		{
 			if (peer->suspiciousGroup)
-				r->groups.insert(peer->suspiciousGroup);
+				r->sourceGroups.insert(peer->suspiciousGroup);
 
 			r->sources.insert(source);
 			storage.storePieceBlock(block);
@@ -471,6 +482,7 @@ void mtt::Downloader::evaluateNextRequests(PeerRequestsInfo& info, PeerCommunica
 		info.currentRequests.push_back({ request->piece.index });
 		info.currentRequests.back().blocks.resize(request->piece.blocksState.size());
 		info.requestedPieces.push_back(request->piece.index);
+		request->activePeers.insert(peer);
 
 		currentRequests += sendPieceRequests(peer, info.currentRequests.back(), *request, maxRequests - currentRequests);
 	}
@@ -508,10 +520,14 @@ mtt::Downloader::RequestInfo* mtt::Downloader::getBestNextRequest(PeerRequestsIn
 			if (firstPriority != priority)
 				break;
 
-			if (isMissingPiece(idx) && requests.find(idx) == requests.end() && peer->info.pieces.hasPiece(idx))
+			if (isMissingPiece(idx) && peer->info.pieces.hasPiece(idx))
 			{
-				DL_LOG("fast getBestNextPiece idx" << idx);
-				return &getRequest(idx);
+				auto it = requests.find(idx);
+				if (it == requests.end() || it->second->activePeers.empty())
+				{
+					DL_LOG("fast getBestNextPiece idx" << idx);
+					return &getRequest(idx);
+				}
 			}
 		}
 
@@ -530,10 +546,12 @@ mtt::Downloader::RequestInfo* mtt::Downloader::getBestNextRequest(PeerRequestsIn
 
 		for (auto request : possibleShareRequests)
 		{
-			if (info.suspiciousGroup && request->groups.find(info.suspiciousGroup) != request->groups.end())
+			if (info.suspiciousGroup && request->sourceGroups.find(info.suspiciousGroup) != request->sourceGroups.end())
 				continue;
 
-			if (!bestSharedRequest || bestSharedRequest->activeRequestsCount > request->activeRequestsCount)
+			if (!bestSharedRequest ||
+				bestSharedRequest->activePeers.size() > request->activePeers.size() ||
+				(bestSharedRequest->activePeers.size() == request->activePeers.size() && bestSharedRequest->requestsCounter > request->requestsCounter))
 				bestSharedRequest = request;
 		}
 
@@ -561,7 +579,7 @@ mtt::Downloader::RequestInfo* mtt::Downloader::getBestNextRequest(PeerRequestsIn
 			lastPriority = priority;
 
 			auto it = requests.find(idx);
-			if (it != requests.end())
+			if (it != requests.end() && !it->second->activePeers.empty())
 			{
 				bool alreadyRequested = false;
 				for (auto& r : info.currentRequests)
@@ -594,7 +612,7 @@ uint32_t mtt::Downloader::sendPieceRequests(PeerCommunication* peer, PeerRequest
 	uint32_t count = 0;
 	auto blocksCount = (uint16_t)info.piece.blocksState.size();
 
-	uint16_t nextBlock = info.activeRequestsCount % blocksCount;
+	uint16_t nextBlock = info.requestsCounter % blocksCount;
 	for (uint32_t i = 0; i < blocksCount; i++)
 	{
 		if (info.piece.blocksState.empty() || info.piece.blocksState[nextBlock] == 0)
@@ -615,7 +633,7 @@ uint32_t mtt::Downloader::sendPieceRequests(PeerCommunication* peer, PeerRequest
 		if (count == max)
 			break;
 	}
-	info.activeRequestsCount += (uint16_t)count;
+	info.requestsCounter += (uint16_t)count;
 
 	return count;
 }

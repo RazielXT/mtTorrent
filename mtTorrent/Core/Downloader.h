@@ -69,9 +69,10 @@ namespace mtt
 		struct RequestInfo
 		{
 			PieceState piece;
-			uint16_t activeRequestsCount = 0;
+			uint16_t requestsCounter = 0;
+			std::set<PeerCommunication*> activePeers;
 			std::set<PeerCommunication*> sources;
-			std::set<uint32_t> groups;
+			std::set<uint32_t> sourceGroups;
 		};
 		std::map<uint32_t, std::shared_ptr<RequestInfo>> requests;
 		uint32_t GroupIdx = 0;
