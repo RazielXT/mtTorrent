@@ -8,10 +8,16 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "countryIpListParser", "countryIpListParser\countryIpListParser.vcxproj", "{841FA89C-34F1-4180-BECC-193231E68E8F}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SdkExample", "SdkExample\SdkExample.vcxproj", "{8D1AE2D0-94D2-4705-91B2-CA824F565537}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7A7123CF-1E7A-408F-8281-6A0ADB328253} = {7A7123CF-1E7A-408F-8281-6A0ADB328253}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mtTorrentTests", "mtTorrentTests\mtTorrentTests.vcxproj", "{C2B5C776-4C76-4FF9-A62C-F3B033EFC267}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mtTorrentGui", "mtTorrentGui\mtTorrentGui.vcxproj", "{BD72F5DE-167E-4B76-A007-C4A83A73370C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7A7123CF-1E7A-408F-8281-6A0ADB328253} = {7A7123CF-1E7A-408F-8281-6A0ADB328253}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -55,10 +61,10 @@ Global
 		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.Release|x64.Build.0 = Release|x64
 		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.Release|x86.ActiveCfg = Release|Win32
 		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.Release|x86.Build.0 = Release|Win32
-		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.ReleaseWithSSL|x64.ActiveCfg = Release|x64
-		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.ReleaseWithSSL|x64.Build.0 = Release|x64
-		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.ReleaseWithSSL|x86.ActiveCfg = Release|Win32
-		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.ReleaseWithSSL|x86.Build.0 = Release|Win32
+		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.ReleaseWithSSL|x64.ActiveCfg = ReleaseWithSSL|x64
+		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.ReleaseWithSSL|x64.Build.0 = ReleaseWithSSL|x64
+		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.ReleaseWithSSL|x86.ActiveCfg = ReleaseWithSSL|Win32
+		{8D1AE2D0-94D2-4705-91B2-CA824F565537}.ReleaseWithSSL|x86.Build.0 = ReleaseWithSSL|Win32
 		{C2B5C776-4C76-4FF9-A62C-F3B033EFC267}.Debug|x64.ActiveCfg = Debug|x64
 		{C2B5C776-4C76-4FF9-A62C-F3B033EFC267}.Debug|x64.Build.0 = Debug|x64
 		{C2B5C776-4C76-4FF9-A62C-F3B033EFC267}.Debug|x86.ActiveCfg = Debug|Win32
@@ -67,22 +73,22 @@ Global
 		{C2B5C776-4C76-4FF9-A62C-F3B033EFC267}.Release|x64.Build.0 = Release|x64
 		{C2B5C776-4C76-4FF9-A62C-F3B033EFC267}.Release|x86.ActiveCfg = Release|Win32
 		{C2B5C776-4C76-4FF9-A62C-F3B033EFC267}.Release|x86.Build.0 = Release|Win32
-		{C2B5C776-4C76-4FF9-A62C-F3B033EFC267}.ReleaseWithSSL|x64.ActiveCfg = Release|x64
-		{C2B5C776-4C76-4FF9-A62C-F3B033EFC267}.ReleaseWithSSL|x64.Build.0 = Release|x64
-		{C2B5C776-4C76-4FF9-A62C-F3B033EFC267}.ReleaseWithSSL|x86.ActiveCfg = Release|Win32
-		{C2B5C776-4C76-4FF9-A62C-F3B033EFC267}.ReleaseWithSSL|x86.Build.0 = Release|Win32
+		{C2B5C776-4C76-4FF9-A62C-F3B033EFC267}.ReleaseWithSSL|x64.ActiveCfg = ReleaseWithSSL|x64
+		{C2B5C776-4C76-4FF9-A62C-F3B033EFC267}.ReleaseWithSSL|x64.Build.0 = ReleaseWithSSL|x64
+		{C2B5C776-4C76-4FF9-A62C-F3B033EFC267}.ReleaseWithSSL|x86.ActiveCfg = ReleaseWithSSL|Win32
+		{C2B5C776-4C76-4FF9-A62C-F3B033EFC267}.ReleaseWithSSL|x86.Build.0 = ReleaseWithSSL|Win32
 		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.Debug|x64.ActiveCfg = Debug|x64
 		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.Debug|x64.Build.0 = Debug|x64
-		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.Debug|x86.ActiveCfg = Debug|x64
-		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.Debug|x86.Build.0 = Debug|x64
+		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.Debug|x86.ActiveCfg = Debug|Win32
+		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.Debug|x86.Build.0 = Debug|Win32
 		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.Release|x64.ActiveCfg = Release|x64
 		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.Release|x64.Build.0 = Release|x64
-		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.Release|x86.ActiveCfg = Release|x64
-		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.Release|x86.Build.0 = Release|x64
+		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.Release|x86.ActiveCfg = Release|Win32
+		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.Release|x86.Build.0 = Release|Win32
 		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.ReleaseWithSSL|x64.ActiveCfg = ReleaseWithSSL|x64
 		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.ReleaseWithSSL|x64.Build.0 = ReleaseWithSSL|x64
-		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.ReleaseWithSSL|x86.ActiveCfg = Release|x64
-		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.ReleaseWithSSL|x86.Build.0 = Release|x64
+		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.ReleaseWithSSL|x86.ActiveCfg = ReleaseWithSSL|Win32
+		{BD72F5DE-167E-4B76-A007-C4A83A73370C}.ReleaseWithSSL|x86.Build.0 = ReleaseWithSSL|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -259,7 +259,7 @@ void TcpAsyncStream::handle_resolve(const std::error_code& error, tcp::resolver:
 	}
 }
 
-void TcpAsyncStream::handle_resolver_connect(const std::error_code& error, tcp::resolver::results_type results, int counter, std::shared_ptr<tcp::resolver> resolver)
+void TcpAsyncStream::handle_resolver_connect(const std::error_code& error, tcp::resolver::results_type results, uint32_t counter, std::shared_ptr<tcp::resolver> resolver)
 {
 	if (error && results.size() < counter)
 	{
@@ -269,7 +269,7 @@ void TcpAsyncStream::handle_resolver_connect(const std::error_code& error, tcp::
 		socket.close(ec);
 
 		auto it = results.begin();
-		for (int i = 0; i < counter; i++) it++;
+		for (uint32_t i = 0; i < counter; i++) it++;
 		tcp::endpoint endpoint = it->endpoint();
 
 		socket.async_connect(endpoint, std::bind(&TcpAsyncStream::handle_resolver_connect, shared_from_this(), std::placeholders::_1, results, counter + 1, resolver));

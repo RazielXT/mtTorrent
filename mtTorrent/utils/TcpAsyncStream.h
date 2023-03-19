@@ -56,7 +56,7 @@ protected:
 
 	enum { Clear, Connecting, Connected, Disconnected } state = Clear;
 	void handle_resolve(const std::error_code& error, tcp::resolver::results_type results, std::shared_ptr<tcp::resolver> resolver);
-	void handle_resolver_connect(const std::error_code& err, tcp::resolver::results_type results, int counter, std::shared_ptr<tcp::resolver> resolver);
+	void handle_resolver_connect(const std::error_code& err, tcp::resolver::results_type results, uint32_t counter, std::shared_ptr<tcp::resolver> resolver);
 	void handle_connect(const std::error_code& err);
 	void do_close();
 
