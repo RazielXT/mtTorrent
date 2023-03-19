@@ -4,6 +4,7 @@
 #include "Configuration.h"
 #include "Logging.h"
 #include "Torrent.h"
+#include "FileTransfer.h"
 
 #define UDP_TRACKER_LOG(x) WRITE_GLOBAL_LOG(UdpTracker, info.hostname << " " << x)
 
@@ -120,9 +121,9 @@ DataBuffer UdpTrackerComm::createAnnounceRequest()
 	packet.add(torrent->hash(), 20);
 	packet.add(mtt::config::getInternal().hashId, 20);
 
-	packet.add64(torrent->downloaded());
+	packet.add64(torrent->fileTransfer->downloaded());
 	packet.add64(torrent->dataLeft());
-	packet.add64(torrent->uploaded());
+	packet.add64(torrent->fileTransfer->uploaded());
 
 	packet.add32(torrent->finished() ? Completed : Started);
 	packet.add32(0);

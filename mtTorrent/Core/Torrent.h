@@ -38,11 +38,8 @@ namespace mtt
 		const std::string& name() const;
 		float progress() const;
 		float selectionProgress() const;
-		uint64_t downloaded() const;
-		size_t downloadSpeed() const;
-		uint64_t uploaded() const;
-		size_t uploadSpeed() const;
-		uint64_t receivedBytes() const;
+		uint64_t finishedBytes() const;
+		uint64_t finishedSelectedBytes() const;
 		uint64_t dataLeft() const;
 		bool finished() const;
 		bool selectionFinished() const;

@@ -20,8 +20,7 @@ namespace mtt
 		void refreshRequest();
 
 		uint64_t uploaded = 0;
-
-		std::map<PeerCommunication*, uint32_t> popHandledRequests();
+		uint32_t uploadSpeed = 0;
 
 	private:
 
@@ -44,8 +43,6 @@ namespace mtt
 		bool requestingBytes = false;
 		uint32_t availableBytes = 0;
 		BandwidthChannel* globalBw;
-
-		std::map<PeerCommunication*, uint32_t> handledRequests;
 
 		Torrent& torrent;
 

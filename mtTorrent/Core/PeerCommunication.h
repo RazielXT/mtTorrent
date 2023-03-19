@@ -50,6 +50,7 @@ namespace mtt
 		PeerInfo info;
 		PeerState state;
 		PeerExtensions ext;
+		PeerStats stats;
 
 		void connect(const Addr& address);
 		size_t fromStream(std::shared_ptr<PeerStream> stream, const BufferView& streamData);

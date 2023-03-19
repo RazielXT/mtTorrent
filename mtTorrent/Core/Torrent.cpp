@@ -421,32 +421,17 @@ float mtt::Torrent::selectionProgress() const
 	return progress;
 }
 
-uint64_t mtt::Torrent::downloaded() const
+uint64_t mtt::Torrent::finishedBytes() const
 {
 	return files.progress.getReceivedBytes(infoFile.info.pieceSize, infoFile.info.fullSize) + fileTransfer->downloader.getUnfinishedPiecesDownloadSize();
 }
 
-size_t mtt::Torrent::downloadSpeed() const
+uint64_t mtt::Torrent::finishedSelectedBytes() const
 {
-	return fileTransfer->getDownloadSpeed();
-}
-
-uint64_t mtt::Torrent::uploaded() const
-{
-	return fileTransfer->uploader->uploaded;
-}
-
-size_t mtt::Torrent::uploadSpeed() const
-{
-	return fileTransfer->getUploadSpeed();
-}
-
-uint64_t mtt::Torrent::receivedBytes() const
-{
-	return fileTransfer->downloader.downloaded;
+	return files.progress.getReceivedSelectedBytes(infoFile.info.pieceSize, infoFile.info.fullSize) + fileTransfer->downloader.getUnfinishedSelectedPiecesDownloadSize();
 }
 
 uint64_t mtt::Torrent::dataLeft() const
 {
-	return infoFile.info.fullSize - downloaded();
+	return infoFile.info.fullSize - finishedBytes();
 }

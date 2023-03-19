@@ -23,6 +23,7 @@ namespace mtt
 		bool finished() const;
 		bool selectedFinished() const;
 		uint64_t getReceivedBytes(uint32_t pieceSize, uint64_t fullSize) const;
+		uint64_t getReceivedSelectedBytes(uint32_t pieceSize, uint64_t fullSize) const;
 
 		void addPiece(uint32_t index);
 		bool hasPiece(uint32_t index) const;

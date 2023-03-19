@@ -23,6 +23,7 @@ namespace mtt
 		Status connect(const Addr& addr);
 		size_t add(std::shared_ptr<PeerStream> stream, const BufferView& data);
 		bool disconnect(PeerCommunication*, bool unwanted = false);
+		void inspectConnectedPeers(std::function<void(const std::vector<PeerCommunication*>&)>);
 
 		std::vector<TrackerInfo> getSourcesInfo();
 		void refreshSource(const std::string& name);

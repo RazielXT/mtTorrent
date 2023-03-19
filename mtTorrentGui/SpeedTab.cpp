@@ -69,8 +69,8 @@ void SpeedTab::update()
 
 	qreal xValue = seriesDownload->count();
 
-	qreal dlSpeed = selected->getFileTransfer().getDownloadSpeed() / (1024.f * 1024);
-	qreal upSpeed = selected->getFileTransfer().getUploadSpeed() / (1024.f * 1024);
+	qreal dlSpeed = selected->getFileTransfer().downloadSpeed() / (1024.f * 1024);
+	qreal upSpeed = selected->getFileTransfer().uploadSpeed() / (1024.f * 1024);
 
 	*seriesDownload << QPointF{ xValue, dlSpeed };
 	*seriesUpload << QPointF{ xValue, upSpeed };

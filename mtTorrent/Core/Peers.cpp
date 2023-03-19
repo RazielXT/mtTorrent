@@ -258,6 +258,19 @@ bool mtt::Peers::disconnect(PeerCommunication* p, bool unwanted)
 	return false;
 }
 
+void mtt::Peers::inspectConnectedPeers(std::function<void(const std::vector<PeerCommunication*>&)> f)
+{
+	std::lock_guard<std::mutex> guard(peersMutex);
+
+	std::vector<PeerCommunication*> peers;
+	peers.reserve(activeConnections.size());
+
+	for (auto& c : activeConnections)
+		peers.push_back(c.comm.get());
+
+	f(peers);
+}
+
 std::vector<mtt::TrackerInfo> mtt::Peers::getSourcesInfo()
 {
 	torrent.loadFileInfo();
@@ -338,8 +351,6 @@ uint32_t mtt::Peers::receivedCount() const
 
 std::vector<mtt::ConnectedPeerInfo> mtt::Peers::getConnectedPeersInfo() const
 {
-	auto speeds = torrent.fileTransfer->getPeersSpeeds();
-
 	std::lock_guard<std::mutex> guard(peersMutex);
 
 	std::vector<mtt::ConnectedPeerInfo> out;
@@ -355,13 +366,7 @@ std::vector<mtt::ConnectedPeerInfo> mtt::Peers::getConnectedPeersInfo() const
 		out[i].client = peer.comm->info.client;
 		out[i].state = peer.comm->state;
 		out[i].flags = peer.comm->getStream()->getFlags();
-
-		const auto& info = speeds.find(peer.comm.get());
-		if (info != speeds.end())
-		{
-			out[i].downloadSpeed = info->second.first;
-			out[i].uploadSpeed = info->second.second;
-		}
+		out[i].stats = peer.comm->stats;
 
 		i++;
 	}

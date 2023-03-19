@@ -41,6 +41,7 @@ void mtt::Downloader::stop()
 
 	unfinishedPieces.add(out);
 	storage.stop();
+	downloadSpeed = 0;
 }
 
 void mtt::Downloader::sortPieces(const std::vector<uint32_t>& availability)
@@ -58,9 +59,9 @@ void mtt::Downloader::sortPieces(const std::vector<uint32_t>& availability)
 
 std::vector<uint32_t> mtt::Downloader::getCurrentRequests() const
 {
-	std::vector<uint32_t> out;
-
 	std::lock_guard<std::mutex> guard(requestsMutex);
+
+	std::vector<uint32_t> out;
 	out.reserve(requests.size());
 
 	for (const auto& it : requests)
@@ -102,9 +103,23 @@ void mtt::Downloader::connectionClosed(PeerCommunication* p)
 	}
 }
 
-size_t mtt::Downloader::getUnfinishedPiecesDownloadSize()
+uint64_t mtt::Downloader::getUnfinishedSelectedPiecesDownloadSize()
 {
-	size_t s = unfinishedPieces.getDownloadSize();
+	uint64_t s = 0;
+
+	std::lock_guard<std::mutex> guard(requestsMutex);
+
+	for (const auto& [idx, r] : requests)
+	{
+		s += r->piece.downloadedSize;
+	}
+
+	return s;
+}
+
+uint64_t mtt::Downloader::getUnfinishedPiecesDownloadSize()
+{
+	uint64_t s = unfinishedPieces.getDownloadSize();
 
 	std::lock_guard<std::mutex> guard(requestsMutex);
 

@@ -17,6 +17,7 @@ void mtt::Uploader::stop()
 	pendingRequests.clear();
 	requestingBytes = false;
 	availableBytes = 0;
+	uploadSpeed = 0;
 }
 
 void mtt::Uploader::isInterested(PeerCommunication* p)
@@ -110,8 +111,6 @@ void mtt::Uploader::sendRequests()
 				r.peer->sendPieceBlock(block);
 				uploaded += r.block.length;
 				availableBytes -= r.block.length;
-
-				handledRequests[r.peer] += r.block.length;
 			}
 			else
 			{
@@ -142,13 +141,6 @@ void mtt::Uploader::refreshRequest()
 		else
 			it++;
 	}
-}
-
-std::map<mtt::PeerCommunication*, uint32_t> mtt::Uploader::popHandledRequests()
-{
-	std::lock_guard<std::mutex> guard(requestsMutex);
-
-	return std::move(handledRequests);
 }
 
 std::string mtt::Uploader::name()

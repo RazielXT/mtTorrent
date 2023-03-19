@@ -47,6 +47,24 @@ uint64_t mtt::PiecesProgress::getReceivedBytes(uint32_t pieceSize, uint64_t full
 	return bytes;
 }
 
+uint64_t mtt::PiecesProgress::getReceivedSelectedBytes(uint32_t pieceSize, uint64_t fullSize) const
+{
+	if (pieces.empty())
+		return 0;
+
+	uint64_t fullPieceCount = selectedReceivedPiecesCount;
+	uint64_t bytes = 0;
+
+	if (pieces.back() == HasFlag)
+	{
+		fullPieceCount--;
+		bytes = fullSize % pieceSize;
+	}
+
+	bytes += fullPieceCount * pieceSize;
+	return bytes;
+}
+
 void mtt::PiecesProgress::calculatePieces()
 {
 	receivedPiecesCount = 0;

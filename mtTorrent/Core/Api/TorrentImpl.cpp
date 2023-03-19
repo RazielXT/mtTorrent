@@ -58,19 +58,14 @@ float mttApi::Torrent::selectionProgress() const
 	return static_cast<const mtt::Torrent*>(this)->selectionProgress();
 }
 
-uint64_t mttApi::Torrent::downloaded() const
+uint64_t mttApi::Torrent::finishedBytes() const
 {
-	return static_cast<const mtt::Torrent*>(this)->downloaded();
+	return static_cast<const mtt::Torrent*>(this)->finishedBytes();
 }
 
-uint64_t mttApi::Torrent::uploaded() const
+uint64_t mttApi::Torrent::finishedSelectedBytes() const
 {
-	return static_cast<const mtt::Torrent*>(this)->uploaded();
-}
-
-uint64_t mttApi::Torrent::receivedBytes() const
-{
-	return static_cast<const mtt::Torrent*>(this)->receivedBytes();
+	return static_cast<const mtt::Torrent*>(this)->finishedSelectedBytes();
 }
 
 bool mttApi::Torrent::finished() const

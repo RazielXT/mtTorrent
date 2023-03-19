@@ -23,41 +23,19 @@ namespace mtt
 		Downloader downloader;
 		std::shared_ptr<Uploader> uploader;
 
-		uint32_t getDownloadSpeed() const;
-		uint32_t getUploadSpeed() const;
-
-		std::map<PeerCommunication*, std::pair<uint32_t, uint32_t>> getPeersSpeeds() const;
-
 	private:
 
 		FileLog log;
 
 		std::vector<uint32_t> piecesAvailability;
 
-		struct ActivePeer
-		{
-			//todo to stream
-			Timestamp connectionTime = 0;
-			Timestamp lastActivityTime = 0;
-
-			//todo to stream bandwidth
-			uint32_t downloadSpeed = 0;
-			uint64_t downloaded = 0;
-
-			uint32_t uploadSpeed = 0;
-			uint64_t uploaded = 0;
-		};
-		std::map<PeerCommunication*, ActivePeer> activePeers;
-		mutable std::mutex peersMutex;
-
 		void evaluateMorePeers();
-		void addPeer(PeerCommunication* p);
-		void removePeer(PeerCommunication* p);
 
 		std::shared_ptr<ScheduledTimer> refreshTimer;
 
 		void updateMeasures();
 		std::map<PeerCommunication*, std::pair<uint64_t, uint64_t>> lastSpeedMeasure;
+		std::pair<uint64_t, uint64_t> lastSumMeasure;
 		int32_t updateMeasuresCounter = 0;
 
 		void evalCurrentPeers();

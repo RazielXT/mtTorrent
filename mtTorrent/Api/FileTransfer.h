@@ -11,8 +11,14 @@ namespace mttApi
 		/*
 			Get bytes downloaded/uploaded in last second
 		*/
-		API_EXPORT uint32_t getDownloadSpeed() const;
-		API_EXPORT uint32_t getUploadSpeed() const;
+		API_EXPORT uint32_t downloadSpeed() const;
+		API_EXPORT uint32_t uploadSpeed() const;
+
+		/*
+			Get bytes downloaded/uploaded sum
+		*/
+		API_EXPORT uint64_t downloaded() const;
+		API_EXPORT uint64_t uploaded() const;
 
 		/*
 			Get list of currently requested pieces

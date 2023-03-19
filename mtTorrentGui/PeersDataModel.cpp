@@ -38,9 +38,9 @@ QVariant PeersDataModel::data(const QModelIndex& index, int role /*= Qt::Display
 		case Column::Address:
 			return info.address.c_str();
 		case Column::Download:
-			return info.downloadSpeed;
+			return info.stats.downloadSpeed;
 		case Column::Upload:
-			return info.uploadSpeed;
+			return info.stats.uploadSpeed;
 		case Column::Progress:
 			return info.percentage;
 		case Column::Client:

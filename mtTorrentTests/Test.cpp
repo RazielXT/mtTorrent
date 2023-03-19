@@ -970,7 +970,7 @@ void localDownloadTest()
 		if (torrent->files.checking)
 			TEST_LOG("Checking: " << torrent->files.checkingProgress())
 		else
-			TEST_LOG("Progress: " << torrent->selectionFinished() << "(" << torrent->downloaded()/(1024.f*1024) << "MB) (" << torrent->downloadSpeed() / (1024.f * 1024) << " MBps)");
+			TEST_LOG("Progress: " << torrent->selectionProgress() << "(" << torrent->fileTransfer->downloaded()/(1024.f*1024) << "MB) (" << torrent->fileTransfer->downloadSpeed() / (1024.f * 1024) << " MB/s)");
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	}

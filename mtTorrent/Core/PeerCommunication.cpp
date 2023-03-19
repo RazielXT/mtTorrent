@@ -230,6 +230,7 @@ size_t mtt::PeerCommunication::dataReceived(const BufferView& buffer)
 
 void mtt::PeerCommunication::connectionOpened()
 {
+	stats.connectionTime = stats.lastActivityTime = mtt::CurrentTimestamp();
 	state.action = PeerState::Connected;
 	BT_LOG("connected");
 
@@ -325,6 +326,8 @@ void mtt::PeerCommunication::sendPieceBlock(const PieceBlock& block)
 		return;
 
 	BT_LOG("sendPieceBlock " << block.info.index);
+	stats.uploaded += block.info.length;
+
 	send(mtt::bt::createPiece(block));
 }
 
@@ -359,6 +362,8 @@ void mtt::PeerCommunication::send(DataBuffer data)
 
 void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 {
+	stats.lastActivityTime = mtt::CurrentTimestamp();
+
 	if (message.id == PeerMessage::Bitfield)
 	{
 		info.pieces.fromBitfieldData(message.bitfield);
@@ -428,6 +433,8 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 			BT_LOG("Piece " << message.piece.info.index << message.piece.info.begin << message.piece.info.length)
 		else
 			BT_LOG("ReceiveMessage " << message.id);
+
+		stats.downloaded += message.piece.info.length;
 	}
 
 	listener.messageReceived(this, message);

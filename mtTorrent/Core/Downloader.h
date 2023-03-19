@@ -13,7 +13,8 @@ namespace mtt
 		void start();
 		void stop();
 
-		size_t getUnfinishedPiecesDownloadSize();
+		uint64_t getUnfinishedPiecesDownloadSize();
+		uint64_t getUnfinishedSelectedPiecesDownloadSize();
 		std::map<uint32_t, uint32_t> getUnfinishedPiecesDownloadSizeMap();
 
 		void handshakeFinished(PeerCommunication*);
@@ -25,6 +26,7 @@ namespace mtt
 		void refreshSelection(const DownloadSelection& selectedPieces, const std::vector<uint32_t>& availability);
 
 		uint64_t downloaded = 0;
+		uint32_t downloadSpeed = 0;
 
 		std::vector<uint32_t> getCurrentRequests() const;
 		std::vector<uint32_t> popFreshPieces();

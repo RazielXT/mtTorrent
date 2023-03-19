@@ -80,9 +80,9 @@ int main()
 			}
 			case mttApi::Torrent::State::Active:
 				if (!t->finished())
-					std::cout << "Progress : " << t->progress() * 100 << "%%, Speed : " << t->getFileTransfer().getDownloadSpeed() << " bps, Connected peers : " << t->getPeers().connectedCount() << ", Received peers : " << t->getPeers().receivedCount() << std::endl;
+					std::cout << "Progress : " << t->progress() * 100 << "%%, Speed : " << t->getFileTransfer().downloadSpeed() << " bps, Connected peers : " << t->getPeers().connectedCount() << ", Received peers : " << t->getPeers().receivedCount() << std::endl;
 				else
-					std::cout << "Finished, upload speed: " << t->getFileTransfer().getUploadSpeed() << std::endl;
+					std::cout << "Finished, upload speed: " << t->getFileTransfer().uploadSpeed() << std::endl;
 				break;
 			case mttApi::Torrent::State::Stopped:
 				if (auto err = (int)t->getLastError())
@@ -159,7 +159,7 @@ void example2()
 
 	auto& transfer = torrent->getFileTransfer();
 
-	std::cout << "Current download speed: " << transfer.getDownloadSpeed() << " bytes per second" << std::endl;
+	std::cout << "Current download speed: " << transfer.downloadSpeed() << " bytes per second" << std::endl;
 	std::cout << "Currently downloading " << transfer.getCurrentRequests().size() << " pieces" << std::endl;
 
 	auto peers = torrent->getPeers().getConnectedPeersInfo();
@@ -167,7 +167,7 @@ void example2()
 	std::cout << "Currently connected to " << peers.size() << " peers" << std::endl;
 
 	for (const auto& peer : peers)
-		std::cout << "Address: " << peer.address << ", speed " << peer.downloadSpeed << ", torrent client" << peer.client << std::endl;
+		std::cout << "Address: " << peer.address << ", speed " << peer.stats.downloadSpeed << ", torrent client" << peer.client << std::endl;
 
 	if (auto magnet = torrent->getMetadataDownload())
 	{

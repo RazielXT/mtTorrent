@@ -76,7 +76,7 @@ namespace mtt
 		std::vector<mtt::PieceState> getState(); //save, pop
 		void clear(); //reset
 
-		size_t getDownloadSize();
+		uint64_t getDownloadSize();
 		std::map<uint32_t, uint32_t> getDownloadSizeMap();
 
 	private:

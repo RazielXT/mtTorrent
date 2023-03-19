@@ -208,9 +208,9 @@ std::vector<mtt::PieceState> mtt::UnfinishedPiecesState::getState()
 	return pieces;
 }
 
-size_t mtt::UnfinishedPiecesState::getDownloadSize()
+uint64_t mtt::UnfinishedPiecesState::getDownloadSize()
 {
-	size_t sz = 0;
+	uint64_t sz = 0;
 	std::lock_guard<std::mutex> guard(mutex);
 
 	for (const auto& u : pieces)

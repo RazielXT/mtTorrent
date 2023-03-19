@@ -18,6 +18,7 @@ mtt::FileTransfer::FileTransfer(Torrent& t) : downloader(t), torrent(t)
 
 void mtt::FileTransfer::start()
 {
+	lastSumMeasure = { downloader.downloaded, uploader->uploaded };
 	piecesAvailability.resize(torrent.infoFile.info.pieces.size());
 	refreshSelection();
 
@@ -50,6 +51,7 @@ void mtt::FileTransfer::stop()
 
 	downloader.stop();
 	uploader->stop();
+	lastSpeedMeasure.clear();
 }
 
 void mtt::FileTransfer::refreshSelection()
@@ -69,14 +71,13 @@ void mtt::FileTransfer::handshakeFinished(PeerCommunication* p)
 	if (!torrent.files.progress.empty())
 		p->sendBitfield(torrent.files.progress.toBitfieldData());
 
-	addPeer(p);
 	downloader.handshakeFinished(p);
 }
 
 void mtt::FileTransfer::connectionClosed(PeerCommunication* p, int code)
 {
 	TRANSFER_LOG("closed " << p->getStream()->getAddressName());
-	removePeer(p);
+
 	downloader.connectionClosed(p);
 	uploader->cancelRequests(p);
 }
@@ -110,10 +111,6 @@ void mtt::FileTransfer::messageReceived(PeerCommunication* p, PeerMessage& msg)
 	}
 
 	downloader.messageReceived(p, msg);
-	{
-		std::lock_guard<std::mutex> guard(peersMutex);
-		activePeers[p].lastActivityTime = mtt::CurrentTimestamp();
-	}
 }
 
 void mtt::FileTransfer::extendedHandshakeFinished(PeerCommunication*, const ext::Handshake&)
@@ -143,56 +140,6 @@ void mtt::FileTransfer::extendedMessageReceived(PeerCommunication* p, ext::Type 
 	}
 }
 
-uint32_t mtt::FileTransfer::getDownloadSpeed() const
-{
-	uint32_t sum = 0;
-
-	std::lock_guard<std::mutex> guard(peersMutex);
-	for (auto& peer : activePeers)
-		sum += peer.second.downloadSpeed;
-
-	return sum;
-}
-
-uint32_t mtt::FileTransfer::getUploadSpeed() const
-{
-	uint32_t sum = 0;
-
-	std::lock_guard<std::mutex> guard(peersMutex);
-	for (auto& peer : activePeers)
-		sum += peer.second.uploadSpeed;
-
-	return sum;
-}
-
-std::map<mtt::PeerCommunication*, std::pair<uint32_t, uint32_t>> mtt::FileTransfer::getPeersSpeeds() const
-{
-	std::lock_guard<std::mutex> guard(peersMutex);
-
-	std::map<mtt::PeerCommunication*, std::pair<uint32_t, uint32_t>> out;
-	for (auto&[comm, info] : activePeers)
-	{
-		out[comm] = { info.downloadSpeed, info.uploadSpeed };
-	}
-	return out;
-}
-
-void mtt::FileTransfer::addPeer(PeerCommunication* p)
-{
-	std::lock_guard<std::mutex> guard(peersMutex);
-
-	auto& info = activePeers[p];
-	info.connectionTime = info.lastActivityTime = mtt::CurrentTimestamp();
-}
-
-void mtt::FileTransfer::removePeer(PeerCommunication* p)
-{
-	std::lock_guard<std::mutex> guard(peersMutex);
-
-	if (auto it = activePeers.find(p); it != activePeers.end())
-		activePeers.erase(it);
-}
-
 void mtt::FileTransfer::evaluateMorePeers()
 {
 	TRANSFER_LOG("evaluateMorePeers");
@@ -211,6 +158,7 @@ void mtt::FileTransfer::evalCurrentPeers()
 		return;
 
 	peersEvalCounter = peersEvalInterval;
+	auto inspectFunc = [this](const std::vector<PeerCommunication*>& activePeers)
 	{
 		const auto currentTime = mtt::CurrentTimestamp();
 
@@ -220,44 +168,38 @@ void mtt::FileTransfer::evalCurrentPeers()
 		const uint32_t minPeersPiecesTimeChance = 20;
 		auto minTimeToReceive = currentTime - minPeersPiecesTimeChance;
 
-		std::lock_guard<std::mutex> guard(peersMutex);
 		TRANSFER_LOG("evalCurrentPeers" << activePeers.size());
 
 		if (activePeers.size() > mtt::config::getExternal().connection.maxTorrentConnections)
 		{
-			struct PeerEval
-			{
-				PeerCommunication* comm = nullptr;
-				const ActivePeer* info = nullptr;
-			};
-			PeerEval slowestPeer;
-			std::vector<PeerEval> idleUploads;
-			std::vector<PeerEval> idlePeers;
+			PeerCommunication* slowestPeer = nullptr;
+			std::vector<PeerCommunication*> idleUploads;
+			std::vector<PeerCommunication*> idlePeers;
 
-			for (const auto& [comm,peer] : activePeers)
+			for (auto peer : activePeers)
 			{
-				TRANSFER_LOG(comm->getStream()->getAddress() << peer.downloadSpeed << peer.uploadSpeed << currentTime - peer.lastActivityTime);
+				TRANSFER_LOG(peer->getStream()->getAddress() << peer->stats.downloadSpeed << peer->stats.uploadSpeed << currentTime - peer->stats.lastActivityTime);
 
-				if (peer.connectionTime > minTimeToEval)
+				if (peer->stats.connectionTime > minTimeToEval || !peer->stats.connectionTime)
 				{
 					continue;
 				}
 
-				if (peer.lastActivityTime < minTimeToReceive)
+				if (peer->stats.lastActivityTime < minTimeToReceive)
 				{
-					if (comm->state.peerInterested)
-						idleUploads.push_back({ comm, &peer });
+					if (peer->state.peerInterested)
+						idleUploads.push_back(peer);
 					else
-						idlePeers.push_back({ comm, &peer });
+						idlePeers.push_back(peer);
 
 					continue;
 				}
 
-				if (!slowestPeer.info ||
-					peer.downloadSpeed < slowestPeer.info->downloadSpeed || 
-					(peer.downloadSpeed == slowestPeer.info->downloadSpeed && peer.downloaded < slowestPeer.info->downloaded))
+				if (!slowestPeer ||
+					peer->stats.downloadSpeed < slowestPeer->stats.downloadSpeed ||
+					(peer->stats.downloadSpeed == slowestPeer->stats.downloadSpeed && peer->stats.downloaded < slowestPeer->stats.downloaded))
 				{
-					slowestPeer = { comm, &peer };
+					slowestPeer = peer;
 				}
 			}
 
@@ -265,12 +207,12 @@ void mtt::FileTransfer::evalCurrentPeers()
 			if (idleUploads.size() > maxProtectedUploads)
 			{
 				std::sort(idleUploads.begin(), idleUploads.end(), [](const auto& l, const auto& r)
-					{ return r.info->uploadSpeed > l.info->uploadSpeed || (r.info->uploadSpeed == l.info->uploadSpeed && r.info->uploaded > l.info->uploaded); });
+					{ return r->stats.uploadSpeed > l->stats.uploadSpeed || (r->stats.uploadSpeed == l->stats.uploadSpeed && r->stats.uploaded > l->stats.uploaded); });
 
 				idleUploads.resize(idleUploads.size() - maxProtectedUploads);
 				for (const auto& peer : idleUploads)
 				{
-					TRANSFER_LOG("eval upload" << peer.comm->getStream()->getAddressName());
+					TRANSFER_LOG("eval upload" << peer->getStream()->getAddressName());
 					idlePeers.push_back(peer);
 				}
 			}
@@ -278,67 +220,71 @@ void mtt::FileTransfer::evalCurrentPeers()
 			if (idlePeers.size() > 5)
 			{
 				std::sort(idlePeers.begin(), idlePeers.end(),	[](const auto& l, const auto& r)
-					{ return l.info->downloaded < r.info->downloaded; });
+					{ return l->stats.downloaded < r->stats.downloaded; });
 
 				idlePeers.resize(5);
 			}
-			else if (idlePeers.empty() && slowestPeer.comm)
+			else if (idlePeers.empty() && slowestPeer)
 			{
-				TRANSFER_LOG("eval slowest" << slowestPeer.comm->getStream()->getAddressName());
+				TRANSFER_LOG("eval slowest" << slowestPeer->getStream()->getAddressName());
 				idlePeers.push_back(slowestPeer);
 			}
 
 			for (const auto& peer : idlePeers)
 			{
-				TRANSFER_LOG("eval removing" << peer.comm->getStream()->getAddressName());
-				torrent.peers->disconnect(peer.comm);
+				TRANSFER_LOG("eval removing" << peer->getStream()->getAddressName());
+				peer->close();
 			}
 		}
-	}
+	};
+	torrent.peers->inspectConnectedPeers(inspectFunc);
 
 	evaluateMorePeers();
 }
 
 void mtt::FileTransfer::updateMeasures()
 {
-	std::map<PeerCommunication*, std::pair<uint64_t, uint64_t>> currentMeasure;
-	auto freshPieces = downloader.popFreshPieces();
-
+	auto inspectFunc = [this](const std::vector<PeerCommunication*>& activePeers)
 	{
-		std::lock_guard<std::mutex> guard(peersMutex);
+		std::map<PeerCommunication*, std::pair<uint64_t, uint64_t>> currentMeasure;
+		auto freshPieces = downloader.popFreshPieces();
 
-		auto finishedUploadRequests = uploader->popHandledRequests();
-		for (const auto& r : finishedUploadRequests)
+		for (auto peer : activePeers)
 		{
-			auto it = activePeers.find(r.first);
-			if (it != activePeers.end())
-				it->second.uploaded += r.second;
-		}
+			currentMeasure[peer] = { peer->stats.downloaded, peer->stats.uploaded };
 
-		for (auto& [comm, peer] : activePeers)
-		{
-			peer.downloaded = comm->getStream()->getReceivedDataCount();
-			currentMeasure[comm] = { peer.downloaded, peer.uploaded };
+			peer->stats.downloadSpeed = 0;
+			peer->stats.uploadSpeed = 0;
 
-			peer.downloadSpeed = 0;
-			peer.uploadSpeed = 0;
-
-			auto last = lastSpeedMeasure.find(comm);
+			auto last = lastSpeedMeasure.find(peer);
 			if (last != lastSpeedMeasure.end())
 			{
-				if (peer.downloaded > last->second.first)
-					peer.downloadSpeed = (uint32_t)(peer.downloaded - last->second.first);
-				if (peer.uploaded > last->second.second)
-					peer.uploadSpeed = (uint32_t)(peer.uploaded - last->second.second);
+				if (peer->stats.downloaded > last->second.first)
+					peer->stats.downloadSpeed = (uint32_t)(peer->stats.downloaded - last->second.first);
+				if (peer->stats.uploaded > last->second.second)
+					peer->stats.uploadSpeed = (uint32_t)(peer->stats.uploaded - last->second.second);
 			}
 
-			if (comm->isEstablished())
+			if (peer->isEstablished())
 				for (auto piece : freshPieces)
-					comm->sendHave(piece);
+					peer->sendHave(piece);
 		}
-	}
 
-	lastSpeedMeasure = std::move(currentMeasure);
+		lastSpeedMeasure = std::move(currentMeasure);
+	};
+	torrent.peers->inspectConnectedPeers(inspectFunc);
+
+	{
+		downloader.downloadSpeed = 0;
+		uploader->uploadSpeed = 0;
+
+		if (downloader.downloaded > lastSumMeasure.first)
+			downloader.downloadSpeed = (uint32_t)(downloader.downloaded - lastSumMeasure.first);
+		if (uploader->uploaded > lastSumMeasure.second)
+			uploader->uploadSpeed = (uint32_t)(uploader->uploaded - lastSumMeasure.second);
+
+		lastSumMeasure = { downloader.downloaded, uploader->uploaded };
+	}
 
 	const int32_t updateMeasuresExtraInterval = 5;
 	if (updateMeasuresCounter-- > 0)

@@ -34,15 +34,15 @@ QVariant TorrentsDataModel::data(const QModelIndex& index, int role) const
 		case Column::Progress:
 			return t->selectionProgress();
 		case Column::Download:
-			return t->getFileTransfer().getDownloadSpeed();
+			return t->getFileTransfer().downloadSpeed();
 		case Column::Upload:
-			return t->getFileTransfer().getUploadSpeed();
+			return t->getFileTransfer().uploadSpeed();
 		case Column::Peers:
 			return t->getPeers().connectedCount();
 		case Column::Downloaded:
-			return (qulonglong)t->downloaded();
+			return (qulonglong)t->finishedBytes();
 		case Column::Uploaded:
-			return (qulonglong)t->uploaded();
+			return (qulonglong)t->getFileTransfer().uploaded();
 		case Column::Added:
 			return (qulonglong)t->getTimeAdded();
 		}

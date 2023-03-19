@@ -4,6 +4,7 @@
 #include "Configuration.h"
 #include "utils/UrlEncoding.h"
 #include "Torrent.h"
+#include "FileTransfer.h"
 #include "utils/HttpHeader.h"
 
 
@@ -119,8 +120,8 @@ DataBuffer mtt::HttpTracker::createAnnounceRequest(std::string path, std::string
 	builder << "GET " << path << "?info_hash=" << UrlEncode(torrent->hash(), 20);
 	builder << "&peer_id=" << UrlEncode(mtt::config::getInternal().hashId, 20);
 	builder << "&port=" << std::to_string(mtt::config::getExternal().connection.tcpPort);
-	builder << "&uploaded=" << std::to_string(torrent->uploaded());
-	builder << "&downloaded=" << std::to_string(torrent->downloaded());
+	builder << "&uploaded=" << std::to_string(torrent->fileTransfer->uploaded());
+	builder << "&downloaded=" << std::to_string(torrent->fileTransfer->downloaded());
 	builder << "&left=" << std::to_string(torrent->dataLeft());
 	builder << "&numwant=" << std::to_string(mtt::config::getInternal().maxPeersPerTrackerRequest);
 	builder << "&compact=1&no_peer_id=0&key=" << std::to_string(mtt::config::getInternal().trackerKey);

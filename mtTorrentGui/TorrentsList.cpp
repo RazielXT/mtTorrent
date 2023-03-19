@@ -44,7 +44,7 @@ public:
 				auto t = list.getTorrent(index);
 				if (!t->selectionFinished() && t->getState() == mttApi::Torrent::State::Active)
 				{
-					auto downloaded = t->downloaded();
+					auto downloaded = t->finishedSelectedBytes();
 					uint64_t leftBytes = ((uint64_t)(downloaded / t->selectionProgress())) - downloaded;
 					if (uint64_t leftTime = leftBytes / downloadSpeed)
 						txt += " (" + utils::formatDuration(leftTime) + ")";

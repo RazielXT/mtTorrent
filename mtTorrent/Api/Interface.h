@@ -167,16 +167,27 @@ namespace mtt
 		action = Disconnected;
 	};
 
+	struct PeerStats
+	{
+		Timestamp connectionTime = 0;
+		Timestamp lastActivityTime = 0;
+
+		uint32_t downloadSpeed = 0;
+		uint64_t downloaded = 0;
+
+		uint32_t uploadSpeed = 0;
+		uint64_t uploaded = 0;
+	};
+
 	struct ConnectedPeerInfo
 	{
 		std::string address;
 		std::string client;
-		uint32_t uploadSpeed = 0;
-		uint32_t downloadSpeed = 0;
 		float percentage = 0;
 		std::string country;
 		uint32_t flags = 0;
 		PeerState state;
+		PeerStats stats;
 	};
 
 	struct PathValidation
