@@ -24,3 +24,8 @@ std::vector<uint32_t> mttApi::FileTransfer::getCurrentRequests() const
 {
 	return static_cast<const mtt::FileTransfer*>(this)->downloader.getCurrentRequests();
 }
+
+std::vector<mtt::PieceDownloadState> mttApi::FileTransfer::getCurrentRequestsInfo() const
+{
+	return static_cast<const mtt::FileTransfer*>(this)->downloader.getCurrentRequestsInfo();
+}

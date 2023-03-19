@@ -25,6 +25,11 @@ namespace mttApi
 		*/
 		API_EXPORT std::vector<uint32_t> getCurrentRequests() const;
 
+		/*
+			Get details about currently requested pieces
+		*/
+		API_EXPORT std::vector<mtt::PieceDownloadState> getCurrentRequestsInfo() const;
+
 	protected:
 
 		FileTransfer() = default;

@@ -72,6 +72,29 @@ std::vector<uint32_t> mtt::Downloader::getCurrentRequests() const
 	return out;
 }
 
+std::vector<mtt::PieceDownloadState> mtt::Downloader::getCurrentRequestsInfo() const
+{
+	std::lock_guard<std::mutex> guard(requestsMutex);
+
+	std::vector<PieceDownloadState> out;
+	out.resize(requests.size());
+	int i = 0;
+
+	for (const auto& it : requests)
+	{
+		auto& info = out[i++];
+		auto& r = *it.second;
+
+		info.index = r.piece.index;
+		info.blocksCount = (uint32_t)r.piece.blocksState.size();
+		info.receivedBlocks = info.blocksCount - r.piece.remainingBlocks;
+		info.sentRequestsCount = r.requestsCounter;
+		info.activeSources = (uint32_t)r.activePeers.size();
+	}
+
+	return out;
+}
+
 std::vector<uint32_t> mtt::Downloader::popFreshPieces()
 {
 	std::lock_guard<std::mutex> guard(requestsMutex);

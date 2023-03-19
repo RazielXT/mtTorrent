@@ -201,6 +201,15 @@ namespace mtt
 		uint64_t missingSize = 0;	//not yet allocated
 	};
 
+	struct PieceDownloadState
+	{
+		uint32_t index = 0;
+		uint32_t blocksCount = 0;
+		uint32_t receivedBlocks = 0;
+		uint32_t sentRequestsCount = 0;
+		uint32_t activeSources = 0;
+	};
+
 	struct AlertMessage
 	{
 		virtual ~AlertMessage() = default;

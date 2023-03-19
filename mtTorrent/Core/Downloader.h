@@ -29,6 +29,7 @@ namespace mtt
 		uint32_t downloadSpeed = 0;
 
 		std::vector<uint32_t> getCurrentRequests() const;
+		std::vector<mtt::PieceDownloadState> getCurrentRequestsInfo() const;
 		std::vector<uint32_t> popFreshPieces();
 
 		DownloadStorage storage;
