@@ -189,22 +189,27 @@ void TorrentsList::showContextMenu(const QPoint& pos)
 	if (idx.isValid())
 	{
 		auto t = getTorrent(idx);
-		auto& icons = utils::getIconProvider();
 
 		QMenu contextMenu(table);
 		contextMenu.setStyleSheet("font-size: 12px");
 
 		auto actionOpenDir = contextMenu.addAction("Open directory", [t]() { QDesktopServices::openUrl(QUrl::fromLocalFile(t->getFiles().getLocationPath().c_str())); });
-		actionOpenDir->setIcon(icons.icon(QFileIconProvider::Folder));
+		actionOpenDir->setIcon(QApplication::style()->standardIcon(QStyle::StandardPixmap::SP_DirLinkIcon));
 
 		auto actionChangeDir = contextMenu.addAction("Change directory", [t, this]() { changeTorrentDirectory(t); });
-		actionChangeDir->setIcon(icons.icon(QFileIconProvider::Folder));
+		actionChangeDir->setIcon(QApplication::style()->standardIcon(QStyle::StandardPixmap::SP_DirIcon));
 
 		if (t->getMetadataDownload())
-			contextMenu.addAction("Magnet logs", [t]() { MagnetWindow::Show(t); });
+		{
+			auto actionMagnetLogs = contextMenu.addAction("Magnet logs", [t]() { MagnetWindow::Show(t); });
+			actionMagnetLogs->setIcon(QApplication::style()->standardIcon(QStyle::StandardPixmap::SP_FileDialogDetailedView));
+		}
 
 		if (t->hasMetadata())
-			contextMenu.addAction("Check files", [t]() { t->getFiles().startCheck(); });
+		{
+			auto actionCheck = contextMenu.addAction("Check files", [t]() { t->getFiles().startCheck(); });
+			actionCheck->setIcon(QApplication::style()->standardIcon(QStyle::StandardPixmap::SP_FileDialogContentsView));
+		}
 
 		contextMenu.exec(table->viewport()->mapToGlobal(pos));
 	}
