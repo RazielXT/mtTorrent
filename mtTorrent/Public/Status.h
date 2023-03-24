@@ -25,6 +25,7 @@ namespace mtt
 		E_FileWriteError,
 		E_FileLockedError,
 		E_NotEmpty,
+		E_Unwanted,
 
 		E_NetworkError = 2000,
 		E_ConnectionClosed

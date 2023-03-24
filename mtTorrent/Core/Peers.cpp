@@ -176,7 +176,7 @@ std::shared_ptr<mtt::PeerCommunication> mtt::Peers::removePeer(PeerCommunication
 	return nullptr;
 }
 
-mtt::Status mtt::Peers::connect(const Addr& addr)
+mtt::Status mtt::Peers::connect(const Addr& addr, ConnectType type)
 {
 	if (!addr.valid())
 		return mtt::Status::E_InvalidInput;
@@ -202,10 +202,13 @@ mtt::Status mtt::Peers::connect(const Addr& addr)
 			idx = (uint32_t)std::distance(knownPeers.begin(), it);
 
 		KnownPeer& peer = knownPeers[idx];
+		if (peer.unwanted)
+			return mtt::Status::E_Unwanted;
+
 		peer.state = KnownPeer::State::Connecting;
 		peer.lastConnectionTime = mtt::CurrentTimestamp();
 		peer.connectionAttempts++;
-		connect(addr, idx);
+		connect(addr, idx, type);
 	}
 
 	return mtt::Status::Success;
@@ -462,10 +465,12 @@ uint32_t mtt::Peers::updateKnownPeers(const ext::PeerExchange::Message& pex)
 	return accepted;
 }
 
-void mtt::Peers::connect(const Addr& address, uint32_t idx)
+void mtt::Peers::connect(const Addr& address, uint32_t idx, ConnectType type)
 {
 	ActivePeer peer;
 	peer.comm = std::make_shared<PeerCommunication>(torrent.infoFile.info, *this, torrent.service.io);
+	if (type == ConnectType::Holepunch)
+		peer.comm->getStream()->enableHolepunch();
 	peer.comm->connect(address);
 	peer.idx = idx;
 	activeConnections.emplace_back(std::move(peer));
@@ -681,14 +686,6 @@ void mtt::Peers::evaluatePossibleHolepunch(PeerCommunication* p, const KnownPeer
 
 		if (negotiator)
 		{
-			std::lock_guard<std::mutex> guard(holepunchMutex);
-
-			HolepunchState s;
-			s.target = info.address;
-			s.negotiator = negotiator.get();
-			s.time = mtt::CurrentTimestamp();
-			holepunchStates.push_back(s);
-
 			PEERS_LOG("HolepunchMessage sendRendezvous " << info.address << negotiator->getStream()->getAddress());
 			negotiator->ext.holepunch.sendRendezvous(info.address);
 		}
@@ -721,35 +718,14 @@ void mtt::Peers::handleHolepunchMessage(PeerCommunication* p, const ext::UtHolep
 	}
 	else if (msg.id == ext::UtHolepunch::Connect)
 	{
-		bool wanted = false;
-		{
-			std::lock_guard<std::mutex> guard(holepunchMutex);
-			for (auto it = holepunchStates.begin(); it != holepunchStates.end(); it++)
-			{
-				if (it->negotiator == p && it->target == msg.addr)
-				{
-					wanted = true;
-					holepunchStates.erase(it);
-					break;
-				}
-			}
-		}
+		bool wanted = mtt::config::getExternal().connection.maxTorrentConnections > activeConnections.size();
+
 		if (wanted)
-			connect(msg.addr);
+			connect(msg.addr, ConnectType::Holepunch);
 	}
 	else if (msg.id == ext::UtHolepunch::Error)
 	{
 		PEERS_LOG("HolepunchMessageErr " << msg.e);
-
-		std::lock_guard<std::mutex> guard(holepunchMutex);
-		for (auto it = holepunchStates.begin(); it != holepunchStates.end(); it++)
-		{
-			if (it->negotiator == p && it->target == msg.addr)
-			{
-				holepunchStates.erase(it);
-				break;
-			}
-		}
 	}
 }
 

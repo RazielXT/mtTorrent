@@ -20,7 +20,8 @@ namespace mtt
 		void startConnecting();
 		void stopConnecting();
 
-		Status connect(const Addr& addr);
+		enum class ConnectType { Normal, Holepunch };
+		Status connect(const Addr& addr, ConnectType type = ConnectType::Normal);
 		size_t add(std::shared_ptr<PeerStream> stream, const BufferView& data);
 		bool disconnect(PeerCommunication*, bool unwanted = false);
 		void inspectConnectedPeers(std::function<void(const std::vector<PeerCommunication*>&)>);
@@ -67,7 +68,7 @@ namespace mtt
 		mutable std::mutex peersMutex;
 
 		std::shared_ptr<PeerCommunication> removePeer(PeerCommunication*, KnownPeer& info);
-		void connect(const Addr& addr, uint32_t knownIdx);
+		void connect(const Addr& addr, uint32_t knownIdx, ConnectType type = ConnectType::Normal);
 		struct ActivePeer
 		{
 			std::shared_ptr<PeerCommunication> comm;
@@ -139,15 +140,6 @@ namespace mtt
 
 		std::atomic<mtt::IPeerListener*> listener = nullptr;
 		void setTargetListener(mtt::IPeerListener*);
-
-		struct HolepunchState
-		{
-			Addr target;
-			PeerCommunication* negotiator = {};
-			Timestamp time{};
-		};
-		std::vector<HolepunchState> holepunchStates;
-		std::mutex holepunchMutex;
 
 		void evaluatePossibleHolepunch(PeerCommunication*, const KnownPeer&);
 		void handleHolepunchMessage(PeerCommunication*, const ext::UtHolepunch::Message&);
