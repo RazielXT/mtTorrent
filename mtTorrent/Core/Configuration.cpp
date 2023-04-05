@@ -20,7 +20,7 @@ std::string getDefaultDirectory()
 #ifdef _WIN32
 	// this will work for X86 and X64 if the matching 'bitness' client has been installed
 	PWSTR pszPath = NULL;
-	if (SHGetKnownFolderPath(FOLDERID_Downloads, KF_FLAG_CREATE, NULL, &pszPath) != S_OK)
+	if (SHGetKnownFolderPath(FOLDERID_LocalDocuments, KF_FLAG_CREATE, NULL, &pszPath) != S_OK)
 		return "";
 
 	std::wstring path = pszPath;
@@ -35,7 +35,7 @@ std::string getDefaultDirectory()
 			std::string utf8String;
 			utf8String.resize(requiredSize);
 			WideCharToMultiByte(CP_UTF8, 0, path.data(), (int)path.size(), utf8String.data(), requiredSize, NULL, NULL);
-			utf8String += "\\mtTorrent\\";
+			utf8String += "\\mtTorrent Downloads\\";
 			return utf8String;
 		}
 	}
