@@ -11,7 +11,7 @@ namespace mtt
 		void resize(size_t size);
 		void removeReceived(const std::vector<bool>&);
 
-		void select(const File& info, bool selected);
+		void select(uint32_t startPieceIndex, uint32_t endPieceIndex, bool selected);
 		void fromBitfieldData(const BufferView& bitfield);
 		void fromList(const std::vector<uint8_t>& pieces);
 		DataBuffer toBitfieldData() const;

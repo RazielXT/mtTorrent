@@ -91,12 +91,49 @@ void mtt::Files::stop()
 
 void mtt::Files::select(uint32_t idx, bool selected)
 {
-	auto& files = torrent.infoFile.info.files;
-
 	if (selection[idx].selected != selected)
 	{
 		selection[idx].selected = selected;
-		progress.select(files[idx], selected);
+
+		auto& files = torrent.infoFile.info.files;
+		uint32_t startPieceIndex = files[idx].startPieceIndex;
+		uint32_t endPieceIndex = files[idx].endPieceIndex;
+
+		if (!selected)
+		{
+			//keep start if selected by other file
+			{
+				int i = int(idx) - 1;
+				while (i >= 0 && files[i].endPieceIndex == startPieceIndex)
+				{
+					if (selection[i].selected)
+					{
+						startPieceIndex++;
+						break;
+					}
+					i--;
+				}
+			}
+			//keep end if selected by other file
+			{
+				uint32_t i = idx + 1;
+				while (i < files.size() && files[i].startPieceIndex == endPieceIndex)
+				{
+					if (selection[i].selected)
+					{
+						if (endPieceIndex == 0)
+							startPieceIndex++; //force skip all
+						else
+							endPieceIndex--;
+
+						break;
+					}
+					i--;
+				}
+			}
+		}
+
+		progress.select(startPieceIndex, endPieceIndex, selected);
 	}
 }
 

@@ -122,9 +122,9 @@ void mtt::PiecesProgress::removeReceived(const std::vector<bool>& where)
 	}
 }
 
-void mtt::PiecesProgress::select(const File& info, bool selected)
+void mtt::PiecesProgress::select(uint32_t startPieceIndex, uint32_t endPieceIndex, bool selected)
 {
-	for (uint32_t i = info.startPieceIndex; i <= info.endPieceIndex; i++)
+	for (uint32_t i = startPieceIndex; i <= endPieceIndex; i++)
 	{
 		if (selectedPiece(i) == selected)
 			continue;
