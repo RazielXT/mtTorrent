@@ -22,6 +22,7 @@ namespace mtt
 			TorrentRemoved = TorrentFinished << 2,
 			TorrentCheckStarted = TorrentFinished << 3,
 			TorrentCheckFinished = TorrentFinished << 4,
+			TorrentInterrupted = TorrentFinished << 5,
 
 			MetadataInitialized = firstBit(Category::Metadata),
 

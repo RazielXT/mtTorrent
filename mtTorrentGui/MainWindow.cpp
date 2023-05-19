@@ -44,13 +44,36 @@ MainWindow::MainWindow(QStringList params, QWidget* parent)	: QMainWindow(parent
 					auto t = a->getAs<mtt::TorrentAlert>()->torrent;
 					torrents.remove(t);
 				}
-				if (a->id == mtt::Alerts::Id::MetadataInitialized)
+				else if (a->id == mtt::Alerts::Id::MetadataInitialized)
 				{
 					auto t = a->getAs<mtt::MetadataAlert>()->torrent;
 
 					auto w = new NewTorrentWindow(t, this);
 					w->setWindowModality(Qt::ApplicationModal);
 					w->show();
+				}
+				else if (a->id == mtt::Alerts::Id::TorrentInterrupted)
+				{
+					auto t = a->getAs<mtt::TorrentAlert>()->torrent;
+
+					QMessageBox msgBox;
+					msgBox.setWindowTitle(t->name().c_str());
+					msgBox.setStyleSheet(guiUtils::CenteredMessageBoxStyle());
+					msgBox.setStandardButtons(QMessageBox::Ok);
+
+					switch (t->getLastError())
+					{
+					case mtt::Status::E_FileReadError:
+					case mtt::Status::E_FileWriteError:
+					case mtt::Status::E_FileLockedError:
+						msgBox.setText(QString("Torrent interrupted by file error (%1)").arg((int)t->getLastError()));
+						break;
+					default:
+						msgBox.setText(QString("Torrent interrupted by error (%1)").arg((int)t->getLastError()));
+						break;
+					}
+
+					msgBox.exec();
 				}
 				if (a->id == mtt::Alerts::Id::TorrentCheckStarted || a->id == mtt::Alerts::Id::TorrentCheckFinished || a->id == mtt::Alerts::Id::TorrentFinished)
 				{

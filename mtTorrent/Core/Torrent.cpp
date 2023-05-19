@@ -334,6 +334,9 @@ void mtt::Torrent::stop(StopReason reason)
 	if (reason != StopReason::Internal)
 		service.stop();
 
+	if (reason == StopReason::Internal)
+		AlertsManager::Get().torrentAlert(Alerts::Id::TorrentInterrupted, *this);
+
 	if (reason == StopReason::Manual)
 		started = false;
 
