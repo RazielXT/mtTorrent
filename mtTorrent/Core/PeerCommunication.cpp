@@ -427,15 +427,13 @@ void mtt::PeerCommunication::handleMessage(PeerMessage& message)
 			listener.handshakeFinished(this);
 		}
 	}
-	else
+	else if (message.id == PeerMessage::Piece)
 	{
-		if (message.id == PeerMessage::Piece)
-			BT_LOG("Piece " << message.piece.info.index << message.piece.info.begin << message.piece.info.length)
-		else
-			BT_LOG("ReceiveMessage " << message.id);
-
 		stats.downloaded += message.piece.info.length;
+		BT_LOG("Piece " << message.piece.info.index << message.piece.info.begin << message.piece.info.length);
 	}
+	else
+		BT_LOG("OtherMessage " << message.id);
 
 	listener.messageReceived(this, message);
 }
