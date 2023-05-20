@@ -25,6 +25,17 @@ void FilesTab::init(Ui_mainWindowWidget& ui)
 	piecesChartLabel = ui.piecesChartLabel;
 
 	filesTree->connect(filesTree, &QTreeView::clicked, [this](const QModelIndex& index) { filesClicked(index); });
+
+	auto sortColumn = app::getSetting("filesSortColumn");
+	auto sortOrder = app::getSetting("filesSortOrder");
+	if (sortColumn.isValid())
+		filesTree->header()->setSortIndicator(sortColumn.toInt(), (Qt::SortOrder)sortOrder.toInt());
+}
+
+void FilesTab::deinit()
+{
+	app::setSetting("filesSortColumn", filesTree->header()->sortIndicatorSection());
+	app::setSetting("filesSortOrder", (int)filesTree->header()->sortIndicatorOrder());
 }
 
 void FilesTab::update()
@@ -65,7 +76,7 @@ void FilesTab::selectTorrent(mttApi::TorrentPtr t)
 
 	if (selected)
 	{
-		filesTree->expandAll();
+		filesTree->expandToDepth(0);
 		piecesChartLabel->setToolTip("Piece size " + utils::formatBytes(selected->getMetadata().info.pieceSize));
 	}
 	else

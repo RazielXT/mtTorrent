@@ -143,6 +143,8 @@ void TorrentsList::deinit()
 	app::setSetting("torrentSortColumn", table->horizontalHeader()->sortIndicatorSection());
 	app::setSetting("torrentSortOrder", (int)table->horizontalHeader()->sortIndicatorOrder());
 
+	filesTab.deinit();
+
 	QStringList columnSizes;
 	for (int i = 0; i < (int)TorrentsDataModel::Column::COUNT; i++)
 		columnSizes.append(QString::number(table->columnWidth(i)));

@@ -9,6 +9,8 @@ public:
 	FilesTab() = default;
 
 	void init(Ui_mainWindowWidget&);
+	void deinit();
+
 	void selectTorrent(mttApi::TorrentPtr t);
 	void update();
 
@@ -30,5 +32,5 @@ private:
 	QLabel* piecesChart = nullptr;
 	QLabel* piecesChartLabel = nullptr;
 
-	QWidget* filesTab;
+	QWidget* filesTab = nullptr;
 };
