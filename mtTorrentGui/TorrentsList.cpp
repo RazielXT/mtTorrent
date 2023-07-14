@@ -195,7 +195,14 @@ void TorrentsList::showContextMenu(const QPoint& pos)
 		QMenu contextMenu(table);
 		contextMenu.setStyleSheet("font-size: 12px");
 
-		auto actionOpenDir = contextMenu.addAction("Open directory", [t]() { QDesktopServices::openUrl(QUrl::fromLocalFile(t->getFiles().getLocationPath().c_str())); });
+		auto actionOpenDir = contextMenu.addAction("Open directory", [t]()
+			{
+				auto location = t->getFiles().getLocationPath();
+				if (t->getFilesInfo().size() > 1)
+					location += t->name();
+
+				QDesktopServices::openUrl(QUrl::fromLocalFile(location.c_str()));
+			});
 		actionOpenDir->setIcon(QApplication::style()->standardIcon(QStyle::StandardPixmap::SP_DirLinkIcon));
 
 		auto actionChangeDir = contextMenu.addAction("Change directory", [t, this]() { changeTorrentDirectory(t); });
