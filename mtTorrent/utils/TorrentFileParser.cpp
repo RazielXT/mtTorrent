@@ -181,6 +181,7 @@ mtt::TorrentInfo parseTorrentInfo(const BencodeParser::Object* infoDictionary)
 	if (auto files = infoDictionary->getListObject("files"))
 	{
 		info.name = infoDictionary->getTxt("name");
+		auto namePath = info.paths.insert(info.name).first->c_str();
 
 		uint64_t sizeSum = 0;
 		
@@ -190,7 +191,7 @@ mtt::TorrentInfo parseTorrentInfo(const BencodeParser::Object* infoDictionary)
 			std::string filename;
 
 			std::vector<std::string_view> path;
-			path.push_back(info.name);
+			path.push_back(namePath);
 
 			if (auto pathList = file->getListObject("path"))
 			{
