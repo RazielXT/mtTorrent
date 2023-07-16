@@ -170,8 +170,6 @@ mtt::Status mtt::Storage::loadPieceBlocks(const File& file, uint32_t idx, const 
 			fileOut.seekg(blockInfo.fileDataPos);
 			fileOut.read((char*)buffer + offset.begin + blockInfo.dataPos, blockInfo.dataSize);
 		}
-		else
-			break;
 	}
 
 	return Status::Success;
