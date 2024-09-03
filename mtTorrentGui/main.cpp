@@ -6,7 +6,7 @@
 
 void initEnvironment()
 {
-	wchar_t pathBuffer[256];
+	TCHAR pathBuffer[256];
 	if (GetModuleFileName(NULL, pathBuffer, 256))
 	{
 		PathRemoveFileSpec(pathBuffer);
