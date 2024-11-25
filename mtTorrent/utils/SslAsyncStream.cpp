@@ -4,7 +4,7 @@
 
 #define SSL_TCP_LOG(x) WRITE_LOG(x)
 
-SslAsyncStream::SslAsyncStream(asio::io_context& io_context) : io(io_context), socket(io, ctx), ctx(asio::ssl::context::tls)
+SslAsyncStream::SslAsyncStream(asio::io_context& io_context) : io(io_context), ctx(asio::ssl::context::tls), socket(io, ctx)
 {
 	CREATE_LOG(SslTcp);
 	ctx.set_default_verify_paths();

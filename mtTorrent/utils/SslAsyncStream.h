@@ -41,9 +41,9 @@ protected:
  	void handle_write(asio::error_code ec, std::size_t);
  	void handle_receive(asio::error_code, std::size_t received, std::size_t bytes_requested);
 
+	asio::io_context& io;
 	asio::ssl::context ctx;
 	asio::ssl::stream<tcp::socket> socket;
-	asio::io_context& io;
 
 	struct
 	{
